@@ -1,14 +1,14 @@
 NodeOUs:
   Enable: true
   ClientOUIdentifier:
-    Certificate: cacerts/ca.blockchain.local-cert.pem
+    Certificate: cacerts/localhost-9054-ca-orderer.pem
     OrganizationalUnitIdentifier: client
   PeerOUIdentifier:
-    Certificate: cacerts/ca.blockchain.local-cert.pem
+    Certificate: cacerts/localhost-9054-ca-orderer.pem
     OrganizationalUnitIdentifier: peer
   AdminOUIdentifier:
-    Certificate: cacerts/ca.blockchain.local-cert.pem
+    Certificate: cacerts/localhost-9054-ca-orderer.pem
     OrganizationalUnitIdentifier: admin
   OrdererOUIdentifier:
-    Certificate: cacerts/ca.blockchain.local-cert.pem
+    Certificate: cacerts/localhost-9054-ca-orderer.pem
     OrganizationalUnitIdentifier: orderer
