@@ -98,3 +98,7 @@ Verify CouchDB DNS from Docker network
 docker run --rm --network blockchain_net busybox nslookup couchdb0.org1
 docker run --rm --network blockchain_net busybox nslookup couchdb0.org2
 
+
+
+
+Provide me with a full updated Steps and script Document to save
