@@ -1,0 +1,5 @@
+/home/nix/u01/blockchain-integration/scripts/restart-network.sh
+/home/nix/u01/blockchain-integration/scripts/start-network.sh
+/home/nix/u01/blockchain-integration/scripts/stop-network.sh
+/home/nix/u01/blockchain-integration/scripts/verify-network.sh
+
