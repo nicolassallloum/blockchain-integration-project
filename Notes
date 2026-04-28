@@ -3,3 +3,55 @@
 /home/nix/u01/blockchain-integration/scripts/stop-network.sh
 /home/nix/u01/blockchain-integration/scripts/verify-network.sh
 
+1. Verify Docker service
+sudo systemctl status docker
+
+
+nix@pg-replica:~/u01/blockchain-integration$ docker network create blockchain-net
+affc5abb78d82b151a8d1251509f44d333fde027d57e7ddc80d262e0a6b63603
+
+
+Create network
+~/u01/blockchain-integration/docker/networks/create-networks.sh
+
+Create Docker Verification Script
+~/u01/blockchain-integration/docker/scripts/docker-check.sh
+
+
+Docker Commands Required for Hyperledger Fabric:
+
+From Fabric test network folder:
+cd ~/u01/blockchain-integration/fabric/fabric-samples/test-network
+
+Check Fabric containers:
+docker ps
+
+Check all containers:
+docker ps -a
+
+Check Fabric images:
+docker images | grep hyperledger
+
+Check CouchDB containers:
+docker ps | grep couchdb
+
+View peer logs:
+docker logs peer0.org1.example.com
+
+View orderer logs:
+docker logs orderer.example.com
+
+View CouchDB logs:
+docker logs couchdb0
+
+
+
+Final Verification Checklist
+docker version
+docker compose version
+docker info
+docker run hello-world
+docker network ls
+docker ps
+systemctl status docker
+systemctl status containerd
