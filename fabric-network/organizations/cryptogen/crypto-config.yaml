@@ -1,0 +1,32 @@
+OrdererOrgs:
+  - Name: Orderer
+    Domain: blockchain.local
+    EnableNodeOUs: true
+    Specs:
+      - Hostname: orderer
+        SANS:
+          - localhost
+          - orderer.blockchain.local
+
+PeerOrgs:
+  - Name: Org1
+    Domain: org1.blockchain.local
+    EnableNodeOUs: true
+    Template:
+      Count: 1
+      SANS:
+        - localhost
+        - peer0.org1.blockchain.local
+    Users:
+      Count: 1
+
+  - Name: Org2
+    Domain: org2.blockchain.local
+    EnableNodeOUs: true
+    Template:
+      Count: 1
+      SANS:
+        - localhost
+        - peer0.org2.blockchain.local
+    Users:
+      Count: 1

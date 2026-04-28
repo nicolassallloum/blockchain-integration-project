@@ -55,3 +55,46 @@ docker network ls
 docker ps
 systemctl status docker
 systemctl status containerd
+
+
+step 5
+Main Commands
+Run Docker verification
+~/u01/blockchain-integration/docker/scripts/docker-check.sh
+Create Docker networks
+~/u01/blockchain-integration/docker/networks/create-networks.sh
+Restart Docker runtime after server timeout
+~/u01/blockchain-integration/docker/scripts/restart-containers.sh
+View container logs
+~/u01/blockchain-integration/docker/scripts/view-logs.sh <container_name>
+
+Example:
+
+~/u01/blockchain-integration/docker/scripts/view-logs.sh peer0.org1.example.com
+Clean unused Docker resources
+~/u01/blockchain-integration/docker/scripts/docker-clean.sh
+Important Notes
+
+Use:
+
+docker compose
+
+Do not use old:
+
+docker-compose
+
+Do not delete Docker volumes unless you are sure they do not contain PostgreSQL, CouchDB, or Fabric ledger data.
+EOF
+
+echo "Created:"
+echo "$DOCKER_DIR/README.md"
+
+echo ""
+
+
+
+
+Verify CouchDB DNS from Docker network
+docker run --rm --network blockchain_net busybox nslookup couchdb0.org1
+docker run --rm --network blockchain_net busybox nslookup couchdb0.org2
+
