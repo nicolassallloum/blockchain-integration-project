@@ -104,8 +104,8 @@ services:
       - "7050:7050"
       - "7053:7053"
     volumes:
-      - ../organizations/ordererOrganizations/blockchain.local/orderers/orderer.blockchain.local/msp:/var/hyperledger/orderer/msp
-      - ../organizations/ordererOrganizations/blockchain.local/orderers/orderer.blockchain.local/tls:/var/hyperledger/orderer/tls
+      - ./organizations/ordererOrganizations/blockchain.local/orderers/orderer.blockchain.local/msp:/var/hyperledger/orderer/msp
+      - ./organizations/ordererOrganizations/blockchain.local/orderers/orderer.blockchain.local/tls:/var/hyperledger/orderer/tls
       - orderer.blockchain.local:/var/hyperledger/production/orderer
     networks:
       blockchain_net:
@@ -155,8 +155,8 @@ services:
     depends_on:
       - couchdb0.org1
     volumes:
-      - ../organizations/peerOrganizations/org1.blockchain.local/peers/peer0.org1.blockchain.local/msp:/etc/hyperledger/fabric/msp
-      - ../organizations/peerOrganizations/org1.blockchain.local/peers/peer0.org1.blockchain.local/tls:/etc/hyperledger/fabric/tls
+      - ./organizations/peerOrganizations/org1.blockchain.local/peers/peer0.org1.blockchain.local/msp:/etc/hyperledger/fabric/msp
+      - ./organizations/peerOrganizations/org1.blockchain.local/peers/peer0.org1.blockchain.local/tls:/etc/hyperledger/fabric/tls
       - peer0.org1.blockchain.local:/var/hyperledger/production
     networks:
       blockchain_net:
@@ -204,8 +204,8 @@ services:
     depends_on:
       - couchdb0.org2
     volumes:
-      - ../organizations/peerOrganizations/org2.blockchain.local/peers/peer0.org2.blockchain.local/msp:/etc/hyperledger/fabric/msp
-      - ../organizations/peerOrganizations/org2.blockchain.local/peers/peer0.org2.blockchain.local/tls:/etc/hyperledger/fabric/tls
+      - ./organizations/peerOrganizations/org2.blockchain.local/peers/peer0.org2.blockchain.local/msp:/etc/hyperledger/fabric/msp
+      - ./organizations/peerOrganizations/org2.blockchain.local/peers/peer0.org2.blockchain.local/tls:/etc/hyperledger/fabric/tls
       - peer0.org2.blockchain.local:/var/hyperledger/production
     networks:
       blockchain_net:

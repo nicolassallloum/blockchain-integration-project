@@ -1,0 +1,7 @@
+{
+  "index": {
+    "fields": ["docType", "transactionId"]
+  },
+  "name": "idxTransactionById",
+  "type": "json"
+}

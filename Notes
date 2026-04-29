@@ -102,3 +102,8 @@ docker run --rm --network blockchain_net busybox nslookup couchdb0.org2
 
 
 Provide me with a full updated Steps and script Document to save
+
+couchdb coukie:8F589D625437A0D7FFACE1BACEA72C0E
+91f525e85337cfa222a3416802455e3769029ed11b10f251e644b03487d393ff_sk
+
+organizations/peerOrganizations/org1.blockchain.local/peers/peer0.org1.blockchain.local/tls/keystore/91f525e85337cfa222a3416802455e3769029ed11b10f251e644b03487d393ff_sk
