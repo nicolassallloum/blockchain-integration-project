@@ -1,0 +1,19 @@
+{
+  "name": "kyc-wallet-chaincode-js",
+  "version": "1.0.0",
+  "description": "Hyperledger Fabric JavaScript chaincode for Blockchain Integration Project - KYC Wallet and Transactions",
+  "main": "index.js",
+  "scripts": {
+    "start": "fabric-chaincode-node start",
+    "test": "echo \"No test configured yet\" && exit 0"
+  },
+  "dependencies": {
+    "fabric-contract-api": "^2.5.4",
+    "fabric-shim": "^2.5.4"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "author": "Nix",
+  "license": "UNLICENSED"
+}
