@@ -1,0 +1,11 @@
+{
+  "index": {
+    "fields": [
+      "docType",
+      "organizationId"
+    ]
+  },
+  "ddoc": "indexOrganizationByIdDoc",
+  "name": "indexOrganizationById",
+  "type": "json"
+}

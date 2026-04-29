@@ -1,0 +1,11 @@
+{
+  "index": {
+    "fields": [
+      "docType",
+      "walletAddress"
+    ]
+  },
+  "ddoc": "indexWalletByAddressDoc",
+  "name": "indexWalletByAddress",
+  "type": "json"
+}

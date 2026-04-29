@@ -7,7 +7,7 @@ NodeOUs:
     Certificate: cacerts/localhost-8054-ca-org2.pem
     OrganizationalUnitIdentifier: peer
   AdminOUIdentifier:
-    Certificate: cacerts/localhost-8054-ca-org2.pem
+    Certificate: cacerts/ca.org2.blockchain.local-cert.pem
     OrganizationalUnitIdentifier: admin
   OrdererOUIdentifier:
     Certificate: cacerts/localhost-8054-ca-org2.pem
