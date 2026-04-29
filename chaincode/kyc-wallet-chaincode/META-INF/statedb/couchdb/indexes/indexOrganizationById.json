@@ -1,11 +1,8 @@
 {
   "index": {
-    "fields": [
-      "docType",
-      "organizationId"
-    ]
+    "fields": ["docType", "organizationId"]
   },
-  "ddoc": "indexOrganizationByIdDoc",
+  "ddoc": "indexOrganizationById",
   "name": "indexOrganizationById",
   "type": "json"
 }

@@ -1,11 +1,8 @@
 {
   "index": {
-    "fields": [
-      "docType",
-      "customerId"
-    ]
+    "fields": ["docType", "customerId"]
   },
-  "ddoc": "indexWalletByCustomerIdDoc",
+  "ddoc": "indexWalletByCustomerId",
   "name": "indexWalletByCustomerId",
   "type": "json"
 }

@@ -1,12 +1,8 @@
 {
   "index": {
-    "fields": [
-      "docType",
-      "toWalletAddress",
-      "createdAt"
-    ]
+    "fields": ["docType", "toWalletAddress", "createdAt"]
   },
-  "ddoc": "indexTransactionByToWalletDateDoc",
+  "ddoc": "indexTransactionByToWalletDate",
   "name": "indexTransactionByToWalletDate",
   "type": "json"
 }

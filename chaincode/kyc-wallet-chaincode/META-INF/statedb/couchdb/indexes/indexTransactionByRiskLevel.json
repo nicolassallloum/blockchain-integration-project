@@ -1,11 +1,8 @@
 {
   "index": {
-    "fields": [
-      "docType",
-      "riskLevel"
-    ]
+    "fields": ["docType", "riskLevel"]
   },
-  "ddoc": "indexTransactionByRiskLevelDoc",
+  "ddoc": "indexTransactionByRiskLevel",
   "name": "indexTransactionByRiskLevel",
   "type": "json"
 }
