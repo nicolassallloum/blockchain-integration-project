@@ -1,0 +1,14 @@
+{
+  "index": {
+    "fields": [
+      "docType",
+      "fromWalletAddress",
+      "transactionType",
+      "status",
+      "createdAt"
+    ]
+  },
+  "ddoc": "indexTransactionCompositeDoc",
+  "name": "indexTransactionComposite",
+  "type": "json"
+}

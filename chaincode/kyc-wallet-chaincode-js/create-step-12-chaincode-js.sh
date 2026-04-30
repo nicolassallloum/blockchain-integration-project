@@ -1,19 +1,62 @@
+#!/bin/bash
+
+set -e
+
+PROJECT_DIR="/home/nix/u01/blockchain-integration/chaincode/kyc-wallet-chaincode-js"
+
+echo "Creating STEP 12 JavaScript Chaincode..."
+mkdir -p "$PROJECT_DIR/lib"
+
+cd "$PROJECT_DIR"
+
+cat > package.json <<'PKG'
+{
+  "name": "kyc-wallet-chaincode-js",
+  "version": "1.0.0",
+  "description": "Hyperledger Fabric JavaScript chaincode for Blockchain Integration Project - KYC Wallet and Transactions",
+  "main": "index.js",
+  "scripts": {
+    "start": "fabric-chaincode-node start",
+    "test": "echo \"No test configured yet\" && exit 0"
+  },
+  "dependencies": {
+    "fabric-contract-api": "^2.5.4",
+    "fabric-shim": "^2.5.4"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "author": "Nix",
+  "license": "UNLICENSED"
+}
+PKG
+
+cat > index.js <<'IDX'
+'use strict';
+
+const KycWalletContract = require('./lib/kycWalletContract');
+
+module.exports.contracts = [KycWalletContract];
+IDX
+
+cat > lib/kycWalletContract.js <<'CHAINCODE'
 'use strict';
 
 const { Contract } = require('fabric-contract-api');
 const crypto = require('crypto');
 
 class KycWalletContract extends Contract {
+
     constructor() {
         super('KycWalletContract');
     }
 
     async InitLedger(ctx) {
         const metadata = {
-            docType: 'metadata',
+            docType: 'CHAINCODE_METADATA',
             project: 'Blockchain Integration Project',
             chaincodeName: 'kyc-wallet-chaincode-js',
-            version: '2.0.0',
+            version: '1.0.0',
             initializedAt: this._getTxTimestamp(ctx),
             initializedByTxId: ctx.stub.getTxID()
         };
@@ -29,7 +72,7 @@ class KycWalletContract extends Contract {
         this._required(fullName, 'fullName');
         this._required(passwordHash, 'passwordHash');
 
-        const parsedInitialBalance = this._parseAmount(initialBalance || '0', 'initialBalance');
+        const parsedInitialBalance = this._parseAmount(initialBalance, 'initialBalance');
 
         if (parsedInitialBalance < 0) {
             throw new Error('Initial balance cannot be negative');
@@ -46,7 +89,7 @@ class KycWalletContract extends Contract {
         const walletAddress = this._generateWalletAddress(customerId, organizationId, txId);
 
         const wallet = {
-            docType: 'wallet',
+            docType: 'WALLET',
             walletAddress,
             customerId,
             organizationId,
@@ -67,16 +110,16 @@ class KycWalletContract extends Contract {
         await ctx.stub.putState(this._walletKey(walletAddress), Buffer.from(JSON.stringify(wallet)));
 
         const transaction = {
-            docType: 'transaction',
+            docType: 'TRANSACTION',
             transactionId: txId,
             transactionType: 'WALLET_CREATED',
-            fromWalletAddress: null,
-            toWalletAddress: walletAddress,
+            fromWallet: null,
+            toWallet: walletAddress,
             organizationId,
             amount: parsedInitialBalance,
             currency: 'TOKEN',
             status: 'SUCCESS',
-            riskStatus: 'LOW',
+            riskLevel: 'LOW',
             description: 'Wallet created',
             createdAt,
             createdTxId: txId
@@ -109,16 +152,15 @@ class KycWalletContract extends Contract {
         }
 
         const authId = ctx.stub.getTxID();
-        const createdAt = this._getTxTimestamp(ctx);
 
         const loginAudit = {
-            docType: 'authAudit',
+            docType: 'AUTH_AUDIT',
             authId,
             walletAddress,
             customerId: wallet.customerId,
             organizationId: wallet.organizationId,
             loginStatus: 'SUCCESS',
-            createdAt,
+            createdAt: this._getTxTimestamp(ctx),
             createdTxId: authId
         };
 
@@ -174,16 +216,16 @@ class KycWalletContract extends Contract {
         toWallet.updatedTxId = txId;
 
         const transaction = {
-            docType: 'transaction',
+            docType: 'TRANSACTION',
             transactionId: txId,
             transactionType: 'WALLET_TO_WALLET',
-            fromWalletAddress,
-            toWalletAddress,
+            fromWallet: fromWalletAddress,
+            toWallet: toWalletAddress,
             organizationId: null,
             amount: parsedAmount,
             currency: 'TOKEN',
             status: 'SUCCESS',
-            riskStatus: this._calculateRiskStatus(parsedAmount),
+            riskLevel: this._calculateRiskLevel(parsedAmount),
             description: description || 'Wallet-to-wallet transfer',
             fromWalletBalanceAfter: fromWallet.balance,
             toWalletBalanceAfter: toWallet.balance,
@@ -238,11 +280,10 @@ class KycWalletContract extends Contract {
 
         if (!organizationBalanceBytes || organizationBalanceBytes.length === 0) {
             organizationBalance = {
-                docType: 'organization',
+                docType: 'ORGANIZATION_BALANCE',
                 organizationId,
                 balance: 0,
                 currency: 'TOKEN',
-                status: 'ACTIVE',
                 createdAt,
                 updatedAt: createdAt,
                 createdTxId: txId,
@@ -257,16 +298,16 @@ class KycWalletContract extends Contract {
         organizationBalance.updatedTxId = txId;
 
         const transaction = {
-            docType: 'transaction',
+            docType: 'TRANSACTION',
             transactionId: txId,
             transactionType: 'WALLET_TO_ORGANIZATION',
-            fromWalletAddress,
-            toWalletAddress: null,
+            fromWallet: fromWalletAddress,
+            toWallet: null,
             organizationId,
             amount: parsedAmount,
             currency: 'TOKEN',
             status: 'SUCCESS',
-            riskStatus: this._calculateRiskStatus(parsedAmount),
+            riskLevel: this._calculateRiskLevel(parsedAmount),
             description: description || 'Wallet-to-organization transfer',
             fromWalletBalanceAfter: fromWallet.balance,
             organizationBalanceAfter: organizationBalance.balance,
@@ -314,40 +355,20 @@ class KycWalletContract extends Contract {
             throw new Error(`Wallet not found: ${walletAddress}`);
         }
 
-        const outgoingQuery = {
+        const query = {
             selector: {
-                docType: 'transaction',
-                fromWalletAddress
+                docType: 'TRANSACTION',
+                $or: [
+                    { fromWallet: walletAddress },
+                    { toWallet: walletAddress }
+                ]
             },
-            use_index: [
-                'indexTransactionByFromWalletDoc',
-                'indexTransactionByFromWallet'
+            sort: [
+                { createdAt: 'desc' }
             ]
         };
 
-        const incomingQuery = {
-            selector: {
-                docType: 'transaction',
-                toWalletAddress: walletAddress
-            },
-            use_index: [
-                'indexTransactionByToWalletDoc',
-                'indexTransactionByToWallet'
-            ]
-        };
-
-        const outgoingTransactions = await this._queryLedger(ctx, outgoingQuery);
-        const incomingTransactions = await this._queryLedger(ctx, incomingQuery);
-
-        const mergedMap = new Map();
-
-        for (const tx of outgoingTransactions.concat(incomingTransactions)) {
-            mergedMap.set(tx.transactionId, tx);
-        }
-
-        const transactions = Array.from(mergedMap.values()).sort((a, b) => {
-            return String(b.createdAt).localeCompare(String(a.createdAt));
-        });
+        const transactions = await this._queryLedger(ctx, query);
 
         return this._successResponse('Transaction history retrieved successfully', {
             walletAddress,
@@ -412,203 +433,6 @@ class KycWalletContract extends Contract {
         return walletBytes && walletBytes.length > 0;
     }
 
-    async QueryWalletByAddress(ctx, walletAddress) {
-        this._required(walletAddress, 'walletAddress');
-
-        const query = {
-            selector: {
-                docType: 'wallet',
-                walletAddress
-            },
-            use_index: [
-                'indexWalletByAddressDoc',
-                'indexWalletByAddress'
-            ]
-        };
-
-        const results = await this._queryLedgerWithKeys(ctx, query);
-
-        return JSON.stringify(results);
-    }
-
-    async QueryWalletByCustomerId(ctx, customerId) {
-        this._required(customerId, 'customerId');
-
-        const query = {
-            selector: {
-                docType: 'wallet',
-                customerId
-            },
-            use_index: [
-                'indexWalletByCustomerIdDoc',
-                'indexWalletByCustomerId'
-            ]
-        };
-
-        const results = await this._queryLedgerWithKeys(ctx, query);
-
-        return JSON.stringify(results);
-    }
-
-    async QueryOrganizationById(ctx, organizationId) {
-        this._required(organizationId, 'organizationId');
-
-        const query = {
-            selector: {
-                docType: 'organization',
-                organizationId
-            },
-            use_index: [
-                'indexOrganizationByIdDoc',
-                'indexOrganizationById'
-            ]
-        };
-
-        const results = await this._queryLedgerWithKeys(ctx, query);
-
-        return JSON.stringify(results);
-    }
-
-    async QueryTransactionById(ctx, transactionId) {
-        this._required(transactionId, 'transactionId');
-
-        const query = {
-            selector: {
-                docType: 'transaction',
-                transactionId
-            },
-            use_index: [
-                'indexTransactionByIdDoc',
-                'indexTransactionById'
-            ]
-        };
-
-        const results = await this._queryLedgerWithKeys(ctx, query);
-
-        return JSON.stringify(results);
-    }
-
-    async QueryTransactionsByStatus(ctx, status) {
-        this._required(status, 'status');
-
-        const query = {
-            selector: {
-                docType: 'transaction',
-                status
-            },
-            use_index: [
-                'indexTransactionByStatusDoc',
-                'indexTransactionByStatus'
-            ]
-        };
-
-        const results = await this._queryLedgerWithKeys(ctx, query);
-
-        return JSON.stringify(results);
-    }
-
-    async QueryTransactionsByType(ctx, transactionType) {
-        this._required(transactionType, 'transactionType');
-
-        const query = {
-            selector: {
-                docType: 'transaction',
-                transactionType
-            },
-            use_index: [
-                'indexTransactionByTypeDoc',
-                'indexTransactionByType'
-            ]
-        };
-
-        const results = await this._queryLedgerWithKeys(ctx, query);
-
-        return JSON.stringify(results);
-    }
-
-    async QueryTransactionsByRiskStatus(ctx, riskStatus) {
-        this._required(riskStatus, 'riskStatus');
-
-        const query = {
-            selector: {
-                docType: 'transaction',
-                riskStatus
-            },
-            use_index: [
-                'indexTransactionByRiskStatusDoc',
-                'indexTransactionByRiskStatus'
-            ]
-        };
-
-        const results = await this._queryLedgerWithKeys(ctx, query);
-
-        return JSON.stringify(results);
-    }
-
-    async QueryTransactionsByDateRange(ctx, startDate, endDate) {
-        this._required(startDate, 'startDate');
-        this._required(endDate, 'endDate');
-
-        const query = {
-            selector: {
-                docType: 'transaction',
-                createdAt: {
-                    '$gte': startDate,
-                    '$lte': endDate
-                }
-            },
-            use_index: [
-                'indexTransactionByCreatedDateDoc',
-                'indexTransactionByCreatedDate'
-            ]
-        };
-
-        const results = await this._queryLedgerWithKeys(ctx, query);
-
-        return JSON.stringify(results);
-    }
-
-    async QueryTransactionHistoryByWallet(ctx, walletAddress) {
-        this._required(walletAddress, 'walletAddress');
-
-        const outgoingQuery = {
-            selector: {
-                docType: 'transaction',
-                fromWalletAddress: walletAddress
-            },
-            use_index: [
-                'indexTransactionByFromWalletDoc',
-                'indexTransactionByFromWallet'
-            ]
-        };
-
-        const incomingQuery = {
-            selector: {
-                docType: 'transaction',
-                toWalletAddress: walletAddress
-            },
-            use_index: [
-                'indexTransactionByToWalletDoc',
-                'indexTransactionByToWallet'
-            ]
-        };
-
-        const outgoingResults = await this._queryLedgerWithKeys(ctx, outgoingQuery);
-        const incomingResults = await this._queryLedgerWithKeys(ctx, incomingQuery);
-
-        const mergedMap = new Map();
-
-        for (const item of outgoingResults.concat(incomingResults)) {
-            mergedMap.set(item.record.transactionId, item);
-        }
-
-        const results = Array.from(mergedMap.values()).sort((a, b) => {
-            return String(b.record.createdAt).localeCompare(String(a.record.createdAt));
-        });
-
-        return JSON.stringify(results);
-    }
-
     _walletKey(walletAddress) {
         return `WALLET_${walletAddress}`;
     }
@@ -664,7 +488,7 @@ class KycWalletContract extends Contract {
         return `WALLET_${hash.substring(0, 40).toUpperCase()}`;
     }
 
-    _calculateRiskStatus(amount) {
+    _calculateRiskLevel(amount) {
         const numericAmount = Number(amount);
 
         if (numericAmount >= 100000) {
@@ -680,18 +504,7 @@ class KycWalletContract extends Contract {
 
     _getTxTimestamp(ctx) {
         const timestamp = ctx.stub.getTxTimestamp();
-
-        let seconds;
-
-        if (timestamp.seconds && typeof timestamp.seconds.toNumber === 'function') {
-            seconds = timestamp.seconds.toNumber();
-        } else if (timestamp.seconds && timestamp.seconds.low !== undefined) {
-            seconds = timestamp.seconds.low;
-        } else {
-            seconds = Number(timestamp.seconds || 0);
-        }
-
-        const milliseconds = seconds * 1000 + Math.floor(timestamp.nanos / 1000000);
+        const milliseconds = timestamp.seconds.low * 1000 + Math.floor(timestamp.nanos / 1000000);
 
         return new Date(milliseconds).toISOString();
     }
@@ -709,13 +522,9 @@ class KycWalletContract extends Contract {
     async _getWalletByCustomerId(ctx, customerId) {
         const query = {
             selector: {
-                docType: 'wallet',
+                docType: 'WALLET',
                 customerId
             },
-            use_index: [
-                'indexWalletByCustomerIdDoc',
-                'indexWalletByCustomerId'
-            ],
             limit: 1
         };
 
@@ -732,49 +541,18 @@ class KycWalletContract extends Contract {
         const iterator = await ctx.stub.getQueryResult(JSON.stringify(query));
         const results = [];
 
-        try {
-            while (true) {
-                const result = await iterator.next();
+        while (true) {
+            const result = await iterator.next();
 
-                if (result.value && result.value.value.toString()) {
-                    const record = JSON.parse(result.value.value.toString('utf8'));
-                    results.push(record);
-                }
-
-                if (result.done) {
-                    break;
-                }
+            if (result.value && result.value.value.toString()) {
+                const record = JSON.parse(result.value.value.toString('utf8'));
+                results.push(record);
             }
-        } finally {
-            await iterator.close();
-        }
 
-        return results;
-    }
-
-    async _queryLedgerWithKeys(ctx, query) {
-        const iterator = await ctx.stub.getQueryResult(JSON.stringify(query));
-        const results = [];
-
-        try {
-            while (true) {
-                const result = await iterator.next();
-
-                if (result.value && result.value.value.toString()) {
-                    const record = JSON.parse(result.value.value.toString('utf8'));
-
-                    results.push({
-                        key: result.value.key,
-                        record
-                    });
-                }
-
-                if (result.done) {
-                    break;
-                }
+            if (result.done) {
+                await iterator.close();
+                break;
             }
-        } finally {
-            await iterator.close();
         }
 
         return results;
@@ -801,3 +579,15 @@ class KycWalletContract extends Contract {
 }
 
 module.exports = KycWalletContract;
+CHAINCODE
+
+echo "Installing npm dependencies..."
+npm install
+
+echo "Checking JavaScript syntax..."
+node -c index.js
+node -c lib/kycWalletContract.js
+
+echo "STEP 12 JavaScript chaincode created successfully."
+echo "Location: $PROJECT_DIR"
+

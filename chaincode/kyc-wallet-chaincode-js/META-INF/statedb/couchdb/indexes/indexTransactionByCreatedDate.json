@@ -1,0 +1,11 @@
+{
+  "index": {
+    "fields": [
+      "docType",
+      "createdAt"
+    ]
+  },
+  "ddoc": "indexTransactionByCreatedDateDoc",
+  "name": "indexTransactionByCreatedDate",
+  "type": "json"
+}
