@@ -1,0 +1,24 @@
+services:
+  cli:
+    container_name: cli
+    image: hyperledger/fabric-tools:2.5
+    tty: true
+    stdin_open: true
+    working_dir: /root
+    command: /bin/bash
+    environment:
+      - GOPATH=/opt/gopath
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_TLS_ENABLED=true
+    volumes:
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - ./organizations:/organizations
+      - ../chaincode:/chaincode
+      - ./:/fabric-network
+    networks:
+      - fabric_test
+
+networks:
+  fabric_test:
+    external: true
