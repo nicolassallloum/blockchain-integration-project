@@ -1,0 +1,1046 @@
+/* =====================================================================
+   Blockchain Integration Project
+   STEP 16 — Off-Chain Database Schema Design
+
+   Purpose:
+   This script creates the production-ready PostgreSQL off-chain schema
+   used by the Blockchain Integration Project.
+
+   PostgreSQL Role:
+   - Store off-chain operational data
+   - Track blockchain API requests
+   - Store wallet and organization reference records
+   - Store transaction reporting records
+   - Store audit and integration logs
+   - Maintain mappings between external systems and blockchain ledger IDs
+
+   Schema:
+   - blockchain
+
+   Tables:
+   - blockchain.wallets
+   - blockchain.organizations
+   - blockchain.transactions
+   - blockchain.audit_logs
+   - blockchain.integration_requests
+   - blockchain.system_mappings
+
+   Notes:
+   - This script is idempotent.
+   - No DROP statements are used.
+   - UUID primary keys are used.
+   - JSONB fields are used for flexible blockchain/API payload storage.
+   - Timestamptz is used for all timestamps.
+   ===================================================================== */
+
+
+BEGIN;
+
+
+/* =====================================================================
+   1. Required Extensions
+   ===================================================================== */
+
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_proc
+        WHERE proname = 'gen_random_uuid'
+    ) THEN
+        CREATE EXTENSION IF NOT EXISTS pgcrypto;
+    ELSE
+        RAISE NOTICE 'gen_random_uuid() already exists. Skipping pgcrypto creation.';
+    END IF;
+END $$;
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS citext;
+
+
+/* =====================================================================
+   2. Schema Creation
+   ===================================================================== */
+
+CREATE SCHEMA IF NOT EXISTS blockchain;
+
+
+/* =====================================================================
+   3. Common Updated Timestamp Function
+   ===================================================================== */
+
+CREATE OR REPLACE FUNCTION blockchain.set_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+/* =====================================================================
+   4. Table: blockchain.organizations
+   ===================================================================== */
+
+CREATE TABLE IF NOT EXISTS blockchain.organizations
+(
+    organization_id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    organization_code        VARCHAR(100) NOT NULL,
+    organization_name        VARCHAR(255) NOT NULL,
+    organization_type        VARCHAR(50)  NOT NULL,
+
+    fabric_org_msp_id        VARCHAR(100),
+    fabric_org_name          VARCHAR(150),
+
+    external_system_code     VARCHAR(100),
+    external_organization_id VARCHAR(150),
+
+    country_code             VARCHAR(10),
+    registration_number      VARCHAR(150),
+    tax_number               VARCHAR(150),
+
+    status                   VARCHAR(30) NOT NULL DEFAULT 'ACTIVE',
+
+    metadata                 JSONB NOT NULL DEFAULT '{}'::jsonb,
+    api_payload              JSONB NOT NULL DEFAULT '{}'::jsonb,
+    blockchain_payload       JSONB NOT NULL DEFAULT '{}'::jsonb,
+
+    created_by               VARCHAR(150) DEFAULT CURRENT_USER,
+    updated_by               VARCHAR(150),
+    created_at               TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at               TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT uq_blockchain_organizations_code
+        UNIQUE (organization_code),
+
+    CONSTRAINT chk_blockchain_organizations_status
+        CHECK (status IN ('ACTIVE', 'INACTIVE', 'SUSPENDED', 'DELETED')),
+
+    CONSTRAINT chk_blockchain_organizations_type
+        CHECK (organization_type IN ('BANK', 'FINTECH', 'GOVERNMENT', 'MERCHANT', 'EXCHANGE', 'OTHER'))
+);
+
+
+COMMENT ON TABLE blockchain.organizations IS
+'Stores off-chain organization reference data used by the Blockchain Integration Project. Each organization may represent a bank, fintech, government entity, merchant, exchange, or other enterprise participant.';
+
+COMMENT ON COLUMN blockchain.organizations.organization_id IS
+'Internal PostgreSQL UUID primary key.';
+
+COMMENT ON COLUMN blockchain.organizations.organization_code IS
+'Unique business code for the organization, such as BANK001 or ORG001.';
+
+COMMENT ON COLUMN blockchain.organizations.fabric_org_msp_id IS
+'Hyperledger Fabric MSP ID mapped to this organization.';
+
+COMMENT ON COLUMN blockchain.organizations.metadata IS
+'Flexible JSONB metadata for additional organization attributes.';
+
+COMMENT ON COLUMN blockchain.organizations.api_payload IS
+'Original or normalized API payload related to organization creation or updates.';
+
+COMMENT ON COLUMN blockchain.organizations.blockchain_payload IS
+'Blockchain-specific payload or response related to organization registration.';
+
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_organizations_status
+    ON blockchain.organizations (status);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_organizations_type
+    ON blockchain.organizations (organization_type);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_organizations_fabric_msp
+    ON blockchain.organizations (fabric_org_msp_id);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_organizations_external_org
+    ON blockchain.organizations (external_system_code, external_organization_id);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_organizations_metadata_gin
+    ON blockchain.organizations USING GIN (metadata);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_organizations_api_payload_gin
+    ON blockchain.organizations USING GIN (api_payload);
+
+
+/* =====================================================================
+   Trigger: organizations updated_at
+   ===================================================================== */
+
+DROP TRIGGER IF EXISTS trg_blockchain_organizations_updated_at
+ON blockchain.organizations;
+
+CREATE TRIGGER trg_blockchain_organizations_updated_at
+BEFORE UPDATE ON blockchain.organizations
+FOR EACH ROW
+EXECUTE FUNCTION blockchain.set_updated_at();
+
+
+/* =====================================================================
+   5. Table: blockchain.wallets
+   ===================================================================== */
+
+CREATE TABLE IF NOT EXISTS blockchain.wallets
+(
+    wallet_id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    wallet_address           VARCHAR(200) NOT NULL,
+    customer_id              VARCHAR(150) NOT NULL,
+    organization_id          UUID,
+
+    organization_code        VARCHAR(100),
+    wallet_type              VARCHAR(50) NOT NULL DEFAULT 'CUSTOMER',
+
+    customer_name            VARCHAR(255),
+    national_id_hash         VARCHAR(255),
+    mobile_hash              VARCHAR(255),
+    email_hash               VARCHAR(255),
+    password_hash_reference  VARCHAR(255),
+
+    ledger_doc_type          VARCHAR(100) DEFAULT 'wallet',
+    ledger_key               VARCHAR(255),
+    fabric_tx_id             VARCHAR(255),
+    fabric_channel_name      VARCHAR(150),
+    chaincode_name           VARCHAR(150),
+
+    current_balance          NUMERIC(30, 8) NOT NULL DEFAULT 0,
+    currency_code            VARCHAR(10) NOT NULL DEFAULT 'USD',
+
+    status                   VARCHAR(30) NOT NULL DEFAULT 'ACTIVE',
+    kyc_status               VARCHAR(30) NOT NULL DEFAULT 'PENDING',
+    risk_level               VARCHAR(30) NOT NULL DEFAULT 'LOW',
+
+    wallet_metadata          JSONB NOT NULL DEFAULT '{}'::jsonb,
+    kyc_payload              JSONB NOT NULL DEFAULT '{}'::jsonb,
+    blockchain_payload       JSONB NOT NULL DEFAULT '{}'::jsonb,
+
+    created_by               VARCHAR(150) DEFAULT CURRENT_USER,
+    updated_by               VARCHAR(150),
+    created_at               TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at               TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT uq_blockchain_wallets_wallet_address
+        UNIQUE (wallet_address),
+
+    CONSTRAINT uq_blockchain_wallets_customer_org
+        UNIQUE (customer_id, organization_code),
+
+    CONSTRAINT fk_blockchain_wallets_organization
+        FOREIGN KEY (organization_id)
+        REFERENCES blockchain.organizations (organization_id)
+        ON UPDATE CASCADE
+        ON DELETE SET NULL,
+
+    CONSTRAINT chk_blockchain_wallets_status
+        CHECK (status IN ('ACTIVE', 'INACTIVE', 'BLOCKED', 'SUSPENDED', 'CLOSED', 'DELETED')),
+
+    CONSTRAINT chk_blockchain_wallets_kyc_status
+        CHECK (kyc_status IN ('PENDING', 'APPROVED', 'REJECTED', 'EXPIRED', 'UNDER_REVIEW')),
+
+    CONSTRAINT chk_blockchain_wallets_risk_level
+        CHECK (risk_level IN ('LOW', 'MEDIUM', 'HIGH', 'CRITICAL')),
+
+    CONSTRAINT chk_blockchain_wallets_wallet_type
+        CHECK (wallet_type IN ('CUSTOMER', 'ORGANIZATION', 'BANK', 'SYSTEM', 'MERCHANT')),
+
+    CONSTRAINT chk_blockchain_wallets_balance_non_negative
+        CHECK (current_balance >= 0)
+);
+
+
+COMMENT ON TABLE blockchain.wallets IS
+'Stores off-chain wallet reference data linked to blockchain ledger wallet records. This table is used for fast API lookup, reporting, reconciliation, and integration with enterprise systems.';
+
+COMMENT ON COLUMN blockchain.wallets.wallet_address IS
+'Unique blockchain wallet address generated by the chaincode or middleware layer.';
+
+COMMENT ON COLUMN blockchain.wallets.customer_id IS
+'Enterprise customer identifier linked to the wallet.';
+
+COMMENT ON COLUMN blockchain.wallets.organization_id IS
+'Foreign key reference to blockchain.organizations.';
+
+COMMENT ON COLUMN blockchain.wallets.ledger_key IS
+'Ledger state key used in Hyperledger Fabric CouchDB world state.';
+
+COMMENT ON COLUMN blockchain.wallets.fabric_tx_id IS
+'Fabric transaction ID that created or last updated this wallet.';
+
+COMMENT ON COLUMN blockchain.wallets.current_balance IS
+'Off-chain synchronized wallet balance for reporting and quick API access. The ledger remains the source of truth.';
+
+COMMENT ON COLUMN blockchain.wallets.wallet_metadata IS
+'Flexible JSONB metadata for wallet attributes.';
+
+COMMENT ON COLUMN blockchain.wallets.kyc_payload IS
+'KYC-related payload stored off-chain for integration and audit purposes.';
+
+COMMENT ON COLUMN blockchain.wallets.blockchain_payload IS
+'Blockchain response or ledger representation of the wallet.';
+
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_wallets_customer_id
+    ON blockchain.wallets (customer_id);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_wallets_organization_id
+    ON blockchain.wallets (organization_id);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_wallets_organization_code
+    ON blockchain.wallets (organization_code);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_wallets_status
+    ON blockchain.wallets (status);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_wallets_kyc_status
+    ON blockchain.wallets (kyc_status);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_wallets_risk_level
+    ON blockchain.wallets (risk_level);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_wallets_fabric_tx_id
+    ON blockchain.wallets (fabric_tx_id);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_wallets_ledger_key
+    ON blockchain.wallets (ledger_key);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_wallets_created_at
+    ON blockchain.wallets (created_at);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_wallets_metadata_gin
+    ON blockchain.wallets USING GIN (wallet_metadata);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_wallets_kyc_payload_gin
+    ON blockchain.wallets USING GIN (kyc_payload);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_wallets_blockchain_payload_gin
+    ON blockchain.wallets USING GIN (blockchain_payload);
+
+
+/* =====================================================================
+   Trigger: wallets updated_at
+   ===================================================================== */
+
+DROP TRIGGER IF EXISTS trg_blockchain_wallets_updated_at
+ON blockchain.wallets;
+
+CREATE TRIGGER trg_blockchain_wallets_updated_at
+BEFORE UPDATE ON blockchain.wallets
+FOR EACH ROW
+EXECUTE FUNCTION blockchain.set_updated_at();
+
+
+/* =====================================================================
+   6. Table: blockchain.transactions
+   ===================================================================== */
+
+CREATE TABLE IF NOT EXISTS blockchain.transactions
+(
+    transaction_id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    business_transaction_id  VARCHAR(200),
+    ledger_transaction_id    VARCHAR(255),
+    fabric_tx_id             VARCHAR(255),
+    ledger_key               VARCHAR(255),
+
+    transaction_type         VARCHAR(50) NOT NULL,
+    transaction_direction    VARCHAR(30),
+
+    from_wallet_id           UUID,
+    to_wallet_id             UUID,
+
+    from_wallet_address      VARCHAR(200),
+    to_wallet_address        VARCHAR(200),
+
+    organization_id          UUID,
+    organization_code        VARCHAR(100),
+
+    amount                   NUMERIC(30, 8) NOT NULL,
+    currency_code            VARCHAR(10) NOT NULL DEFAULT 'USD',
+
+    transaction_fee          NUMERIC(30, 8) NOT NULL DEFAULT 0,
+    total_amount             NUMERIC(30, 8) GENERATED ALWAYS AS (amount + transaction_fee) STORED,
+
+    status                   VARCHAR(30) NOT NULL DEFAULT 'PENDING',
+    risk_level               VARCHAR(30) NOT NULL DEFAULT 'LOW',
+    aml_status               VARCHAR(30) NOT NULL DEFAULT 'NOT_CHECKED',
+
+    failure_code             VARCHAR(100),
+    failure_reason           TEXT,
+
+    request_reference        VARCHAR(255),
+    external_reference       VARCHAR(255),
+    idempotency_key          VARCHAR(255),
+
+    fabric_channel_name      VARCHAR(150),
+    chaincode_name           VARCHAR(150),
+
+    transaction_payload      JSONB NOT NULL DEFAULT '{}'::jsonb,
+    blockchain_response      JSONB NOT NULL DEFAULT '{}'::jsonb,
+    aml_payload              JSONB NOT NULL DEFAULT '{}'::jsonb,
+    metadata                 JSONB NOT NULL DEFAULT '{}'::jsonb,
+
+    submitted_at             TIMESTAMPTZ,
+    confirmed_at             TIMESTAMPTZ,
+    failed_at                TIMESTAMPTZ,
+
+    created_by               VARCHAR(150) DEFAULT CURRENT_USER,
+    updated_by               VARCHAR(150),
+    created_at               TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at               TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT uq_blockchain_transactions_business_tx
+        UNIQUE (business_transaction_id),
+
+    CONSTRAINT uq_blockchain_transactions_fabric_tx
+        UNIQUE (fabric_tx_id),
+
+    CONSTRAINT uq_blockchain_transactions_idempotency_key
+        UNIQUE (idempotency_key),
+
+    CONSTRAINT fk_blockchain_transactions_from_wallet
+        FOREIGN KEY (from_wallet_id)
+        REFERENCES blockchain.wallets (wallet_id)
+        ON UPDATE CASCADE
+        ON DELETE SET NULL,
+
+    CONSTRAINT fk_blockchain_transactions_to_wallet
+        FOREIGN KEY (to_wallet_id)
+        REFERENCES blockchain.wallets (wallet_id)
+        ON UPDATE CASCADE
+        ON DELETE SET NULL,
+
+    CONSTRAINT fk_blockchain_transactions_organization
+        FOREIGN KEY (organization_id)
+        REFERENCES blockchain.organizations (organization_id)
+        ON UPDATE CASCADE
+        ON DELETE SET NULL,
+
+    CONSTRAINT chk_blockchain_transactions_type
+        CHECK (transaction_type IN (
+            'WALLET_TRANSFER',
+            'ORGANIZATION_TRANSFER',
+            'TRANSFER_TO_ORGANIZATION',
+            'TRANSFER_FROM_ORGANIZATION',
+            'TOP_UP',
+            'WITHDRAWAL',
+            'REVERSAL',
+            'ADJUSTMENT'
+        )),
+
+    CONSTRAINT chk_blockchain_transactions_direction
+        CHECK (
+            transaction_direction IS NULL
+            OR transaction_direction IN ('INCOMING', 'OUTGOING', 'INTERNAL')
+        ),
+
+    CONSTRAINT chk_blockchain_transactions_status
+        CHECK (status IN (
+            'PENDING',
+            'SUBMITTED',
+            'CONFIRMED',
+            'FAILED',
+            'REJECTED',
+            'REVERSED',
+            'CANCELLED'
+        )),
+
+    CONSTRAINT chk_blockchain_transactions_risk_level
+        CHECK (risk_level IN ('LOW', 'MEDIUM', 'HIGH', 'CRITICAL')),
+
+    CONSTRAINT chk_blockchain_transactions_aml_status
+        CHECK (aml_status IN ('NOT_CHECKED', 'PASSED', 'FAILED', 'MANUAL_REVIEW', 'BLOCKED')),
+
+    CONSTRAINT chk_blockchain_transactions_amount_positive
+        CHECK (amount > 0),
+
+    CONSTRAINT chk_blockchain_transactions_fee_non_negative
+        CHECK (transaction_fee >= 0)
+);
+
+
+COMMENT ON TABLE blockchain.transactions IS
+'Stores off-chain transaction records synchronized with Hyperledger Fabric ledger transactions. Used for reporting, dashboards, reconciliation, AML checks, and API response tracking.';
+
+COMMENT ON COLUMN blockchain.transactions.business_transaction_id IS
+'Business-level transaction identifier generated by the middleware or enterprise system.';
+
+COMMENT ON COLUMN blockchain.transactions.ledger_transaction_id IS
+'Transaction ID stored or returned by chaincode logic.';
+
+COMMENT ON COLUMN blockchain.transactions.fabric_tx_id IS
+'Native Hyperledger Fabric transaction ID.';
+
+COMMENT ON COLUMN blockchain.transactions.idempotency_key IS
+'Unique key used to prevent duplicate transaction processing from APIs.';
+
+COMMENT ON COLUMN blockchain.transactions.transaction_payload IS
+'Original normalized transaction request payload.';
+
+COMMENT ON COLUMN blockchain.transactions.blockchain_response IS
+'Blockchain invocation response returned by Fabric or the blockchain middleware.';
+
+COMMENT ON COLUMN blockchain.transactions.aml_payload IS
+'AML, sanctions, or risk-screening result payload.';
+
+COMMENT ON COLUMN blockchain.transactions.total_amount IS
+'Generated amount including transaction fee.';
+
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_transactions_type
+    ON blockchain.transactions (transaction_type);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_transactions_status
+    ON blockchain.transactions (status);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_transactions_risk_level
+    ON blockchain.transactions (risk_level);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_transactions_aml_status
+    ON blockchain.transactions (aml_status);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_transactions_from_wallet_id
+    ON blockchain.transactions (from_wallet_id);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_transactions_to_wallet_id
+    ON blockchain.transactions (to_wallet_id);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_transactions_from_wallet_address
+    ON blockchain.transactions (from_wallet_address);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_transactions_to_wallet_address
+    ON blockchain.transactions (to_wallet_address);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_transactions_organization_id
+    ON blockchain.transactions (organization_id);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_transactions_created_at
+    ON blockchain.transactions (created_at);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_transactions_confirmed_at
+    ON blockchain.transactions (confirmed_at);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_transactions_request_reference
+    ON blockchain.transactions (request_reference);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_transactions_external_reference
+    ON blockchain.transactions (external_reference);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_transactions_wallet_date
+    ON blockchain.transactions (from_wallet_address, to_wallet_address, created_at);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_transactions_status_date
+    ON blockchain.transactions (status, created_at);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_transactions_payload_gin
+    ON blockchain.transactions USING GIN (transaction_payload);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_transactions_blockchain_response_gin
+    ON blockchain.transactions USING GIN (blockchain_response);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_transactions_aml_payload_gin
+    ON blockchain.transactions USING GIN (aml_payload);
+
+
+/* =====================================================================
+   Trigger: transactions updated_at
+   ===================================================================== */
+
+DROP TRIGGER IF EXISTS trg_blockchain_transactions_updated_at
+ON blockchain.transactions;
+
+CREATE TRIGGER trg_blockchain_transactions_updated_at
+BEFORE UPDATE ON blockchain.transactions
+FOR EACH ROW
+EXECUTE FUNCTION blockchain.set_updated_at();
+
+
+/* =====================================================================
+   7. Table: blockchain.integration_requests
+   ===================================================================== */
+
+CREATE TABLE IF NOT EXISTS blockchain.integration_requests
+(
+    integration_request_id   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    request_id               VARCHAR(255) NOT NULL,
+    correlation_id           VARCHAR(255),
+    idempotency_key          VARCHAR(255),
+
+    source_system            VARCHAR(150) NOT NULL,
+    target_system            VARCHAR(150) NOT NULL DEFAULT 'HYPERLEDGER_FABRIC',
+
+    api_name                 VARCHAR(150),
+    api_endpoint             VARCHAR(500),
+    http_method              VARCHAR(20),
+
+    operation_name           VARCHAR(150) NOT NULL,
+    operation_type           VARCHAR(100),
+
+    related_wallet_id        UUID,
+    related_transaction_id   UUID,
+    related_organization_id  UUID,
+
+    request_status           VARCHAR(30) NOT NULL DEFAULT 'RECEIVED',
+    processing_status        VARCHAR(30) NOT NULL DEFAULT 'PENDING',
+
+    http_status_code         INTEGER,
+    error_code               VARCHAR(100),
+    error_message            TEXT,
+
+    retry_count              INTEGER NOT NULL DEFAULT 0,
+    max_retry_count          INTEGER NOT NULL DEFAULT 3,
+
+    request_payload          JSONB NOT NULL DEFAULT '{}'::jsonb,
+    response_payload         JSONB NOT NULL DEFAULT '{}'::jsonb,
+    headers_payload          JSONB NOT NULL DEFAULT '{}'::jsonb,
+    blockchain_payload       JSONB NOT NULL DEFAULT '{}'::jsonb,
+    metadata                 JSONB NOT NULL DEFAULT '{}'::jsonb,
+
+    received_at              TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    started_at               TIMESTAMPTZ,
+    completed_at             TIMESTAMPTZ,
+    failed_at                TIMESTAMPTZ,
+
+    created_by               VARCHAR(150) DEFAULT CURRENT_USER,
+    updated_by               VARCHAR(150),
+    created_at               TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at               TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT uq_blockchain_integration_requests_request_id
+        UNIQUE (request_id),
+
+    CONSTRAINT uq_blockchain_integration_requests_idempotency_key
+        UNIQUE (idempotency_key),
+
+    CONSTRAINT fk_blockchain_integration_requests_wallet
+        FOREIGN KEY (related_wallet_id)
+        REFERENCES blockchain.wallets (wallet_id)
+        ON UPDATE CASCADE
+        ON DELETE SET NULL,
+
+    CONSTRAINT fk_blockchain_integration_requests_transaction
+        FOREIGN KEY (related_transaction_id)
+        REFERENCES blockchain.transactions (transaction_id)
+        ON UPDATE CASCADE
+        ON DELETE SET NULL,
+
+    CONSTRAINT fk_blockchain_integration_requests_organization
+        FOREIGN KEY (related_organization_id)
+        REFERENCES blockchain.organizations (organization_id)
+        ON UPDATE CASCADE
+        ON DELETE SET NULL,
+
+    CONSTRAINT chk_blockchain_integration_requests_http_method
+        CHECK (
+            http_method IS NULL
+            OR http_method IN ('GET', 'POST', 'PUT', 'PATCH', 'DELETE')
+        ),
+
+    CONSTRAINT chk_blockchain_integration_requests_request_status
+        CHECK (request_status IN (
+            'RECEIVED',
+            'VALIDATED',
+            'REJECTED',
+            'PROCESSING',
+            'COMPLETED',
+            'FAILED',
+            'RETRYING',
+            'CANCELLED'
+        )),
+
+    CONSTRAINT chk_blockchain_integration_requests_processing_status
+        CHECK (processing_status IN (
+            'PENDING',
+            'IN_PROGRESS',
+            'SUCCESS',
+            'FAILED',
+            'RETRY_REQUIRED',
+            'NO_RETRY',
+            'TIMEOUT'
+        )),
+
+    CONSTRAINT chk_blockchain_integration_requests_retry_count
+        CHECK (retry_count >= 0),
+
+    CONSTRAINT chk_blockchain_integration_requests_max_retry_count
+        CHECK (max_retry_count >= 0)
+);
+
+
+COMMENT ON TABLE blockchain.integration_requests IS
+'Tracks all API and middleware integration requests sent to or received from the blockchain layer. Used for idempotency, retry management, monitoring, debugging, and reconciliation.';
+
+COMMENT ON COLUMN blockchain.integration_requests.request_id IS
+'Unique request identifier generated by the middleware or source system.';
+
+COMMENT ON COLUMN blockchain.integration_requests.correlation_id IS
+'Correlation ID used to trace the request across API, middleware, database, and blockchain layers.';
+
+COMMENT ON COLUMN blockchain.integration_requests.idempotency_key IS
+'Unique idempotency key used to prevent duplicate API processing.';
+
+COMMENT ON COLUMN blockchain.integration_requests.request_payload IS
+'Original request body received by the Blockchain API.';
+
+COMMENT ON COLUMN blockchain.integration_requests.response_payload IS
+'Response returned to the caller or received from downstream services.';
+
+COMMENT ON COLUMN blockchain.integration_requests.blockchain_payload IS
+'Payload submitted to or returned by Hyperledger Fabric.';
+
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_integration_requests_correlation_id
+    ON blockchain.integration_requests (correlation_id);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_integration_requests_source_target
+    ON blockchain.integration_requests (source_system, target_system);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_integration_requests_operation
+    ON blockchain.integration_requests (operation_name);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_integration_requests_request_status
+    ON blockchain.integration_requests (request_status);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_integration_requests_processing_status
+    ON blockchain.integration_requests (processing_status);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_integration_requests_received_at
+    ON blockchain.integration_requests (received_at);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_integration_requests_related_wallet
+    ON blockchain.integration_requests (related_wallet_id);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_integration_requests_related_transaction
+    ON blockchain.integration_requests (related_transaction_id);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_integration_requests_request_payload_gin
+    ON blockchain.integration_requests USING GIN (request_payload);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_integration_requests_response_payload_gin
+    ON blockchain.integration_requests USING GIN (response_payload);
+
+
+/* =====================================================================
+   Trigger: integration_requests updated_at
+   ===================================================================== */
+
+DROP TRIGGER IF EXISTS trg_blockchain_integration_requests_updated_at
+ON blockchain.integration_requests;
+
+CREATE TRIGGER trg_blockchain_integration_requests_updated_at
+BEFORE UPDATE ON blockchain.integration_requests
+FOR EACH ROW
+EXECUTE FUNCTION blockchain.set_updated_at();
+
+
+/* =====================================================================
+   8. Table: blockchain.audit_logs
+   ===================================================================== */
+
+CREATE TABLE IF NOT EXISTS blockchain.audit_logs
+(
+    audit_log_id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    correlation_id           VARCHAR(255),
+    request_id               VARCHAR(255),
+
+    entity_type              VARCHAR(100) NOT NULL,
+    entity_id                VARCHAR(255),
+
+    action                   VARCHAR(100) NOT NULL,
+    action_category          VARCHAR(100),
+
+    actor_type               VARCHAR(50) NOT NULL DEFAULT 'SYSTEM',
+    actor_id                 VARCHAR(150),
+    actor_name               VARCHAR(255),
+
+    source_system            VARCHAR(150),
+    ip_address               INET,
+    user_agent               TEXT,
+
+    old_values               JSONB NOT NULL DEFAULT '{}'::jsonb,
+    new_values               JSONB NOT NULL DEFAULT '{}'::jsonb,
+    event_payload            JSONB NOT NULL DEFAULT '{}'::jsonb,
+    metadata                 JSONB NOT NULL DEFAULT '{}'::jsonb,
+
+    status                   VARCHAR(30) NOT NULL DEFAULT 'SUCCESS',
+    severity                 VARCHAR(30) NOT NULL DEFAULT 'INFO',
+
+    error_code               VARCHAR(100),
+    error_message            TEXT,
+
+    event_at                 TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    created_by               VARCHAR(150) DEFAULT CURRENT_USER,
+    created_at               TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT chk_blockchain_audit_logs_actor_type
+        CHECK (actor_type IN ('USER', 'SYSTEM', 'API', 'CHAINCODE', 'SCHEDULER', 'ADMIN')),
+
+    CONSTRAINT chk_blockchain_audit_logs_status
+        CHECK (status IN ('SUCCESS', 'FAILED', 'WARNING', 'REJECTED')),
+
+    CONSTRAINT chk_blockchain_audit_logs_severity
+        CHECK (severity IN ('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'))
+);
+
+
+COMMENT ON TABLE blockchain.audit_logs IS
+'Stores immutable-style audit events for API actions, wallet actions, transaction actions, chaincode interactions, errors, and system events.';
+
+COMMENT ON COLUMN blockchain.audit_logs.entity_type IS
+'Type of entity affected by the action, such as WALLET, TRANSACTION, ORGANIZATION, INTEGRATION_REQUEST, or SYSTEM_MAPPING.';
+
+COMMENT ON COLUMN blockchain.audit_logs.entity_id IS
+'Identifier of the affected entity. Stored as text to support UUIDs, ledger keys, and external IDs.';
+
+COMMENT ON COLUMN blockchain.audit_logs.old_values IS
+'Previous state of the audited entity where applicable.';
+
+COMMENT ON COLUMN blockchain.audit_logs.new_values IS
+'New state of the audited entity where applicable.';
+
+COMMENT ON COLUMN blockchain.audit_logs.event_payload IS
+'Full event payload related to the audit event.';
+
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_audit_logs_correlation_id
+    ON blockchain.audit_logs (correlation_id);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_audit_logs_request_id
+    ON blockchain.audit_logs (request_id);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_audit_logs_entity
+    ON blockchain.audit_logs (entity_type, entity_id);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_audit_logs_action
+    ON blockchain.audit_logs (action);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_audit_logs_actor
+    ON blockchain.audit_logs (actor_type, actor_id);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_audit_logs_status
+    ON blockchain.audit_logs (status);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_audit_logs_severity
+    ON blockchain.audit_logs (severity);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_audit_logs_event_at
+    ON blockchain.audit_logs (event_at);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_audit_logs_event_payload_gin
+    ON blockchain.audit_logs USING GIN (event_payload);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_audit_logs_metadata_gin
+    ON blockchain.audit_logs USING GIN (metadata);
+
+
+/* =====================================================================
+   9. Table: blockchain.system_mappings
+   ===================================================================== */
+
+CREATE TABLE IF NOT EXISTS blockchain.system_mappings
+(
+    mapping_id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    source_system            VARCHAR(150) NOT NULL,
+    target_system            VARCHAR(150) NOT NULL,
+
+    source_entity_type       VARCHAR(100) NOT NULL,
+    source_entity_id         VARCHAR(255) NOT NULL,
+
+    target_entity_type       VARCHAR(100) NOT NULL,
+    target_entity_id         VARCHAR(255) NOT NULL,
+
+    blockchain_entity_type   VARCHAR(100),
+    blockchain_ledger_key    VARCHAR(255),
+    wallet_id                UUID,
+    organization_id          UUID,
+    transaction_id           UUID,
+
+    mapping_status           VARCHAR(30) NOT NULL DEFAULT 'ACTIVE',
+    sync_status              VARCHAR(30) NOT NULL DEFAULT 'SYNCED',
+
+    last_synced_at           TIMESTAMPTZ,
+    sync_error_code          VARCHAR(100),
+    sync_error_message       TEXT,
+
+    mapping_payload          JSONB NOT NULL DEFAULT '{}'::jsonb,
+    source_payload           JSONB NOT NULL DEFAULT '{}'::jsonb,
+    target_payload           JSONB NOT NULL DEFAULT '{}'::jsonb,
+    metadata                 JSONB NOT NULL DEFAULT '{}'::jsonb,
+
+    created_by               VARCHAR(150) DEFAULT CURRENT_USER,
+    updated_by               VARCHAR(150),
+    created_at               TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at               TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT uq_blockchain_system_mappings_source_target
+        UNIQUE (
+            source_system,
+            target_system,
+            source_entity_type,
+            source_entity_id,
+            target_entity_type,
+            target_entity_id
+        ),
+
+    CONSTRAINT fk_blockchain_system_mappings_wallet
+        FOREIGN KEY (wallet_id)
+        REFERENCES blockchain.wallets (wallet_id)
+        ON UPDATE CASCADE
+        ON DELETE SET NULL,
+
+    CONSTRAINT fk_blockchain_system_mappings_organization
+        FOREIGN KEY (organization_id)
+        REFERENCES blockchain.organizations (organization_id)
+        ON UPDATE CASCADE
+        ON DELETE SET NULL,
+
+    CONSTRAINT fk_blockchain_system_mappings_transaction
+        FOREIGN KEY (transaction_id)
+        REFERENCES blockchain.transactions (transaction_id)
+        ON UPDATE CASCADE
+        ON DELETE SET NULL,
+
+    CONSTRAINT chk_blockchain_system_mappings_mapping_status
+        CHECK (mapping_status IN ('ACTIVE', 'INACTIVE', 'DELETED', 'CONFLICT')),
+
+    CONSTRAINT chk_blockchain_system_mappings_sync_status
+        CHECK (sync_status IN ('SYNCED', 'PENDING', 'FAILED', 'OUT_OF_SYNC', 'RETRY_REQUIRED'))
+);
+
+
+COMMENT ON TABLE blockchain.system_mappings IS
+'Maintains mapping between external systems, internal PostgreSQL entities, and blockchain ledger keys. Used for reconciliation, integration lookup, and cross-system traceability.';
+
+COMMENT ON COLUMN blockchain.system_mappings.source_system IS
+'Name of the source system, such as TEMENOS, CORE_BANKING, MOBILE_APP, SPRING_BOOT_API, or BLOCKCHAIN_API.';
+
+COMMENT ON COLUMN blockchain.system_mappings.target_system IS
+'Name of the target system, such as HYPERLEDGER_FABRIC, POSTGRESQL, COUCHDB, or EXTERNAL_API.';
+
+COMMENT ON COLUMN blockchain.system_mappings.blockchain_ledger_key IS
+'Ledger state key used in Hyperledger Fabric CouchDB world state.';
+
+COMMENT ON COLUMN blockchain.system_mappings.mapping_payload IS
+'Flexible JSONB payload describing the mapping logic and attributes.';
+
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_system_mappings_source
+    ON blockchain.system_mappings (source_system, source_entity_type, source_entity_id);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_system_mappings_target
+    ON blockchain.system_mappings (target_system, target_entity_type, target_entity_id);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_system_mappings_ledger_key
+    ON blockchain.system_mappings (blockchain_ledger_key);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_system_mappings_wallet_id
+    ON blockchain.system_mappings (wallet_id);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_system_mappings_organization_id
+    ON blockchain.system_mappings (organization_id);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_system_mappings_transaction_id
+    ON blockchain.system_mappings (transaction_id);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_system_mappings_mapping_status
+    ON blockchain.system_mappings (mapping_status);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_system_mappings_sync_status
+    ON blockchain.system_mappings (sync_status);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_system_mappings_last_synced_at
+    ON blockchain.system_mappings (last_synced_at);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_system_mappings_payload_gin
+    ON blockchain.system_mappings USING GIN (mapping_payload);
+
+
+/* =====================================================================
+   Trigger: system_mappings updated_at
+   ===================================================================== */
+
+DROP TRIGGER IF EXISTS trg_blockchain_system_mappings_updated_at
+ON blockchain.system_mappings;
+
+CREATE TRIGGER trg_blockchain_system_mappings_updated_at
+BEFORE UPDATE ON blockchain.system_mappings
+FOR EACH ROW
+EXECUTE FUNCTION blockchain.set_updated_at();
+
+
+/* =====================================================================
+   10. Optional Initial Audit Record
+   ===================================================================== */
+
+INSERT INTO blockchain.audit_logs
+(
+    entity_type,
+    entity_id,
+    action,
+    action_category,
+    actor_type,
+    actor_id,
+    source_system,
+    event_payload,
+    status,
+    severity
+)
+VALUES
+(
+    'DATABASE_SCHEMA',
+    'STEP_16_OFF_CHAIN_SCHEMA',
+    'SCHEMA_CREATED_OR_VALIDATED',
+    'DATABASE_DEPLOYMENT',
+    'SYSTEM',
+    CURRENT_USER,
+    'POSTGRESQL',
+    jsonb_build_object(
+        'step', 'STEP 16',
+        'description', 'Off-chain database schema design created or validated',
+        'schema', 'blockchain',
+        'tables', jsonb_build_array(
+            'wallets',
+            'organizations',
+            'transactions',
+            'audit_logs',
+            'integration_requests',
+            'system_mappings'
+        )
+    ),
+    'SUCCESS',
+    'INFO'
+);
+
+
+/* =====================================================================
+   11. Verification Queries
+   ===================================================================== */
+
+-- List created tables:
+-- SELECT table_schema, table_name
+-- FROM information_schema.tables
+-- WHERE table_schema = 'blockchain'
+-- ORDER BY table_name;
+
+-- List indexes:
+-- SELECT schemaname, tablename, indexname
+-- FROM pg_indexes
+-- WHERE schemaname = 'blockchain'
+-- ORDER BY tablename, indexname;
+
+-- List constraints:
+-- SELECT
+--     tc.table_schema,
+--     tc.table_name,
+--     tc.constraint_name,
+--     tc.constraint_type
+-- FROM information_schema.table_constraints tc
+-- WHERE tc.table_schema = 'blockchain'
+-- ORDER BY tc.table_name, tc.constraint_type;
+
+
+COMMIT;
