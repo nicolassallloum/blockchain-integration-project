@@ -15,7 +15,7 @@
 const path = require("path");
 const dotenv = require("dotenv");
 const Joi = require("joi");
-
+const walletRoutes = require("./wallet.routes");
 dotenv.config();
 
 function toArray(value) {

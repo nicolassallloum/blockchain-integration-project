@@ -1,0 +1,337 @@
+const crypto = require("crypto");
+const { Pool } = require("pg");
+const fabricService = require("./fabric.service");
+
+const pool = new Pool({
+  host: process.env.POSTGRES_HOST || process.env.DB_HOST || "172.31.13.133",
+  port: Number(process.env.POSTGRES_PORT || process.env.DB_PORT || 5444),
+  database: process.env.POSTGRES_DATABASE || process.env.DB_NAME || "vfds_dev",
+  user: process.env.POSTGRES_USER || process.env.DB_USER || "postgres",
+  password: process.env.POSTGRES_PASSWORD || process.env.DB_PASSWORD,
+  max: 10,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000
+});
+
+function generateRequestId() {
+  return `REQ_${crypto.randomBytes(12).toString("hex").toUpperCase()}`;
+}
+
+function safeJsonParse(value) {
+  try {
+    if (!value) return null;
+    if (typeof value === "object") return value;
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
+}
+
+function normalizeFabricResponse(result) {
+  if (!result) return null;
+
+  if (Buffer.isBuffer(result)) {
+    return safeJsonParse(result.toString("utf8")) || result.toString("utf8");
+  }
+
+  if (typeof result === "string") {
+    return safeJsonParse(result) || result;
+  }
+
+  return result;
+}
+
+function extractWalletData(fabricResponse) {
+  /**
+   * Expected chaincode response example:
+   * {
+   *   success: true,
+   *   message: "Wallet created successfully",
+   *   data: {
+   *     wallet: {
+   *       walletAddress: "WALLET_xxx",
+   *       customerId: "CUST1001",
+   *       organizationId: "BANK001",
+   *       balance: "1000"
+   *     }
+   *   }
+   * }
+   */
+
+  if (!fabricResponse) return {};
+
+  if (fabricResponse.data && fabricResponse.data.wallet) {
+    return fabricResponse.data.wallet;
+  }
+
+  if (fabricResponse.wallet) {
+    return fabricResponse.wallet;
+  }
+
+  return fabricResponse;
+}
+
+async function insertWallet(client, payload, fabricResponse, walletData, requestId) {
+  const walletAddress =
+    walletData.walletAddress ||
+    walletData.wallet_address ||
+    walletData.address ||
+    `WALLET_PENDING_${requestId}`;
+
+  const balance =
+    walletData.balance ||
+    walletData.initialBalance ||
+    payload.initialBalance ||
+    "0";
+
+  const insertSql = `
+    INSERT INTO blockchain.wallets (
+      customer_id,
+      organization_id,
+      wallet_address,
+      owner_name,
+      national_id_hash,
+      mobile_hash,
+      email_hash,
+      status,
+      balance,
+      fabric_response,
+      metadata,
+      created_by,
+      updated_by,
+      created_at,
+      updated_at
+    )
+    VALUES (
+      $1, $2, $3, $4, $5, $6, $7,
+      $8, $9, $10::jsonb, $11::jsonb,
+      $12, $13, NOW(), NOW()
+    )
+    RETURNING *;
+  `;
+
+  const values = [
+    payload.customerId,
+    payload.organizationId,
+    walletAddress,
+    payload.fullName,
+    payload.nationalIdHash,
+    payload.mobileHash,
+    payload.emailHash,
+    "ACTIVE",
+    balance,
+    JSON.stringify(fabricResponse || {}),
+    JSON.stringify({
+      ...payload.metadata,
+      requestId,
+      requestSource: payload.requestSource
+    }),
+    payload.createdBy,
+    payload.createdBy
+  ];
+
+  const result = await client.query(insertSql, values);
+  return result.rows[0];
+}
+
+async function insertAuditLog(client, payload, fabricResponse, walletRecord, requestId, status, errorMessage = null) {
+  const auditSql = `
+    INSERT INTO blockchain.audit_logs (
+      entity_type,
+      entity_id,
+      action,
+      status,
+      request_id,
+      request_payload,
+      response_payload,
+      error_message,
+      performed_by,
+      source_system,
+      ip_address,
+      user_agent,
+      created_at
+    )
+    VALUES (
+      $1, $2, $3, $4, $5,
+      $6::jsonb, $7::jsonb, $8,
+      $9, $10, $11, $12, NOW()
+    );
+  `;
+
+  const values = [
+    "WALLET",
+    walletRecord?.wallet_id || walletRecord?.id || walletRecord?.wallet_address || payload.customerId,
+    "CREATE_WALLET",
+    status,
+    requestId,
+    JSON.stringify({
+      customerId: payload.customerId,
+      organizationId: payload.organizationId,
+      fullName: payload.fullName,
+      nationalIdHash: payload.nationalIdHash,
+      mobileHash: payload.mobileHash,
+      emailHash: payload.emailHash,
+      initialBalance: payload.initialBalance
+    }),
+    JSON.stringify(fabricResponse || {}),
+    errorMessage,
+    payload.createdBy,
+    payload.requestSource,
+    payload.ipAddress,
+    payload.userAgent
+  ];
+
+  await client.query(auditSql, values);
+}
+
+exports.createWallet = async (payload) => {
+  const requestId = generateRequestId();
+
+  console.log("[STEP 21] Create wallet started:", {
+    requestId,
+    customerId: payload.customerId,
+    organizationId: payload.organizationId
+  });
+
+  console.log("[STEP 21] Connecting to PostgreSQL...");
+
+  const client = await pool.connect();
+
+  console.log("[STEP 21] PostgreSQL connected successfully");
+
+  let fabricResponse = null;
+  let walletRecord = null;
+
+  try {
+    await client.query("BEGIN");
+
+    console.log("[STEP 21] PostgreSQL transaction started");
+    console.log("[STEP 21] Submitting Fabric transaction CreateWallet...");
+
+    const fabricResult = await fabricService.submitTransaction("CreateWallet", [
+      payload.customerId,
+      payload.organizationId,
+      payload.fullName,
+      payload.nationalIdHash,
+      payload.mobileHash,
+      payload.emailHash,
+      payload.passwordHash,
+      String(payload.initialBalance || "0")
+    ]);
+
+    console.log("[STEP 21] Fabric transaction completed");
+
+    fabricResponse = normalizeFabricResponse(fabricResult);
+
+    console.log("[STEP 21] Fabric response:", JSON.stringify(fabricResponse, null, 2));
+
+    if (
+      fabricResponse &&
+      fabricResponse.success === false
+    ) {
+      const error = new Error(fabricResponse.message || "Fabric wallet creation failed");
+      error.statusCode = 409;
+      error.code = "FABRIC_TRANSACTION_FAILED";
+      error.details = fabricResponse;
+      throw error;
+    }
+
+    const walletData = extractWalletData(fabricResponse);
+
+    console.log("[STEP 21] Extracted wallet data:", JSON.stringify(walletData, null, 2));
+    console.log("[STEP 21] Inserting wallet into PostgreSQL...");
+
+    walletRecord = await insertWallet(
+      client,
+      payload,
+      fabricResponse,
+      walletData,
+      requestId
+    );
+
+    console.log("[STEP 21] Wallet inserted into PostgreSQL:", {
+      customerId: walletRecord.customer_id,
+      walletAddress: walletRecord.wallet_address
+    });
+
+    console.log("[STEP 21] Inserting audit log...");
+
+    await insertAuditLog(
+      client,
+      payload,
+      fabricResponse,
+      walletRecord,
+      requestId,
+      "SUCCESS",
+      null
+    );
+
+    console.log("[STEP 21] Audit log inserted");
+    console.log("[STEP 21] Committing PostgreSQL transaction...");
+
+    await client.query("COMMIT");
+
+    console.log("[STEP 21] Wallet creation completed successfully");
+
+    return {
+      requestId,
+      wallet: {
+        customerId: walletRecord.customer_id,
+        organizationId: walletRecord.organization_id,
+        walletAddress: walletRecord.wallet_address,
+        ownerName: walletRecord.owner_name,
+        status: walletRecord.status,
+        balance: walletRecord.balance,
+        createdAt: walletRecord.created_at
+      },
+      blockchain: {
+        chaincodeFunction: "CreateWallet",
+        fabricResponse
+      }
+    };
+  } catch (error) {
+    console.error("[STEP 21] Wallet creation failed:", {
+      message: error.message,
+      code: error.code,
+      stack: error.stack
+    });
+
+    await client.query("ROLLBACK");
+
+    try {
+      console.log("[STEP 21] Inserting failed audit log...");
+
+      await client.query("BEGIN");
+
+      await insertAuditLog(
+        client,
+        payload,
+        fabricResponse,
+        walletRecord,
+        requestId,
+        "FAILED",
+        error.message
+      );
+
+      await client.query("COMMIT");
+
+      console.log("[STEP 21] Failed audit log inserted");
+    } catch (auditError) {
+      await client.query("ROLLBACK");
+      console.error("[STEP 21] Audit log insert failed:", auditError);
+    }
+
+    if (!error.statusCode) {
+      error.statusCode = 500;
+    }
+
+    if (!error.code) {
+      error.code = "WALLET_CREATION_FAILED";
+    }
+
+    throw error;
+  } finally {
+    client.release();
+    console.log("[STEP 21] PostgreSQL connection released");
+  }
+};

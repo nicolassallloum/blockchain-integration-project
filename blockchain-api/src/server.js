@@ -1,54 +1,270 @@
-"use strict";
+require("dotenv").config();
 
-const http = require("http");
-const app = require("./app");
-const config = require("./config");
-const logger = require("./utils/logger");
-const fabricRoutes = require("./routes/fabric.routes");
-const server = http.createServer(app);
+const express = require("express");
+const cors = require("cors");
+const helmet = require("helmet");
+const compression = require("compression");
+const morgan = require("morgan");
 
-server.listen(config.app.port, config.app.host, () => {
-  logger.info("==================================================");
-  logger.info("Blockchain API Middleware started successfully");
-  logger.info(`Environment: ${config.app.env}`);
-  logger.info(`Version: ${config.app.version}`);
-  logger.info(`URL: http://${config.app.host}:${config.app.port}`);
-  logger.info(
-    `Health Check: http://${config.app.host}:${config.app.port}${config.app.apiPrefix}/health`
-  );
-  logger.info("==================================================");
+let logger;
+
+try {
+  logger = require("./utils/logger");
+} catch (error) {
+  logger = console;
+}
+
+const apiRoutes = require("./routes");
+
+const app = express();
+
+/**
+ * Environment configuration
+ */
+const PORT = Number(process.env.PORT || 3001);
+const HOST = process.env.HOST || "0.0.0.0";
+const NODE_ENV = process.env.NODE_ENV || "development";
+const API_PREFIX = process.env.API_PREFIX || "/api/v1";
+const SERVICE_NAME = process.env.SERVICE_NAME || "Blockchain API Middleware";
+const SERVICE_VERSION = process.env.SERVICE_VERSION || "1.0.0";
+
+/**
+ * Security middleware
+ */
+app.use(
+  helmet({
+    crossOriginResourcePolicy: {
+      policy: "same-origin"
+    }
+  })
+);
+
+/**
+ * CORS middleware
+ */
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN || "*",
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "Accept", "X-Request-ID"]
+  })
+);
+
+/**
+ * Body parsers
+ */
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+
+/**
+ * Compression
+ */
+app.use(compression());
+
+/**
+ * HTTP request logging
+ */
+app.use(
+  morgan("combined", {
+    stream: {
+      write: (message) => {
+        if (logger && logger.info) {
+          logger.info(message.trim());
+        } else {
+          console.log(message.trim());
+        }
+      }
+    }
+  })
+);
+
+/**
+ * Simple request log
+ */
+app.use((req, res, next) => {
+  if (logger && logger.info) {
+    logger.info(`${req.method} ${req.originalUrl}`, {
+      ip: req.ip,
+      userAgent: req.headers["user-agent"]
+    });
+  } else {
+    console.log(`${req.method} ${req.originalUrl}`);
+  }
+
+  next();
 });
 
-function gracefulShutdown(signal) {
-  logger.warn(`${signal} received. Shutting down gracefully...`);
+/**
+ * Root endpoint
+ */
+app.get("/", (req, res) => {
+  return res.status(200).json({
+    success: true,
+    message: "Blockchain API Middleware is running",
+    apiPrefix: API_PREFIX,
+    health: `${API_PREFIX}/health`,
+    blockchainStatus: `${API_PREFIX}/blockchain/status`,
+    fabricSubmit: `${API_PREFIX}/fabric/submit`,
+    walletCreation: `${API_PREFIX}/wallets`,
+    timestamp: new Date().toISOString()
+  });
+});
+
+/**
+ * Mount API v1 routes
+ *
+ * IMPORTANT:
+ * This must be mounted before the 404 handler.
+ */
+app.use(API_PREFIX, apiRoutes);
+
+/**
+ * Direct fallback route for wallet creation
+ *
+ * This protects you if src/routes/index.js is not loaded correctly.
+ * Final endpoint:
+ * POST /api/v1/wallets
+ */
+try {
+  const walletRoutes = require("./routes/wallet.routes");
+  app.use(`${API_PREFIX}/wallets`, walletRoutes);
+} catch (error) {
+  console.warn(`[SERVER] Wallet direct route not loaded: ${error.message}`);
+}
+
+/**
+ * 404 handler
+ *
+ * IMPORTANT:
+ * Keep this after all route registrations.
+ */
+app.use((req, res) => {
+  return res.status(404).json({
+    success: false,
+    message: `Route not found: ${req.method} ${req.originalUrl}`,
+    data: null,
+    meta: null,
+    timestamp: new Date().toISOString()
+  });
+});
+
+/**
+ * Global error handler
+ */
+app.use((error, req, res, next) => {
+  const statusCode = error.statusCode || error.status || 500;
+
+  if (logger && logger.error) {
+    logger.error("Unhandled API error", {
+      message: error.message,
+      stack: error.stack,
+      method: req.method,
+      url: req.originalUrl
+    });
+  } else {
+    console.error("Unhandled API error:", error);
+  }
+
+  return res.status(statusCode).json({
+    success: false,
+    message: error.message || "Internal server error",
+    error: {
+      code: error.code || "INTERNAL_SERVER_ERROR",
+      details: error.details || null
+    },
+    data: null,
+    meta: null,
+    timestamp: new Date().toISOString()
+  });
+});
+
+/**
+ * Start server
+ */
+const server = app.listen(PORT, HOST, () => {
+  const startMessages = [
+    "==================================================",
+    "Blockchain API Middleware started successfully",
+    `Environment: ${NODE_ENV}`,
+    `Version: ${SERVICE_VERSION}`,
+    `URL: http://${HOST}:${PORT}`,
+    `Health Check: http://${HOST}:${PORT}${API_PREFIX}/health`,
+    `Wallet Creation: http://${HOST}:${PORT}${API_PREFIX}/wallets`,
+    "=================================================="
+  ];
+
+  startMessages.forEach((message) => {
+    if (logger && logger.info) {
+      logger.info(message);
+    } else {
+      console.log(message);
+    }
+  });
+});
+
+/**
+ * Graceful shutdown
+ */
+function shutdown(signal) {
+  const message = `Received ${signal}. Shutting down ${SERVICE_NAME}...`;
+
+  if (logger && logger.info) {
+    logger.info(message);
+  } else {
+    console.log(message);
+  }
 
   server.close(() => {
-    logger.info("HTTP server closed.");
+    if (logger && logger.info) {
+      logger.info("HTTP server closed successfully");
+    } else {
+      console.log("HTTP server closed successfully");
+    }
+
     process.exit(0);
   });
 
   setTimeout(() => {
-    logger.error("Forced shutdown after timeout.");
+    console.error("Forced shutdown after timeout");
     process.exit(1);
   }, 10000);
 }
 
-process.on("SIGINT", () => gracefulShutdown("SIGINT"));
-process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
 
-process.on("unhandledRejection", (reason) => {
-  logger.error("Unhandled Promise Rejection", {
-    reason: reason instanceof Error ? reason.message : reason,
-  });
-});
-
+/**
+ * Uncaught exception handler
+ */
 process.on("uncaughtException", (error) => {
-  logger.error("Uncaught Exception", {
-    message: error.message,
-    stack: error.stack,
-  });
+  if (logger && logger.error) {
+    logger.error(`Uncaught Exception ${error.message}`, {
+      stack: error.stack,
+      service: SERVICE_NAME,
+      environment: NODE_ENV
+    });
+  } else {
+    console.error("Uncaught Exception:", error);
+  }
 
   process.exit(1);
 });
 
-module.exports = server;
+/**
+ * Unhandled promise rejection handler
+ */
+process.on("unhandledRejection", (reason) => {
+  if (logger && logger.error) {
+    logger.error("Unhandled Rejection", {
+      reason,
+      service: SERVICE_NAME,
+      environment: NODE_ENV
+    });
+  } else {
+    console.error("Unhandled Rejection:", reason);
+  }
+
+  process.exit(1);
+});
+
+module.exports = app;
