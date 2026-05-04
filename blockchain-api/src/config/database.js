@@ -7,14 +7,12 @@ const pool = new Pool({
   user: process.env.POSTGRES_USER || process.env.DB_USER || "postgres",
   password: process.env.POSTGRES_PASSWORD || process.env.DB_PASSWORD,
   max: Number(process.env.POSTGRES_POOL_MAX || 20),
-  idleTimeoutMillis: Number(process.env.POSTGRES_IDLE_TIMEOUT_MS || 30000),
-  connectionTimeoutMillis: Number(process.env.POSTGRES_CONNECTION_TIMEOUT_MS || 10000)
-});
-
-pool.on("error", (error) => {
-  console.error("Unexpected PostgreSQL pool error:", error.message);
+  idleTimeoutMillis: Number(process.env.POSTGRES_IDLE_TIMEOUT || 30000),
+  connectionTimeoutMillis: Number(process.env.POSTGRES_CONNECTION_TIMEOUT || 10000)
 });
 
 module.exports = {
+  query: (text, params) => pool.query(text, params),
+  getClient: () => pool.connect(),
   pool
 };

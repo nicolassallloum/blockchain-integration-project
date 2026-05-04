@@ -1,19 +1,29 @@
 const express = require("express");
+
 const router = express.Router();
 
-const walletController = require("../controllers/wallet.controller");
-const walletAuthController = require("../controllers/wallet-auth.controller");
+let walletController = null;
 
-const {
-  validateWalletLoginRequest
-} = require("../middlewares/wallet-login.validator");
+try {
+  walletController = require("../controllers/wallet.controller");
+} catch (error) {
+  console.warn("[ROUTES] wallet controller not loaded:", error.message);
+}
 
-router.post("/", walletController.createWallet);
+/**
+ * Wallet Creation
+ * POST /api/v1/wallets
+ */
+if (walletController && walletController.createWallet) {
+  router.post("/", walletController.createWallet);
+}
 
-router.post(
-  "/login",
-  validateWalletLoginRequest,
-  walletAuthController.loginWallet
-);
+/**
+ * Wallet Login
+ * POST /api/v1/wallets/login
+ */
+if (walletController && walletController.loginWallet) {
+  router.post("/login", walletController.loginWallet);
+}
 
 module.exports = router;

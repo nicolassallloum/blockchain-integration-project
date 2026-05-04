@@ -11,7 +11,7 @@ const logger = require("./utils/logger");
 // Existing routes
 const healthRoutes = require("./routes/health.routes");
 const blockchainRoutes = require("./routes/blockchain.routes");
-
+const transactionRoutes = require("./transaction.routes");
 // STEP 20 — Fabric SDK Integration routes
 const fabricRoutes = require("./routes/fabric.routes");
 
@@ -21,7 +21,7 @@ const app = express();
 // API Prefix Fallback
 // ==================================================
 const API_PREFIX = config.api?.prefix || process.env.API_PREFIX || "/api/v1";
-
+router.use("/transactions", transactionRoutes);
 // ==================================================
 // Security Middleware
 // ==================================================
