@@ -5,7 +5,7 @@ const cors = require("cors");
 const helmet = require("helmet");
 const compression = require("compression");
 const morgan = require("morgan");
-
+const transactionRoutes = require("./routes/transactions.routes");
 let logger;
 
 try {
@@ -31,6 +31,7 @@ const SERVICE_VERSION = process.env.SERVICE_VERSION || "1.0.0";
 /**
  * Security middleware
  */
+
 app.use(
   helmet({
     crossOriginResourcePolicy: {
@@ -131,6 +132,7 @@ try {
 } catch (error) {
   console.warn(`[SERVER] Wallet direct route not loaded: ${error.message}`);
 }
+app.use("/api/v1/transactions", transactionRoutes);
 
 /**
  * 404 handler
@@ -139,12 +141,12 @@ try {
  * Keep this after all route registrations.
  */
 app.use((req, res) => {
-  return res.status(404).json({
+  res.status(404).json({
     success: false,
     message: `Route not found: ${req.method} ${req.originalUrl}`,
     data: null,
     meta: null,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 

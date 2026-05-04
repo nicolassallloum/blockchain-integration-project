@@ -1,66 +1,74 @@
-"use strict";
-
 const fs = require("fs");
 const path = require("path");
 const winston = require("winston");
-const config = require("../config");
 
-const logDirectory = path.dirname(config.logging.appLogPath);
+let config = {};
 
-if (!fs.existsSync(logDirectory)) {
-  fs.mkdirSync(logDirectory, { recursive: true });
+try {
+  config = require("../config/config");
+} catch (error) {
+  config = {};
 }
 
-const logFormat =
-  config.logging.format === "json"
-    ? winston.format.combine(
-        winston.format.timestamp(),
-        winston.format.errors({ stack: true }),
-        winston.format.json()
-      )
-    : winston.format.combine(
-        winston.format.colorize(),
-        winston.format.timestamp(),
-        winston.format.printf(({ timestamp, level, message, ...meta }) => {
-          const metaText = Object.keys(meta).length
-            ? JSON.stringify(meta, null, 2)
-            : "";
+const loggingConfig = config.logging || {};
 
-          return `${timestamp} [${level}]: ${message} ${metaText}`;
-        })
-      );
+const appLogPath =
+  loggingConfig.appLogPath ||
+  process.env.APP_LOG_PATH ||
+  "logs/app.log";
 
-const transports = [
-  new winston.transports.Console({
-    level: config.logging.level,
-  }),
-];
+const errorLogPath =
+  loggingConfig.errorLogPath ||
+  process.env.ERROR_LOG_PATH ||
+  "logs/error.log";
 
-if (config.logging.toFile) {
-  transports.push(
-    new winston.transports.File({
-      filename: config.logging.appLogPath,
-      level: config.logging.level,
-    })
-  );
+const logLevel =
+  loggingConfig.level ||
+  process.env.LOG_LEVEL ||
+  "info";
 
-  transports.push(
-    new winston.transports.File({
-      filename: config.logging.errorLogPath,
-      level: "error",
-    })
-  );
+const appLogDirectory = path.dirname(appLogPath);
+const errorLogDirectory = path.dirname(errorLogPath);
+
+if (!fs.existsSync(appLogDirectory)) {
+  fs.mkdirSync(appLogDirectory, { recursive: true });
+}
+
+if (!fs.existsSync(errorLogDirectory)) {
+  fs.mkdirSync(errorLogDirectory, { recursive: true });
 }
 
 const logger = winston.createLogger({
-  level: config.logging.level,
-  format: logFormat,
+  level: logLevel,
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.errors({ stack: true }),
+    winston.format.splat(),
+    winston.format.json()
+  ),
   defaultMeta: {
-    service: config.app.name,
-    environment: config.app.env,
+    service: process.env.APP_NAME || "Blockchain API Middleware",
   },
-  transports,
-  exitOnError: false,
+  transports: [
+    new winston.transports.File({
+      filename: errorLogPath,
+      level: "error",
+    }),
+    new winston.transports.File({
+      filename: appLogPath,
+    }),
+  ],
 });
+
+if (process.env.NODE_ENV !== "production") {
+  logger.add(
+    new winston.transports.Console({
+      format: winston.format.combine(
+        winston.format.colorize(),
+        winston.format.simple()
+      ),
+    })
+  );
+}
 
 module.exports = logger;

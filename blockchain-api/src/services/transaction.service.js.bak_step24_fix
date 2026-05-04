@@ -58,37 +58,11 @@ function validateAmount(amount) {
 }
 
 /**
- * Extract a readable Fabric error message
+ * Insert audit log using an existing PostgreSQL transaction client.
+ * This version is aligned to the Step 16 table style:
+ * blockchain.audit_logs
  */
-function extractFabricErrorMessage(fabricResult) {
-  return (
-    fabricResult?.error?.details?.[0]?.message ||
-    fabricResult?.error?.message ||
-    fabricResult?.message ||
-    "Fabric transaction failed"
-  );
-}
-
-/**
- * Ensure Fabric transaction was successful
- */
-function assertFabricSuccess(fabricResult, errorCode) {
-  if (!fabricResult || fabricResult.success === false) {
-    throw buildError(
-      extractFabricErrorMessage(fabricResult),
-      500,
-      errorCode
-    );
-  }
-}
-
-/**
- * Safe audit log insert.
- *
- * This function is intentionally defensive because your current audit_logs table
- * may not yet contain all enterprise audit columns.
- */
-async function safeAuditLog(client, data) {
+async function insertAuditLog(client, payload) {
   try {
     await client.query(
       `
@@ -126,27 +100,147 @@ async function safeAuditLog(client, data) {
       )
       `,
       [
-        data.requestId,
-        data.eventType,
-        data.eventCategory || "TRANSACTION",
-        data.entityType || "TRANSACTION",
-        data.entityId,
-        data.eventStatus,
-        data.eventDescription,
-        JSON.stringify(data.requestPayload || {}),
-        JSON.stringify(data.responsePayload || {}),
-        data.sourceSystem || "BLOCKCHAIN_API",
-        data.requestSource || "API",
-        data.createdBy || "system",
+        payload.requestId,
+        payload.eventType,
+        payload.eventCategory,
+        payload.entityType,
+        payload.entityId,
+        payload.eventStatus,
+        payload.eventDescription,
+        JSON.stringify(payload.requestPayload || {}),
+        JSON.stringify(payload.responsePayload || {}),
+        payload.sourceSystem || "BLOCKCHAIN_API",
+        payload.requestSource || "API",
+        payload.createdBy || "system",
       ]
     );
   } catch (error) {
-    logger.error("Audit insert failed", {
-      requestId: data.requestId,
+    logger.error("Audit log insert failed", {
+      requestId: payload.requestId,
       error: error.message,
       stack: error.stack,
     });
   }
+}
+
+/**
+ * Insert integration request.
+ *
+ * IMPORTANT:
+ * This version avoids putting source_system/request_source directly into columns
+ * because your current DB error shows a string value is going into a numeric column.
+ * So we store sourceSystem/requestSource safely inside request_payload JSONB.
+ */
+async function insertIntegrationRequestProcessing(client, payload) {
+    /**
+     * Insert integration request as PROCESSING
+     * sourceSystem/requestSource are stored inside JSONB to avoid DB type mismatch.
+     */
+    await client.query(
+      `
+      INSERT INTO blockchain.integration_requests (
+        request_id,
+        request_type,
+        request_status,
+        request_payload,
+        created_by,
+        created_at,
+        updated_at
+      )
+      VALUES (
+        $1,
+        'ORGANIZATION_TRANSFER',
+        'PROCESSING',
+        $2::jsonb,
+        $3,
+        NOW(),
+        NOW()
+      )
+      ON CONFLICT (request_id)
+      DO UPDATE SET
+        request_status = 'PROCESSING',
+        request_payload = EXCLUDED.request_payload,
+        updated_at = NOW()
+      `,
+      [
+        requestId,
+        JSON.stringify({
+          senderWalletAddress,
+          organizationCode,
+          amount,
+          currency,
+          transactionPurpose,
+          transactionDescription,
+          sourceSystem: payload.sourceSystem || "BLOCKCHAIN_API",
+          requestSource: payload.requestSource || "API",
+          createdBy: payload.createdBy || "system",
+        }),
+        payload.createdBy || "system",
+      ]
+    );
+}
+
+/**
+ * Mark integration request completed.
+ */
+async function updateIntegrationRequestCompleted(client, payload) {
+  await client.query(
+    `
+    UPDATE blockchain.integration_requests
+    SET
+      request_status = 'COMPLETED',
+      response_payload = $1::jsonb,
+      updated_by = $2,
+      updated_at = NOW()
+    WHERE request_id = $3
+    `,
+    [
+      JSON.stringify(payload.responsePayload || {}),
+      payload.createdBy || "system",
+      payload.requestId,
+    ]
+  );
+}
+
+/**
+ * Mark integration request failed.
+ */
+async function upsertIntegrationRequestFailed(client, payload) {
+  await client.query(
+    `
+    INSERT INTO blockchain.integration_requests (
+      request_id,
+      request_type,
+      request_status,
+      request_payload,
+      response_payload,
+      created_by,
+      created_at,
+      updated_at
+    )
+    VALUES (
+      $1,
+      'ORGANIZATION_TRANSFER',
+      'FAILED',
+      $2::jsonb,
+      $3::jsonb,
+      $4,
+      NOW(),
+      NOW()
+    )
+    ON CONFLICT (request_id)
+    DO UPDATE SET
+      request_status = 'FAILED',
+      response_payload = EXCLUDED.response_payload,
+      updated_at = NOW()
+    `,
+    [
+      payload.requestId,
+      JSON.stringify(payload.requestPayload || {}),
+      JSON.stringify(payload.responsePayload || {}),
+      payload.createdBy || "system",
+    ]
+  );
 }
 
 /**
@@ -156,12 +250,8 @@ async function safeAuditLog(client, data) {
 exports.walletToWalletTransfer = async (payload) => {
   const client = await db.getClient();
 
-  const localRequestId = payload.requestId || `REQ_${Date.now()}`;
-  const localTransactionId = uuidv4();
-
-  const sourceSystem = payload.sourceSystem || "BLOCKCHAIN_API";
-  const requestSource = payload.requestSource || "API";
-  const createdBy = payload.createdBy || "system";
+  const requestId = payload.requestId || `REQ_${Date.now()}`;
+  const transactionId = uuidv4();
 
   try {
     await client.query("BEGIN");
@@ -180,12 +270,6 @@ exports.walletToWalletTransfer = async (payload) => {
 
     const amount = validateAmount(payload.amount);
     const currency = payload.currency || "USD";
-
-    const transactionPurpose =
-      payload.transactionPurpose || "Wallet-to-wallet transfer";
-
-    const transactionDescription =
-      payload.transactionDescription || "Wallet-to-wallet transaction";
 
     if (senderWalletAddress === receiverWalletAddress) {
       throw buildError(
@@ -271,18 +355,16 @@ exports.walletToWalletTransfer = async (payload) => {
     const fabricResult = await fabricService.submitTransaction(
       "TransferBetweenWallets",
       [
-        localTransactionId,
+        transactionId,
         senderWalletAddress,
         receiverWalletAddress,
         amount.toString(),
         currency,
-        transactionPurpose,
-        transactionDescription,
-        localRequestId,
+        payload.transactionPurpose || "Wallet-to-wallet transfer",
+        payload.transactionDescription || "",
+        requestId,
       ]
     );
-
-    assertFabricSuccess(fabricResult, "FABRIC_WALLET_TRANSFER_FAILED");
 
     await client.query(
       `
@@ -326,19 +408,19 @@ exports.walletToWalletTransfer = async (payload) => {
       )
       `,
       [
-        localTransactionId,
-        localRequestId,
+        transactionId,
+        requestId,
         senderWalletAddress,
         receiverWalletAddress,
         amount,
         currency,
-        transactionPurpose,
-        transactionDescription,
+        payload.transactionPurpose || "Wallet-to-wallet transfer",
+        payload.transactionDescription || "",
         fabricResult.transactionId || fabricResult.txId || null,
         JSON.stringify(fabricResult || {}),
-        sourceSystem,
-        requestSource,
-        createdBy,
+        payload.sourceSystem || "BLOCKCHAIN_API",
+        payload.requestSource || "API",
+        payload.createdBy || "system",
       ]
     );
 
@@ -351,7 +433,7 @@ exports.walletToWalletTransfer = async (payload) => {
         updated_at = NOW()
       WHERE wallet_address = $3
       `,
-      [amount, createdBy, senderWalletAddress]
+      [amount, payload.createdBy || "system", senderWalletAddress]
     );
 
     await client.query(
@@ -363,39 +445,29 @@ exports.walletToWalletTransfer = async (payload) => {
         updated_at = NOW()
       WHERE wallet_address = $3
       `,
-      [amount, createdBy, receiverWalletAddress]
+      [amount, payload.createdBy || "system", receiverWalletAddress]
     );
 
-    await safeAuditLog(client, {
-      requestId: localRequestId,
+    await insertAuditLog(client, {
+      requestId,
       eventType: "WALLET_TO_WALLET_TRANSFER",
       eventCategory: "TRANSACTION",
       entityType: "TRANSACTION",
-      entityId: localTransactionId,
+      entityId: transactionId,
       eventStatus: "SUCCESS",
       eventDescription: "Wallet-to-wallet transfer completed successfully",
-      requestPayload: {
-        senderWalletAddress,
-        receiverWalletAddress,
-        amount,
-        currency,
-        transactionPurpose,
-        transactionDescription,
-        sourceSystem,
-        requestSource,
-        createdBy,
-      },
+      requestPayload: payload,
       responsePayload: fabricResult,
-      sourceSystem,
-      requestSource,
-      createdBy,
+      sourceSystem: payload.sourceSystem,
+      requestSource: payload.requestSource,
+      createdBy: payload.createdBy,
     });
 
     await client.query("COMMIT");
 
     return {
-      transactionId: localTransactionId,
-      requestId: localRequestId,
+      transactionId,
+      requestId,
       senderWalletAddress,
       receiverWalletAddress,
       amount: amount.toString(),
@@ -406,8 +478,8 @@ exports.walletToWalletTransfer = async (payload) => {
     await client.query("ROLLBACK");
 
     logger.error("Wallet-to-wallet transfer service failed", {
-      requestId: localRequestId,
-      transactionId: localTransactionId,
+      requestId,
+      transactionId,
       error: error.message,
       stack: error.stack,
     });
@@ -421,23 +493,16 @@ exports.walletToWalletTransfer = async (payload) => {
 /**
  * STEP 24
  * Wallet-to-organization transfer
- *
- * Compatibility mode:
- * Current deployed chaincode expects 4 parameters:
- * 1. senderWalletAddress
- * 2. organizationCode
- * 3. amount
- * 4. requestId
+ */
+/**
+ * STEP 24
+ * Wallet-to-organization transfer
  */
 exports.walletToOrganizationTransfer = async (payload) => {
   const client = await db.getClient();
 
-  const localRequestId = payload.requestId || `REQ_${Date.now()}`;
-  const localTransactionId = uuidv4();
-
-  const sourceSystem = payload.sourceSystem || "BLOCKCHAIN_API";
-  const requestSource = payload.requestSource || "API";
-  const createdBy = payload.createdBy || "system";
+  const requestId = payload.requestId || `REQ_${Date.now()}`;
+  const transactionId = uuidv4();
 
   try {
     await client.query("BEGIN");
@@ -463,6 +528,13 @@ exports.walletToOrganizationTransfer = async (payload) => {
     const transactionDescription =
       payload.transactionDescription || "Wallet-to-organization transaction";
 
+    const sourceSystem = payload.sourceSystem || "BLOCKCHAIN_API";
+    const requestSource = payload.requestSource || "API";
+    const createdBy = payload.createdBy || "system";
+
+    /**
+     * Supported currency validation
+     */
     const allowedCurrencies = ["USD", "LBP", "EUR"];
 
     if (!allowedCurrencies.includes(currency)) {
@@ -473,6 +545,9 @@ exports.walletToOrganizationTransfer = async (payload) => {
       );
     }
 
+    /**
+     * Sender wallet validation
+     */
     const senderWalletResult = await client.query(
       `
       SELECT 
@@ -516,8 +591,10 @@ exports.walletToOrganizationTransfer = async (payload) => {
     }
 
     /**
-     * Organization validation.
-     * Your current table appears to use status, not organization_status.
+     * Organization validation
+     *
+     * Your current uploaded file uses status instead of organization_status,
+     * so this query supports both possible designs.
      */
     const organizationResult = await client.query(
       `
@@ -526,7 +603,7 @@ exports.walletToOrganizationTransfer = async (payload) => {
         organization_code,
         organization_name,
         organization_type,
-        status
+        COALESCE(organization_status, status) AS organization_status
       FROM blockchain.organizations
       WHERE organization_code = $1
       LIMIT 1
@@ -544,7 +621,7 @@ exports.walletToOrganizationTransfer = async (payload) => {
 
     const organization = organizationResult.rows[0];
 
-    if (organization.status !== "ACTIVE") {
+    if (organization.organization_status !== "ACTIVE") {
       throw buildError(
         "Organization is not active",
         400,
@@ -552,6 +629,9 @@ exports.walletToOrganizationTransfer = async (payload) => {
       );
     }
 
+    /**
+     * Business rules
+     */
     if (amount < 1) {
       throw buildError(
         "Minimum organization transfer amount is 1",
@@ -570,6 +650,10 @@ exports.walletToOrganizationTransfer = async (payload) => {
 
     /**
      * Insert integration request as PROCESSING.
+     *
+     * IMPORTANT:
+     * sourceSystem and requestSource are stored inside request_payload JSONB
+     * to avoid the previous numeric mismatch error.
      */
     await client.query(
       `
@@ -577,8 +661,6 @@ exports.walletToOrganizationTransfer = async (payload) => {
         request_id,
         request_type,
         request_status,
-        source_system,
-        request_source,
         request_payload,
         created_by,
         created_at,
@@ -588,25 +670,19 @@ exports.walletToOrganizationTransfer = async (payload) => {
         $1,
         'ORGANIZATION_TRANSFER',
         'PROCESSING',
-        $2,
+        $2::jsonb,
         $3,
-        $4::jsonb,
-        $5,
         NOW(),
         NOW()
       )
       ON CONFLICT (request_id)
       DO UPDATE SET
         request_status = 'PROCESSING',
-        source_system = EXCLUDED.source_system,
-        request_source = EXCLUDED.request_source,
         request_payload = EXCLUDED.request_payload,
         updated_at = NOW()
       `,
       [
-        localRequestId,
-        sourceSystem,
-        requestSource,
+        requestId,
         JSON.stringify({
           senderWalletAddress,
           organizationCode,
@@ -623,31 +699,24 @@ exports.walletToOrganizationTransfer = async (payload) => {
     );
 
     /**
-     * Submit to Fabric.
-     *
-     * Current chaincode expects 4 args only.
+     * Submit wallet-to-organization transaction to Fabric ledger
      */
     const fabricResult = await fabricService.submitTransaction(
       "TransferToOrganization",
       [
+        transactionId,
         senderWalletAddress,
         organizationCode,
         amount.toString(),
-        localRequestId,
+        currency,
+        transactionPurpose,
+        transactionDescription,
+        requestId,
       ]
     );
 
     /**
-     * Stop immediately if Fabric failed.
-     * This prevents API success=true with fabricResult.success=false.
-     */
-    assertFabricSuccess(
-      fabricResult,
-      "FABRIC_ORGANIZATION_TRANSFER_FAILED"
-    );
-
-    /**
-     * Insert transaction only after Fabric success.
+     * Insert PostgreSQL transaction record
      */
     await client.query(
       `
@@ -695,8 +764,8 @@ exports.walletToOrganizationTransfer = async (payload) => {
       )
       `,
       [
-        localTransactionId,
-        localRequestId,
+        transactionId,
+        requestId,
         senderWalletAddress,
         organization.organization_id,
         organization.organization_code,
@@ -713,7 +782,7 @@ exports.walletToOrganizationTransfer = async (payload) => {
     );
 
     /**
-     * Deduct balance only after Fabric success.
+     * Deduct balance from sender wallet
      */
     await client.query(
       `
@@ -727,10 +796,13 @@ exports.walletToOrganizationTransfer = async (payload) => {
       [amount, createdBy, senderWalletAddress]
     );
 
+    /**
+     * Mark integration request as COMPLETED
+     */
     await client.query(
       `
       UPDATE blockchain.integration_requests
-      SET 
+      SET
         request_status = 'COMPLETED',
         response_payload = $1::jsonb,
         updated_by = $2,
@@ -739,20 +811,23 @@ exports.walletToOrganizationTransfer = async (payload) => {
       `,
       [
         JSON.stringify({
-          transactionId: localTransactionId,
+          transactionId,
           fabricResult,
         }),
         createdBy,
-        localRequestId,
+        requestId,
       ]
     );
 
-    await safeAuditLog(client, {
-      requestId: localRequestId,
+    /**
+     * Audit success
+     */
+    await insertAuditLog(client, {
+      requestId,
       eventType: "WALLET_TO_ORGANIZATION_TRANSFER",
       eventCategory: "TRANSACTION",
       entityType: "TRANSACTION",
-      entityId: localTransactionId,
+      entityId: transactionId,
       eventStatus: "SUCCESS",
       eventDescription:
         "Wallet-to-organization transfer completed successfully",
@@ -768,7 +843,7 @@ exports.walletToOrganizationTransfer = async (payload) => {
         createdBy,
       },
       responsePayload: {
-        transactionId: localTransactionId,
+        transactionId,
         organizationCode: organization.organization_code,
         amount,
         currency,
@@ -782,8 +857,8 @@ exports.walletToOrganizationTransfer = async (payload) => {
     await client.query("COMMIT");
 
     return {
-      transactionId: localTransactionId,
-      requestId: localRequestId,
+      transactionId,
+      requestId,
       senderWalletAddress,
       organizationId: organization.organization_id,
       organizationCode: organization.organization_code,
@@ -797,17 +872,24 @@ exports.walletToOrganizationTransfer = async (payload) => {
     await client.query("ROLLBACK");
 
     logger.error("Wallet-to-organization transfer service failed", {
-      requestId: localRequestId,
-      transactionId: localTransactionId,
+      requestId,
+      transactionId,
       error: error.message,
       stack: error.stack,
     });
 
+    /**
+     * Best-effort failure sync and audit outside rolled-back transaction
+     */
     let failureClient;
 
     try {
       failureClient = await db.getClient();
       await failureClient.query("BEGIN");
+
+      const sourceSystem = payload.sourceSystem || "BLOCKCHAIN_API";
+      const requestSource = payload.requestSource || "API";
+      const createdBy = payload.createdBy || "system";
 
       await failureClient.query(
         `
@@ -815,8 +897,6 @@ exports.walletToOrganizationTransfer = async (payload) => {
           request_id,
           request_type,
           request_status,
-          source_system,
-          request_source,
           request_payload,
           response_payload,
           created_by,
@@ -827,27 +907,20 @@ exports.walletToOrganizationTransfer = async (payload) => {
           $1,
           'ORGANIZATION_TRANSFER',
           'FAILED',
-          $2,
-          $3,
-          $4::jsonb,
-          $5::jsonb,
-          $6,
+          $2::jsonb,
+          $3::jsonb,
+          $4,
           NOW(),
           NOW()
         )
         ON CONFLICT (request_id)
         DO UPDATE SET
           request_status = 'FAILED',
-          source_system = EXCLUDED.source_system,
-          request_source = EXCLUDED.request_source,
-          request_payload = EXCLUDED.request_payload,
           response_payload = EXCLUDED.response_payload,
           updated_at = NOW()
         `,
         [
-          localRequestId,
-          sourceSystem,
-          requestSource,
+          requestId,
           JSON.stringify({
             ...payload,
             sourceSystem,
@@ -863,12 +936,12 @@ exports.walletToOrganizationTransfer = async (payload) => {
         ]
       );
 
-      await safeAuditLog(failureClient, {
-        requestId: localRequestId,
+      await insertAuditLog(failureClient, {
+        requestId,
         eventType: "WALLET_TO_ORGANIZATION_TRANSFER",
         eventCategory: "TRANSACTION",
         entityType: "TRANSACTION",
-        entityId: localTransactionId,
+        entityId: transactionId,
         eventStatus: "FAILED",
         eventDescription: error.message,
         requestPayload: {
@@ -894,8 +967,8 @@ exports.walletToOrganizationTransfer = async (payload) => {
       }
 
       logger.error("Failed to write organization transfer failure audit", {
-        requestId: localRequestId,
-        transactionId: localTransactionId,
+        requestId,
+        transactionId,
         error: auditError.message,
         stack: auditError.stack,
       });

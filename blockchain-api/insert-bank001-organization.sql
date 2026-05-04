@@ -150,8 +150,8 @@ BEGIN
         v_insert_values  := v_insert_values  || quote_literal('ACTIVE') || ', ';
     END IF;
 
-    IF 'organization_status' = ANY(v_columns) THEN
-        v_insert_columns := v_insert_columns || 'organization_status, ';
+    IF 'status' = ANY(v_columns) THEN
+        v_insert_columns := v_insert_columns || 'status, ';
         v_insert_values  := v_insert_values  || quote_literal('ACTIVE') || ', ';
     END IF;
 
