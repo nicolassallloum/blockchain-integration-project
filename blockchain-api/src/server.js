@@ -1,19 +1,26 @@
-const app = require("./app");
-const appConfig = require("./config/app.config");
-const logger = require("./config/logger.config");
+"use strict";
 
-const server = app.listen(appConfig.port, appConfig.host, () => {
+const http = require("http");
+const app = require("./app");
+const config = require("./config");
+const logger = require("./utils/logger");
+
+const server = http.createServer(app);
+
+server.listen(config.app.port, config.app.host, () => {
   logger.info("==================================================");
-  logger.info(`${appConfig.name} started successfully`);
-  logger.info(`Environment: ${appConfig.env}`);
-  logger.info(`Version: ${appConfig.version}`);
-  logger.info(`URL: http://${appConfig.host}:${appConfig.port}`);
-  logger.info(`Health Check: http://${appConfig.host}:${appConfig.port}${appConfig.apiPrefix}/health`);
+  logger.info("Blockchain API Middleware started successfully");
+  logger.info(`Environment: ${config.app.env}`);
+  logger.info(`Version: ${config.app.version}`);
+  logger.info(`URL: http://${config.app.host}:${config.app.port}`);
+  logger.info(
+    `Health Check: http://${config.app.host}:${config.app.port}${config.app.apiPrefix}/health`
+  );
   logger.info("==================================================");
 });
 
-const gracefulShutdown = (signal) => {
-  logger.info(`${signal} received. Shutting down gracefully...`);
+function gracefulShutdown(signal) {
+  logger.warn(`${signal} received. Shutting down gracefully...`);
 
   server.close(() => {
     logger.info("HTTP server closed.");
@@ -21,19 +28,27 @@ const gracefulShutdown = (signal) => {
   });
 
   setTimeout(() => {
-    logger.error("Force shutdown after timeout.");
+    logger.error("Forced shutdown after timeout.");
     process.exit(1);
   }, 10000);
-};
+}
 
-process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
 process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
 
 process.on("unhandledRejection", (reason) => {
-  logger.error(`Unhandled Rejection: ${reason}`);
+  logger.error("Unhandled Promise Rejection", {
+    reason: reason instanceof Error ? reason.message : reason,
+  });
 });
 
 process.on("uncaughtException", (error) => {
-  logger.error(`Uncaught Exception: ${error.message}`);
+  logger.error("Uncaught Exception", {
+    message: error.message,
+    stack: error.stack,
+  });
+
   process.exit(1);
 });
+
+module.exports = server;
