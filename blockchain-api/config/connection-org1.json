@@ -17,6 +17,12 @@
       "peers": [
         "peer0.org1.blockchain.local"
       ]
+    },
+    "Org2": {
+      "mspid": "Org2MSP",
+      "peers": [
+        "peer0.org2.blockchain.local"
+      ]
     }
   },
   "peers": {
@@ -28,6 +34,16 @@
       "grpcOptions": {
         "ssl-target-name-override": "peer0.org1.blockchain.local",
         "hostnameOverride": "peer0.org1.blockchain.local"
+      }
+    },
+    "peer0.org2.blockchain.local": {
+      "url": "grpcs://localhost:9051",
+      "tlsCACerts": {
+        "path": "/home/nix/u01/blockchain-integration/fabric-network/organizations/peerOrganizations/org2.blockchain.local/peers/peer0.org2.blockchain.local/tls/ca.crt"
+      },
+      "grpcOptions": {
+        "ssl-target-name-override": "peer0.org2.blockchain.local",
+        "hostnameOverride": "peer0.org2.blockchain.local"
       }
     }
   }

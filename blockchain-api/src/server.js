@@ -4,7 +4,7 @@ const http = require("http");
 const app = require("./app");
 const config = require("./config");
 const logger = require("./utils/logger");
-
+const fabricRoutes = require("./routes/fabric.routes");
 const server = http.createServer(app);
 
 server.listen(config.app.port, config.app.host, () => {

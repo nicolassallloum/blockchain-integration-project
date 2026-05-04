@@ -210,24 +210,15 @@ const config = {
   },
 
   fabric: {
-    connectionProfile: path.resolve(env.FABRIC_CONNECTION_PROFILE),
-    channelName: env.FABRIC_CHANNEL_NAME,
-    chaincodeName: env.FABRIC_CHAINCODE_NAME,
-    walletPath: path.resolve(env.FABRIC_WALLET_PATH),
-    mspId: env.FABRIC_MSP_ID,
-    identity: env.FABRIC_IDENTITY,
-
-    discovery: {
-      enabled: env.FABRIC_DISCOVERY_ENABLED,
-      asLocalhost: env.FABRIC_DISCOVERY_AS_LOCALHOST,
-    },
-
-    timeouts: {
-      commitSeconds: env.FABRIC_COMMIT_TIMEOUT_SECONDS,
-      endorseSeconds: env.FABRIC_ENDORSE_TIMEOUT_SECONDS,
-      submitSeconds: env.FABRIC_SUBMIT_TIMEOUT_SECONDS,
-      evaluateSeconds: env.FABRIC_EVALUATE_TIMEOUT_SECONDS,
-    },
+    mspId: process.env.FABRIC_MSP_ID || process.env.FABRIC_ORG_MSP_ID,
+    identity: process.env.FABRIC_IDENTITY || process.env.FABRIC_IDENTITY_LABEL,
+    channelName: process.env.FABRIC_CHANNEL_NAME,
+    chaincodeName: process.env.FABRIC_CHAINCODE_NAME,
+    walletPath: process.env.FABRIC_WALLET_PATH,
+    connectionProfile: process.env.FABRIC_CONNECTION_PROFILE,
+    peerName: process.env.FABRIC_PEER_NAME,
+    peerEndpoint: process.env.FABRIC_PEER_ENDPOINT,
+    peerTlsHostAlias: process.env.FABRIC_PEER_TLS_HOST_ALIAS
   },
 
   postgres: {
@@ -304,6 +295,7 @@ const config = {
     postgres: env.HEALTH_CHECK_POSTGRES,
     couchdb: env.HEALTH_CHECK_COUCHDB,
   },
+
 };
 
 module.exports = config;
