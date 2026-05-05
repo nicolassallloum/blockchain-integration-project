@@ -5,6 +5,7 @@ const cors = require("cors");
 const helmet = require("helmet");
 const compression = require("compression");
 const morgan = require("morgan");
+const walletQueryRoutes = require("./routes/wallet-query.routes");
 const transactionRoutes = require("./routes/transactions.routes");
 let logger;
 
@@ -56,7 +57,7 @@ app.use(
  */
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
-
+app.use("/api/v1/wallets", walletQueryRoutes);
 /**
  * Compression
  */

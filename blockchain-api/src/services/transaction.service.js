@@ -271,20 +271,16 @@ exports.walletToWalletTransfer = async (payload) => {
     const fabricResult = await fabricService.submitTransaction(
       "TransferBetweenWallets",
       [
-        localTransactionId,
         senderWalletAddress,
         receiverWalletAddress,
         amount.toString(),
-        currency,
-        transactionPurpose,
-        transactionDescription,
         localRequestId,
       ]
     );
 
     assertFabricSuccess(fabricResult, "FABRIC_WALLET_TRANSFER_FAILED");
 
-    await client.query(
+    const insertTransactionResult = await client.query(
       `
       INSERT INTO blockchain.transactions (
         transaction_id,
@@ -293,6 +289,8 @@ exports.walletToWalletTransfer = async (payload) => {
         transaction_status,
         sender_wallet_address,
         receiver_wallet_address,
+        from_wallet_address,
+        to_wallet_address,
         amount,
         currency,
         transaction_purpose,
@@ -312,6 +310,8 @@ exports.walletToWalletTransfer = async (payload) => {
         'COMPLETED',
         $3,
         $4,
+        $3,
+        $4,
         $5::numeric,
         $6,
         $7,
@@ -324,6 +324,7 @@ exports.walletToWalletTransfer = async (payload) => {
         NOW(),
         NOW()
       )
+      RETURNING transaction_id, request_id;
       `,
       [
         localTransactionId,
@@ -334,7 +335,11 @@ exports.walletToWalletTransfer = async (payload) => {
         currency,
         transactionPurpose,
         transactionDescription,
-        fabricResult.transactionId || fabricResult.txId || null,
+        fabricResult.commit?.transactionId ||
+          fabricResult.data?.data?.transaction?.transactionId ||
+          fabricResult.transactionId ||
+          fabricResult.txId ||
+          null,
         JSON.stringify(fabricResult || {}),
         sourceSystem,
         requestSource,
@@ -342,6 +347,11 @@ exports.walletToWalletTransfer = async (payload) => {
       ]
     );
 
+    logger.info("Wallet transfer saved to PostgreSQL", {
+      requestId: localRequestId,
+      transactionId: localTransactionId,
+      rowsInserted: insertTransactionResult.rowCount,
+    });
     await client.query(
       `
       UPDATE blockchain.wallets
@@ -649,7 +659,7 @@ exports.walletToOrganizationTransfer = async (payload) => {
     /**
      * Insert transaction only after Fabric success.
      */
-    await client.query(
+        await client.query(
       `
       INSERT INTO blockchain.transactions (
         transaction_id,
@@ -658,6 +668,8 @@ exports.walletToOrganizationTransfer = async (payload) => {
         transaction_status,
         sender_wallet_address,
         receiver_wallet_address,
+        from_wallet_address,
+        to_wallet_address,
         organization_id,
         organization_code,
         amount,
@@ -679,6 +691,8 @@ exports.walletToOrganizationTransfer = async (payload) => {
         'COMPLETED',
         $3,
         NULL,
+        $3,
+        NULL,
         $4,
         $5,
         $6::numeric,
@@ -698,8 +712,8 @@ exports.walletToOrganizationTransfer = async (payload) => {
         localTransactionId,
         localRequestId,
         senderWalletAddress,
-        organization.organization_id,
-        organization.organization_code,
+        organization.organization_id || organization.id,
+        organizationCode,
         amount,
         currency,
         transactionPurpose,
