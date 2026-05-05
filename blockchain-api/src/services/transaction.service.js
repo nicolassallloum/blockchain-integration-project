@@ -1,94 +1,57 @@
-const { v4: uuidv4 } = require("uuid");
-const db = require("../config/database");
+const crypto = require("crypto");
+const databaseService = require("./database.service");
 const fabricService = require("./fabric.service");
 const logger = require("../utils/logger");
 
-/**
- * Build custom application error
- */
-function buildError(message, statusCode = 400, errorCode = "VALIDATION_ERROR") {
+function buildError(message, statusCode = 500, errorCode = "TRANSACTION_SERVICE_ERROR") {
   const error = new Error(message);
   error.statusCode = statusCode;
   error.errorCode = errorCode;
   return error;
 }
 
-/**
- * Validate required string field
- */
-function validateRequiredString(value, fieldName, errorCode) {
-  if (!value || typeof value !== "string" || value.trim() === "") {
-    throw buildError(`${fieldName} is required`, 400, errorCode);
-  }
-
-  return value.trim();
+function generateRequestId() {
+  return `REQ_${crypto.randomBytes(12).toString("hex").toUpperCase()}`;
 }
 
-/**
- * Validate transaction amount
- */
-function validateAmount(amount) {
-  if (amount === undefined || amount === null || amount === "") {
-    throw buildError("Amount is required", 400, "AMOUNT_REQUIRED");
+function assertFabricSuccess(fabricResult, errorCode) {
+  if (!fabricResult || fabricResult.success === false) {
+    const message =
+      fabricResult?.error?.details?.[0]?.message ||
+      fabricResult?.error?.message ||
+      fabricResult?.message ||
+      "Fabric transaction failed";
+
+    throw buildError(message, 500, errorCode);
   }
 
-  const numericAmount = Number(amount);
+  const innerSuccess =
+    fabricResult?.data?.success ??
+    fabricResult?.data?.data?.success ??
+    true;
 
-  if (Number.isNaN(numericAmount)) {
-    throw buildError("Amount must be numeric", 400, "INVALID_AMOUNT");
+  if (innerSuccess === false) {
+    const message =
+      fabricResult?.data?.message ||
+      fabricResult?.data?.data?.message ||
+      "Fabric transaction failed";
+
+    throw buildError(message, 500, errorCode);
   }
-
-  if (numericAmount <= 0) {
-    throw buildError(
-      "Amount must be greater than zero",
-      400,
-      "INVALID_AMOUNT"
-    );
-  }
-
-  if (numericAmount > 100000) {
-    throw buildError(
-      "Amount exceeds maximum allowed transaction limit",
-      400,
-      "AMOUNT_LIMIT_EXCEEDED"
-    );
-  }
-
-  return numericAmount;
 }
 
-/**
- * Extract a readable Fabric error message
- */
-function extractFabricErrorMessage(fabricResult) {
+function extractFabricTransactionId(fabricResult) {
   return (
-    fabricResult?.error?.details?.[0]?.message ||
-    fabricResult?.error?.message ||
-    fabricResult?.message ||
-    "Fabric transaction failed"
+    fabricResult?.commit?.transactionId ||
+    fabricResult?.data?.data?.transaction?.transactionId ||
+    fabricResult?.data?.transaction?.transactionId ||
+    fabricResult?.transactionId ||
+    fabricResult?.txId ||
+    null
   );
 }
 
-/**
- * Ensure Fabric transaction was successful
- */
-function assertFabricSuccess(fabricResult, errorCode) {
-  if (!fabricResult || fabricResult.success === false) {
-    throw buildError(
-      extractFabricErrorMessage(fabricResult),
-      500,
-      errorCode
-    );
-  }
-}
-
-/**
- * Safe audit log insert.
- *
- * This function is intentionally defensive because your current audit_logs table
- * may not yet contain all enterprise audit columns.
- */
-async function safeAuditLog(client, data) {
+async function safeAuditLog(client, payload) {
   try {
     await client.query(
       `
@@ -126,146 +89,119 @@ async function safeAuditLog(client, data) {
       )
       `,
       [
-        data.requestId,
-        data.eventType,
-        data.eventCategory || "TRANSACTION",
-        data.entityType || "TRANSACTION",
-        data.entityId,
-        data.eventStatus,
-        data.eventDescription,
-        JSON.stringify(data.requestPayload || {}),
-        JSON.stringify(data.responsePayload || {}),
-        data.sourceSystem || "BLOCKCHAIN_API",
-        data.requestSource || "API",
-        data.createdBy || "system",
+        payload.requestId || null,
+        payload.eventType || null,
+        payload.eventCategory || null,
+        payload.entityType || null,
+        payload.entityId || null,
+        payload.eventStatus || null,
+        payload.eventDescription || null,
+        JSON.stringify(payload.requestPayload || {}),
+        JSON.stringify(payload.responsePayload || {}),
+        payload.sourceSystem || "BLOCKCHAIN_API",
+        payload.requestSource || "API",
+        payload.createdBy || "system",
       ]
     );
   } catch (error) {
-    logger.error("Audit insert failed", {
-      requestId: data.requestId,
+    logger.warn("Audit log insert skipped", {
       error: error.message,
-      stack: error.stack,
+      requestId: payload.requestId,
     });
   }
 }
 
-/**
- * STEP 23
- * Wallet-to-wallet transfer
- */
-exports.walletToWalletTransfer = async (payload) => {
-  const client = await db.getClient();
+async function getWalletByAddress(client, walletAddress) {
+  const result = await client.query(
+    `
+    SELECT
+      wallet_id,
+      wallet_address,
+      customer_id,
+      organization_id,
+      organization_code,
+      full_name,
+      current_balance,
+      currency,
+      wallet_status
+    FROM blockchain.wallets
+    WHERE wallet_address = $1
+    LIMIT 1
+    `,
+    [walletAddress]
+  );
 
-  const localRequestId = payload.requestId || `REQ_${Date.now()}`;
-  const localTransactionId = uuidv4();
+  return result.rows[0] || null;
+}
 
-  const sourceSystem = payload.sourceSystem || "BLOCKCHAIN_API";
+exports.walletToWalletTransfer = async function walletToWalletTransfer(payload = {}, requestIdFromHeader = null) {
+  const pool = databaseService.getPool();
+  const client = await pool.connect();
+
+  const localTransactionId = crypto.randomUUID();
+  const localRequestId =
+    requestIdFromHeader ||
+    payload.requestId ||
+    generateRequestId();
+
+  const senderWalletAddress =
+    payload.senderWalletAddress ||
+    payload.fromWalletAddress ||
+    payload.from_wallet_address;
+
+  const receiverWalletAddress =
+    payload.receiverWalletAddress ||
+    payload.toWalletAddress ||
+    payload.to_wallet_address;
+
+  const amount = Number(payload.amount);
+  const currency = payload.currency || "TOKEN";
+  const transactionPurpose = payload.transactionPurpose || null;
+  const transactionDescription = payload.transactionDescription || null;
   const requestSource = payload.requestSource || "API";
+  const sourceSystem = payload.sourceSystem || "BLOCKCHAIN_API";
   const createdBy = payload.createdBy || "system";
 
   try {
-    await client.query("BEGIN");
+    if (!senderWalletAddress) {
+      throw buildError("senderWalletAddress is required", 400, "SENDER_WALLET_REQUIRED");
+    }
 
-    const senderWalletAddress = validateRequiredString(
-      payload.senderWalletAddress,
-      "Sender wallet address",
-      "SENDER_WALLET_REQUIRED"
-    );
-
-    const receiverWalletAddress = validateRequiredString(
-      payload.receiverWalletAddress,
-      "Receiver wallet address",
-      "RECEIVER_WALLET_REQUIRED"
-    );
-
-    const amount = validateAmount(payload.amount);
-    const currency = payload.currency || "USD";
-
-    const transactionPurpose =
-      payload.transactionPurpose || "Wallet-to-wallet transfer";
-
-    const transactionDescription =
-      payload.transactionDescription || "Wallet-to-wallet transaction";
+    if (!receiverWalletAddress) {
+      throw buildError("receiverWalletAddress is required", 400, "RECEIVER_WALLET_REQUIRED");
+    }
 
     if (senderWalletAddress === receiverWalletAddress) {
-      throw buildError(
-        "Sender and receiver wallet cannot be the same",
-        400,
-        "SAME_WALLET_TRANSFER_NOT_ALLOWED"
-      );
+      throw buildError("Sender and receiver wallets cannot be the same", 400, "SAME_WALLET_TRANSFER_NOT_ALLOWED");
     }
 
-    const senderWalletResult = await client.query(
-      `
-      SELECT 
-        wallet_id,
-        wallet_address,
-        customer_id,
-        wallet_status,
-        current_balance
-      FROM blockchain.wallets
-      WHERE wallet_address = $1
-      LIMIT 1
-      `,
-      [senderWalletAddress]
-    );
-
-    if (senderWalletResult.rowCount === 0) {
-      throw buildError(
-        "Sender wallet not found",
-        404,
-        "SENDER_WALLET_NOT_FOUND"
-      );
+    if (Number.isNaN(amount) || amount <= 0) {
+      throw buildError("amount must be greater than zero", 400, "INVALID_AMOUNT");
     }
 
-    const receiverWalletResult = await client.query(
-      `
-      SELECT 
-        wallet_id,
-        wallet_address,
-        customer_id,
-        wallet_status,
-        current_balance
-      FROM blockchain.wallets
-      WHERE wallet_address = $1
-      LIMIT 1
-      `,
-      [receiverWalletAddress]
-    );
+    await client.query("BEGIN");
 
-    if (receiverWalletResult.rowCount === 0) {
-      throw buildError(
-        "Receiver wallet not found",
-        404,
-        "RECEIVER_WALLET_NOT_FOUND"
-      );
+    const senderWallet = await getWalletByAddress(client, senderWalletAddress);
+    const receiverWallet = await getWalletByAddress(client, receiverWalletAddress);
+
+    if (!senderWallet) {
+      throw buildError("Sender wallet not found", 404, "SENDER_WALLET_NOT_FOUND");
     }
 
-    const senderWallet = senderWalletResult.rows[0];
-    const receiverWallet = receiverWalletResult.rows[0];
+    if (!receiverWallet) {
+      throw buildError("Receiver wallet not found", 404, "RECEIVER_WALLET_NOT_FOUND");
+    }
 
     if (senderWallet.wallet_status !== "ACTIVE") {
-      throw buildError(
-        "Sender wallet is not active",
-        400,
-        "SENDER_WALLET_NOT_ACTIVE"
-      );
+      throw buildError("Sender wallet is not active", 400, "SENDER_WALLET_NOT_ACTIVE");
     }
 
     if (receiverWallet.wallet_status !== "ACTIVE") {
-      throw buildError(
-        "Receiver wallet is not active",
-        400,
-        "RECEIVER_WALLET_NOT_ACTIVE"
-      );
+      throw buildError("Receiver wallet is not active", 400, "RECEIVER_WALLET_NOT_ACTIVE");
     }
 
     if (Number(senderWallet.current_balance) < amount) {
-      throw buildError(
-        "Insufficient sender wallet balance",
-        400,
-        "INSUFFICIENT_BALANCE"
-      );
+      throw buildError("Insufficient sender wallet balance", 400, "INSUFFICIENT_BALANCE");
     }
 
     const fabricResult = await fabricService.submitTransaction(
@@ -279,6 +215,8 @@ exports.walletToWalletTransfer = async (payload) => {
     );
 
     assertFabricSuccess(fabricResult, "FABRIC_WALLET_TRANSFER_FAILED");
+
+    const fabricTransactionId = extractFabricTransactionId(fabricResult);
 
     const insertTransactionResult = await client.query(
       `
@@ -324,7 +262,7 @@ exports.walletToWalletTransfer = async (payload) => {
         NOW(),
         NOW()
       )
-      RETURNING transaction_id, request_id;
+      RETURNING *
       `,
       [
         localTransactionId,
@@ -335,11 +273,7 @@ exports.walletToWalletTransfer = async (payload) => {
         currency,
         transactionPurpose,
         transactionDescription,
-        fabricResult.commit?.transactionId ||
-          fabricResult.data?.data?.transaction?.transactionId ||
-          fabricResult.transactionId ||
-          fabricResult.txId ||
-          null,
+        fabricTransactionId,
         JSON.stringify(fabricResult || {}),
         sourceSystem,
         requestSource,
@@ -347,33 +281,30 @@ exports.walletToWalletTransfer = async (payload) => {
       ]
     );
 
-    logger.info("Wallet transfer saved to PostgreSQL", {
-      requestId: localRequestId,
-      transactionId: localTransactionId,
-      rowsInserted: insertTransactionResult.rowCount,
-    });
     await client.query(
       `
       UPDATE blockchain.wallets
-      SET 
+      SET
         current_balance = current_balance - $1::numeric,
-        updated_by = $2,
+        currency = $2,
+        updated_by = $3,
         updated_at = NOW()
-      WHERE wallet_address = $3
+      WHERE wallet_address = $4
       `,
-      [amount, createdBy, senderWalletAddress]
+      [amount, currency, createdBy, senderWalletAddress]
     );
 
     await client.query(
       `
       UPDATE blockchain.wallets
-      SET 
+      SET
         current_balance = current_balance + $1::numeric,
-        updated_by = $2,
+        currency = $2,
+        updated_by = $3,
         updated_at = NOW()
-      WHERE wallet_address = $3
+      WHERE wallet_address = $4
       `,
-      [amount, createdBy, receiverWalletAddress]
+      [amount, currency, createdBy, receiverWalletAddress]
     );
 
     await safeAuditLog(client, {
@@ -403,6 +334,13 @@ exports.walletToWalletTransfer = async (payload) => {
 
     await client.query("COMMIT");
 
+    logger.info("Wallet-to-wallet transfer completed successfully", {
+      requestId: localRequestId,
+      transactionId: localTransactionId,
+      fabricTransactionId,
+      rowsInserted: insertTransactionResult.rowCount,
+    });
+
     return {
       transactionId: localTransactionId,
       requestId: localRequestId,
@@ -428,215 +366,85 @@ exports.walletToWalletTransfer = async (payload) => {
   }
 };
 
-/**
- * STEP 24
- * Wallet-to-organization transfer
- *
- * Compatibility mode:
- * Current deployed chaincode expects 4 parameters:
- * 1. senderWalletAddress
- * 2. organizationCode
- * 3. amount
- * 4. requestId
- */
-exports.walletToOrganizationTransfer = async (payload) => {
-  const client = await db.getClient();
+exports.walletToOrganizationTransfer = async function walletToOrganizationTransfer(payload = {}, requestIdFromHeader = null) {
+  const pool = databaseService.getPool();
+  const client = await pool.connect();
 
-  const localRequestId = payload.requestId || `REQ_${Date.now()}`;
-  const localTransactionId = uuidv4();
+  const localTransactionId = crypto.randomUUID();
+  const localRequestId =
+    requestIdFromHeader ||
+    payload.requestId ||
+    generateRequestId();
 
-  const sourceSystem = payload.sourceSystem || "BLOCKCHAIN_API";
+  const senderWalletAddress =
+    payload.senderWalletAddress ||
+    payload.fromWalletAddress ||
+    payload.from_wallet_address;
+
+  const organizationCode = payload.organizationCode || payload.organizationId;
+  const amount = Number(payload.amount);
+  const currency = payload.currency || "TOKEN";
+  const transactionPurpose = payload.transactionPurpose || null;
+  const transactionDescription = payload.transactionDescription || null;
   const requestSource = payload.requestSource || "API";
+  const sourceSystem = payload.sourceSystem || "BLOCKCHAIN_API";
   const createdBy = payload.createdBy || "system";
 
   try {
+    if (!senderWalletAddress) {
+      throw buildError("senderWalletAddress is required", 400, "SENDER_WALLET_REQUIRED");
+    }
+
+    if (!organizationCode) {
+      throw buildError("organizationCode is required", 400, "ORGANIZATION_CODE_REQUIRED");
+    }
+
+    if (Number.isNaN(amount) || amount <= 0) {
+      throw buildError("amount must be greater than zero", 400, "INVALID_AMOUNT");
+    }
+
     await client.query("BEGIN");
 
-    const senderWalletAddress = validateRequiredString(
-      payload.senderWalletAddress,
-      "Sender wallet address",
-      "SENDER_WALLET_REQUIRED"
-    );
+    const senderWallet = await getWalletByAddress(client, senderWalletAddress);
 
-    const organizationCode = validateRequiredString(
-      payload.organizationCode,
-      "Organization code",
-      "ORGANIZATION_CODE_REQUIRED"
-    );
-
-    const amount = validateAmount(payload.amount);
-    const currency = payload.currency || "USD";
-
-    const transactionPurpose =
-      payload.transactionPurpose || "Wallet-to-organization transfer";
-
-    const transactionDescription =
-      payload.transactionDescription || "Wallet-to-organization transaction";
-
-    const allowedCurrencies = ["USD", "LBP", "EUR"];
-
-    if (!allowedCurrencies.includes(currency)) {
-      throw buildError(
-        "Currency is not supported for organization transfers",
-        400,
-        "UNSUPPORTED_CURRENCY"
-      );
+    if (!senderWallet) {
+      throw buildError("Sender wallet not found", 404, "SENDER_WALLET_NOT_FOUND");
     }
-
-    const senderWalletResult = await client.query(
-      `
-      SELECT 
-        wallet_id,
-        wallet_address,
-        customer_id,
-        organization_id,
-        wallet_status,
-        current_balance
-      FROM blockchain.wallets
-      WHERE wallet_address = $1
-      LIMIT 1
-      `,
-      [senderWalletAddress]
-    );
-
-    if (senderWalletResult.rowCount === 0) {
-      throw buildError(
-        "Sender wallet not found",
-        404,
-        "SENDER_WALLET_NOT_FOUND"
-      );
-    }
-
-    const senderWallet = senderWalletResult.rows[0];
 
     if (senderWallet.wallet_status !== "ACTIVE") {
-      throw buildError(
-        "Sender wallet is not active",
-        400,
-        "SENDER_WALLET_NOT_ACTIVE"
-      );
+      throw buildError("Sender wallet is not active", 400, "SENDER_WALLET_NOT_ACTIVE");
     }
 
     if (Number(senderWallet.current_balance) < amount) {
-      throw buildError(
-        "Insufficient wallet balance",
-        400,
-        "INSUFFICIENT_BALANCE"
-      );
+      throw buildError("Insufficient sender wallet balance", 400, "INSUFFICIENT_BALANCE");
     }
 
-    /**
-     * Organization validation.
-     * Your current table appears to use status, not organization_status.
-     */
     const organizationResult = await client.query(
       `
-      SELECT 
+      SELECT
         organization_id,
         organization_code,
         organization_name,
-        organization_type,
-        status
+        organization_status
       FROM blockchain.organizations
       WHERE organization_code = $1
+         OR organization_id::text = $1
       LIMIT 1
       `,
       [organizationCode]
     );
 
-    if (organizationResult.rowCount === 0) {
-      throw buildError(
-        "Organization not found",
-        404,
-        "ORGANIZATION_NOT_FOUND"
-      );
+    const organization = organizationResult.rows[0] || {
+      organization_id: null,
+      organization_code: organizationCode,
+      organization_name: organizationCode,
+      organization_status: "ACTIVE",
+    };
+
+    if (organization.organization_status && organization.organization_status !== "ACTIVE") {
+      throw buildError("Organization is not active", 400, "ORGANIZATION_NOT_ACTIVE");
     }
 
-    const organization = organizationResult.rows[0];
-
-    if (organization.status !== "ACTIVE") {
-      throw buildError(
-        "Organization is not active",
-        400,
-        "ORGANIZATION_NOT_ACTIVE"
-      );
-    }
-
-    if (amount < 1) {
-      throw buildError(
-        "Minimum organization transfer amount is 1",
-        400,
-        "MIN_AMOUNT_NOT_ALLOWED"
-      );
-    }
-
-    if (amount > 50000) {
-      throw buildError(
-        "Organization transfer amount exceeds business limit",
-        400,
-        "ORGANIZATION_TRANSFER_LIMIT_EXCEEDED"
-      );
-    }
-
-    /**
-     * Insert integration request as PROCESSING.
-     */
-    await client.query(
-      `
-      INSERT INTO blockchain.integration_requests (
-        request_id,
-        request_type,
-        request_status,
-        source_system,
-        request_source,
-        request_payload,
-        created_by,
-        created_at,
-        updated_at
-      )
-      VALUES (
-        $1,
-        'ORGANIZATION_TRANSFER',
-        'PROCESSING',
-        $2,
-        $3,
-        $4::jsonb,
-        $5,
-        NOW(),
-        NOW()
-      )
-      ON CONFLICT (request_id)
-      DO UPDATE SET
-        request_status = 'PROCESSING',
-        source_system = EXCLUDED.source_system,
-        request_source = EXCLUDED.request_source,
-        request_payload = EXCLUDED.request_payload,
-        updated_at = NOW()
-      `,
-      [
-        localRequestId,
-        sourceSystem,
-        requestSource,
-        JSON.stringify({
-          senderWalletAddress,
-          organizationCode,
-          amount,
-          currency,
-          transactionPurpose,
-          transactionDescription,
-          sourceSystem,
-          requestSource,
-          createdBy,
-        }),
-        createdBy,
-      ]
-    );
-
-    /**
-     * Submit to Fabric.
-     *
-     * Current chaincode expects 4 args only.
-     */
     const fabricResult = await fabricService.submitTransaction(
       "TransferToOrganization",
       [
@@ -647,19 +455,11 @@ exports.walletToOrganizationTransfer = async (payload) => {
       ]
     );
 
-    /**
-     * Stop immediately if Fabric failed.
-     * This prevents API success=true with fabricResult.success=false.
-     */
-    assertFabricSuccess(
-      fabricResult,
-      "FABRIC_ORGANIZATION_TRANSFER_FAILED"
-    );
+    assertFabricSuccess(fabricResult, "FABRIC_ORGANIZATION_TRANSFER_FAILED");
 
-    /**
-     * Insert transaction only after Fabric success.
-     */
-        await client.query(
+    const fabricTransactionId = extractFabricTransactionId(fabricResult);
+
+    const insertTransactionResult = await client.query(
       `
       INSERT INTO blockchain.transactions (
         transaction_id,
@@ -707,18 +507,19 @@ exports.walletToOrganizationTransfer = async (payload) => {
         NOW(),
         NOW()
       )
+      RETURNING *
       `,
       [
         localTransactionId,
         localRequestId,
         senderWalletAddress,
-        organization.organization_id || organization.id,
-        organizationCode,
+        organization.organization_id,
+        organization.organization_code || organizationCode,
         amount,
         currency,
         transactionPurpose,
         transactionDescription,
-        fabricResult.transactionId || fabricResult.txId || null,
+        fabricTransactionId,
         JSON.stringify(fabricResult || {}),
         sourceSystem,
         requestSource,
@@ -726,39 +527,17 @@ exports.walletToOrganizationTransfer = async (payload) => {
       ]
     );
 
-    /**
-     * Deduct balance only after Fabric success.
-     */
     await client.query(
       `
       UPDATE blockchain.wallets
-      SET 
+      SET
         current_balance = current_balance - $1::numeric,
-        updated_by = $2,
+        currency = $2,
+        updated_by = $3,
         updated_at = NOW()
-      WHERE wallet_address = $3
+      WHERE wallet_address = $4
       `,
-      [amount, createdBy, senderWalletAddress]
-    );
-
-    await client.query(
-      `
-      UPDATE blockchain.integration_requests
-      SET 
-        request_status = 'COMPLETED',
-        response_payload = $1::jsonb,
-        updated_by = $2,
-        updated_at = NOW()
-      WHERE request_id = $3
-      `,
-      [
-        JSON.stringify({
-          transactionId: localTransactionId,
-          fabricResult,
-        }),
-        createdBy,
-        localRequestId,
-      ]
+      [amount, currency, createdBy, senderWalletAddress]
     );
 
     await safeAuditLog(client, {
@@ -768,8 +547,7 @@ exports.walletToOrganizationTransfer = async (payload) => {
       entityType: "TRANSACTION",
       entityId: localTransactionId,
       eventStatus: "SUCCESS",
-      eventDescription:
-        "Wallet-to-organization transfer completed successfully",
+      eventDescription: "Wallet-to-organization transfer completed successfully",
       requestPayload: {
         senderWalletAddress,
         organizationCode,
@@ -781,13 +559,7 @@ exports.walletToOrganizationTransfer = async (payload) => {
         requestSource,
         createdBy,
       },
-      responsePayload: {
-        transactionId: localTransactionId,
-        organizationCode: organization.organization_code,
-        amount,
-        currency,
-        fabricResult,
-      },
+      responsePayload: fabricResult,
       sourceSystem,
       requestSource,
       createdBy,
@@ -795,16 +567,20 @@ exports.walletToOrganizationTransfer = async (payload) => {
 
     await client.query("COMMIT");
 
+    logger.info("Wallet-to-organization transfer completed successfully", {
+      requestId: localRequestId,
+      transactionId: localTransactionId,
+      fabricTransactionId,
+      rowsInserted: insertTransactionResult.rowCount,
+    });
+
     return {
       transactionId: localTransactionId,
       requestId: localRequestId,
       senderWalletAddress,
-      organizationId: organization.organization_id,
-      organizationCode: organization.organization_code,
-      organizationName: organization.organization_name,
+      organizationCode,
       amount: amount.toString(),
       currency,
-      transactionPurpose,
       fabricResult,
     };
   } catch (error) {
@@ -816,108 +592,6 @@ exports.walletToOrganizationTransfer = async (payload) => {
       error: error.message,
       stack: error.stack,
     });
-
-    let failureClient;
-
-    try {
-      failureClient = await db.getClient();
-      await failureClient.query("BEGIN");
-
-      await failureClient.query(
-        `
-        INSERT INTO blockchain.integration_requests (
-          request_id,
-          request_type,
-          request_status,
-          source_system,
-          request_source,
-          request_payload,
-          response_payload,
-          created_by,
-          created_at,
-          updated_at
-        )
-        VALUES (
-          $1,
-          'ORGANIZATION_TRANSFER',
-          'FAILED',
-          $2,
-          $3,
-          $4::jsonb,
-          $5::jsonb,
-          $6,
-          NOW(),
-          NOW()
-        )
-        ON CONFLICT (request_id)
-        DO UPDATE SET
-          request_status = 'FAILED',
-          source_system = EXCLUDED.source_system,
-          request_source = EXCLUDED.request_source,
-          request_payload = EXCLUDED.request_payload,
-          response_payload = EXCLUDED.response_payload,
-          updated_at = NOW()
-        `,
-        [
-          localRequestId,
-          sourceSystem,
-          requestSource,
-          JSON.stringify({
-            ...payload,
-            sourceSystem,
-            requestSource,
-            createdBy,
-          }),
-          JSON.stringify({
-            error: error.message,
-            errorCode:
-              error.errorCode || "ORGANIZATION_TRANSFER_FAILED",
-          }),
-          createdBy,
-        ]
-      );
-
-      await safeAuditLog(failureClient, {
-        requestId: localRequestId,
-        eventType: "WALLET_TO_ORGANIZATION_TRANSFER",
-        eventCategory: "TRANSACTION",
-        entityType: "TRANSACTION",
-        entityId: localTransactionId,
-        eventStatus: "FAILED",
-        eventDescription: error.message,
-        requestPayload: {
-          ...payload,
-          sourceSystem,
-          requestSource,
-          createdBy,
-        },
-        responsePayload: {
-          error: error.message,
-          errorCode:
-            error.errorCode || "ORGANIZATION_TRANSFER_FAILED",
-        },
-        sourceSystem,
-        requestSource,
-        createdBy,
-      });
-
-      await failureClient.query("COMMIT");
-    } catch (auditError) {
-      if (failureClient) {
-        await failureClient.query("ROLLBACK");
-      }
-
-      logger.error("Failed to write organization transfer failure audit", {
-        requestId: localRequestId,
-        transactionId: localTransactionId,
-        error: auditError.message,
-        stack: auditError.stack,
-      });
-    } finally {
-      if (failureClient) {
-        failureClient.release();
-      }
-    }
 
     throw error;
   } finally {

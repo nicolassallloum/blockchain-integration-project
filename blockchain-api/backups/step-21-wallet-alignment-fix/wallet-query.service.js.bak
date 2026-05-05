@@ -1,82 +1,41 @@
 const fabricService = require("./fabric.service");
 const databaseService = require("./database.service");
-const logger = require("../utils/logger");
 
 class WalletQueryService {
-  safeParseFabricResult(result) {
-    if (!result) return null;
-
-    if (Buffer.isBuffer(result)) {
-      const text = result.toString("utf8");
-      if (!text || text.trim() === "") return null;
-
-      try {
-        return JSON.parse(text);
-      } catch {
-        return text;
-      }
-    }
-
-    if (typeof result === "string") {
-      if (result.trim() === "") return null;
-
-      try {
-        return JSON.parse(result);
-      } catch {
-        return result;
-      }
-    }
-
-    return result;
-  }
-
-  extractWalletFromFabricResponse(fabricResult) {
-    const parsed = this.safeParseFabricResult(fabricResult);
-
-    return (
-      parsed?.data?.wallet ||
-      parsed?.data?.data?.wallet ||
-      parsed?.wallet ||
-      parsed ||
-      null
-    );
-  }
-
   async getWalletByAddress(walletAddress, requestId) {
     const cleanWalletAddress = walletAddress.trim();
 
-    const dbWallet = await this.getWalletByAddressFromDatabase(cleanWalletAddress);
+    /**
+     * 1. Try Fabric first
+     */
+    try {
+      const fabricResult = await fabricService.evaluateTransaction(
+        "GetWalletByAddress",
+        [cleanWalletAddress]
+      );
 
-    if (dbWallet?.customer_id) {
-      try {
-        const fabricResult = await fabricService.evaluateTransaction(
-          "GetWalletByCustomerId",
-          [dbWallet.customer_id]
-        );
+      const parsedWallet = this.safeParseFabricResult(fabricResult);
 
-        const fabricWallet = this.extractWalletFromFabricResponse(fabricResult);
-
-        if (fabricWallet?.walletAddress) {
-          return {
-            success: true,
-            httpStatus: 200,
-            message: "Wallet details retrieved successfully from blockchain using customerId mapping",
-            source: "FABRIC",
-            data: this.normalizeWallet({
-              ...dbWallet,
-              ...fabricWallet,
-              walletAddress: fabricWallet.walletAddress,
-            }),
-          };
-        }
-      } catch (error) {
-        logger.warn("Fabric wallet query by customerId failed. Returning PostgreSQL wallet.", {
-          requestId,
-          walletAddress: cleanWalletAddress,
-          error: error.message,
-        });
+      if (parsedWallet) {
+        return {
+          success: true,
+          httpStatus: 200,
+          message: "Wallet details retrieved successfully from blockchain",
+          source: "FABRIC",
+          data: this.normalizeWallet(parsedWallet),
+        };
       }
+    } catch (error) {
+      console.warn(
+        `[${requestId}] Fabric wallet query failed. Falling back to PostgreSQL.`,
+        error.message
+      );
     }
+
+    /**
+     * 2. PostgreSQL fallback
+     */
+    const dbWallet = await this.getWalletByAddressFromDatabase(cleanWalletAddress);
 
     if (!dbWallet) {
       return {
@@ -100,35 +59,36 @@ class WalletQueryService {
   async getWalletBalance(walletAddress, requestId) {
     const cleanWalletAddress = walletAddress.trim();
 
-    const dbWallet = await this.getWalletByAddressFromDatabase(cleanWalletAddress);
+    /**
+     * 1. Try Fabric first
+     */
+    try {
+      const fabricResult = await fabricService.evaluateTransaction(
+        "GetWalletBalance",
+        [cleanWalletAddress]
+      );
 
-    if (dbWallet?.customer_id) {
-      try {
-        const fabricResult = await fabricService.evaluateTransaction(
-          "GetWalletByCustomerId",
-          [dbWallet.customer_id]
-        );
+      const parsedBalance = this.safeParseFabricResult(fabricResult);
 
-        const fabricWallet = this.extractWalletFromFabricResponse(fabricResult);
-
-        if (fabricWallet?.walletAddress) {
-          return {
-            success: true,
-            httpStatus: 200,
-            message: "Wallet balance retrieved successfully from blockchain using customerId mapping",
-            source: "FABRIC",
-            data: this.normalizeBalance(fabricWallet.walletAddress, fabricWallet),
-          };
-        }
-      } catch (error) {
-        logger.warn("Fabric balance query by customerId failed. Returning PostgreSQL balance.", {
-          requestId,
-          walletAddress: cleanWalletAddress,
-          error: error.message,
-        });
+      if (parsedBalance !== null && parsedBalance !== undefined) {
+        return {
+          success: true,
+          httpStatus: 200,
+          message: "Wallet balance retrieved successfully from blockchain",
+          source: "FABRIC",
+          data: this.normalizeBalance(cleanWalletAddress, parsedBalance),
+        };
       }
+    } catch (error) {
+      console.warn(
+        `[${requestId}] Fabric balance query failed. Falling back to PostgreSQL.`,
+        error.message
+      );
     }
 
+    /**
+     * 2. PostgreSQL fallback
+     */
     const dbBalance = await this.getWalletBalanceFromDatabase(cleanWalletAddress);
 
     if (!dbBalance) {
@@ -156,6 +116,44 @@ class WalletQueryService {
     const limit = Number(options.limit || 50);
     const offset = Number(options.offset || 0);
 
+    /**
+     * 1. Try Fabric first
+     */
+    try {
+      const fabricResult = await fabricService.evaluateTransaction(
+        "GetTransactionHistoryByWallet",
+        [cleanWalletAddress]
+      );
+
+      const parsedHistory = this.safeParseFabricResult(fabricResult);
+
+      if (Array.isArray(parsedHistory)) {
+        return {
+          success: true,
+          httpStatus: 200,
+          message: "Wallet transaction history retrieved successfully from blockchain",
+          source: "FABRIC",
+          data: {
+            walletAddress: cleanWalletAddress,
+            limit,
+            offset,
+            total: parsedHistory.length,
+            transactions: parsedHistory
+              .slice(offset, offset + limit)
+              .map((transaction) => this.normalizeTransaction(transaction)),
+          },
+        };
+      }
+    } catch (error) {
+      console.warn(
+        `[${requestId}] Fabric wallet history query failed. Falling back to PostgreSQL.`,
+        error.message
+      );
+    }
+
+    /**
+     * 2. PostgreSQL fallback
+     */
     const dbHistory = await this.getWalletHistoryFromDatabase(
       cleanWalletAddress,
       limit,
@@ -179,6 +177,36 @@ class WalletQueryService {
     };
   }
 
+  safeParseFabricResult(result) {
+    if (!result) return null;
+
+    if (Buffer.isBuffer(result)) {
+      const text = result.toString("utf8");
+
+      if (!text || text.trim() === "") {
+        return null;
+      }
+
+      try {
+        return JSON.parse(text);
+      } catch {
+        return text;
+      }
+    }
+
+    if (typeof result === "string") {
+      if (result.trim() === "") return null;
+
+      try {
+        return JSON.parse(result);
+      } catch {
+        return result;
+      }
+    }
+
+    return result;
+  }
+
   normalizeWallet(wallet) {
     return {
       walletAddress:
@@ -200,7 +228,6 @@ class WalletQueryService {
       organizationCode:
         wallet.organizationCode ||
         wallet.organization_code ||
-        wallet.organizationId ||
         null,
 
       fullName:
@@ -215,7 +242,7 @@ class WalletQueryService {
 
       currency:
         wallet.currency ||
-        "TOKEN",
+        "USD",
 
       balance:
         wallet.balance !== undefined
@@ -244,7 +271,7 @@ class WalletQueryService {
       return {
         walletAddress,
         balance: String(balancePayload),
-        currency: "TOKEN",
+        currency: "USD",
       };
     }
 
@@ -263,7 +290,7 @@ class WalletQueryService {
 
       currency:
         balancePayload.currency ||
-        "TOKEN",
+        "USD",
 
       status:
         balancePayload.status ||
@@ -291,11 +318,6 @@ class WalletQueryService {
         transaction.request_id ||
         null,
 
-      fabricTransactionId:
-        transaction.fabricTransactionId ||
-        transaction.fabric_transaction_id ||
-        null,
-
       fromWalletAddress:
         transaction.fromWalletAddress ||
         transaction.from_wallet_address ||
@@ -317,12 +339,12 @@ class WalletQueryService {
 
       currency:
         transaction.currency ||
-        "TOKEN",
+        "USD",
 
       transactionType:
         transaction.transactionType ||
         transaction.transaction_type ||
-        "WALLET_TO_WALLET",
+        "WALLET_TRANSFER",
 
       transactionPurpose:
         transaction.transactionPurpose ||
@@ -342,7 +364,7 @@ class WalletQueryService {
       riskLevel:
         transaction.riskLevel ||
         transaction.risk_level ||
-        "LOW",
+        null,
 
       createdAt:
         transaction.createdAt ||
@@ -356,7 +378,6 @@ class WalletQueryService {
 
     const query = `
       SELECT
-        wallet_id,
         wallet_address,
         customer_id,
         organization_id,
@@ -383,7 +404,6 @@ class WalletQueryService {
     const query = `
       SELECT
         wallet_address,
-        customer_id,
         current_balance,
         currency,
         wallet_status,
@@ -398,52 +418,65 @@ class WalletQueryService {
     return result.rows[0] || null;
   }
 
-  async getWalletHistoryFromDatabase(walletAddress, limit, offset) {
-    const pool = databaseService.getPool();
+    async getWalletHistoryFromDatabase(walletAddress, limit, offset) {
+    const pool = databaseService.getPool();     
 
+    /*
+    * STEP 25 FIX
+    * Support multiple possible transaction table names because your project
+    * has used both:
+    *
+    * blockchain.transactions
+    * blockchain.blockchain_transaction
+    */
     const tableCheckQuery = `
-      SELECT table_name
-      FROM information_schema.tables
-      WHERE table_schema = 'blockchain'
+        SELECT table_name
+        FROM information_schema.tables
+        WHERE table_schema = 'blockchain'
         AND table_name IN (
-          'transactions',
-          'blockchain_transaction',
-          'fabric_transactions'
+            'transactions',
+            'blockchain_transaction',
+            'fabric_transactions'
         )
-      ORDER BY
+        ORDER BY
         CASE table_name
-          WHEN 'transactions' THEN 1
-          WHEN 'blockchain_transaction' THEN 2
-          WHEN 'fabric_transactions' THEN 3
-          ELSE 99
+            WHEN 'transactions' THEN 1
+            WHEN 'blockchain_transaction' THEN 2
+            WHEN 'fabric_transactions' THEN 3
+            ELSE 99
         END
-      LIMIT 1;
+        LIMIT 1;
     `;
 
     const tableCheckResult = await pool.query(tableCheckQuery);
 
     if (!tableCheckResult.rows.length) {
-      logger.warn("No transaction table found in schema blockchain", {
-        walletAddress,
-      });
+        console.warn(
+        `No transaction table found in schema blockchain. Returning empty history for wallet ${walletAddress}`
+        );
 
-      return {
+        return {
         total: 0,
         transactions: [],
-      };
+        };
     }
 
     const tableName = tableCheckResult.rows[0].table_name;
     const fullTableName = `blockchain.${tableName}`;
 
+    /*
+    * Detect available columns because schemas may differ between:
+    * blockchain.transactions
+    * blockchain.blockchain_transaction
+    */
     const columnsResult = await pool.query(
-      `
-      SELECT column_name
-      FROM information_schema.columns
-      WHERE table_schema = 'blockchain'
+        `
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_schema = 'blockchain'
         AND table_name = $1;
-      `,
-      [tableName]
+        `,
+        [tableName]
     );
 
     const columns = columnsResult.rows.map((row) => row.column_name);
@@ -456,104 +489,96 @@ class WalletQueryService {
     let whereClause = null;
 
     if (hasFromWalletAddress && hasToWalletAddress) {
-      whereClause = `
+        whereClause = `
         WHERE from_wallet_address = $1
-           OR to_wallet_address = $1
-      `;
+            OR to_wallet_address = $1
+        `;
     } else if (hasSenderWalletAddress && hasReceiverWalletAddress) {
-      whereClause = `
+        whereClause = `
         WHERE sender_wallet_address = $1
-           OR receiver_wallet_address = $1
-      `;
+            OR receiver_wallet_address = $1
+        `;
     } else {
-      logger.warn("Transaction table does not have wallet address columns", {
-        fullTableName,
-        walletAddress,
-      });
+        console.warn(
+        `Transaction table ${fullTableName} does not have wallet address columns. Returning empty history.`
+        );
 
-      return {
+        return {
         total: 0,
         transactions: [],
-      };
+        };
     }
 
     const selectTransactionId = columns.includes("transaction_id")
-      ? "transaction_id"
-      : columns.includes("id")
-      ? "id AS transaction_id"
-      : "NULL AS transaction_id";
+        ? "transaction_id"
+        : columns.includes("id")
+        ? "id AS transaction_id"
+        : "NULL AS transaction_id";
 
     const selectRequestId = columns.includes("request_id")
-      ? "request_id"
-      : "NULL AS request_id";
-
-    const selectFabricTransactionId = columns.includes("fabric_transaction_id")
-      ? "fabric_transaction_id"
-      : columns.includes("fabric_tx_id")
-      ? "fabric_tx_id AS fabric_transaction_id"
-      : "NULL AS fabric_transaction_id";
+        ? "request_id"
+        : "NULL AS request_id";
 
     const selectFromWalletAddress = hasFromWalletAddress
-      ? "from_wallet_address"
-      : hasSenderWalletAddress
-      ? "sender_wallet_address AS from_wallet_address"
-      : "NULL AS from_wallet_address";
+        ? "from_wallet_address"
+        : hasSenderWalletAddress
+        ? "sender_wallet_address AS from_wallet_address"
+        : "NULL AS from_wallet_address";
 
     const selectToWalletAddress = hasToWalletAddress
-      ? "to_wallet_address"
-      : hasReceiverWalletAddress
-      ? "receiver_wallet_address AS to_wallet_address"
-      : "NULL AS to_wallet_address";
+        ? "to_wallet_address"
+        : hasReceiverWalletAddress
+        ? "receiver_wallet_address AS to_wallet_address"
+        : "NULL AS to_wallet_address";
 
     const selectAmount = columns.includes("amount")
-      ? "amount"
-      : "0 AS amount";
+        ? "amount"
+        : "0 AS amount";
 
     const selectCurrency = columns.includes("currency")
-      ? "currency"
-      : "'TOKEN' AS currency";
+        ? "currency"
+        : "'USD' AS currency";
 
     const selectTransactionType = columns.includes("transaction_type")
-      ? "transaction_type"
-      : "'WALLET_TO_WALLET' AS transaction_type";
+        ? "transaction_type"
+        : "'WALLET_TO_WALLET' AS transaction_type";
 
     const selectTransactionPurpose = columns.includes("transaction_purpose")
-      ? "transaction_purpose"
-      : "NULL AS transaction_purpose";
+        ? "transaction_purpose"
+        : "NULL AS transaction_purpose";
 
     const selectTransactionDescription = columns.includes("transaction_description")
-      ? "transaction_description"
-      : "NULL AS transaction_description";
+        ? "transaction_description"
+        : "NULL AS transaction_description";
 
     const selectTransactionStatus = columns.includes("transaction_status")
-      ? "transaction_status"
-      : columns.includes("status")
-      ? "status AS transaction_status"
-      : "'UNKNOWN' AS transaction_status";
+        ? "transaction_status"
+        : columns.includes("status")
+        ? "status AS transaction_status"
+        : "'UNKNOWN' AS transaction_status";
 
     const selectRiskLevel = columns.includes("risk_level")
-      ? "risk_level"
-      : "'LOW' AS risk_level";
+        ? "risk_level"
+        : "NULL AS risk_level";
 
     const selectCreatedAt = columns.includes("created_at")
-      ? "created_at"
-      : "NULL AS created_at";
+        ? "created_at"
+        : "NULL AS created_at";
 
     const orderBy = columns.includes("created_at")
-      ? "ORDER BY created_at DESC"
-      : "ORDER BY transaction_id DESC";
+        ? "ORDER BY created_at DESC"
+        : "ORDER BY transaction_id DESC";
 
     const countQuery = `
-      SELECT COUNT(*)::INT AS total
-      FROM ${fullTableName}
-      ${whereClause};
+        SELECT COUNT(*)::INT AS total
+        FROM ${fullTableName}
+        ${whereClause};
     `;
 
     const dataQuery = `
-      SELECT
+        SELECT
         ${selectTransactionId},
         ${selectRequestId},
-        ${selectFabricTransactionId},
         ${selectFromWalletAddress},
         ${selectToWalletAddress},
         ${selectAmount},
@@ -564,24 +589,24 @@ class WalletQueryService {
         ${selectTransactionStatus},
         ${selectRiskLevel},
         ${selectCreatedAt}
-      FROM ${fullTableName}
-      ${whereClause}
-      ${orderBy}
-      LIMIT $2 OFFSET $3;
+        FROM ${fullTableName}
+        ${whereClause}
+        ${orderBy}
+        LIMIT $2 OFFSET $3;
     `;
 
     const countResult = await pool.query(countQuery, [walletAddress]);
     const dataResult = await pool.query(dataQuery, [
-      walletAddress,
-      limit,
-      offset,
+        walletAddress,
+        limit,
+        offset,
     ]);
 
     return {
-      total: countResult.rows[0]?.total || 0,
-      transactions: dataResult.rows,
+        total: countResult.rows[0]?.total || 0,
+        transactions: dataResult.rows,
     };
-  }
+    }
 }
 
 module.exports = new WalletQueryService();
