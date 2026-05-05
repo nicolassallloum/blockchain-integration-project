@@ -6,7 +6,7 @@ const helmet = require("helmet");
 const compression = require("compression");
 const morgan = require("morgan");
 const walletQueryRoutes = require("./routes/wallet-query.routes");
-const transactionRoutes = require("./routes/transactions.routes");
+const transactionsRoutes = require("./routes/transactions.routes");
 let logger;
 
 try {
@@ -133,7 +133,7 @@ try {
 } catch (error) {
   console.warn(`[SERVER] Wallet direct route not loaded: ${error.message}`);
 }
-app.use("/api/v1/transactions", transactionRoutes);
+app.use("/api/v1/transactions", transactionsRoutes);
 
 /**
  * 404 handler

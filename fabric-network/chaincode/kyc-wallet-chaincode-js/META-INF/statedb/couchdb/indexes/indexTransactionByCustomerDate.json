@@ -1,0 +1,8 @@
+{
+  "index": {
+    "fields": ["docType", "senderCustomerId", "receiverCustomerId", "createdAt"]
+  },
+  "ddoc": "indexTransactionByCustomerDate",
+  "name": "indexTransactionByCustomerDate",
+  "type": "json"
+}

@@ -156,7 +156,7 @@ class TransactionService {
         bt.created_at                  AS "createdAt",
         bt.updated_at                  AS "updatedAt",
         bt.metadata                    AS "metadata"
-      FROM blockchain.transactions bt
+      FROM blockchain.blockchain_transaction bt
       ${whereSql}
       ORDER BY ${sortColumn} ${sortOrder}
       LIMIT $${nextParamIndex}
@@ -165,7 +165,7 @@ class TransactionService {
 
     const countQuery = `
       SELECT COUNT(*)::BIGINT AS total
-      FROM blockchain.transactions bt
+      FROM blockchain.blockchain_transaction bt
       ${whereSql};
     `;
 
@@ -221,7 +221,7 @@ class TransactionService {
         bt.created_at                  AS "createdAt",
         bt.updated_at                  AS "updatedAt",
         bt.metadata                    AS "metadata"
-      FROM blockchain.transactions bt
+      FROM blockchain.blockchain_transaction bt
       WHERE bt.transaction_id = $1
       LIMIT 1;
     `;

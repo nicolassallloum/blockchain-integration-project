@@ -1,28 +1,24 @@
 const express = require("express");
-const router = express.Router();
 
 const transactionController = require("../controllers/transaction.controller");
 
-/**
- * STEP 23
- * Wallet-to-wallet transfer
- *
- * POST /api/v1/transactions/wallet-transfer
- */
-router.post(
-  "/wallet-transfer",
-  transactionController.walletToWalletTransfer
-);
+const router = express.Router();
 
 /**
- * STEP 24
- * Wallet-to-organization transfer
+ * STEP 26 — Transaction History & Search APIs
  *
- * POST /api/v1/transactions/organization-transfer
+ * Base path from server.js:
+ * /api/v1/transactions
+ *
+ * Final endpoints:
+ * GET /api/v1/transactions
+ * GET /api/v1/transactions/:transactionId
  */
-router.post(
-  "/organization-transfer",
-  transactionController.walletToOrganizationTransfer
-);
+
+// Search transaction history
+router.get("/", transactionController.searchTransactions);
+
+// Get transaction by transactionId
+router.get("/:transactionId", transactionController.getTransactionById);
 
 module.exports = router;

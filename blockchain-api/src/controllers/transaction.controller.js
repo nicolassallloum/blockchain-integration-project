@@ -1,82 +1,183 @@
 const transactionService = require("../services/transaction.service");
-const logger = require("../utils/logger");
 
-/**
- * STEP 23
- * Wallet-to-wallet transfer controller
- */
-exports.walletToWalletTransfer = async (req, res) => {
-  const requestId =
+function buildRequestId(req) {
+  return (
     req.headers["x-request-id"] ||
-    req.body.requestId ||
-    `REQ_${Date.now()}`;
+    `REQ_${Date.now()}_${Math.random().toString(16).slice(2).toUpperCase()}`
+  );
+}
 
-  try {
-    const result = await transactionService.walletToWalletTransfer({
-      ...req.body,
-      requestId,
-    });
+function parsePositiveInteger(value, defaultValue, maxValue = 100) {
+  const parsed = Number.parseInt(value, 10);
 
-    return res.status(200).json({
-      success: true,
-      message: "Wallet-to-wallet transfer completed successfully",
-      data: result,
-      requestId,
-    });
-  } catch (error) {
-    logger.error("Wallet-to-wallet transfer failed", {
-      requestId,
-      error: error.message,
-      stack: error.stack,
-    });
-
-    return res.status(error.statusCode || 500).json({
-      success: false,
-      message: error.message || "Wallet-to-wallet transfer failed",
-      errorCode: error.errorCode || "WALLET_TRANSFER_FAILED",
-      data: null,
-      requestId,
-    });
+  if (Number.isNaN(parsed) || parsed <= 0) {
+    return defaultValue;
   }
-};
 
-/**
- * STEP 24
- * Wallet-to-organization transfer controller
- */
-exports.walletToOrganizationTransfer = async (req, res) => {
-  const requestId =
-    req.headers["x-request-id"] ||
-    req.body.requestId ||
-    `REQ_${Date.now()}`;
+  return Math.min(parsed, maxValue);
+}
 
-  try {
-    const result = await transactionService.walletToOrganizationTransfer({
-      ...req.body,
-      requestId,
-    });
-
-    return res.status(200).json({
-      success: true,
-      message: "Wallet-to-organization transfer completed successfully",
-      data: result,
-      requestId,
-    });
-  } catch (error) {
-    logger.error("Wallet-to-organization transfer failed", {
-      requestId,
-      error: error.message,
-      stack: error.stack,
-    });
-
-    return res.status(error.statusCode || 500).json({
-      success: false,
-      message:
-        error.message || "Wallet-to-organization transfer failed",
-      errorCode:
-        error.errorCode || "ORGANIZATION_TRANSFER_FAILED",
-      data: null,
-      requestId,
-    });
+function parseDecimal(value) {
+  if (value === undefined || value === null || value === "") {
+    return null;
   }
-};
+
+  const parsed = Number(value);
+
+  if (Number.isNaN(parsed)) {
+    return null;
+  }
+
+  return parsed;
+}
+
+function normalizeSortBy(sortBy) {
+  const allowedSortColumns = [
+    "createdAt",
+    "updatedAt",
+    "amount",
+    "transactionType",
+    "status",
+    "transactionId",
+  ];
+
+  if (!allowedSortColumns.includes(sortBy)) {
+    return "createdAt";
+  }
+
+  return sortBy;
+}
+
+function normalizeSortOrder(sortOrder) {
+  const value = String(sortOrder || "desc").toLowerCase();
+
+  return value === "asc" ? "asc" : "desc";
+}
+
+function normalizeSource(source) {
+  const value = String(source || "postgres").toLowerCase();
+
+  if (value === "fabric" || value === "couchdb") {
+    return "fabric";
+  }
+
+  return "postgres";
+}
+
+class TransactionController {
+  async searchTransactions(req, res) {
+    const requestId = buildRequestId(req);
+
+    try {
+      const filters = {
+        walletAddress: req.query.walletAddress || null,
+        customerId: req.query.customerId || null,
+        organizationId: req.query.organizationId || null,
+        transactionType: req.query.transactionType || null,
+        status: req.query.status || null,
+        dateFrom: req.query.dateFrom || null,
+        dateTo: req.query.dateTo || null,
+        amountMin: parseDecimal(req.query.amountMin),
+        amountMax: parseDecimal(req.query.amountMax),
+      };
+
+      const pagination = {
+        page: parsePositiveInteger(req.query.page, 1, 100000),
+        limit: parsePositiveInteger(req.query.limit, 20, 100),
+      };
+
+      const sorting = {
+        sortBy: normalizeSortBy(req.query.sortBy),
+        sortOrder: normalizeSortOrder(req.query.sortOrder),
+      };
+
+      const source = normalizeSource(req.query.source);
+
+      const result = await transactionService.searchTransactions({
+        filters,
+        pagination,
+        sorting,
+        source,
+        requestId,
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "Transaction history retrieved successfully",
+        data: result.data,
+        pagination: result.pagination,
+        filters: result.filters,
+        sorting: result.sorting,
+        source: result.source,
+        requestId,
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: "Failed to retrieve transaction history",
+        errorCode: "TRANSACTION_SEARCH_FAILED",
+        error: {
+          message: error.message,
+        },
+        data: null,
+        requestId,
+      });
+    }
+  }
+
+  async getTransactionById(req, res) {
+    const requestId = buildRequestId(req);
+
+    try {
+      const { transactionId } = req.params;
+      const source = normalizeSource(req.query.source);
+
+      if (!transactionId) {
+        return res.status(400).json({
+          success: false,
+          message: "transactionId is required",
+          errorCode: "TRANSACTION_ID_REQUIRED",
+          data: null,
+          requestId,
+        });
+      }
+
+      const transaction = await transactionService.getTransactionById({
+        transactionId,
+        source,
+        requestId,
+      });
+
+      if (!transaction) {
+        return res.status(404).json({
+          success: false,
+          message: `Transaction not found for transactionId=${transactionId}`,
+          errorCode: "TRANSACTION_NOT_FOUND",
+          data: null,
+          requestId,
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: "Transaction retrieved successfully",
+        data: transaction,
+        source,
+        requestId,
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: "Failed to retrieve transaction",
+        errorCode: "TRANSACTION_GET_FAILED",
+        error: {
+          message: error.message,
+        },
+        data: null,
+        requestId,
+      });
+    }
+  }
+}
+
+module.exports = new TransactionController();
