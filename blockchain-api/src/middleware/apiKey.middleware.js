@@ -1,57 +1,64 @@
 'use strict';
 
 /**
- * STEP 27 — API Key Validation Middleware
+ * STEP 28 — API Key Protection Middleware
+ *
+ * Used for internal service-to-service endpoints.
  */
 
 const crypto = require('crypto');
-const authConfig = require('../config/auth.config');
-const { AuthError } = require('../utils/authErrors');
+const securityConfig = require('../config/security.config');
 
-function safeCompare(a, b) {
-  const valueA = Buffer.from(String(a || ''), 'utf8');
-  const valueB = Buffer.from(String(b || ''), 'utf8');
+function safeCompare(valueA, valueB) {
+  if (!valueA || !valueB) return false;
 
-  if (valueA.length !== valueB.length) {
-    return false;
-  }
+  const bufferA = Buffer.from(valueA);
+  const bufferB = Buffer.from(valueB);
 
-  return crypto.timingSafeEqual(valueA, valueB);
+  if (bufferA.length !== bufferB.length) return false;
+
+  return crypto.timingSafeEqual(bufferA, bufferB);
 }
 
-function validateApiKey(req, res, next) {
-  try {
-    if (!authConfig.authEnabled) {
-      return next();
-    }
-
-    const headerName = authConfig.apiKey.headerName.toLowerCase();
-    const providedApiKey = req.headers[headerName];
-    const expectedApiKey = authConfig.apiKey.internalServiceApiKey;
-
-    if (!providedApiKey) {
-      throw new AuthError(`Missing API key header: ${headerName}`, 401, 'API_KEY_MISSING');
-    }
-
-    if (!expectedApiKey || expectedApiKey.includes('change-me')) {
-      throw new AuthError('Internal API key is not configured securely', 500, 'API_KEY_NOT_CONFIGURED');
-    }
-
-    if (!safeCompare(providedApiKey, expectedApiKey)) {
-      throw new AuthError('Invalid API key', 401, 'INVALID_API_KEY');
-    }
-
-    req.apiKeyAuth = {
-      authenticated: true,
-      headerName
-    };
-
+function apiKeyProtection(req, res, next) {
+  if (!securityConfig.apiKey.enabled) {
     return next();
-  } catch (error) {
-    return next(error);
   }
+
+  const configuredApiKey = securityConfig.apiKey.internalApiKey;
+  const providedApiKey = req.headers['x-api-key'];
+
+  if (!configuredApiKey) {
+    return res.status(500).json({
+      success: false,
+      message: 'API key protection is enabled but INTERNAL_API_KEY is not configured',
+      errorCode: 'API_KEY_NOT_CONFIGURED',
+      requestId: req.headers['x-request-id'] || null
+    });
+  }
+
+  if (!providedApiKey || !safeCompare(providedApiKey, configuredApiKey)) {
+    console.warn(
+      JSON.stringify({
+        level: 'warn',
+        event: 'INVALID_OR_MISSING_API_KEY',
+        requestId: req.headers['x-request-id'] || null,
+        method: req.method,
+        path: req.originalUrl,
+        ip: req.ip,
+        timestamp: new Date().toISOString()
+      })
+    );
+
+    return res.status(401).json({
+      success: false,
+      message: 'Unauthorized service request',
+      errorCode: 'INVALID_API_KEY',
+      requestId: req.headers['x-request-id'] || null
+    });
+  }
+
+  return next();
 }
 
-module.exports = {
-  validateApiKey
-};
+module.exports = apiKeyProtection;

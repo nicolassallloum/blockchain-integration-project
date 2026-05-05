@@ -2,16 +2,20 @@
 
 /**
  * Blockchain API Middleware Server
- * STEP 27 — Updated Authentication & Authorization Integration
+ * STEP 28 — API Security Controls Integrated
+ * Keeps STEP 27 Auth + Central Route Registration
  */
 
 require("dotenv").config();
 
 const express = require("express");
-const cors = require("cors");
-const helmet = require("helmet");
 const compression = require("compression");
 const morgan = require("morgan");
+const os = require("os");
+
+const securityConfig = require("./config/security.config");
+const { validateEnvironmentSecrets } = require("./config/env.validator");
+const { applySecurityMiddleware } = require("./middleware/security.middleware");
 
 let logger;
 
@@ -28,7 +32,7 @@ const apiRoutes = require("./routes");
 const authRoutes = require("./routes/auth.routes");
 
 /**
- * STEP 27 Error Middleware
+ * Error Middleware
  */
 const {
   errorHandler,
@@ -48,53 +52,13 @@ const SERVICE_NAME = process.env.SERVICE_NAME || "Blockchain API Middleware";
 const SERVICE_VERSION = process.env.SERVICE_VERSION || "1.0.0";
 
 /**
- * Security headers
+ * STEP 28 — Validate important secrets at startup.
  */
-app.use(
-  helmet({
-    crossOriginResourcePolicy: {
-      policy: "same-origin"
-    }
-  })
-);
+validateEnvironmentSecrets();
 
 /**
- * CORS
- */
-app.use(
-  cors({
-    origin: process.env.CORS_ORIGIN || "*",
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: [
-      "Content-Type",
-      "Authorization",
-      "Accept",
-      "X-Request-ID",
-      "x-request-id",
-      "x-api-key"
-    ],
-    exposedHeaders: ["x-request-id"]
-  })
-);
-
-/**
- * Body parsers
- */
-app.use(express.json({ limit: process.env.JSON_BODY_LIMIT || "10mb" }));
-app.use(
-  express.urlencoded({
-    extended: true,
-    limit: process.env.URLENCODED_BODY_LIMIT || "10mb"
-  })
-);
-
-/**
- * Compression
- */
-app.use(compression());
-
-/**
- * Request ID propagation
+ * STEP 28 — Request ID propagation.
+ * Must run early so all logs and errors include requestId.
  */
 app.use((req, res, next) => {
   const incomingRequestId =
@@ -109,6 +73,42 @@ app.use((req, res, next) => {
 
   next();
 });
+
+/**
+ * STEP 28 — Request size limits.
+ */
+app.use(
+  express.json({
+    limit:
+      securityConfig.requestBodyLimit ||
+      process.env.JSON_BODY_LIMIT ||
+      "1mb",
+    strict: true
+  })
+);
+
+app.use(
+  express.urlencoded({
+    extended: false,
+    limit:
+      securityConfig.requestBodyLimit ||
+      process.env.URLENCODED_BODY_LIMIT ||
+      "1mb"
+  })
+);
+
+/**
+ * STEP 28 — Security controls:
+ * Helmet headers, CORS rules, HPP protection,
+ * suspicious request logging, SQL injection blocking,
+ * global rate limiting.
+ */
+applySecurityMiddleware(app);
+
+/**
+ * Compression
+ */
+app.use(compression());
 
 /**
  * HTTP request logging
@@ -177,15 +177,31 @@ app.get(`${API_PREFIX}/health`, (req, res) => {
       uptimeSeconds: process.uptime(),
       timestamp: new Date().toISOString(),
       system: {
-        hostname: require("os").hostname(),
+        hostname: os.hostname(),
         platform: process.platform,
-        memoryFree: require("os").freemem(),
-        memoryTotal: require("os").totalmem()
+        memoryFree: os.freemem(),
+        memoryTotal: os.totalmem()
+      },
+      security: {
+        helmet: true,
+        cors: true,
+        rateLimit: true,
+        requestSizeLimit: securityConfig.requestBodyLimit,
+        apiKeyProtection: securityConfig.apiKey.enabled
       },
       blockchain: {
-        channelName: process.env.FABRIC_CHANNEL_NAME || process.env.CHANNEL_NAME || null,
-        chaincodeName: process.env.FABRIC_CHAINCODE_NAME || process.env.CHAINCODE_NAME || null,
-        mspId: process.env.FABRIC_MSP_ID || process.env.MSP_ID || null
+        channelName:
+          process.env.FABRIC_CHANNEL_NAME ||
+          process.env.CHANNEL_NAME ||
+          null,
+        chaincodeName:
+          process.env.FABRIC_CHAINCODE_NAME ||
+          process.env.CHAINCODE_NAME ||
+          null,
+        mspId:
+          process.env.FABRIC_MSP_ID ||
+          process.env.MSP_ID ||
+          null
       }
     },
     meta: null,
@@ -207,8 +223,8 @@ app.use(`${API_PREFIX}/auth`, authRoutes);
  * Existing API routes
  *
  * Keep this as the single main route registration point.
- * Do NOT additionally mount duplicate wallet/transaction/fabric routes here
- * unless they are not included in src/routes/index.js.
+ * Do NOT mount wallet/transaction/fabric directly here
+ * because src/routes/index.js already controls them.
  */
 app.use(API_PREFIX, apiRoutes);
 
@@ -243,13 +259,25 @@ if (typeof errorHandler === "function") {
     if (logger && logger.error) {
       logger.error("Unhandled API error", {
         message: error.message,
-        stack: error.stack,
+        stack: NODE_ENV === "production" ? undefined : error.stack,
         method: req.method,
         url: req.originalUrl,
         requestId: req.requestId
       });
     } else {
       console.error("Unhandled API error:", error);
+    }
+
+    if (error.type === "entity.too.large") {
+      return res.status(413).json({
+        success: false,
+        message: "Request payload is too large",
+        errorCode: "REQUEST_PAYLOAD_TOO_LARGE",
+        data: null,
+        meta: null,
+        timestamp: new Date().toISOString(),
+        requestId: req.requestId
+      });
     }
 
     return res.status(statusCode).json({
@@ -278,6 +306,7 @@ const server = app.listen(PORT, HOST, () => {
     `Auth: http://${HOST}:${PORT}${API_PREFIX}/auth`,
     `Wallets: http://${HOST}:${PORT}${API_PREFIX}/wallets`,
     `Transactions: http://${HOST}:${PORT}${API_PREFIX}/transactions`,
+    `Security: Helmet=true CORS=true RateLimit=true BodyLimit=${securityConfig.requestBodyLimit}`,
     "=================================================="
   ];
 

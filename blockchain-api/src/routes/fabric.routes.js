@@ -1,38 +1,76 @@
-'use strict';
-
-const express = require('express');
-const router = express.Router();
-
-const fabricController = require('../controllers/fabric.controller');
-
-const {
-  serviceAccess
-} = require('../middleware/routeSecurity.middleware');
+"use strict";
 
 /**
- * STEP 27 — Protected Fabric Routes
- *
- * Fabric submit/evaluate should not be public.
- * Only trusted internal services should access these endpoints.
+ * STEP 28 — Secure Fabric Routes
  */
 
-router.post(
-  '/submit',
-  serviceAccess,
-  fabricController.submitTransaction
-);
+const express = require("express");
+const { body } = require("express-validator");
 
-router.post(
-  '/evaluate',
-  serviceAccess,
-  fabricController.evaluateTransaction
-);
+const fabricController = require("../controllers/fabric.controller");
+const apiKeyProtection = require("../middleware/apiKey.middleware");
+const { validateRequest } = require("../middleware/validation.middleware");
 
-if (fabricController.getBlockchainStatus) {
-  router.get(
-    '/status',
-    fabricController.getBlockchainStatus
-  );
+const router = express.Router();
+
+function unavailableHandler(handlerName) {
+  return (req, res) => {
+    return res.status(501).json({
+      success: false,
+      message: `Fabric handler is not implemented: ${handlerName}`,
+      errorCode: "FABRIC_HANDLER_NOT_IMPLEMENTED",
+      availableHandlers: Object.keys(fabricController),
+      requestId: req.requestId || req.headers["x-request-id"] || null
+    });
+  };
 }
+
+const submitHandler =
+  fabricController.submitTransaction ||
+  fabricController.submit ||
+  fabricController.invoke ||
+  unavailableHandler("submitTransaction");
+
+const evaluateHandler =
+  fabricController.evaluateTransaction ||
+  fabricController.evaluate ||
+  fabricController.query ||
+  unavailableHandler("evaluateTransaction");
+
+const fabricValidation = [
+  body("functionName")
+    .isString()
+    .trim()
+    .isLength({ min: 2, max: 100 })
+    .matches(/^[A-Za-z0-9_]+$/)
+    .withMessage("functionName is invalid"),
+
+  body("args")
+    .optional()
+    .isArray()
+    .withMessage("args must be an array")
+];
+
+/**
+ * POST /api/v1/fabric/submit
+ */
+router.post(
+  "/submit",
+  apiKeyProtection,
+  fabricValidation,
+  validateRequest,
+  submitHandler
+);
+
+/**
+ * POST /api/v1/fabric/evaluate
+ */
+router.post(
+  "/evaluate",
+  apiKeyProtection,
+  fabricValidation,
+  validateRequest,
+  evaluateHandler
+);
 
 module.exports = router;
