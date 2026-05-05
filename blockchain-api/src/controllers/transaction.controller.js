@@ -1,181 +1,296 @@
-const transactionService = require("../services/transaction.service");
+'use strict';
 
-function buildRequestId(req) {
-  return (
-    req.headers["x-request-id"] ||
-    `REQ_${Date.now()}_${Math.random().toString(16).slice(2).toUpperCase()}`
-  );
+const transactionService = require('../services/transaction.service');
+const auditService = require('../services/audit.service');
+
+const {
+  AUDIT_EVENT_TYPES,
+  AUDIT_EVENT_STATUS,
+  AUDIT_EVENT_CATEGORY
+} = require('../constants/audit.constants');
+
+function getRequestContext(req) {
+  return auditService.buildRequestContext(req);
 }
 
-function parsePositiveInteger(value, defaultValue, maxValue = 100) {
-  const parsed = Number.parseInt(value, 10);
-
-  if (Number.isNaN(parsed) || parsed <= 0) {
-    return defaultValue;
-  }
-
-  return Math.min(parsed, maxValue);
-}
-
-function parseDecimal(value) {
-  if (value === undefined || value === null || value === "") {
-    return null;
-  }
-
-  const parsed = Number(value);
-
-  if (Number.isNaN(parsed)) {
-    return null;
-  }
-
-  return parsed;
-}
-
-function normalizeSortBy(sortBy) {
-  const allowedSortColumns = [
-    "createdAt",
-    "updatedAt",
-    "amount",
-    "transactionType",
-    "status",
-    "transactionId",
-  ];
-
-  if (!allowedSortColumns.includes(sortBy)) {
-    return "createdAt";
-  }
-
-  return sortBy;
-}
-
-function normalizeSortOrder(sortOrder) {
-  const value = String(sortOrder || "desc").toLowerCase();
-
-  return value === "asc" ? "asc" : "desc";
-}
-
-function normalizeSource(source) {
-  const value = String(source || "postgres").toLowerCase();
-
-  if (value === "fabric" || value === "couchdb") {
-    return "fabric";
-  }
-
-  return "postgres";
-}
-
-class TransactionController {
-  async searchTransactions(req, res) {
-    const requestId = buildRequestId(req);
-
-    try {
-      const filters = {
-        walletAddress: req.query.walletAddress || null,
-        customerId: req.query.customerId || null,
-        organizationId: req.query.organizationId || null,
-        transactionType: req.query.transactionType || null,
-        status: req.query.status || null,
-        dateFrom: req.query.dateFrom || null,
-        dateTo: req.query.dateTo || null,
-        amountMin: parseDecimal(req.query.amountMin),
-        amountMax: parseDecimal(req.query.amountMax),
-      };
-
-      const pagination = {
-        page: parsePositiveInteger(req.query.page, 1, 100000),
-        limit: parsePositiveInteger(req.query.limit, 20, 100),
-      };
-
-      const sorting = {
-        sortBy: normalizeSortBy(req.query.sortBy),
-        sortOrder: normalizeSortOrder(req.query.sortOrder),
-      };
-
-      const source = normalizeSource(req.query.source);
-
-      const result = await transactionService.searchTransactions({
-        filters,
-        pagination,
-        sorting,
-        source,
-        requestId,
-      });
-
-      return res.status(200).json({
-        success: true,
-        message: "Transaction history retrieved successfully",
-        data: result.data,
-        pagination: result.pagination,
-        filters: result.filters,
-        sorting: result.sorting,
-        source: result.source,
-        requestId,
-      });
-    } catch (error) {
-      return res.status(500).json({
-        success: false,
-        message: "Failed to retrieve transaction history",
-        errorCode: "TRANSACTION_SEARCH_FAILED",
-        error: {
-          message: error.message,
-        },
-        data: null,
-        requestId,
-      });
+function resolveServiceMethod(service, methodNames = []) {
+  for (const methodName of methodNames) {
+    if (typeof service[methodName] === 'function') {
+      return service[methodName].bind(service);
     }
   }
 
-  async getTransactionById(req, res) {
-    const requestId = buildRequestId(req);
+  return null;
+}
+
+class TransactionController {
+  async walletTransfer(req, res, next) {
+    const context = getRequestContext(req);
 
     try {
-      const { transactionId } = req.params;
-      const source = normalizeSource(req.query.source);
-
-      if (!transactionId) {
-        return res.status(400).json({
-          success: false,
-          message: "transactionId is required",
-          errorCode: "TRANSACTION_ID_REQUIRED",
-          data: null,
-          requestId,
-        });
-      }
-
-      const transaction = await transactionService.getTransactionById({
-        transactionId,
-        source,
-        requestId,
+      await auditService.log({
+        ...context,
+        eventType: AUDIT_EVENT_TYPES.TRANSACTION_REQUEST,
+        eventCategory: AUDIT_EVENT_CATEGORY.TRANSACTION,
+        eventStatus: AUDIT_EVENT_STATUS.PENDING,
+        walletAddress:
+          req.body.senderWalletAddress ||
+          req.body.fromWalletAddress ||
+          null,
+        requestPayload: req.body,
+        controllerName: 'transaction.controller',
+        serviceName: 'transaction.service',
+        metadata: {
+          transactionType: 'WALLET_TO_WALLET'
+        }
       });
 
-      if (!transaction) {
-        return res.status(404).json({
-          success: false,
-          message: `Transaction not found for transactionId=${transactionId}`,
-          errorCode: "TRANSACTION_NOT_FOUND",
-          data: null,
-          requestId,
-        });
+      const walletTransferMethod = resolveServiceMethod(transactionService, [
+        'walletTransfer',
+        'createWalletTransfer',
+        'walletToWalletTransfer',
+        'transferBetweenWallets',
+        'executeWalletTransfer',
+        'processWalletTransfer'
+      ]);
+
+      if (!walletTransferMethod) {
+        throw new Error(
+          'No wallet transfer method found in transaction.service.js. Expected one of: walletTransfer, createWalletTransfer, walletToWalletTransfer, transferBetweenWallets, executeWalletTransfer, processWalletTransfer'
+        );
       }
+
+      const result = await walletTransferMethod(req.body, {
+        requestId: req.requestId,
+        correlationId: req.correlationId,
+        sourceSystem: req.sourceSystem,
+        requestSource: req.requestSource,
+        createdBy: req.body.createdBy || 'system'
+      });
+
+      await auditService.log({
+        ...context,
+        eventType: AUDIT_EVENT_TYPES.TRANSACTION_SUCCESS,
+        eventCategory: AUDIT_EVENT_CATEGORY.TRANSACTION,
+        eventStatus: AUDIT_EVENT_STATUS.SUCCESS,
+        transactionId:
+          result?.data?.transactionId ||
+          result?.transactionId ||
+          null,
+        fabricTxId:
+          result?.data?.fabricTxId ||
+          result?.fabricTxId ||
+          result?.txId ||
+          null,
+        walletAddress:
+          req.body.senderWalletAddress ||
+          req.body.fromWalletAddress ||
+          null,
+        responsePayload: result,
+        controllerName: 'transaction.controller',
+        serviceName: 'transaction.service',
+        metadata: {
+          transactionType: 'WALLET_TO_WALLET'
+        }
+      });
+
+      return res.status(200).json({
+        ...result,
+        requestId: req.requestId,
+        correlationId: req.correlationId
+      });
+    } catch (error) {
+      await auditService.log({
+        ...context,
+        eventType: AUDIT_EVENT_TYPES.TRANSACTION_FAILED,
+        eventCategory: AUDIT_EVENT_CATEGORY.TRANSACTION,
+        eventStatus: AUDIT_EVENT_STATUS.FAILED,
+        walletAddress:
+          req.body.senderWalletAddress ||
+          req.body.fromWalletAddress ||
+          null,
+        errorCode: error.code || 'WALLET_TRANSFER_ERROR',
+        errorMessage: error.message,
+        errorStack: error.stack,
+        requestPayload: req.body,
+        controllerName: 'transaction.controller',
+        serviceName: 'transaction.service',
+        metadata: {
+          transactionType: 'WALLET_TO_WALLET'
+        }
+      });
+
+      return next(error);
+    }
+  }
+
+  async organizationTransfer(req, res, next) {
+    const context = getRequestContext(req);
+
+    try {
+      await auditService.log({
+        ...context,
+        eventType: AUDIT_EVENT_TYPES.TRANSACTION_REQUEST,
+        eventCategory: AUDIT_EVENT_CATEGORY.TRANSACTION,
+        eventStatus: AUDIT_EVENT_STATUS.PENDING,
+        walletAddress:
+          req.body.senderWalletAddress ||
+          req.body.fromWalletAddress ||
+          null,
+        organizationId: req.body.organizationId || null,
+        organizationCode: req.body.organizationCode || null,
+        requestPayload: req.body,
+        controllerName: 'transaction.controller',
+        serviceName: 'transaction.service',
+        metadata: {
+          transactionType: 'WALLET_TO_ORGANIZATION'
+        }
+      });
+
+      const organizationTransferMethod = resolveServiceMethod(transactionService, [
+        'organizationTransfer',
+        'createOrganizationTransfer',
+        'walletToOrganizationTransfer',
+        'transferToOrganization',
+        'executeOrganizationTransfer',
+        'processOrganizationTransfer'
+      ]);
+
+      if (!organizationTransferMethod) {
+        throw new Error(
+          'No organization transfer method found in transaction.service.js. Expected one of: organizationTransfer, createOrganizationTransfer, walletToOrganizationTransfer, transferToOrganization, executeOrganizationTransfer, processOrganizationTransfer'
+        );
+      }
+
+      const result = await organizationTransferMethod(req.body, {
+        requestId: req.requestId,
+        correlationId: req.correlationId,
+        sourceSystem: req.sourceSystem,
+        requestSource: req.requestSource,
+        createdBy: req.body.createdBy || 'system'
+      });
+
+      await auditService.log({
+        ...context,
+        eventType: AUDIT_EVENT_TYPES.TRANSACTION_SUCCESS,
+        eventCategory: AUDIT_EVENT_CATEGORY.TRANSACTION,
+        eventStatus: AUDIT_EVENT_STATUS.SUCCESS,
+        transactionId:
+          result?.data?.transactionId ||
+          result?.transactionId ||
+          null,
+        fabricTxId:
+          result?.data?.fabricTxId ||
+          result?.fabricTxId ||
+          result?.txId ||
+          null,
+        walletAddress:
+          req.body.senderWalletAddress ||
+          req.body.fromWalletAddress ||
+          null,
+        organizationId: req.body.organizationId || null,
+        organizationCode: req.body.organizationCode || null,
+        responsePayload: result,
+        controllerName: 'transaction.controller',
+        serviceName: 'transaction.service',
+        metadata: {
+          transactionType: 'WALLET_TO_ORGANIZATION'
+        }
+      });
+
+      return res.status(200).json({
+        ...result,
+        requestId: req.requestId,
+        correlationId: req.correlationId
+      });
+    } catch (error) {
+      await auditService.log({
+        ...context,
+        eventType: AUDIT_EVENT_TYPES.TRANSACTION_FAILED,
+        eventCategory: AUDIT_EVENT_CATEGORY.TRANSACTION,
+        eventStatus: AUDIT_EVENT_STATUS.FAILED,
+        walletAddress:
+          req.body.senderWalletAddress ||
+          req.body.fromWalletAddress ||
+          null,
+        organizationId: req.body.organizationId || null,
+        organizationCode: req.body.organizationCode || null,
+        errorCode: error.code || 'ORGANIZATION_TRANSFER_ERROR',
+        errorMessage: error.message,
+        errorStack: error.stack,
+        requestPayload: req.body,
+        controllerName: 'transaction.controller',
+        serviceName: 'transaction.service',
+        metadata: {
+          transactionType: 'WALLET_TO_ORGANIZATION'
+        }
+      });
+
+      return next(error);
+    }
+  }
+
+  async getTransactionHistory(req, res, next) {
+    try {
+      const getHistoryMethod = resolveServiceMethod(transactionService, [
+        'getTransactionHistory',
+        'searchTransactions',
+        'getTransactions'
+      ]);
+
+      if (!getHistoryMethod) {
+        throw new Error(
+          'No transaction history method found in transaction.service.js'
+        );
+      }
+
+      const result = await getHistoryMethod(req.query, {
+        requestId: req.requestId,
+        correlationId: req.correlationId,
+        sourceSystem: req.sourceSystem,
+        requestSource: req.requestSource
+      });
+
+      return res.status(200).json({
+        ...result,
+        requestId: req.requestId,
+        correlationId: req.correlationId
+      });
+    } catch (error) {
+      return next(error);
+    }
+  }
+
+  async getTransactionById(req, res, next) {
+    try {
+      const getByIdMethod = resolveServiceMethod(transactionService, [
+        'getTransactionById',
+        'findTransactionById',
+        'getTransaction'
+      ]);
+
+      if (!getByIdMethod) {
+        throw new Error(
+          'No get transaction by ID method found in transaction.service.js'
+        );
+      }
+
+      const result = await getByIdMethod(req.params.transactionId, {
+        requestId: req.requestId,
+        correlationId: req.correlationId,
+        sourceSystem: req.sourceSystem,
+        requestSource: req.requestSource
+      });
 
       return res.status(200).json({
         success: true,
-        message: "Transaction retrieved successfully",
-        data: transaction,
-        source,
-        requestId,
+        message: 'Transaction retrieved successfully',
+        data: result?.data || result,
+        requestId: req.requestId,
+        correlationId: req.correlationId
       });
     } catch (error) {
-      return res.status(500).json({
-        success: false,
-        message: "Failed to retrieve transaction",
-        errorCode: "TRANSACTION_GET_FAILED",
-        error: {
-          message: error.message,
-        },
-        data: null,
-        requestId,
-      });
+      return next(error);
     }
   }
 }

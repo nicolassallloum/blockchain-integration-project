@@ -1,41 +1,96 @@
 'use strict';
 
-/**
- * STEP 27 — Centralized Error Handler
- */
+const auditService = require('../services/audit.service');
 
-function errorHandler(error, req, res, next) {
-  const statusCode = error.statusCode || 500;
+const {
+  AUDIT_EVENT_TYPES,
+  AUDIT_EVENT_STATUS,
+  AUDIT_EVENT_CATEGORY
+} = require('../constants/audit.constants');
 
-  const requestId =
-    req.headers['x-request-id'] ||
-    req.requestId ||
-    null;
+function getStatusCode(error) {
+  if (error.statusCode) return error.statusCode;
+  if (error.status) return error.status;
+
+  if (error.name === 'ValidationError') return 400;
+  if (error.name === 'UnauthorizedError') return 401;
+  if (error.name === 'ForbiddenError') return 403;
+  if (error.name === 'NotFoundError') return 404;
+
+  return 500;
+}
+
+function getErrorCode(error, statusCode) {
+  if (error.code) return error.code;
+  if (error.errorCode) return error.errorCode;
+
+  switch (statusCode) {
+    case 400:
+      return 'BAD_REQUEST';
+    case 401:
+      return 'UNAUTHORIZED';
+    case 403:
+      return 'FORBIDDEN';
+    case 404:
+      return 'NOT_FOUND';
+    case 409:
+      return 'CONFLICT';
+    case 422:
+      return 'VALIDATION_ERROR';
+    default:
+      return 'SYSTEM_ERROR';
+  }
+}
+
+async function errorMiddleware(error, req, res, next) {
+  const statusCode = getStatusCode(error);
+  const errorCode = getErrorCode(error, statusCode);
+
+  try {
+    await auditService.log({
+      ...auditService.buildRequestContext(req),
+      eventType: AUDIT_EVENT_TYPES.SYSTEM_ERROR,
+      eventCategory: AUDIT_EVENT_CATEGORY.SYSTEM,
+      eventStatus:
+        statusCode >= 500
+          ? AUDIT_EVENT_STATUS.ERROR
+          : AUDIT_EVENT_STATUS.FAILED,
+      errorCode,
+      errorMessage: error.message,
+      errorStack: error.stack,
+      requestPayload: req.body || null,
+      metadata: {
+        params: req.params || null,
+        query: req.query || null,
+        statusCode
+      },
+      controllerName: 'global.error.middleware',
+      serviceName: 'express'
+    });
+  } catch (auditError) {
+    console.error('Failed to write system error audit log:', auditError.message);
+  }
 
   const response = {
     success: false,
-    message: error.message || 'Internal server error',
-    errorCode: error.errorCode || 'INTERNAL_SERVER_ERROR',
-    requestId
+    message:
+      statusCode >= 500
+        ? 'Internal server error'
+        : error.message || 'Request failed',
+    errorCode,
+    data: null,
+    requestId: req.requestId || null,
+    correlationId: req.correlationId || null
   };
 
   if (process.env.NODE_ENV !== 'production') {
-    response.stack = error.stack;
+    response.debug = {
+      originalMessage: error.message,
+      stack: error.stack
+    };
   }
 
   return res.status(statusCode).json(response);
 }
 
-function notFoundHandler(req, res) {
-  return res.status(404).json({
-    success: false,
-    message: `Route not found: ${req.method} ${req.originalUrl}`,
-    errorCode: 'ROUTE_NOT_FOUND',
-    requestId: req.headers['x-request-id'] || null
-  });
-}
-
-module.exports = {
-  errorHandler,
-  notFoundHandler
-};
+module.exports = errorMiddleware;

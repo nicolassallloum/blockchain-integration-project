@@ -1,3 +1,5 @@
+'use strict';
+
 const express = require("express");
 
 const router = express.Router();
@@ -13,11 +15,18 @@ function safeLoadRoute(routeName, routePath) {
   }
 }
 
+
+
+const walletRoutes = require('./wallet.routes');
+const transactionRoutes = require('./transaction.routes');
+const fabricRoutes = require('./fabric.routes');
+
+
 const healthRoutes = safeLoadRoute("health", "./health.routes");
 const blockchainRoutes = safeLoadRoute("blockchain", "./blockchain.routes");
-const fabricRoutes = safeLoadRoute("fabric", "./fabric.routes");
-const walletRoutes = safeLoadRoute("wallet", "./wallet.routes");
-const transactionRoutes = safeLoadRoute("transaction", "./transaction.routes");
+// const fabricRoutes = safeLoadRoute("fabric", "./fabric.routes");
+// const walletRoutes = safeLoadRoute("wallet", "./wallet.routes");
+// const transactionRoutes = safeLoadRoute("transaction", "./transaction.routes");
 
 if (healthRoutes) {
   router.use("/health", healthRoutes);
