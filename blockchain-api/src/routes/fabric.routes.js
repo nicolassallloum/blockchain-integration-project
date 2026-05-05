@@ -1,14 +1,38 @@
-"use strict";
+'use strict';
 
-const express = require("express");
-const fabricController = require("../controllers/fabric.controller");
-
+const express = require('express');
 const router = express.Router();
 
-router.get("/status", fabricController.status.bind(fabricController));
+const fabricController = require('../controllers/fabric.controller');
 
-router.post("/evaluate", fabricController.evaluate.bind(fabricController));
+const {
+  serviceAccess
+} = require('../middleware/routeSecurity.middleware');
 
-router.post("/submit", fabricController.submit.bind(fabricController));
+/**
+ * STEP 27 — Protected Fabric Routes
+ *
+ * Fabric submit/evaluate should not be public.
+ * Only trusted internal services should access these endpoints.
+ */
+
+router.post(
+  '/submit',
+  serviceAccess,
+  fabricController.submitTransaction
+);
+
+router.post(
+  '/evaluate',
+  serviceAccess,
+  fabricController.evaluateTransaction
+);
+
+if (fabricController.getBlockchainStatus) {
+  router.get(
+    '/status',
+    fabricController.getBlockchainStatus
+  );
+}
 
 module.exports = router;

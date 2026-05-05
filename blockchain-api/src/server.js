@@ -1,3 +1,10 @@
+"use strict";
+
+/**
+ * Blockchain API Middleware Server
+ * STEP 27 — Updated Authentication & Authorization Integration
+ */
+
 require("dotenv").config();
 
 const express = require("express");
@@ -5,8 +12,7 @@ const cors = require("cors");
 const helmet = require("helmet");
 const compression = require("compression");
 const morgan = require("morgan");
-const walletQueryRoutes = require("./routes/wallet-query.routes");
-const transactionsRoutes = require("./routes/transactions.routes");
+
 let logger;
 
 try {
@@ -15,7 +21,19 @@ try {
   logger = console;
 }
 
+/**
+ * Routes
+ */
 const apiRoutes = require("./routes");
+const authRoutes = require("./routes/auth.routes");
+
+/**
+ * STEP 27 Error Middleware
+ */
+const {
+  errorHandler,
+  notFoundHandler
+} = require("./middleware/error.middleware");
 
 const app = express();
 
@@ -30,9 +48,8 @@ const SERVICE_NAME = process.env.SERVICE_NAME || "Blockchain API Middleware";
 const SERVICE_VERSION = process.env.SERVICE_VERSION || "1.0.0";
 
 /**
- * Security middleware
+ * Security headers
  */
-
 app.use(
   helmet({
     crossOriginResourcePolicy: {
@@ -42,26 +59,56 @@ app.use(
 );
 
 /**
- * CORS middleware
+ * CORS
  */
 app.use(
   cors({
     origin: process.env.CORS_ORIGIN || "*",
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "Accept", "X-Request-ID"]
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "Accept",
+      "X-Request-ID",
+      "x-request-id",
+      "x-api-key"
+    ],
+    exposedHeaders: ["x-request-id"]
   })
 );
 
 /**
  * Body parsers
  */
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true, limit: "10mb" }));
-app.use("/api/v1/wallets", walletQueryRoutes);
+app.use(express.json({ limit: process.env.JSON_BODY_LIMIT || "10mb" }));
+app.use(
+  express.urlencoded({
+    extended: true,
+    limit: process.env.URLENCODED_BODY_LIMIT || "10mb"
+  })
+);
+
 /**
  * Compression
  */
 app.use(compression());
+
+/**
+ * Request ID propagation
+ */
+app.use((req, res, next) => {
+  const incomingRequestId =
+    req.headers["x-request-id"] ||
+    req.headers["X-Request-ID"];
+
+  req.requestId =
+    incomingRequestId ||
+    `REQ_${Date.now()}_${Math.random().toString(16).slice(2).toUpperCase()}`;
+
+  res.setHeader("x-request-id", req.requestId);
+
+  next();
+});
 
 /**
  * HTTP request logging
@@ -81,11 +128,12 @@ app.use(
 );
 
 /**
- * Simple request log
+ * Simple structured request log
  */
 app.use((req, res, next) => {
   if (logger && logger.info) {
     logger.info(`${req.method} ${req.originalUrl}`, {
+      requestId: req.requestId,
       ip: req.ip,
       userAgent: req.headers["user-agent"]
     });
@@ -102,84 +150,119 @@ app.use((req, res, next) => {
 app.get("/", (req, res) => {
   return res.status(200).json({
     success: true,
-    message: "Blockchain API Middleware is running",
+    message: `${SERVICE_NAME} is running`,
     apiPrefix: API_PREFIX,
     health: `${API_PREFIX}/health`,
+    auth: `${API_PREFIX}/auth`,
     blockchainStatus: `${API_PREFIX}/blockchain/status`,
     fabricSubmit: `${API_PREFIX}/fabric/submit`,
     walletCreation: `${API_PREFIX}/wallets`,
-    timestamp: new Date().toISOString()
+    transactionHistory: `${API_PREFIX}/transactions`,
+    timestamp: new Date().toISOString(),
+    requestId: req.requestId
   });
 });
 
 /**
- * Mount API v1 routes
+ * Health endpoint
+ */
+app.get(`${API_PREFIX}/health`, (req, res) => {
+  return res.status(200).json({
+    success: true,
+    message: `${SERVICE_NAME} is healthy`,
+    data: {
+      service: SERVICE_NAME,
+      version: SERVICE_VERSION,
+      environment: NODE_ENV,
+      uptimeSeconds: process.uptime(),
+      timestamp: new Date().toISOString(),
+      system: {
+        hostname: require("os").hostname(),
+        platform: process.platform,
+        memoryFree: require("os").freemem(),
+        memoryTotal: require("os").totalmem()
+      },
+      blockchain: {
+        channelName: process.env.FABRIC_CHANNEL_NAME || process.env.CHANNEL_NAME || null,
+        chaincodeName: process.env.FABRIC_CHAINCODE_NAME || process.env.CHAINCODE_NAME || null,
+        mspId: process.env.FABRIC_MSP_ID || process.env.MSP_ID || null
+      }
+    },
+    meta: null,
+    requestId: req.requestId
+  });
+});
+
+/**
+ * STEP 27 Auth routes
  *
- * IMPORTANT:
- * This must be mounted before the 404 handler.
+ * Final endpoints:
+ * POST /api/v1/auth/login
+ * POST /api/v1/auth/system-token
+ * GET  /api/v1/auth/me
+ */
+app.use(`${API_PREFIX}/auth`, authRoutes);
+
+/**
+ * Existing API routes
+ *
+ * Keep this as the single main route registration point.
+ * Do NOT additionally mount duplicate wallet/transaction/fabric routes here
+ * unless they are not included in src/routes/index.js.
  */
 app.use(API_PREFIX, apiRoutes);
 
 /**
- * Direct fallback route for wallet creation
- *
- * This protects you if src/routes/index.js is not loaded correctly.
- * Final endpoint:
- * POST /api/v1/wallets
- */
-try {
-  const walletRoutes = require("./routes/wallet.routes");
-  app.use(`${API_PREFIX}/wallets`, walletRoutes);
-} catch (error) {
-  console.warn(`[SERVER] Wallet direct route not loaded: ${error.message}`);
-}
-app.use("/api/v1/transactions", transactionsRoutes);
-
-/**
  * 404 handler
- *
- * IMPORTANT:
- * Keep this after all route registrations.
  */
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    message: `Route not found: ${req.method} ${req.originalUrl}`,
-    data: null,
-    meta: null,
-    timestamp: new Date().toISOString(),
+if (typeof notFoundHandler === "function") {
+  app.use(notFoundHandler);
+} else {
+  app.use((req, res) => {
+    return res.status(404).json({
+      success: false,
+      message: `Route not found: ${req.method} ${req.originalUrl}`,
+      errorCode: "ROUTE_NOT_FOUND",
+      data: null,
+      meta: null,
+      timestamp: new Date().toISOString(),
+      requestId: req.requestId
+    });
   });
-});
+}
 
 /**
  * Global error handler
  */
-app.use((error, req, res, next) => {
-  const statusCode = error.statusCode || error.status || 500;
+if (typeof errorHandler === "function") {
+  app.use(errorHandler);
+} else {
+  app.use((error, req, res, next) => {
+    const statusCode = error.statusCode || error.status || 500;
 
-  if (logger && logger.error) {
-    logger.error("Unhandled API error", {
-      message: error.message,
-      stack: error.stack,
-      method: req.method,
-      url: req.originalUrl
+    if (logger && logger.error) {
+      logger.error("Unhandled API error", {
+        message: error.message,
+        stack: error.stack,
+        method: req.method,
+        url: req.originalUrl,
+        requestId: req.requestId
+      });
+    } else {
+      console.error("Unhandled API error:", error);
+    }
+
+    return res.status(statusCode).json({
+      success: false,
+      message: error.message || "Internal server error",
+      errorCode: error.errorCode || error.code || "INTERNAL_SERVER_ERROR",
+      data: null,
+      meta: null,
+      timestamp: new Date().toISOString(),
+      requestId: req.requestId
     });
-  } else {
-    console.error("Unhandled API error:", error);
-  }
-
-  return res.status(statusCode).json({
-    success: false,
-    message: error.message || "Internal server error",
-    error: {
-      code: error.code || "INTERNAL_SERVER_ERROR",
-      details: error.details || null
-    },
-    data: null,
-    meta: null,
-    timestamp: new Date().toISOString()
   });
-});
+}
 
 /**
  * Start server
@@ -187,12 +270,14 @@ app.use((error, req, res, next) => {
 const server = app.listen(PORT, HOST, () => {
   const startMessages = [
     "==================================================",
-    "Blockchain API Middleware started successfully",
+    `${SERVICE_NAME} started successfully`,
     `Environment: ${NODE_ENV}`,
     `Version: ${SERVICE_VERSION}`,
     `URL: http://${HOST}:${PORT}`,
     `Health Check: http://${HOST}:${PORT}${API_PREFIX}/health`,
-    `Wallet Creation: http://${HOST}:${PORT}${API_PREFIX}/wallets`,
+    `Auth: http://${HOST}:${PORT}${API_PREFIX}/auth`,
+    `Wallets: http://${HOST}:${PORT}${API_PREFIX}/wallets`,
+    `Transactions: http://${HOST}:${PORT}${API_PREFIX}/transactions`,
     "=================================================="
   ];
 
