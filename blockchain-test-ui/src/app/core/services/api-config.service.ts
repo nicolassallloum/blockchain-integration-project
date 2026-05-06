@@ -1,36 +1,64 @@
 import { Injectable } from '@angular/core';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApiConfigService {
-  private readonly defaultBaseUrl = '/api/v1';
+  /**
+   * Main Blockchain API base URL.
+   *
+   * Example:
+   * http://172.31.13.90:3001/api/v1
+   */
+  public readonly baseUrl = environment.apiBaseUrl;
 
-  get baseUrl(): string {
-    return localStorage.getItem('BLOCKCHAIN_API_BASE_URL') || this.defaultBaseUrl;
+  /**
+   * Compatibility getter for older services.
+   */
+  getBaseUrl(): string {
+    return this.baseUrl;
   }
 
-  setBaseUrl(value: string): void {
-    localStorage.setItem('BLOCKCHAIN_API_BASE_URL', value);
+  /**
+   * Compatibility getter for services using getApiBaseUrl().
+   */
+  getApiBaseUrl(): string {
+    return this.baseUrl;
   }
 
-  getApiKey(): string {
-    return localStorage.getItem('BLOCKCHAIN_API_KEY') || '';
+  /**
+   * Wallet APIs
+   */
+  get walletsUrl(): string {
+    return `${this.baseUrl}/wallets`;
   }
 
-  setApiKey(value: string): void {
-    localStorage.setItem('BLOCKCHAIN_API_KEY', value);
+  /**
+   * Transaction APIs
+   */
+  get transactionsUrl(): string {
+    return `${this.baseUrl}/transactions`;
   }
 
-  getJwtToken(): string {
-    return localStorage.getItem('BLOCKCHAIN_JWT_TOKEN') || '';
+  /**
+   * Fabric APIs
+   */
+  get fabricUrl(): string {
+    return `${this.baseUrl}/fabric`;
   }
 
-  setJwtToken(value: string): void {
-    localStorage.setItem('BLOCKCHAIN_JWT_TOKEN', value);
+  /**
+   * Reference APIs
+   */
+  get referenceUrl(): string {
+    return `${this.baseUrl}/reference`;
   }
 
-  clearJwtToken(): void {
-    localStorage.removeItem('BLOCKCHAIN_JWT_TOKEN');
+  /**
+   * Organization APIs
+   */
+  get organizationsUrl(): string {
+    return `${this.baseUrl}/organizations`;
   }
 }

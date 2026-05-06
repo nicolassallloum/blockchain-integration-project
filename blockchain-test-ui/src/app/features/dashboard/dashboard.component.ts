@@ -1,30 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
-
-interface DashboardWallet {
-  walletId?: string;
-  walletAddress?: string;
-  customerId?: string;
-  customerName?: string;
-  fullName?: string;
-  customerType?: string;
-  walletType?: string;
-  nationality?: string;
-  nationalIdHash?: string;
-  idType?: string;
-  ledgerDocType?: string;
-  idNumber?: string;
-  ledgerKey?: string;
-  organizationId?: string;
-  organizationCode?: string;
-  mobileHash?: string;
-  emailHash?: string;
-  status?: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
+import { environment } from '../../../environments/environment';
+import { WalletApiService } from '../../core/services/wallet-api.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -32,94 +10,105 @@ interface DashboardWallet {
   imports: [CommonModule, FormsModule],
   template: `
     <div class="dashboard-page">
-      <div class="dashboard-header">
+      <div class="page-header">
         <div>
           <h1>Digital KYC Dashboard</h1>
           <p>Professional overview of created blockchain wallet identities.</p>
         </div>
 
-        <div class="header-actions">
-          <button class="secondary-btn" type="button" (click)="refreshDashboard()">
-            Refresh
-          </button>
-        </div>
+        <button class="secondary-btn" type="button" (click)="refresh()" [disabled]="loading">
+          {{ loading ? 'Refreshing...' : 'Refresh' }}
+        </button>
       </div>
 
-      <div class="kpi-grid">
-        <div class="kpi-card">
+      <div class="stats-grid">
+        <div class="stat-card">
           <span>Total Wallets</span>
-          <strong>{{ totalRecords }}</strong>
-          <small>Registered blockchain identities</small>
+          <strong>{{ totalWallets }}</strong>
+          <p>Registered blockchain identities</p>
         </div>
 
-        <div class="kpi-card">
+        <div class="stat-card">
           <span>Active Wallets</span>
           <strong>{{ activeWallets }}</strong>
-          <small>Status = ACTIVE</small>
+          <p>Status = ACTIVE</p>
         </div>
 
-        <div class="kpi-card">
+        <div class="stat-card">
           <span>Current Page</span>
-          <strong>{{ page }}</strong>
-          <small>Limit {{ limit }} records</small>
+          <strong>{{ pagination.page }}</strong>
+          <p>Limit {{ pagination.limit }} records</p>
         </div>
 
-        <div class="kpi-card">
+        <div class="stat-card">
           <span>Data Source</span>
-          <strong>PostgreSQL</strong>
-          <small>blockchain.wallets</small>
+          <strong class="source">{{ dataSource }}</strong>
+          <p>{{ tableName }}</p>
         </div>
       </div>
 
-      <div class="toolbar-card">
-        <div class="search-box">
-          <label>Search Wallets</label>
+      <div class="search-card">
+        <h2>Search Wallets</h2>
+
+        <div class="search-row">
           <input
             type="text"
-            [(ngModel)]="searchText"
+            [(ngModel)]="filters.search"
+            name="search"
             placeholder="Search customer, wallet, organization, national ID..."
             (keyup.enter)="searchWallets()"
           />
-        </div>
 
-        <div class="toolbar-actions">
-          <button class="primary-btn" type="button" (click)="searchWallets()">
+          <button class="primary-btn" type="button" (click)="searchWallets()" [disabled]="loading">
             Search
           </button>
 
-          <button class="reset-btn" type="button" (click)="clearSearch()">
+          <button class="light-btn" type="button" (click)="clearSearch()" [disabled]="loading">
             Clear
           </button>
         </div>
       </div>
 
-      <div *ngIf="loading" class="loading-card">
-        Loading dashboard wallets...
-      </div>
-
-      <div *ngIf="errorMessage" class="alert error">
+      <div class="error-box" *ngIf="errorMessage">
         {{ errorMessage }}
       </div>
 
-      <div *ngIf="!loading && !errorMessage" class="table-card">
-        <div class="table-header">
+      <div class="success-box" *ngIf="successMessage">
+        {{ successMessage }}
+      </div>
+
+      <div class="wallets-card">
+        <div class="section-header">
           <div>
-            <h2>Wallet Identities</h2>
-            <p>Showing {{ wallets.length }} of {{ totalRecords }} wallet records.</p>
+            <h2>Wallet Records</h2>
+            <p>Latest wallet identities loaded from the backend API.</p>
+          </div>
+
+          <div class="api-url">
+            API:
+            <span>{{ apiBaseUrl }}/wallets</span>
           </div>
         </div>
 
-        <div class="table-wrapper">
+        <div class="loading" *ngIf="loading">
+          Loading wallet data...
+        </div>
+
+        <div class="empty-state" *ngIf="!loading && wallets.length === 0">
+          <h3>No wallets found</h3>
+          <p>No wallet records were returned from the backend for the selected filters.</p>
+        </div>
+
+        <div class="table-wrapper" *ngIf="!loading && wallets.length > 0">
           <table>
             <thead>
               <tr>
                 <th>Customer ID</th>
-                <th>Customer Name</th>
-                <th>Customer Type</th>
-                <th>Nationality / ID Hash</th>
-                <th>ID Type</th>
-                <th>ID Number</th>
                 <th>Wallet Address</th>
+                <th>Full Name</th>
+                <th>Organization</th>
+                <th>Balance</th>
+                <th>Currency</th>
                 <th>Status</th>
                 <th>Created At</th>
               </tr>
@@ -127,510 +116,568 @@ interface DashboardWallet {
 
             <tbody>
               <tr *ngFor="let wallet of wallets">
+                <td>{{ getField(wallet, 'customerId', 'customer_id') }}</td>
+                <td class="mono">{{ getField(wallet, 'walletAddress', 'wallet_address') }}</td>
+                <td>{{ getField(wallet, 'fullName', 'full_name', 'customerName', 'customer_name') }}</td>
                 <td>
-                  <strong>{{ wallet.customerId || '-' }}</strong>
+                  {{
+                    getField(
+                      wallet,
+                      'organizationName',
+                      'organization_name',
+                      'organizationCode',
+                      'organization_code',
+                      'organizationId',
+                      'organization_id'
+                    )
+                  }}
                 </td>
-
-                <td>
-                  {{ wallet.customerName || wallet.fullName || '-' }}
-                </td>
-
-                <td>
-                  {{ wallet.customerType || wallet.walletType || 'CUSTOMER' }}
-                </td>
-
-                <td>
-                  {{ wallet.nationality || wallet.nationalIdHash || '-' }}
-                </td>
-
-                <td>
-                  {{ wallet.idType || wallet.ledgerDocType || 'wallet' }}
-                </td>
-
-                <td>
-                  {{ wallet.idNumber || wallet.ledgerKey || '-' }}
-                </td>
-
-                <td class="wallet-address">
-                  {{ wallet.walletAddress || '-' }}
-                </td>
-
+                <td>{{ getField(wallet, 'currentBalance', 'current_balance') }}</td>
+                <td>{{ getField(wallet, 'currencyCode', 'currency_code', 'currency') }}</td>
                 <td>
                   <span
                     class="status-pill"
-                    [class.active]="wallet.status === 'ACTIVE'"
-                    [class.inactive]="wallet.status !== 'ACTIVE'"
+                    [class.active]="String(getField(wallet, 'status', 'wallet_status')).toUpperCase() === 'ACTIVE'"
                   >
-                    {{ wallet.status || '-' }}
+                    {{ getField(wallet, 'status', 'wallet_status') }}
                   </span>
                 </td>
-
-                <td>
-                  {{ wallet.createdAt || '-' }}
-                </td>
-              </tr>
-
-              <tr *ngIf="wallets.length === 0">
-                <td colspan="9" class="empty-cell">
-                  No wallet records found.
-                </td>
+                <td>{{ getField(wallet, 'createdAt', 'created_at') }}</td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        <div class="pagination-row">
+        <div class="pagination" *ngIf="!loading">
+          <button
+            class="light-btn"
+            type="button"
+            (click)="previousPage()"
+            [disabled]="!pagination.hasPreviousPage"
+          >
+            Previous
+          </button>
+
           <span>
-            Page {{ page }} of {{ totalPages }}
+            Page {{ pagination.page }} of {{ pagination.totalPages || 1 }}
           </span>
 
-          <div class="pagination-actions">
-            <button
-              type="button"
-              class="secondary-btn"
-              [disabled]="page <= 1"
-              (click)="previousPage()"
-            >
-              Previous
-            </button>
-
-            <button
-              type="button"
-              class="secondary-btn"
-              [disabled]="page >= totalPages"
-              (click)="nextPage()"
-            >
-              Next
-            </button>
-          </div>
+          <button
+            class="light-btn"
+            type="button"
+            (click)="nextPage()"
+            [disabled]="!pagination.hasNextPage"
+          >
+            Next
+          </button>
         </div>
+      </div>
+
+      <div class="raw-card" *ngIf="apiResponse">
+        <h2>Raw API Response</h2>
+        <pre>{{ apiResponse | json }}</pre>
       </div>
     </div>
   `,
-  styles: [`
-    .dashboard-page {
-      padding: 28px;
-      color: #10233f;
-      box-sizing: border-box;
-      overflow-x: hidden;
-    }
-
-    .dashboard-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 16px;
-      margin-bottom: 24px;
-    }
-
-    .dashboard-header h1 {
-      margin: 0;
-      color: #004aad;
-      font-size: 28px;
-      font-weight: 900;
-      letter-spacing: -0.02em;
-    }
-
-    .dashboard-header p {
-      margin: 6px 0 0 0;
-      color: #64748b;
-      font-size: 15px;
-    }
-
-    .header-actions {
-      display: flex;
-      gap: 12px;
-    }
-
-    .kpi-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 16px;
-      margin-bottom: 20px;
-    }
-
-    .kpi-card,
-    .toolbar-card,
-    .table-card,
-    .loading-card {
-      background: #ffffff;
-      border: 1px solid #e5e7eb;
-      border-radius: 18px;
-      box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
-      box-sizing: border-box;
-    }
-
-    .kpi-card {
-      padding: 18px;
-      min-width: 0;
-    }
-
-    .kpi-card span {
-      display: block;
-      color: #64748b;
-      font-size: 12px;
-      font-weight: 900;
-      margin-bottom: 8px;
-    }
-
-    .kpi-card strong {
-      display: block;
-      color: #004aad;
-      font-size: 24px;
-      font-weight: 950;
-      line-height: 1.2;
-      overflow-wrap: anywhere;
-    }
-
-    .kpi-card small {
-      display: block;
-      margin-top: 8px;
-      color: #64748b;
-      font-size: 12px;
-    }
-
-    .toolbar-card {
-      display: flex;
-      align-items: end;
-      gap: 16px;
-      padding: 20px;
-      margin-bottom: 20px;
-    }
-
-    .search-box {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      min-width: 0;
-    }
-
-    .search-box label {
-      color: #004aad;
-      font-weight: 800;
-      margin-bottom: 8px;
-    }
-
-    .search-box input {
-      width: 100%;
-      height: 46px;
-      padding: 0 14px;
-      border: 1px solid #cbd5e1;
-      border-radius: 12px;
-      outline: none;
-      font-size: 14px;
-      box-sizing: border-box;
-    }
-
-    .search-box input:focus {
-      border-color: #004aad;
-      box-shadow: 0 0 0 3px rgba(0, 74, 173, 0.12);
-    }
-
-    .toolbar-actions {
-      display: flex;
-      gap: 10px;
-    }
-
-    .primary-btn,
-    .secondary-btn,
-    .reset-btn {
-      border: none;
-      border-radius: 12px;
-      height: 44px;
-      padding: 0 18px;
-      font-weight: 900;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: 0.2s ease;
-    }
-
-    .primary-btn {
-      background: #004aad;
-      color: #ffffff;
-      box-shadow: 0 8px 18px rgba(0, 74, 173, 0.22);
-    }
-
-    .primary-btn:hover {
-      background: #003b8a;
-    }
-
-    .secondary-btn {
-      background: #e8f1ff;
-      color: #004aad;
-    }
-
-    .secondary-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .reset-btn {
-      background: #f3f4f6;
-      color: #111827;
-    }
-
-    .loading-card {
-      padding: 24px;
-      text-align: center;
-      font-weight: 800;
-      color: #475569;
-    }
-
-    .alert {
-      margin-bottom: 18px;
-      padding: 14px 16px;
-      border-radius: 14px;
-      font-weight: 800;
-    }
-
-    .error {
-      background: #fef2f2;
-      color: #b91c1c;
-      border: 1px solid #fecaca;
-    }
-
-    .table-card {
-      overflow: hidden;
-    }
-
-    .table-header {
-      padding: 22px 24px;
-      border-bottom: 1px solid #e5e7eb;
-      background: linear-gradient(135deg, #f8fbff 0%, #eef6ff 100%);
-    }
-
-    .table-header h2 {
-      margin: 0;
-      color: #004aad;
-      font-size: 22px;
-      font-weight: 950;
-    }
-
-    .table-header p {
-      margin: 6px 0 0 0;
-      color: #64748b;
-      font-size: 14px;
-    }
-
-    .table-wrapper {
-      width: 100%;
-      overflow-x: auto;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 1100px;
-    }
-
-    th {
-      text-align: left;
-      color: #004aad;
-      font-size: 12px;
-      font-weight: 950;
-      padding: 14px 16px;
-      background: #f8fafc;
-      border-bottom: 1px solid #e5e7eb;
-      white-space: nowrap;
-    }
-
-    td {
-      padding: 14px 16px;
-      border-bottom: 1px solid #edf2f7;
-      color: #0f172a;
-      font-size: 14px;
-      vertical-align: top;
-    }
-
-    .wallet-address {
-      max-width: 260px;
-      overflow-wrap: anywhere;
-      font-size: 12px;
-      color: #334155;
-    }
-
-    .status-pill {
-      display: inline-flex;
-      align-items: center;
-      border-radius: 999px;
-      padding: 6px 10px;
-      font-size: 12px;
-      font-weight: 900;
-      background: #f1f5f9;
-      color: #475569;
-    }
-
-    .status-pill.active {
-      background: #ecfdf5;
-      color: #047857;
-      border: 1px solid #a7f3d0;
-    }
-
-    .status-pill.inactive {
-      background: #fef2f2;
-      color: #b91c1c;
-      border: 1px solid #fecaca;
-    }
-
-    .empty-cell {
-      text-align: center;
-      padding: 28px;
-      color: #64748b;
-      font-weight: 800;
-    }
-
-    .pagination-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 18px 24px;
-      color: #475569;
-      font-weight: 800;
-    }
-
-    .pagination-actions {
-      display: flex;
-      gap: 10px;
-    }
-
-    @media (max-width: 1200px) {
-      .kpi-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-    }
-
-    @media (max-width: 900px) {
+  styles: [
+    `
       .dashboard-page {
+        min-height: 100vh;
+        padding: 32px;
+        background: #eef3f8;
+      }
+
+      .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+
+      .page-header h1 {
+        margin: 0;
+        color: #004aad;
+        font-size: 30px;
+        font-weight: 800;
+      }
+
+      .page-header p {
+        margin: 6px 0 0;
+        color: #52647d;
+        font-size: 15px;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+        margin-bottom: 24px;
+      }
+
+      .stat-card,
+      .search-card,
+      .wallets-card,
+      .raw-card {
+        background: #ffffff;
+        border-radius: 16px;
+        border: 1px solid #e1e8f0;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+      }
+
+      .stat-card {
         padding: 20px;
       }
 
-      .dashboard-header,
-      .toolbar-card,
-      .pagination-row {
-        flex-direction: column;
-        align-items: flex-start;
+      .stat-card span {
+        display: block;
+        color: #52647d;
+        font-size: 13px;
+        font-weight: 700;
+        margin-bottom: 10px;
       }
 
-      .kpi-grid {
-        grid-template-columns: 1fr;
+      .stat-card strong {
+        display: block;
+        color: #004aad;
+        font-size: 28px;
+        font-weight: 900;
+        margin-bottom: 6px;
       }
 
-      .toolbar-actions,
-      .pagination-actions {
+      .stat-card strong.source {
+        font-size: 26px;
+      }
+
+      .stat-card p {
+        margin: 0;
+        color: #52647d;
+        font-size: 13px;
+      }
+
+      .search-card {
+        padding: 20px;
+        margin-bottom: 20px;
+      }
+
+      .search-card h2,
+      .wallets-card h2,
+      .raw-card h2 {
+        margin: 0 0 12px;
+        color: #004aad;
+        font-size: 20px;
+        font-weight: 800;
+      }
+
+      .search-row {
+        display: grid;
+        grid-template-columns: 1fr auto auto;
+        gap: 12px;
+      }
+
+      input {
         width: 100%;
-        flex-wrap: wrap;
+        height: 44px;
+        border: 1px solid #cbd8e6;
+        border-radius: 12px;
+        padding: 0 14px;
+        outline: none;
+        font-size: 14px;
       }
-    }
-  `]
+
+      input:focus {
+        border-color: #004aad;
+        box-shadow: 0 0 0 3px rgba(0, 74, 173, 0.12);
+      }
+
+      .primary-btn,
+      .secondary-btn,
+      .light-btn {
+        border: none;
+        border-radius: 12px;
+        padding: 12px 18px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .primary-btn {
+        background: #004aad;
+        color: #ffffff;
+        box-shadow: 0 8px 18px rgba(0, 74, 173, 0.25);
+      }
+
+      .secondary-btn {
+        background: #eef5ff;
+        color: #004aad;
+      }
+
+      .light-btn {
+        background: #f2f4f7;
+        color: #111827;
+      }
+
+      .primary-btn:disabled,
+      .secondary-btn:disabled,
+      .light-btn:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+
+      .error-box {
+        background: #fff1f1;
+        color: #b91c1c;
+        border: 1px solid #fecaca;
+        border-radius: 14px;
+        padding: 14px 18px;
+        margin-bottom: 20px;
+        font-weight: 700;
+      }
+
+      .success-box {
+        background: #ecfdf5;
+        color: #047857;
+        border: 1px solid #a7f3d0;
+        border-radius: 14px;
+        padding: 14px 18px;
+        margin-bottom: 20px;
+        font-weight: 700;
+      }
+
+      .wallets-card {
+        padding: 20px;
+      }
+
+      .section-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        align-items: flex-start;
+        margin-bottom: 16px;
+      }
+
+      .section-header p {
+        margin: 0;
+        color: #52647d;
+      }
+
+      .api-url {
+        color: #52647d;
+        font-size: 13px;
+        text-align: right;
+      }
+
+      .api-url span {
+        display: block;
+        color: #004aad;
+        font-weight: 700;
+        margin-top: 4px;
+      }
+
+      .loading,
+      .empty-state {
+        padding: 32px;
+        text-align: center;
+        border-radius: 14px;
+        background: #f8fafc;
+        color: #52647d;
+      }
+
+      .empty-state h3 {
+        margin: 0 0 8px;
+        color: #004aad;
+      }
+
+      .empty-state p {
+        margin: 0;
+      }
+
+      .table-wrapper {
+        overflow-x: auto;
+      }
+
+      table {
+        width: 100%;
+        min-width: 1100px;
+        border-collapse: collapse;
+      }
+
+      th {
+        background: #f8fafc;
+        color: #334155;
+        text-align: left;
+        padding: 12px;
+        border-bottom: 1px solid #e2e8f0;
+        font-size: 13px;
+      }
+
+      td {
+        padding: 12px;
+        border-bottom: 1px solid #e2e8f0;
+        font-size: 13px;
+        color: #0f172a;
+        vertical-align: top;
+      }
+
+      .mono {
+        font-family: Consolas, Monaco, monospace;
+        font-size: 12px;
+      }
+
+      .status-pill {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 999px;
+        background: #e5e7eb;
+        color: #374151;
+        font-weight: 800;
+        font-size: 12px;
+      }
+
+      .status-pill.active {
+        background: #dcfce7;
+        color: #047857;
+      }
+
+      .pagination {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 14px;
+        margin-top: 18px;
+      }
+
+      .pagination span {
+        color: #52647d;
+        font-weight: 700;
+      }
+
+      .raw-card {
+        padding: 20px;
+        margin-top: 20px;
+      }
+
+      pre {
+        background: #071124;
+        color: #e5e7eb;
+        border-radius: 14px;
+        padding: 18px;
+        overflow: auto;
+        max-height: 420px;
+        font-size: 12px;
+      }
+
+      @media (max-width: 1100px) {
+        .stats-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        .search-row {
+          grid-template-columns: 1fr;
+        }
+
+        .section-header {
+          flex-direction: column;
+        }
+
+        .api-url {
+          text-align: left;
+        }
+      }
+
+      @media (max-width: 700px) {
+        .dashboard-page {
+          padding: 18px;
+        }
+
+        .stats-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .page-header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+      }
+    `
+  ]
 })
 export class DashboardComponent implements OnInit {
-  private readonly apiBaseUrl = '/api/v1';
+  protected readonly String = String;
 
-  wallets: DashboardWallet[] = [];
+  apiBaseUrl = environment.apiBaseUrl;
 
   loading = false;
   errorMessage = '';
+  successMessage = '';
 
-  searchText = '';
+  wallets: any[] = [];
+  apiResponse: any = null;
 
-  page = 1;
-  limit = 13;
-  totalRecords = 0;
-  totalPages = 1;
+  totalWallets = 0;
+  activeWallets = 0;
+  dataSource = 'PostgreSQL';
+  tableName = 'blockchain.wallets';
 
-  constructor(private http: HttpClient) {}
+  filters = {
+    search: '',
+    page: 1,
+    limit: 13
+  };
+
+  pagination = {
+    page: 1,
+    limit: 13,
+    totalRecords: 0,
+    totalPages: 0,
+    hasNextPage: false,
+    hasPreviousPage: false
+  };
+
+  constructor(private walletApiService: WalletApiService) {}
 
   ngOnInit(): void {
-    this.loadWallets();
+    this.loadDashboard();
   }
 
-  get activeWallets(): number {
-    return this.wallets.filter((wallet) => wallet.status === 'ACTIVE').length;
-  }
-
-  loadWallets(): void {
+  loadDashboard(): void {
     this.loading = true;
     this.errorMessage = '';
+    this.successMessage = '';
 
-    const params = new URLSearchParams({
-      page: String(this.page),
-      limit: String(this.limit)
+    this.walletApiService.getWallets(this.filters).subscribe({
+      next: (response: any) => {
+        this.loading = false;
+        this.apiResponse = response;
+
+        this.wallets = this.extractWallets(response);
+        this.pagination = this.extractPagination(response);
+
+        this.totalWallets =
+          response?.pagination?.totalRecords ??
+          response?.pagination?.total ??
+          response?.totalRecords ??
+          this.wallets.length;
+
+        this.activeWallets = this.wallets.filter((wallet: any) => {
+          const status = this.getField(wallet, 'status', 'wallet_status');
+          return String(status).toUpperCase() === 'ACTIVE';
+        }).length;
+
+        this.dataSource = response?.source || 'PostgreSQL';
+        this.tableName = response?.table || 'blockchain.wallets';
+
+        this.successMessage = 'Dashboard data loaded successfully.';
+      },
+      error: (error: any) => {
+        this.loading = false;
+        this.apiResponse = error?.error || error;
+
+        this.wallets = [];
+        this.totalWallets = 0;
+        this.activeWallets = 0;
+
+        this.errorMessage =
+          error?.error?.message ||
+          error?.message ||
+          `Http failure while loading ${this.apiBaseUrl}/wallets`;
+      }
     });
+  }
 
-    if (this.searchText.trim()) {
-      params.set('search', this.searchText.trim());
-    }
-
-    this.http
-      .get<any>(`${this.apiBaseUrl}/wallets?${params.toString()}`)
-      .subscribe({
-        next: (res: any) => {
-          this.loading = false;
-
-          const responseData = res?.data || [];
-          const wallets =
-            Array.isArray(responseData)
-              ? responseData
-              : responseData?.data ||
-                responseData?.wallets ||
-                responseData?.records ||
-                [];
-
-          this.wallets = wallets;
-
-          const pagination = res?.pagination || res?.meta || responseData?.pagination || {};
-
-          this.totalRecords =
-            pagination?.totalRecords ||
-            pagination?.total ||
-            res?.totalRecords ||
-            responseData?.totalRecords ||
-            this.wallets.length;
-
-          this.totalPages =
-            pagination?.totalPages ||
-            Math.max(1, Math.ceil(this.totalRecords / this.limit));
-        },
-        error: (err: any) => {
-          this.loading = false;
-          this.wallets = [];
-          this.totalRecords = 0;
-          this.totalPages = 1;
-
-          this.errorMessage =
-            err?.error?.message ||
-            err?.message ||
-            'Failed to load dashboard wallets';
-        }
-      });
+  refresh(): void {
+    this.loadDashboard();
   }
 
   searchWallets(): void {
-    this.page = 1;
-    this.loadWallets();
+    this.filters.page = 1;
+    this.loadDashboard();
   }
 
   clearSearch(): void {
-    this.searchText = '';
-    this.page = 1;
-    this.loadWallets();
-  }
-
-  refreshDashboard(): void {
-    this.loadWallets();
-  }
-
-  previousPage(): void {
-    if (this.page > 1) {
-      this.page--;
-      this.loadWallets();
-    }
+    this.filters.search = '';
+    this.filters.page = 1;
+    this.loadDashboard();
   }
 
   nextPage(): void {
-    if (this.page < this.totalPages) {
-      this.page++;
-      this.loadWallets();
+    if (!this.pagination.hasNextPage) {
+      return;
     }
+
+    this.filters.page = Number(this.filters.page) + 1;
+    this.loadDashboard();
+  }
+
+  previousPage(): void {
+    if (!this.pagination.hasPreviousPage || Number(this.filters.page) <= 1) {
+      return;
+    }
+
+    this.filters.page = Number(this.filters.page) - 1;
+    this.loadDashboard();
+  }
+
+  getField(row: any, ...keys: string[]): any {
+    for (const key of keys) {
+      if (row?.[key] !== undefined && row?.[key] !== null && row?.[key] !== '') {
+        return row[key];
+      }
+    }
+
+    return '-';
+  }
+
+  private extractWallets(response: any): any[] {
+    if (Array.isArray(response)) {
+      return response;
+    }
+
+    if (Array.isArray(response?.data)) {
+      return response.data;
+    }
+
+    if (Array.isArray(response?.data?.wallets)) {
+      return response.data.wallets;
+    }
+
+    if (Array.isArray(response?.wallets)) {
+      return response.wallets;
+    }
+
+    return [];
+  }
+
+  private extractPagination(response: any): any {
+    const pagination = response?.pagination || {};
+
+    const page = Number(pagination.page || this.filters.page || 1);
+    const limit = Number(pagination.limit || this.filters.limit || 13);
+    const totalRecords = Number(
+      pagination.totalRecords ??
+        pagination.total ??
+        response?.totalRecords ??
+        this.wallets.length ??
+        0
+    );
+
+    const totalPages = Number(
+      pagination.totalPages || Math.ceil(totalRecords / limit) || 0
+    );
+
+    return {
+      page,
+      limit,
+      totalRecords,
+      totalPages,
+      hasNextPage:
+        pagination.hasNextPage !== undefined
+          ? pagination.hasNextPage
+          : page < totalPages,
+      hasPreviousPage:
+        pagination.hasPreviousPage !== undefined
+          ? pagination.hasPreviousPage
+          : page > 1
+    };
   }
 }

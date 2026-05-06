@@ -1,0 +1,28 @@
+@import '../wallet-transfer/wallet-transfer.component.css';
+
+.wallet-result {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+.wallet-result label {
+  display: block;
+  color: #64748b;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.wallet-result strong {
+  color: #0f172a;
+  word-break: break-word;
+}
+
+.balance {
+  color: #2563eb !important;
+  font-size: 22px;
+}
+
+.response-card {
+  margin-top: 20px;
+}

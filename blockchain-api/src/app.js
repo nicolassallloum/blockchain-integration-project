@@ -12,7 +12,7 @@ const helmet = require('helmet');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 const crypto = require('crypto');
-
+const organizationRoutes = require('./routes/organization.routes');
 const routes = require('./routes');
 
 const app = express();
@@ -91,7 +91,6 @@ app.use((req, res, next) => {
  * Normal CORS middleware for non-OPTIONS requests.
  */
 app.use(cors(corsOptions));
-
 /**
  * ---------------------------------------------------------
  * 3. SECURITY HEADERS
@@ -187,6 +186,8 @@ app.use('/api/v1', routes);
  * 10. ROUTE NOT FOUND HANDLER
  * ---------------------------------------------------------
  */
+app.use('/api/v1/organizations', organizationRoutes);
+
 app.use((req, res) => {
   return res.status(404).json({
     success: false,
@@ -199,7 +200,8 @@ app.use((req, res) => {
     correlationId: req.correlationId || null
   });
 });
-
+app.use('/api/v1/wallets', walletRoutes);
+app.use('/api/v1/transactions', transactionRoutes);
 /**
  * ---------------------------------------------------------
  * 11. GLOBAL ERROR HANDLER

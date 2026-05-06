@@ -1,0 +1,160 @@
+<div class="page">
+  <div class="breadcrumb">
+    <span>Digital KYC</span>
+    <span>/</span>
+    <strong>Balance Query</strong>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h1>Wallet Balance Query</h1>
+      <p>View wallet balance using the logged-in customer session or manual search.</p>
+    </div>
+
+    <button class="primary-btn" type="button" (click)="refreshBalance()" [disabled]="loading">
+      {{ loading ? 'Refreshing...' : 'Refresh Balance' }}
+    </button>
+  </div>
+
+  <div *ngIf="session" class="summary-card">
+    <div>
+      <label>Logged Customer</label>
+      <strong>{{ session.customerId || '-' }}</strong>
+    </div>
+    <div>
+      <label>Full Name</label>
+      <strong>{{ session.fullName || '-' }}</strong>
+    </div>
+    <div>
+      <label>Wallet Address</label>
+      <strong class="mono">{{ session.walletAddress || '-' }}</strong>
+    </div>
+    <div>
+      <label>Session Balance</label>
+      <strong>{{ session.currentBalance ?? 0 }} {{ session.currencyCode || 'USD' }}</strong>
+    </div>
+    <div>
+      <label>Organization</label>
+      <strong>{{ session.organizationName || '-' }}</strong>
+    </div>
+  </div>
+
+  <div *ngIf="!session" class="warning-card">
+    <h3>No wallet session found.</h3>
+    <p>You can still use manual testing search by Customer ID or Wallet Address.</p>
+  </div>
+
+  <div class="content-grid">
+    <div class="card">
+      <h2>Search Wallet</h2>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Customer ID</label>
+          <input
+            type="text"
+            [(ngModel)]="filters.customerId"
+            name="customerId"
+            placeholder="CUST2017"
+            [disabled]="loading"
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Wallet Address</label>
+          <input
+            type="text"
+            [(ngModel)]="filters.walletAddress"
+            name="walletAddress"
+            placeholder="WALLET_..."
+            [disabled]="loading"
+          />
+        </div>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="primary-btn" (click)="searchManual()" [disabled]="loading">
+          {{ loading ? 'Searching...' : 'Search' }}
+        </button>
+
+        <button type="button" class="secondary-btn" (click)="clear()" [disabled]="loading">
+          Clear
+        </button>
+      </div>
+
+      <div class="message success" *ngIf="successMessage">
+        {{ successMessage }}
+      </div>
+
+      <div class="message error" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Wallet Balance Result</h2>
+
+      <div *ngIf="wallet" class="wallet-result">
+        <div>
+          <label>Customer ID</label>
+          <strong>{{ wallet.customerId || wallet.customer_id || '-' }}</strong>
+        </div>
+
+        <div>
+          <label>Wallet Address</label>
+          <strong class="mono">{{ wallet.walletAddress || wallet.wallet_address || '-' }}</strong>
+        </div>
+
+        <div>
+          <label>Full Name</label>
+          <strong>{{ wallet.fullName || wallet.full_name || '-' }}</strong>
+        </div>
+
+        <div>
+          <label>Organization ID</label>
+          <strong>{{ wallet.organizationId || wallet.organization_id || '-' }}</strong>
+        </div>
+
+        <div>
+          <label>Organization Name</label>
+          <strong>{{ wallet.organizationName || wallet.organization_name || '-' }}</strong>
+        </div>
+
+        <div>
+          <label>Current Balance</label>
+          <strong class="balance">
+            {{ wallet.currentBalance ?? wallet.current_balance ?? 0 }}
+            {{ wallet.currencyCode || wallet.currency_code || wallet.currency || 'USD' }}
+          </strong>
+        </div>
+
+        <div>
+          <label>Status</label>
+          <strong>{{ wallet.status || wallet.walletStatus || wallet.wallet_status || '-' }}</strong>
+        </div>
+
+        <div>
+          <label>Created Date</label>
+          <strong>{{ wallet.createdAt || wallet.created_at || '-' }}</strong>
+        </div>
+
+        <div>
+          <label>Updated Date</label>
+          <strong>{{ wallet.updatedAt || wallet.updated_at || '-' }}</strong>
+        </div>
+      </div>
+
+      <div class="empty-json" *ngIf="!wallet">
+        Wallet balance result will appear here.
+      </div>
+    </div>
+  </div>
+
+  <div class="card response-card">
+    <h2>API Response Preview</h2>
+    <pre *ngIf="apiResponse">{{ apiResponse | json }}</pre>
+    <div class="empty-json" *ngIf="!apiResponse">
+      API response will appear here.
+    </div>
+  </div>
+</div>
