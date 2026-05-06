@@ -86,18 +86,12 @@ exports.listWallets = async ({ limit = 13, offset = 0, search = '' }) => {
       organizationId: row.organization_id,
       organizationCode: row.organization_code,
 
-      /**
-       * Angular dashboard fields
-       */
       customerName: row.full_name,
       customerType: row.wallet_type,
       nationality: row.national_id_hash,
       idType: row.ledger_doc_type,
       idNumber: row.ledger_key,
 
-      /**
-       * Raw wallet fields
-       */
       fullName: row.full_name,
       walletType: row.wallet_type,
       nationalIdHash: row.national_id_hash,
@@ -113,61 +107,180 @@ exports.listWallets = async ({ limit = 13, offset = 0, search = '' }) => {
 };
 
 /**
+ * Professional Wallet Profile for Login / Query screens.
+ *
+ * First tries your requested full query.
+ * If some optional columns do not exist, it falls back to a safe profile query.
+ */
+const getProfessionalWalletProfileByCustomerId = async (customerId) => {
+  try {
+    const result = await db.query(
+      `
+      SELECT
+          w.customer_id                                  AS "customerId",
+          w.wallet_address                              AS "walletAddress",
+          w.organization_id                             AS "organizationId",
+          bo.organization_name                          AS "organizationName",
+          w.full_name                                   AS "fullName",
+          w.national_id_hash                            AS "nationalIdHash",
+          c.cou_name                                    AS "countryName",
+          w.email_hash                                  AS "emailHash",
+          w.mobile_hash                                 AS "mobileHash",
+          COALESCE(w.current_balance, w.current_Balance, 0) AS "currentBalance",
+          COALESCE(w.currency_code, w.currency, 'USD')  AS "currencyCode",
+          w.created_at                                  AS "createdAt",
+          w.status                                      AS "status"
+      FROM blockchain.wallets w
+      LEFT JOIN blockchain.blockchain_organization bo
+          ON bo.organization_id = w.organization_id
+      LEFT JOIN blockchain.countries c
+          ON c.cou_id::text = w.national_id_hash::text
+      WHERE w.customer_id = $1
+      LIMIT 1
+      `,
+      [customerId]
+    );
+
+    return result.rows[0] || null;
+  } catch (error) {
+    console.warn(
+      'Professional wallet profile full query failed. Falling back to safe query:',
+      error.message
+    );
+
+    const fallbackResult = await db.query(
+      `
+      SELECT
+          w.customer_id                         AS "customerId",
+          w.wallet_address                     AS "walletAddress",
+          w.organization_id                    AS "organizationId",
+          bo.organization_name                 AS "organizationName",
+          w.full_name                          AS "fullName",
+          w.national_id_hash                   AS "nationalIdHash",
+          c.cou_name                           AS "countryName",
+          w.email_hash                         AS "emailHash",
+          w.mobile_hash                        AS "mobileHash",
+          0                                    AS "currentBalance",
+          'USD'                                AS "currencyCode",
+          w.created_at                         AS "createdAt",
+          w.status                             AS "status"
+      FROM blockchain.wallets w
+      LEFT JOIN blockchain.blockchain_organization bo
+          ON bo.organization_id = w.organization_id
+      LEFT JOIN blockchain.countries c
+          ON c.cou_id::text = w.national_id_hash::text
+      WHERE w.customer_id = $1
+      LIMIT 1
+      `,
+      [customerId]
+    );
+
+    return fallbackResult.rows[0] || null;
+  }
+};
+
+/**
+ * Professional Wallet Profile by wallet address.
+ */
+const getProfessionalWalletProfileByAddress = async (walletAddress) => {
+  try {
+    const result = await db.query(
+      `
+      SELECT
+          w.customer_id                                  AS "customerId",
+          w.wallet_address                              AS "walletAddress",
+          w.organization_id                             AS "organizationId",
+          bo.organization_name                          AS "organizationName",
+          w.full_name                                   AS "fullName",
+          w.national_id_hash                            AS "nationalIdHash",
+          c.cou_name                                    AS "countryName",
+          w.email_hash                                  AS "emailHash",
+          w.mobile_hash                                 AS "mobileHash",
+          COALESCE(w.current_balance, w.current_Balance, 0) AS "currentBalance",
+          COALESCE(w.currency_code, w.currency, 'USD')  AS "currencyCode",
+          w.created_at                                  AS "createdAt",
+          w.status                                      AS "status"
+      FROM blockchain.wallets w
+      LEFT JOIN blockchain.blockchain_organization bo
+          ON bo.organization_id = w.organization_id
+      LEFT JOIN blockchain.countries c
+          ON c.cou_id::text = w.national_id_hash::text
+      WHERE w.wallet_address = $1
+      LIMIT 1
+      `,
+      [walletAddress]
+    );
+
+    return result.rows[0] || null;
+  } catch (error) {
+    console.warn(
+      'Professional wallet profile by address full query failed. Falling back to safe query:',
+      error.message
+    );
+
+    const fallbackResult = await db.query(
+      `
+      SELECT
+          w.customer_id                         AS "customerId",
+          w.wallet_address                     AS "walletAddress",
+          w.organization_id                    AS "organizationId",
+          bo.organization_name                 AS "organizationName",
+          w.full_name                          AS "fullName",
+          w.national_id_hash                   AS "nationalIdHash",
+          c.cou_name                           AS "countryName",
+          w.email_hash                         AS "emailHash",
+          w.mobile_hash                        AS "mobileHash",
+          0                                    AS "currentBalance",
+          'USD'                                AS "currencyCode",
+          w.created_at                         AS "createdAt",
+          w.status                             AS "status"
+      FROM blockchain.wallets w
+      LEFT JOIN blockchain.blockchain_organization bo
+          ON bo.organization_id = w.organization_id
+      LEFT JOIN blockchain.countries c
+          ON c.cou_id::text = w.national_id_hash::text
+      WHERE w.wallet_address = $1
+      LIMIT 1
+      `,
+      [walletAddress]
+    );
+
+    return fallbackResult.rows[0] || null;
+  }
+};
+
+/**
  * Get wallet by customer ID
  */
 exports.getWalletByCustomerId = async (customerId) => {
-  const sql = `
-    SELECT
-      wallet_id,
-      wallet_address,
-      customer_id,
-      organization_id,
-      organization_code,
-      wallet_type,
-      full_name,
-      national_id_hash,
-      ledger_doc_type,
-      ledger_key,
-      mobile_hash,
-      email_hash,
-      status,
-      created_at,
-      updated_at
-    FROM blockchain.wallets
-    WHERE customer_id = $1
-    LIMIT 1
-  `;
+  const profile = await getProfessionalWalletProfileByCustomerId(customerId);
 
-  const result = await db.query(sql, [customerId]);
-
-  if (result.rows.length === 0) {
+  if (!profile) {
     return null;
   }
 
-  const row = result.rows[0];
-
   return {
-    id: row.wallet_id,
-    walletId: row.wallet_id,
-    walletAddress: row.wallet_address,
-    customerId: row.customer_id,
-    organizationId: row.organization_id,
-    organizationCode: row.organization_code,
-    walletType: row.wallet_type,
-    fullName: row.full_name,
-    customerName: row.full_name,
-    customerType: row.wallet_type,
-    nationality: row.national_id_hash,
-    idType: row.ledger_doc_type,
-    idNumber: row.ledger_key,
-    nationalIdHash: row.national_id_hash,
-    ledgerDocType: row.ledger_doc_type,
-    ledgerKey: row.ledger_key,
-    mobileHash: row.mobile_hash,
-    emailHash: row.email_hash,
-    status: row.status,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at
+    id: profile.walletId || null,
+    walletId: profile.walletId || null,
+    walletAddress: profile.walletAddress,
+    customerId: profile.customerId,
+    organizationId: profile.organizationId,
+    organizationName: profile.organizationName,
+    walletType: profile.walletType || 'CUSTOMER',
+    fullName: profile.fullName,
+    customerName: profile.fullName,
+    customerType: profile.walletType || 'CUSTOMER',
+    nationality: profile.nationalIdHash,
+    countryName: profile.countryName,
+    idType: 'wallet',
+    idNumber: profile.walletAddress,
+    nationalIdHash: profile.nationalIdHash,
+    mobileHash: profile.mobileHash,
+    emailHash: profile.emailHash,
+    currentBalance: profile.currentBalance,
+    currencyCode: profile.currencyCode,
+    status: profile.status,
+    createdAt: profile.createdAt
   };
 };
 
@@ -175,67 +288,41 @@ exports.getWalletByCustomerId = async (customerId) => {
  * Get wallet by wallet address
  */
 exports.getWalletByAddress = async (walletAddress) => {
-  const sql = `
-    SELECT
-      wallet_id,
-      wallet_address,
-      customer_id,
-      organization_id,
-      organization_code,
-      wallet_type,
-      full_name,
-      national_id_hash,
-      ledger_doc_type,
-      ledger_key,
-      mobile_hash,
-      email_hash,
-      status,
-      created_at,
-      updated_at
-    FROM blockchain.wallets
-    WHERE wallet_address = $1
-    LIMIT 1
-  `;
+  const profile = await getProfessionalWalletProfileByAddress(walletAddress);
 
-  const result = await db.query(sql, [walletAddress]);
-
-  if (result.rows.length === 0) {
+  if (!profile) {
     return null;
   }
 
-  const row = result.rows[0];
-
   return {
-    id: row.wallet_id,
-    walletId: row.wallet_id,
-    walletAddress: row.wallet_address,
-    customerId: row.customer_id,
-    organizationId: row.organization_id,
-    organizationCode: row.organization_code,
-    walletType: row.wallet_type,
-    fullName: row.full_name,
-    customerName: row.full_name,
-    customerType: row.wallet_type,
-    nationality: row.national_id_hash,
-    idType: row.ledger_doc_type,
-    idNumber: row.ledger_key,
-    nationalIdHash: row.national_id_hash,
-    ledgerDocType: row.ledger_doc_type,
-    ledgerKey: row.ledger_key,
-    mobileHash: row.mobile_hash,
-    emailHash: row.email_hash,
-    status: row.status,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at
+    id: profile.walletId || null,
+    walletId: profile.walletId || null,
+    walletAddress: profile.walletAddress,
+    customerId: profile.customerId,
+    organizationId: profile.organizationId,
+    organizationName: profile.organizationName,
+    walletType: profile.walletType || 'CUSTOMER',
+    fullName: profile.fullName,
+    customerName: profile.fullName,
+    customerType: profile.walletType || 'CUSTOMER',
+    nationality: profile.nationalIdHash,
+    countryName: profile.countryName,
+    idType: 'wallet',
+    idNumber: profile.walletAddress,
+    nationalIdHash: profile.nationalIdHash,
+    mobileHash: profile.mobileHash,
+    emailHash: profile.emailHash,
+    currentBalance: profile.currentBalance,
+    currencyCode: profile.currencyCode,
+    status: profile.status,
+    createdAt: profile.createdAt
   };
 };
 
 /**
  * Create wallet directly in PostgreSQL.
  *
- * IMPORTANT:
- * If you already have Fabric wallet creation logic in another service,
- * keep that Fabric logic and only use listWallets for the dashboard.
+ * Kept from your working version.
  */
 exports.createWallet = async (payload) => {
   const {
@@ -334,8 +421,10 @@ exports.createWallet = async (payload) => {
   const result = await db.query(sql, values);
   const row = result.rows[0];
 
+  const profile = await getProfessionalWalletProfileByCustomerId(row.customer_id);
+
   return {
-    wallet: {
+    wallet: profile || {
       id: row.wallet_id,
       walletId: row.wallet_id,
       walletAddress: row.wallet_address,
@@ -366,6 +455,9 @@ exports.createWallet = async (payload) => {
 
 /**
  * Wallet login by customer ID
+ *
+ * Kept bcrypt validation from your working version,
+ * but now returns a professional enriched wallet profile.
  */
 exports.loginWallet = async ({ customerId, password }) => {
   if (!customerId) {
@@ -410,6 +502,9 @@ exports.loginWallet = async ({ customerId, password }) => {
     return null;
   }
 
+  const profile =
+    (await getProfessionalWalletProfileByCustomerId(customerId)) || {};
+
   const token = jwt.sign(
     {
       walletId: wallet.wallet_id,
@@ -428,13 +523,31 @@ exports.loginWallet = async ({ customerId, password }) => {
     token,
     wallet: {
       walletId: wallet.wallet_id,
-      walletAddress: wallet.wallet_address,
-      customerId: wallet.customer_id,
-      organizationId: wallet.organization_id,
+      walletAddress: profile.walletAddress || wallet.wallet_address,
+      customerId: profile.customerId || wallet.customer_id,
+      organizationId: profile.organizationId || wallet.organization_id,
+      organizationName: profile.organizationName || null,
       organizationCode: wallet.organization_code,
       walletType: wallet.wallet_type,
-      fullName: wallet.full_name,
-      status: wallet.status
+      fullName: profile.fullName || wallet.full_name,
+      customerName: profile.fullName || wallet.full_name,
+      nationalIdHash: profile.nationalIdHash || null,
+      countryName: profile.countryName || null,
+      emailHash: profile.emailHash || null,
+      mobileHash: profile.mobileHash || null,
+      currentBalance: profile.currentBalance ?? 0,
+      currencyCode: profile.currencyCode || 'USD',
+      createdAt: profile.createdAt || null,
+      status: profile.status || wallet.status
     }
   };
 };
+
+/**
+ * Compatibility exports for controllers that may call these names.
+ */
+exports.login = exports.loginWallet;
+exports.getByCustomerId = exports.getWalletByCustomerId;
+exports.getByWalletAddress = exports.getWalletByAddress;
+exports.getWalletProfileByCustomerId = getProfessionalWalletProfileByCustomerId;
+exports.getWalletProfileByAddress = getProfessionalWalletProfileByAddress;
