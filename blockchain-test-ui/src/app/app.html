@@ -1,0 +1,47 @@
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon">⛓️</div>
+      <div>
+        <h1>{{ appName }}</h1>
+        <p>Step 30 Angular API Tester</p>
+      </div>
+    </div>
+
+    <nav class="nav-menu">
+      @for (item of menuItems; track item.route) {
+        <a
+          [routerLink]="item.route"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: item.route === '/dashboard' }"
+        >
+          <span>{{ item.icon }}</span>
+          <span>{{ item.label }}</span>
+        </a>
+      }
+    </nav>
+
+    <div class="sidebar-footer">
+      <p>API Middleware</p>
+      <strong>Hyperledger Fabric</strong>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar">
+      <div>
+        <h2>Blockchain Integration Project</h2>
+        <p>Angular lightweight test application for wallet, transaction, and Fabric APIs.</p>
+      </div>
+
+      <div class="status-pill">
+        <span class="dot"></span>
+        Test Mode
+      </div>
+    </header>
+
+    <section class="page-content">
+      <router-outlet></router-outlet>
+    </section>
+  </main>
+</div>
