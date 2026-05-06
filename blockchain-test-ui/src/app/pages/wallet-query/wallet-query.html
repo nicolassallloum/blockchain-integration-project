@@ -1,1 +1,168 @@
-<p>wallet-query works!</p>
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h2>Wallet Query</h2>
+      <p>Search and view professional wallet identity details by Customer ID or Wallet Address.</p>
+    </div>
+
+    <div class="actions">
+      <button type="button" class="secondary-btn" (click)="fillSampleCustomer()">
+        Sample Customer
+      </button>
+
+      <button type="button" class="secondary-btn" (click)="fillSampleWalletAddress()">
+        Sample Wallet
+      </button>
+
+      <button type="button" class="reset-btn" (click)="resetForm()">
+        Reset
+      </button>
+    </div>
+  </div>
+
+  <div class="card query-card">
+    <div class="section-title">
+      <div>
+        <h3>Wallet Search</h3>
+        <p>Select the search type and enter the wallet identifier.</p>
+      </div>
+    </div>
+
+    <form (ngSubmit)="queryWallet()">
+      <div class="query-grid">
+        <div class="field">
+          <label>Search Type</label>
+          <select name="searchType" [(ngModel)]="searchType">
+            <option value="customerId">Customer ID</option>
+            <option value="walletAddress">Wallet Address</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Search Value</label>
+          <input
+            type="text"
+            name="searchValue"
+            [(ngModel)]="searchValue"
+            placeholder="Enter Customer ID or Wallet Address"
+            required
+          />
+        </div>
+      </div>
+
+      <div class="submit-row">
+        <button type="submit" class="primary-btn" [disabled]="loading">
+          {{ loading ? 'Searching Wallet...' : 'Query Wallet' }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <div *ngIf="successMessage" class="alert success">
+    {{ successMessage }}
+  </div>
+
+  <div *ngIf="errorMessage" class="alert error">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="wallet" class="wallet-profile">
+    <div class="profile-header">
+      <div class="profile-left">
+        <div class="success-icon">✓</div>
+
+        <div>
+          <h3>Wallet Identity Profile</h3>
+          <p>Wallet profile retrieved successfully from the Blockchain API Middleware.</p>
+        </div>
+      </div>
+
+      <div class="profile-status">
+        <span>Status</span>
+        <strong>{{ getValue(wallet.status, wallet.walletStatus, wallet.wallet_status) }}</strong>
+      </div>
+    </div>
+
+    <div class="profile-banner">
+      <div>
+        <span>Wallet Address / Login ID</span>
+        <strong>{{ getValue(wallet.walletAddress, wallet.wallet_address) }}</strong>
+      </div>
+
+      <button type="button" class="copy-btn" (click)="copyWalletAddress()">
+        Copy Address
+      </button>
+    </div>
+
+    <div class="details-section">
+      <div class="section-title compact">
+        <div>
+          <h3>Identity & KYC Details</h3>
+          <p>Customer, organization, country, contact, balance, and wallet creation details.</p>
+        </div>
+      </div>
+
+      <div class="details-grid">
+        <div class="detail-item">
+          <span>CUSTOMER_ID</span>
+          <strong>{{ getValue(wallet.customerId, wallet.customer_id) }}</strong>
+        </div>
+
+        <div class="detail-item">
+          <span>CUSTOMER_NAME / FULL_NAME</span>
+          <strong>{{ getValue(wallet.customerName, wallet.fullName, wallet.full_name) }}</strong>
+        </div>
+
+        <div class="detail-item">
+          <span>ORGANIZATION_ID</span>
+          <strong>{{ getValue(wallet.organizationId, wallet.organization_id) }}</strong>
+        </div>
+
+        <div class="detail-item">
+          <span>ORGANIZATION_NAME</span>
+          <strong>{{ getValue(wallet.organizationName, wallet.organization_name) }}</strong>
+        </div>
+
+        <div class="detail-item">
+          <span>COUNTRY_ID / NATIONAL_ID_HASH</span>
+          <strong>{{ getValue(wallet.nationalIdHash, wallet.national_id_hash, wallet.countryId, wallet.country_id) }}</strong>
+        </div>
+
+        <div class="detail-item">
+          <span>COUNTRY_NAME / COU_NAME</span>
+          <strong>{{ getValue(wallet.countryName, wallet.country_name, wallet.couName, wallet.cou_name) }}</strong>
+        </div>
+
+        <div class="detail-item">
+          <span>EMAIL_ADDRESS / EMAIL_HASH</span>
+          <strong>{{ getValue(wallet.emailAddress, wallet.email_address, wallet.emailHash, wallet.email_hash) }}</strong>
+        </div>
+
+        <div class="detail-item">
+          <span>MOBILE_PHONE / MOBILE_HASH</span>
+          <strong>{{ getValue(wallet.mobilePhone, wallet.mobile_phone, wallet.mobileHash, wallet.mobile_hash) }}</strong>
+        </div>
+
+        <div class="detail-item highlight">
+          <span>BALANCE / CURRENT_BALANCE</span>
+          <strong>{{ getValue(wallet.currentBalance, wallet.current_balance, wallet.balance) }}</strong>
+        </div>
+
+        <div class="detail-item highlight">
+          <span>CURRENCY / CURRENCY_CODE</span>
+          <strong>{{ getValue(wallet.currencyCode, wallet.currency_code, wallet.currency) }}</strong>
+        </div>
+
+        <div class="detail-item full-width">
+          <span>CREATION_DATE_TIME / CREATED_AT</span>
+          <strong>{{ getValue(wallet.createdAt, wallet.created_at, wallet.creationDateTime, wallet.creation_date_time) }}</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="responseData" class="response-card">
+    <h3>Raw API Response</h3>
+    <pre>{{ responseData | json }}</pre>
+  </div>
+</div>
