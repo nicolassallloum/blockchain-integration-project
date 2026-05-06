@@ -1,132 +1,227 @@
-"use strict";
+'use strict';
 
-const express = require("express");
-const cors = require("cors");
-const helmet = require("helmet");
-const compression = require("compression");
+/**
+ * Blockchain API - Express Application
+ */
 
-const config = require("./config");
-const logger = require("./utils/logger");
+require('@dotenvx/dotenvx').config();
 
-// Existing routes
-const healthRoutes = require("./routes/health.routes");
-const blockchainRoutes = require("./routes/blockchain.routes");
-const transactionRoutes = require("./transaction.routes");
-// STEP 20 — Fabric SDK Integration routes
-const fabricRoutes = require("./routes/fabric.routes");
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const compression = require('compression');
+const rateLimit = require('express-rate-limit');
+const crypto = require('crypto');
+
+const routes = require('./routes');
 
 const app = express();
 
-// ==================================================
-// API Prefix Fallback
-// ==================================================
-const API_PREFIX = config.api?.prefix || process.env.API_PREFIX || "/api/v1";
-router.use("/transactions", transactionRoutes);
-// ==================================================
-// Security Middleware
-// ==================================================
-app.use(
-  helmet({
-    contentSecurityPolicy: false,
-    crossOriginEmbedderPolicy: false
-  })
-);
+/**
+ * ---------------------------------------------------------
+ * 1. CORS CONFIGURATION
+ * ---------------------------------------------------------
+ */
+const allowedOrigins = [
+  'http://localhost:4200',
+  'http://127.0.0.1:4200',
+  'http://172.31.13.90:4200'
+];
 
-// ==================================================
-// CORS Middleware
-// ==================================================
-app.use(
-  cors({
-    origin: config.cors?.origin || process.env.CORS_ORIGIN || "*",
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "x-request-id"]
-  })
-);
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
 
-// ==================================================
-// Body Parser Middleware
-// ==================================================
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+    return callback(new Error(`CORS blocked for origin: ${origin}`));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'x-request-id',
+    'x-api-key',
+    'x-correlation-id'
+  ],
+  exposedHeaders: [
+    'x-request-id',
+    'x-correlation-id'
+  ],
+  optionsSuccessStatus: 204
+};
 
-// ==================================================
-// Compression Middleware
-// ==================================================
+/**
+ * ---------------------------------------------------------
+ * 2. MANUAL CORS PREFLIGHT HANDLER
+ * ---------------------------------------------------------
+ * Must be FIRST middleware after app creation.
+ */
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+
+  res.setHeader('Vary', 'Origin');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader(
+    'Access-Control-Allow-Methods',
+    'GET,POST,PUT,PATCH,DELETE,OPTIONS'
+  );
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'Content-Type,Authorization,x-request-id,x-api-key,x-correlation-id'
+  );
+  res.setHeader(
+    'Access-Control-Expose-Headers',
+    'x-request-id,x-correlation-id'
+  );
+
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
+
+  return next();
+});
+
+/**
+ * Normal CORS middleware for non-OPTIONS requests.
+ */
+app.use(cors(corsOptions));
+
+/**
+ * ---------------------------------------------------------
+ * 3. SECURITY HEADERS
+ * ---------------------------------------------------------
+ */
+app.use(helmet({
+  crossOriginResourcePolicy: {
+    policy: 'same-origin'
+  }
+}));
+
+/**
+ * ---------------------------------------------------------
+ * 4. BODY PARSERS
+ * ---------------------------------------------------------
+ */
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+/**
+ * ---------------------------------------------------------
+ * 5. COMPRESSION
+ * ---------------------------------------------------------
+ */
 app.use(compression());
 
-// ==================================================
-// Request Logging Middleware
-// ==================================================
+/**
+ * ---------------------------------------------------------
+ * 6. REQUEST ID / CORRELATION ID
+ * ---------------------------------------------------------
+ */
 app.use((req, res, next) => {
-  if (logger && typeof logger.info === "function") {
-    logger.info(`${req.method} ${req.originalUrl}`, {
-      ip: req.ip,
-      userAgent: req.get("User-Agent")
-    });
-  }
+  const incomingRequestId = req.headers['x-request-id'];
+  const generatedRequestId = `REQ_${crypto.randomBytes(12).toString('hex').toUpperCase()}`;
 
-  next();
+  req.requestId = incomingRequestId || generatedRequestId;
+  req.correlationId = req.headers['x-correlation-id'] || req.requestId;
+
+  res.setHeader('x-request-id', req.requestId);
+  res.setHeader('x-correlation-id', req.correlationId);
+
+  return next();
 });
 
-// ==================================================
-// Root Route
-// ==================================================
-app.get("/", (req, res) => {
-  res.status(200).json({
+/**
+ * ---------------------------------------------------------
+ * 7. RATE LIMITING
+ * ---------------------------------------------------------
+ */
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: 'Too many requests. Please try again later.',
+    errorCode: 'RATE_LIMIT_EXCEEDED',
+    data: null
+  }
+});
+
+app.use(apiLimiter);
+
+/**
+ * ---------------------------------------------------------
+ * 8. HEALTH CHECK
+ * ---------------------------------------------------------
+ */
+app.get('/health', (req, res) => {
+  return res.status(200).json({
     success: true,
-    message: "Blockchain API Middleware is running",
-    apiPrefix: API_PREFIX,
-    health: `${API_PREFIX}/health`,
-    blockchainStatus: `${API_PREFIX}/blockchain/status`,
-    fabricStatus: `${API_PREFIX}/fabric/status`,
-    fabricEvaluate: `${API_PREFIX}/fabric/evaluate`,
-    fabricSubmit: `${API_PREFIX}/fabric/submit`,
-    timestamp: new Date().toISOString()
+    message: 'Blockchain API is running',
+    data: {
+      service: 'blockchain-api',
+      status: 'UP',
+      timestamp: new Date().toISOString()
+    },
+    requestId: req.requestId,
+    correlationId: req.correlationId
   });
 });
 
-// ==================================================
-// API Routes
-// ==================================================
-app.use(`${API_PREFIX}/health`, healthRoutes);
-app.use(`${API_PREFIX}/blockchain`, blockchainRoutes);
+/**
+ * ---------------------------------------------------------
+ * 9. API ROUTES
+ * ---------------------------------------------------------
+ */
+app.use('/api/v1', routes);
 
-// STEP 20 — Hyperledger Fabric SDK Routes
-app.use(`${API_PREFIX}/fabric`, fabricRoutes);
-
-// ==================================================
-// 404 Handler
-// Important: This must stay AFTER all route registrations
-// ==================================================
+/**
+ * ---------------------------------------------------------
+ * 10. ROUTE NOT FOUND HANDLER
+ * ---------------------------------------------------------
+ */
 app.use((req, res) => {
-  res.status(404).json({
+  return res.status(404).json({
     success: false,
     message: `Route not found: ${req.method} ${req.originalUrl}`,
+    errorCode: 'ROUTE_NOT_FOUND',
     data: null,
     meta: null,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    requestId: req.requestId || null,
+    correlationId: req.correlationId || null
   });
 });
 
-// ==================================================
-// Global Error Handler
-// ==================================================
+/**
+ * ---------------------------------------------------------
+ * 11. GLOBAL ERROR HANDLER
+ * ---------------------------------------------------------
+ */
 app.use((err, req, res, next) => {
-  if (logger && typeof logger.error === "function") {
-    logger.error("Unhandled application error", {
-      message: err.message,
-      stack: err.stack,
-      method: req.method,
-      url: req.originalUrl
-    });
-  }
+  console.error('Global error handler:', {
+    message: err.message,
+    stack: err.stack,
+    requestId: req.requestId,
+    correlationId: req.correlationId,
+    method: req.method,
+    url: req.originalUrl
+  });
 
-  res.status(err.status || 500).json({
+  return res.status(err.status || 500).json({
     success: false,
-    message: err.message || "Internal Server Error",
+    message: err.message || 'Internal server error',
+    errorCode: err.errorCode || 'SYSTEM_ERROR',
     data: null,
-    meta: null,
-    timestamp: new Date().toISOString()
+    requestId: req.requestId || null,
+    correlationId: req.correlationId || null
   });
 });
 

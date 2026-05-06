@@ -4,7 +4,6 @@ require('dotenv').config();
 
 const express = require('express');
 const helmet = require('helmet');
-const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 
 const routes = require('./routes');
@@ -16,8 +15,49 @@ const app = express();
 
 const PORT = Number(process.env.PORT || 3001);
 const HOST = process.env.HOST || '0.0.0.0';
-
 const NODE_ENV = process.env.NODE_ENV || 'development';
+
+/**
+ * ---------------------------------------------------------
+ * MANUAL CORS PREFLIGHT HANDLER
+ * ---------------------------------------------------------
+ * This MUST be the first middleware after app creation.
+ * This handles Angular browser OPTIONS preflight requests.
+ */
+const manualAllowedOrigins = [
+  'http://localhost:4200',
+  'http://127.0.0.1:4200',
+  'http://172.31.13.90:4200'
+];
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+
+  if (origin && manualAllowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+
+  res.setHeader('Vary', 'Origin');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader(
+    'Access-Control-Allow-Methods',
+    'GET,POST,PUT,PATCH,DELETE,OPTIONS'
+  );
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'Content-Type,Authorization,x-request-id,x-api-key,x-correlation-id'
+  );
+  res.setHeader(
+    'Access-Control-Expose-Headers',
+    'x-request-id,x-correlation-id'
+  );
+
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
+
+  return next();
+});
 
 app.set('trust proxy', true);
 
@@ -27,32 +67,14 @@ app.set('trust proxy', true);
 app.use(
   helmet({
     contentSecurityPolicy: false,
-    crossOriginEmbedderPolicy: false
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: false
   })
 );
 
-const allowedOrigins = (process.env.CORS_ALLOWED_ORIGINS || '')
-  .split(',')
-  .map((origin) => origin.trim())
-  .filter(Boolean);
-
-app.use(
-  cors({
-    origin(origin, callback) {
-      if (!origin) {
-        return callback(null, true);
-      }
-
-      if (allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-
-      return callback(new Error(`CORS blocked origin: ${origin}`));
-    },
-    credentials: true
-  })
-);
-
+/**
+ * Rate limiting
+ */
 const limiter = rateLimit({
   windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS || 15 * 60 * 1000),
   max: Number(process.env.RATE_LIMIT_MAX || 300),
@@ -61,15 +83,15 @@ const limiter = rateLimit({
   message: {
     success: false,
     message: 'Too many requests. Please try again later.',
-    errorCode: 'RATE_LIMIT_EXCEEDED'
+    errorCode: 'RATE_LIMIT_EXCEEDED',
+    data: null
   }
 });
 
 app.use(limiter);
 
 /**
- * Request size limit.
- * Your health response says requestSizeLimit is 1mb, so keep 1mb.
+ * Request body parsing
  */
 app.use(
   express.json({
@@ -86,9 +108,6 @@ app.use(
 
 /**
  * STEP 29 — Request ID and Audit Logging
- *
- * Important:
- * These MUST be before /api/v1 routes.
  */
 app.use(requestIdMiddleware);
 app.use(auditRequestMiddleware);
@@ -171,15 +190,7 @@ process.on('unhandledRejection', (reason) => {
 });
 
 app.listen(PORT, HOST, () => {
-  console.log(
-    JSON.stringify({
-      level: 'info',
-      message: `Blockchain API Middleware started on ${HOST}:${PORT}`,
-      service: 'Blockchain API Middleware',
-      environment: NODE_ENV,
-      apiPrefix: '/api/v1'
-    })
-  );
+  console.log(`Blockchain API running on http://${HOST}:${PORT}`);
 });
 
 module.exports = app;

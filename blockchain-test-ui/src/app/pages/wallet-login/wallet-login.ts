@@ -4,6 +4,6 @@ import { Component } from '@angular/core';
   selector: 'app-wallet-login',
   imports: [],
   templateUrl: './wallet-login.html',
-  styleUrl: './wallet-login.scss',
+  styleUrl: './wallet-login.css',
 })
 export class WalletLogin {}

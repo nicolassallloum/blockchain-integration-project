@@ -1,0 +1,215 @@
+<div class="page-container">
+  <div *ngIf="!showSuccessScreen">
+    <div class="page-header">
+      <div>
+        <h2>Create Wallet</h2>
+        <p>Create a new customer wallet through the Blockchain API Middleware.</p>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="secondary-btn" (click)="fillSampleData()">
+          Fill Sample
+        </button>
+        <button type="button" class="reset-btn" (click)="resetForm()">
+          Reset
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="pageLoading" class="loading-card">
+      Loading customer sequence, organizations, and countries...
+    </div>
+
+    <div *ngIf="!pageLoading" class="card">
+      <form (ngSubmit)="createWallet()">
+        <div class="grid">
+          <div class="field">
+            <label>Customer ID</label>
+            <input
+              type="text"
+              name="customerId"
+              [(ngModel)]="form.customerId"
+              readonly
+            />
+          </div>
+
+          <div class="field">
+            <label>Organization ID</label>
+            <select
+              name="organizationId"
+              [(ngModel)]="form.organizationId"
+              required
+            >
+              <option value="">Select organization</option>
+              <option
+                *ngFor="let org of organizations"
+                [value]="org.organization_id"
+              >
+                {{ org.organization_name }} ({{ org.organization_id }})
+              </option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Full Name</label>
+            <input
+              type="text"
+              name="fullName"
+              [(ngModel)]="form.fullName"
+              placeholder="NICOLAS SALLOUM"
+              required
+            />
+          </div>
+
+          <div class="field">
+            <label>Initial Balance</label>
+            <input
+              type="number"
+              name="initialBalance"
+              [(ngModel)]="form.initialBalance"
+              required
+            />
+          </div>
+
+          <div class="field">
+            <label>Nationality</label>
+            <select
+              name="nationality"
+              [(ngModel)]="form.nationality"
+              required
+            >
+              <option value="">Select nationality</option>
+              <option
+                *ngFor="let country of countries"
+                [value]="country.cou_name"
+              >
+                {{ country.cou_name }} ({{ country.iso_cou_code_alpha }})
+              </option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>National ID Hash</label>
+            <input
+              type="text"
+              name="nationalIdHash"
+              [(ngModel)]="form.nationalIdHash"
+              placeholder="123123"
+              required
+            />
+          </div>
+
+          <div class="field">
+            <label>Mobile Hash</label>
+            <input
+              type="text"
+              name="mobileHash"
+              [(ngModel)]="form.mobileHash"
+              placeholder="79170430"
+              required
+            />
+          </div>
+
+          <div class="field">
+            <label>Email Hash</label>
+            <input
+              type="text"
+              name="emailHash"
+              [(ngModel)]="form.emailHash"
+              placeholder="Nsalloum95@gmail.com"
+              required
+            />
+          </div>
+
+          <div class="field full-width">
+            <label>Auto Generated Password</label>
+            <div class="password-row">
+              <input
+                type="text"
+                name="passwordHash"
+                [(ngModel)]="form.passwordHash"
+                readonly
+              />
+              <button
+                type="button"
+                class="secondary-btn"
+                (click)="generatePassword()"
+              >
+                Regenerate
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="submit-row">
+          <button type="submit" class="primary-btn" [disabled]="loading">
+            {{ loading ? 'Creating Wallet...' : 'Generate Wallet' }}
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div *ngIf="successMessage" class="alert success">
+      {{ successMessage }}
+    </div>
+
+    <div *ngIf="errorMessage" class="alert error">
+      {{ errorMessage }}
+    </div>
+  </div>
+
+  <div *ngIf="showSuccessScreen" class="success-screen-wrapper">
+    <div class="success-card">
+      <div class="success-icon">✓</div>
+
+      <h2>Registration Complete!</h2>
+      <p class="success-text">
+        Your blockchain wallet identity has been successfully created.
+      </p>
+
+      <div class="info-box">
+        <div class="info-label">CUSTOMER ID</div>
+        <div class="info-value blue">{{ resultData.customerId }}</div>
+      </div>
+
+      <div class="info-box">
+        <div class="info-label">WALLET ADDRESS (LOGIN ID)</div>
+        <div class="info-value small-box">
+          {{ resultData.walletAddress }}
+        </div>
+      </div>
+
+      <div class="info-box">
+        <div class="info-label">ONE-TIME PASSWORD</div>
+        <div class="info-value red small-box">
+          {{ resultData.oneTimePassword }}
+        </div>
+        <div class="warning-text">
+          Save this password immediately. It cannot be recovered.
+        </div>
+      </div>
+
+      <div class="info-box">
+        <div class="info-label">RECOVERY PHRASE (Under Development)</div>
+        <div class="info-value phrase-box">
+          {{ resultData.recoveryPhrase || 'No recovery phrase returned from API' }}
+        </div>
+        <div class="phrase-warning">
+          This phrase is the ONLY way to recover your wallet if you lose access.
+          Store it offline and never share it.
+        </div>
+      </div>
+
+      <p class="confirmation-text">
+        By continuing, you confirm that you have safely stored both your
+        password and recovery phrase.
+      </p>
+
+      <div class="success-actions">
+        <button class="primary-btn large-btn" (click)="goToNewRegistration()">
+          Create Another Wallet
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

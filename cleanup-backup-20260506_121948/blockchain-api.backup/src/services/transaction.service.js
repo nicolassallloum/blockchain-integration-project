@@ -1,0 +1,391 @@
+const db = require("../config/database");
+const fabricService = require("./fabric.service");
+
+const POSTGRES_SORT_COLUMN_MAP = {
+  createdAt: "bt.created_at",
+  updatedAt: "bt.updated_at",
+  amount: "bt.amount",
+  transactionType: "bt.transaction_type",
+  status: "bt.status",
+  transactionId: "bt.transaction_id",
+};
+
+class TransactionService {
+  async searchTransactions({ filters, pagination, sorting, source, requestId }) {
+    if (source === "fabric") {
+      return this.searchTransactionsFromFabric({
+        filters,
+        pagination,
+        sorting,
+        requestId,
+      });
+    }
+
+    return this.searchTransactionsFromPostgres({
+      filters,
+      pagination,
+      sorting,
+      requestId,
+    });
+  }
+
+  async getTransactionById({ transactionId, source, requestId }) {
+    if (source === "fabric") {
+      return this.getTransactionByIdFromFabric({
+        transactionId,
+        requestId,
+      });
+    }
+
+    return this.getTransactionByIdFromPostgres({
+      transactionId,
+      requestId,
+    });
+  }
+
+  buildPostgresWhereClause(filters) {
+    const where = [];
+    const values = [];
+    let paramIndex = 1;
+
+    if (filters.walletAddress) {
+      where.push(
+        `(bt.sender_wallet_address = $${paramIndex} OR bt.receiver_wallet_address = $${paramIndex})`
+      );
+      values.push(filters.walletAddress);
+      paramIndex++;
+    }
+
+    if (filters.customerId) {
+      where.push(
+        `(bt.sender_customer_id = $${paramIndex} OR bt.receiver_customer_id = $${paramIndex})`
+      );
+      values.push(filters.customerId);
+      paramIndex++;
+    }
+
+    if (filters.organizationId) {
+      where.push(`bt.organization_id = $${paramIndex}`);
+      values.push(filters.organizationId);
+      paramIndex++;
+    }
+
+    if (filters.transactionType) {
+      where.push(`bt.transaction_type = $${paramIndex}`);
+      values.push(filters.transactionType);
+      paramIndex++;
+    }
+
+    if (filters.status) {
+      where.push(`bt.status = $${paramIndex}`);
+      values.push(filters.status);
+      paramIndex++;
+    }
+
+    if (filters.dateFrom) {
+      where.push(`bt.created_at >= $${paramIndex}`);
+      values.push(filters.dateFrom);
+      paramIndex++;
+    }
+
+    if (filters.dateTo) {
+      where.push(`bt.created_at <= $${paramIndex}`);
+      values.push(filters.dateTo);
+      paramIndex++;
+    }
+
+    if (filters.amountMin !== null && filters.amountMin !== undefined) {
+      where.push(`bt.amount >= $${paramIndex}`);
+      values.push(filters.amountMin);
+      paramIndex++;
+    }
+
+    if (filters.amountMax !== null && filters.amountMax !== undefined) {
+      where.push(`bt.amount <= $${paramIndex}`);
+      values.push(filters.amountMax);
+      paramIndex++;
+    }
+
+    return {
+      whereSql: where.length > 0 ? `WHERE ${where.join(" AND ")}` : "",
+      values,
+      nextParamIndex: paramIndex,
+    };
+  }
+
+  async searchTransactionsFromPostgres({
+    filters,
+    pagination,
+    sorting,
+    requestId,
+  }) {
+    const page = pagination.page;
+    const limit = pagination.limit;
+    const offset = (page - 1) * limit;
+
+    const sortColumn =
+      POSTGRES_SORT_COLUMN_MAP[sorting.sortBy] ||
+      POSTGRES_SORT_COLUMN_MAP.createdAt;
+
+    const sortOrder = sorting.sortOrder === "asc" ? "ASC" : "DESC";
+
+    const { whereSql, values, nextParamIndex } =
+      this.buildPostgresWhereClause(filters);
+
+    const dataQuery = `
+      SELECT
+        bt.transaction_id              AS "transactionId",
+        bt.request_id                  AS "requestId",
+        bt.transaction_type            AS "transactionType",
+        bt.transaction_purpose         AS "transactionPurpose",
+        bt.transaction_description     AS "transactionDescription",
+        bt.sender_wallet_address       AS "senderWalletAddress",
+        bt.receiver_wallet_address     AS "receiverWalletAddress",
+        bt.sender_customer_id          AS "senderCustomerId",
+        bt.receiver_customer_id        AS "receiverCustomerId",
+        bt.organization_id             AS "organizationId",
+        bt.amount                      AS "amount",
+        bt.currency                    AS "currency",
+        bt.status                      AS "status",
+        bt.risk_level                  AS "riskLevel",
+        bt.fabric_tx_id                AS "fabricTxId",
+        bt.fabric_block_number         AS "fabricBlockNumber",
+        bt.source_system               AS "sourceSystem",
+        bt.request_source              AS "requestSource",
+        bt.created_by                  AS "createdBy",
+        bt.created_at                  AS "createdAt",
+        bt.updated_at                  AS "updatedAt",
+        bt.metadata                    AS "metadata"
+      FROM blockchain.transactions bt
+      ${whereSql}
+      ORDER BY ${sortColumn} ${sortOrder}
+      LIMIT $${nextParamIndex}
+      OFFSET $${nextParamIndex + 1};
+    `;
+
+    const countQuery = `
+      SELECT COUNT(*)::BIGINT AS total
+      FROM blockchain.transactions bt
+      ${whereSql};
+    `;
+
+    const dataValues = [...values, limit, offset];
+
+    const [dataResult, countResult] = await Promise.all([
+      db.query(dataQuery, dataValues),
+      db.query(countQuery, values),
+    ]);
+
+    const totalRecords = Number(countResult.rows[0].total);
+    const totalPages = Math.ceil(totalRecords / limit);
+
+    return {
+      data: dataResult.rows,
+      pagination: {
+        page,
+        limit,
+        totalRecords,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
+      filters,
+      sorting,
+      source: "postgres",
+      requestId,
+    };
+  }
+
+  async getTransactionByIdFromPostgres({ transactionId }) {
+    const query = `
+      SELECT
+        bt.transaction_id              AS "transactionId",
+        bt.request_id                  AS "requestId",
+        bt.transaction_type            AS "transactionType",
+        bt.transaction_purpose         AS "transactionPurpose",
+        bt.transaction_description     AS "transactionDescription",
+        bt.sender_wallet_address       AS "senderWalletAddress",
+        bt.receiver_wallet_address     AS "receiverWalletAddress",
+        bt.sender_customer_id          AS "senderCustomerId",
+        bt.receiver_customer_id        AS "receiverCustomerId",
+        bt.organization_id             AS "organizationId",
+        bt.amount                      AS "amount",
+        bt.currency                    AS "currency",
+        bt.status                      AS "status",
+        bt.risk_level                  AS "riskLevel",
+        bt.fabric_tx_id                AS "fabricTxId",
+        bt.fabric_block_number         AS "fabricBlockNumber",
+        bt.source_system               AS "sourceSystem",
+        bt.request_source              AS "requestSource",
+        bt.created_by                  AS "createdBy",
+        bt.created_at                  AS "createdAt",
+        bt.updated_at                  AS "updatedAt",
+        bt.metadata                    AS "metadata"
+      FROM blockchain.transactions bt
+      WHERE bt.transaction_id = $1
+      LIMIT 1;
+    `;
+
+    const result = await db.query(query, [transactionId]);
+
+    return result.rows[0] || null;
+  }
+
+  buildCouchDbSelector(filters) {
+    const selector = {
+      docType: "TRANSACTION",
+    };
+
+    if (filters.walletAddress) {
+      selector.$or = [
+        {
+          senderWalletAddress: filters.walletAddress,
+        },
+        {
+          receiverWalletAddress: filters.walletAddress,
+        },
+      ];
+    }
+
+    if (filters.customerId) {
+      const customerOr = [
+        {
+          senderCustomerId: filters.customerId,
+        },
+        {
+          receiverCustomerId: filters.customerId,
+        },
+      ];
+
+      if (selector.$or) {
+        selector.$and = [
+          {
+            $or: selector.$or,
+          },
+          {
+            $or: customerOr,
+          },
+        ];
+
+        delete selector.$or;
+      } else {
+        selector.$or = customerOr;
+      }
+    }
+
+    if (filters.organizationId) {
+      selector.organizationId = filters.organizationId;
+    }
+
+    if (filters.transactionType) {
+      selector.transactionType = filters.transactionType;
+    }
+
+    if (filters.status) {
+      selector.status = filters.status;
+    }
+
+    if (filters.dateFrom || filters.dateTo) {
+      selector.createdAt = {};
+
+      if (filters.dateFrom) {
+        selector.createdAt.$gte = filters.dateFrom;
+      }
+
+      if (filters.dateTo) {
+        selector.createdAt.$lte = filters.dateTo;
+      }
+    }
+
+    if (filters.amountMin !== null || filters.amountMax !== null) {
+      selector.amount = {};
+
+      if (filters.amountMin !== null && filters.amountMin !== undefined) {
+        selector.amount.$gte = String(filters.amountMin);
+      }
+
+      if (filters.amountMax !== null && filters.amountMax !== undefined) {
+        selector.amount.$lte = String(filters.amountMax);
+      }
+    }
+
+    return selector;
+  }
+
+  async searchTransactionsFromFabric({
+    filters,
+    pagination,
+    sorting,
+    requestId,
+  }) {
+    const selector = this.buildCouchDbSelector(filters);
+
+    const query = {
+      selector,
+      limit: pagination.limit,
+      skip: (pagination.page - 1) * pagination.limit,
+    };
+
+    /**
+     * Recommended chaincode function:
+     * QueryTransactions(queryString)
+     *
+     * Your chaincode should execute:
+     * ctx.stub.getQueryResult(queryString)
+     */
+    const result = await fabricService.evaluateTransaction("QueryTransactions", [
+      JSON.stringify(query),
+    ]);
+
+    let parsedResult;
+
+    try {
+      parsedResult =
+        typeof result === "string" ? JSON.parse(result) : JSON.parse(result.toString());
+    } catch (error) {
+      parsedResult = [];
+    }
+
+    const rows = Array.isArray(parsedResult) ? parsedResult : parsedResult.data || [];
+
+    return {
+      data: rows,
+      pagination: {
+        page: pagination.page,
+        limit: pagination.limit,
+        totalRecords: rows.length,
+        totalPages: null,
+        hasNextPage: rows.length === pagination.limit,
+        hasPreviousPage: pagination.page > 1,
+      },
+      filters,
+      sorting,
+      source: "fabric",
+      requestId,
+    };
+  }
+
+  async getTransactionByIdFromFabric({ transactionId }) {
+    /**
+     * Recommended chaincode function:
+     * GetTransactionById(transactionId)
+     */
+    const result = await fabricService.evaluateTransaction("GetTransactionById", [
+      transactionId,
+    ]);
+
+    if (!result) {
+      return null;
+    }
+
+    try {
+      return typeof result === "string" ? JSON.parse(result) : JSON.parse(result.toString());
+    } catch (error) {
+      return {
+        raw: result.toString(),
+      };
+    }
+  }
+}
+
+module.exports = new TransactionService();

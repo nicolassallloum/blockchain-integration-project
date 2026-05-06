@@ -1,8 +1,8 @@
 import { Routes } from '@angular/router';
 
-import { WalletCreateComponent } from './pages/wallet-create/wallet-create.component';
-import { WalletLoginComponent } from './pages/wallet-login/wallet-login.component';
-import { WalletQueryComponent } from './pages/wallet-query/wallet-query.component';
+import { WalletCreate } from './pages/wallet-create/wallet-create';
+import { WalletLogin } from './pages/wallet-login/wallet-login';
+import { WalletQuery } from './pages/wallet-query/wallet-query';
 
 export const routes: Routes = [
   {
@@ -12,15 +12,15 @@ export const routes: Routes = [
   },
   {
     path: 'wallet-create',
-    component: WalletCreateComponent
+    component: WalletCreate
   },
   {
     path: 'wallet-login',
-    component: WalletLoginComponent
+    component: WalletLogin
   },
   {
     path: 'wallet-query',
-    component: WalletQueryComponent
+    component: WalletQuery
   },
   {
     path: '**',

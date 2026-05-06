@@ -1,0 +1,59 @@
+<div class="layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo-row">
+      <div class="logo-text">
+        <span class="logo-blue">VAL</span><span class="logo-green">OO</span><span class="logo-blue">RES</span>
+      </div>
+      <button class="menu-toggle">☰</button>
+    </div>
+
+    <div class="sidebar-search">
+      <span class="search-icon">🔍</span>
+      <input type="text" placeholder="Search menus..." />
+    </div>
+
+    <div class="menu-group">
+      <div class="back-item">
+        <span>◀</span>
+        <span>Back</span>
+      </div>
+
+      <nav class="menu">
+        @for (item of menuItems; track item.route) {
+          <a
+            [routerLink]="item.route"
+            routerLinkActive="active"
+            class="menu-item"
+          >
+            <span class="dot">{{ item.icon }}</span>
+            <span>{{ item.label }}</span>
+          </a>
+        }
+      </nav>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <header class="top-header">
+      <div class="breadcrumbs">
+        <span>TCR (The Crypto Road)</span>
+        <span class="sep">›</span>
+        <span>Digital KYC</span>
+      </div>
+
+      <div class="header-actions">
+        <div class="notification">
+          🔔
+          <span class="badge">2</span>
+        </div>
+        <div class="avatar">👤</div>
+      </div>
+    </header>
+
+    <section class="content">
+      <router-outlet></router-outlet>
+    </section>
+  </main>
+</div>

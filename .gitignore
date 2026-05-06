@@ -11,3 +11,16 @@ fabric-network/wallet/
 # Docker / local environment
 .env
 *.log
+
+
+node_modules/
+dist/
+logs/
+
+.env.*
+!.env.example
+*.bak
+*.bak_*
+*.bak.*
+coverage/
+.DS_Store

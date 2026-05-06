@@ -1,21 +1,23 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 
 export const apiAuthInterceptor: HttpInterceptorFn = (req, next) => {
-  const apiKey = localStorage.getItem('BLOCKCHAIN_API_KEY') || '';
-  const token = localStorage.getItem('BLOCKCHAIN_JWT_TOKEN') || '';
-  const requestId = `REQ_ANGULAR_UI_${Date.now()}`;
-
-  let headers = req.headers
-    .set('Content-Type', 'application/json')
-    .set('x-request-id', requestId);
-
-  if (apiKey) {
-    headers = headers.set('x-api-key', apiKey);
+  /**
+   * IMPORTANT:
+   * Reference APIs are simple dropdown GET APIs.
+   * Do not add custom headers to them because x-request-id triggers
+   * browser OPTIONS preflight.
+   */
+  if (req.url.includes('/api/v1/reference/')) {
+    return next(req);
   }
 
-  if (token) {
-    headers = headers.set('Authorization', `Bearer ${token}`);
-  }
+  const requestId = `REQ_UI_${Date.now()}`;
 
-  return next(req.clone({ headers }));
+  const clonedRequest = req.clone({
+    setHeaders: {
+      'x-request-id': requestId
+    }
+  });
+
+  return next(clonedRequest);
 };
