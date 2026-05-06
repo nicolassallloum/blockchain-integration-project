@@ -1,0 +1,107 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h2>Wallet Details</h2>
+      <p>Search and view wallet details using customer ID or wallet address.</p>
+    </div>
+
+    <div class="actions">
+      <button type="button" class="secondary-btn" (click)="fillCustomerSample()">
+        Fill Sample
+      </button>
+      <button type="button" class="reset-btn" (click)="resetSearch()">
+        Reset
+      </button>
+    </div>
+  </div>
+
+  <div class="card search-card">
+    <form (ngSubmit)="searchWallet()">
+      <div class="grid">
+        <div class="field">
+          <label>Search By</label>
+          <select name="queryType" [(ngModel)]="queryType">
+            <option value="customerId">Customer ID</option>
+            <option value="walletAddress">Wallet Address</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Search Value</label>
+          <input
+            type="text"
+            name="searchValue"
+            [(ngModel)]="searchValue"
+            placeholder="CUST2017 or WALLET_..."
+            required
+          />
+        </div>
+      </div>
+
+      <div class="submit-row">
+        <button type="submit" class="primary-btn" [disabled]="loading">
+          {{ loading ? 'Searching...' : 'Search Wallet' }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <div *ngIf="successMessage" class="alert success">
+    {{ successMessage }}
+  </div>
+
+  <div *ngIf="errorMessage" class="alert error">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="wallet" class="wallet-card">
+    <h3>Wallet Summary</h3>
+
+    <div class="details-grid">
+      <div class="detail-item">
+        <span>Customer ID</span>
+        <strong>{{ wallet.customerId || wallet.customer_id || '-' }}</strong>
+      </div>
+
+      <div class="detail-item">
+        <span>Full Name</span>
+        <strong>{{ wallet.fullName || wallet.full_name || '-' }}</strong>
+      </div>
+
+      <div class="detail-item">
+        <span>Wallet Address</span>
+        <strong>{{ wallet.walletAddress || wallet.wallet_address || '-' }}</strong>
+      </div>
+
+      <div class="detail-item">
+        <span>Organization ID</span>
+        <strong>{{ wallet.organizationId || wallet.organization_id || '-' }}</strong>
+      </div>
+
+      <div class="detail-item">
+        <span>Balance</span>
+        <strong>{{ wallet.balance || wallet.currentBalance || wallet.current_balance || '0' }}</strong>
+      </div>
+
+      <div class="detail-item">
+        <span>Status</span>
+        <strong>{{ wallet.status || wallet.walletStatus || wallet.wallet_status || '-' }}</strong>
+      </div>
+
+      <div class="detail-item">
+        <span>Created At</span>
+        <strong>{{ wallet.createdAt || wallet.created_at || '-' }}</strong>
+      </div>
+
+      <div class="detail-item">
+        <span>Updated At</span>
+        <strong>{{ wallet.updatedAt || wallet.updated_at || '-' }}</strong>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="responseData" class="response-card">
+    <h3>API Response</h3>
+    <pre>{{ responseData | json }}</pre>
+  </div>
+</div>

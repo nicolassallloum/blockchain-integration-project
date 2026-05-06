@@ -1,0 +1,73 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h2>Wallet Login</h2>
+      <p>Authenticate a customer wallet and receive JWT token.</p>
+    </div>
+
+    <div class="actions">
+      <button type="button" class="secondary-btn" (click)="fillSampleData()">
+        Fill Sample
+      </button>
+      <button type="button" class="reset-btn" (click)="resetForm()">
+        Reset
+      </button>
+    </div>
+  </div>
+
+  <div class="card login-card">
+    <form (ngSubmit)="loginWallet()">
+      <div class="field">
+        <label>Customer ID</label>
+        <input
+          type="text"
+          name="customerId"
+          [(ngModel)]="form.customerId"
+          placeholder="CUST2017"
+          required
+        />
+      </div>
+
+      <div class="field">
+        <label>Password</label>
+        <input
+          type="password"
+          name="password"
+          [(ngModel)]="form.password"
+          placeholder="password123"
+          required
+        />
+      </div>
+
+      <div class="submit-row">
+        <button type="submit" class="primary-btn" [disabled]="loading">
+          {{ loading ? 'Logging In...' : 'Login Wallet' }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <div *ngIf="successMessage" class="alert success">
+    {{ successMessage }}
+  </div>
+
+  <div *ngIf="errorMessage" class="alert error">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="token" class="token-card">
+    <div class="token-header">
+      <h3>JWT Token</h3>
+      <button type="button" class="secondary-btn" (click)="copyToken()">
+        Copy Token
+      </button>
+    </div>
+
+    <textarea readonly>{{ token }}</textarea>
+  </div>
+
+  <div *ngIf="responseData" class="response-card">
+    <h3>API Response</h3>
+    <pre>{{ responseData | json }}</pre>
+  </div>
+</div>

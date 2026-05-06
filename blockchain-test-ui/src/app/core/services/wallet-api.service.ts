@@ -1,28 +1,61 @@
-import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { ApiConfigService } from './api-config.service';
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root'
 })
-export class WalletApiService {
-  private http = inject(HttpClient);
-  private config = inject(ApiConfigService);
+export class WalletService {
+  private readonly apiBaseUrl = 'http://127.0.0.1:3001/api/v1';
 
-  createWallet(payload: any): Observable<any> {
-    return this.http.post(`${this.config.baseUrl}/wallets`, payload);
+  constructor(private http: HttpClient) {}
+
+  private getHeaders(extraHeaders: Record<string, string> = {}) {
+    return new HttpHeaders({
+      'Content-Type': 'application/json',
+      'x-request-id': `REQ_UI_${Date.now()}`,
+      ...extraHeaders
+    });
   }
 
-  loginWallet(payload: any): Observable<any> {
-    return this.http.post(`${this.config.baseUrl}/wallets/login`, payload);
+  createWallet(payload: any) {
+    return this.http.post(
+      `${this.apiBaseUrl}/wallets`,
+      payload,
+      { headers: this.getHeaders() }
+    );
   }
 
-  getWalletByCustomerId(customerId: string): Observable<any> {
-    return this.http.get(`${this.config.baseUrl}/wallets/customer/${customerId}`);
+  loginWallet(payload: any) {
+    return this.http.post(
+      `${this.apiBaseUrl}/wallets/login`,
+      payload,
+      { headers: this.getHeaders() }
+    );
   }
 
-  getWalletByAddress(walletAddress: string): Observable<any> {
-    return this.http.get(`${this.config.baseUrl}/wallets/${walletAddress}`);
+  getWalletByCustomerId(customerId: string, token?: string) {
+    const headers: Record<string, string> = {};
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    return this.http.get(
+      `${this.apiBaseUrl}/wallets/customer/${customerId}`,
+      { headers: this.getHeaders(headers) }
+    );
+  }
+
+  getWalletByAddress(walletAddress: string, token?: string) {
+    const headers: Record<string, string> = {};
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    return this.http.get(
+      `${this.apiBaseUrl}/wallets/address/${walletAddress}`,
+      { headers: this.getHeaders(headers) }
+    );
   }
 }
