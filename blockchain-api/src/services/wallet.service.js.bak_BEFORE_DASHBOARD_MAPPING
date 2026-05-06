@@ -5,23 +5,11 @@ const jwt = require('jsonwebtoken');
 const db = require('../config/database');
 
 const DEFAULT_JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '8h';
-const JWT_SECRET =
-  process.env.JWT_SECRET ||
-  process.env.APP_JWT_SECRET ||
-  'CHANGE_ME_DEV_SECRET';
+const JWT_SECRET = process.env.JWT_SECRET || process.env.APP_JWT_SECRET || 'CHANGE_ME_DEV_SECRET';
 
 /**
- * STEP 30 — Dashboard Wallet List
- *
- * Source table:
- *   blockchain.wallets
- *
- * Dashboard column mapping:
- *   full_name        -> Customer Name
- *   wallet_type      -> Customer Type
- *   national_id_hash -> Nationality
- *   ledger_doc_type  -> ID Type
- *   ledger_key       -> ID Number
+ * STEP 30 / 31 — List wallets for Angular Dashboard
+ * Source table: blockchain.wallets
  */
 exports.listWallets = async ({ limit = 13, offset = 0, search = '' }) => {
   const values = [];
@@ -32,14 +20,12 @@ exports.listWallets = async ({ limit = 13, offset = 0, search = '' }) => {
 
     whereClause = `
       WHERE
-        COALESCE(full_name, '') ILIKE $1
-        OR COALESCE(wallet_type, '') ILIKE $1
-        OR COALESCE(national_id_hash, '') ILIKE $1
-        OR COALESCE(ledger_doc_type, '') ILIKE $1
-        OR COALESCE(ledger_key, '') ILIKE $1
-        OR COALESCE(customer_id, '') ILIKE $1
-        OR COALESCE(wallet_address, '') ILIKE $1
+        customer_id ILIKE $1
+        OR wallet_address ILIKE $1
+        OR full_name ILIKE $1
+        OR wallet_type ILIKE $1
         OR COALESCE(organization_code, '') ILIKE $1
+        OR COALESCE(national_id_hash, '') ILIKE $1
     `;
   }
 
@@ -59,10 +45,9 @@ exports.listWallets = async ({ limit = 13, offset = 0, search = '' }) => {
       wallet_type,
       full_name,
       national_id_hash,
-      ledger_doc_type,
-      ledger_key,
       mobile_hash,
       email_hash,
+      password_hash,
       status,
       created_at,
       updated_at
@@ -85,24 +70,17 @@ exports.listWallets = async ({ limit = 13, offset = 0, search = '' }) => {
       customerId: row.customer_id,
       organizationId: row.organization_id,
       organizationCode: row.organization_code,
-
-      /**
-       * Angular dashboard fields
-       */
-      customerName: row.full_name,
-      customerType: row.wallet_type,
-      nationality: row.national_id_hash,
-      idType: row.ledger_doc_type,
-      idNumber: row.ledger_key,
-
-      /**
-       * Raw wallet fields
-       */
-      fullName: row.full_name,
       walletType: row.wallet_type,
+      fullName: row.full_name,
+
+      // UI mapping for your Angular dashboard table
+      customerName: row.full_name,
+      customerType: row.wallet_type || 'CUSTOMER',
+      nationality: 'LB',
+      idType: 'ID Card',
+      idNumber: row.national_id_hash,
+
       nationalIdHash: row.national_id_hash,
-      ledgerDocType: row.ledger_doc_type,
-      ledgerKey: row.ledger_key,
       mobileHash: row.mobile_hash,
       emailHash: row.email_hash,
       status: row.status,
@@ -126,8 +104,6 @@ exports.getWalletByCustomerId = async (customerId) => {
       wallet_type,
       full_name,
       national_id_hash,
-      ledger_doc_type,
-      ledger_key,
       mobile_hash,
       email_hash,
       status,
@@ -155,14 +131,7 @@ exports.getWalletByCustomerId = async (customerId) => {
     organizationCode: row.organization_code,
     walletType: row.wallet_type,
     fullName: row.full_name,
-    customerName: row.full_name,
-    customerType: row.wallet_type,
-    nationality: row.national_id_hash,
-    idType: row.ledger_doc_type,
-    idNumber: row.ledger_key,
     nationalIdHash: row.national_id_hash,
-    ledgerDocType: row.ledger_doc_type,
-    ledgerKey: row.ledger_key,
     mobileHash: row.mobile_hash,
     emailHash: row.email_hash,
     status: row.status,
@@ -185,8 +154,6 @@ exports.getWalletByAddress = async (walletAddress) => {
       wallet_type,
       full_name,
       national_id_hash,
-      ledger_doc_type,
-      ledger_key,
       mobile_hash,
       email_hash,
       status,
@@ -214,14 +181,7 @@ exports.getWalletByAddress = async (walletAddress) => {
     organizationCode: row.organization_code,
     walletType: row.wallet_type,
     fullName: row.full_name,
-    customerName: row.full_name,
-    customerType: row.wallet_type,
-    nationality: row.national_id_hash,
-    idType: row.ledger_doc_type,
-    idNumber: row.ledger_key,
     nationalIdHash: row.national_id_hash,
-    ledgerDocType: row.ledger_doc_type,
-    ledgerKey: row.ledger_key,
     mobileHash: row.mobile_hash,
     emailHash: row.email_hash,
     status: row.status,
@@ -231,11 +191,11 @@ exports.getWalletByAddress = async (walletAddress) => {
 };
 
 /**
- * Create wallet directly in PostgreSQL.
+ * Basic wallet creation directly into PostgreSQL.
  *
  * IMPORTANT:
- * If you already have Fabric wallet creation logic in another service,
- * keep that Fabric logic and only use listWallets for the dashboard.
+ * If your existing wallet creation currently writes to Fabric first,
+ * keep your existing Fabric implementation and only merge listWallets above.
  */
 exports.createWallet = async (payload) => {
   const {
@@ -247,8 +207,7 @@ exports.createWallet = async (payload) => {
     mobileHash = null,
     emailHash = null,
     passwordHash = null,
-    ledgerDocType = 'wallet',
-    ledgerKey = null,
+    initialBalance = 0,
     requestSource = 'ANGULAR_TEST_UI',
     sourceSystem = 'BLOCKCHAIN_API',
     createdBy = 'angular-test-ui'
@@ -266,10 +225,7 @@ exports.createWallet = async (payload) => {
     throw new Error('fullName is required');
   }
 
-  const walletAddress = `WALLET_${Date.now()}_${Math.random()
-    .toString(16)
-    .slice(2)
-    .toUpperCase()}`;
+  const walletAddress = `WALLET_${Date.now()}_${Math.random().toString(16).slice(2).toUpperCase()}`;
 
   const normalizedPasswordHash =
     passwordHash && passwordHash.startsWith('$2')
@@ -287,8 +243,6 @@ exports.createWallet = async (payload) => {
       wallet_type,
       full_name,
       national_id_hash,
-      ledger_doc_type,
-      ledger_key,
       mobile_hash,
       email_hash,
       password_hash,
@@ -297,7 +251,7 @@ exports.createWallet = async (payload) => {
       updated_at
     )
     VALUES (
-      $1, $2, $3, $4, 'CUSTOMER', $5, $6, $7, $8, $9, $10, $11, 'ACTIVE', NOW(), NOW()
+      $1, $2, $3, $4, 'CUSTOMER', $5, $6, $7, $8, $9, 'ACTIVE', NOW(), NOW()
     )
     RETURNING
       wallet_id,
@@ -308,8 +262,6 @@ exports.createWallet = async (payload) => {
       wallet_type,
       full_name,
       national_id_hash,
-      ledger_doc_type,
-      ledger_key,
       mobile_hash,
       email_hash,
       status,
@@ -324,8 +276,6 @@ exports.createWallet = async (payload) => {
     organizationCode,
     fullName,
     nationalIdHash,
-    ledgerDocType,
-    ledgerKey,
     mobileHash,
     emailHash,
     normalizedPasswordHash
@@ -344,17 +294,11 @@ exports.createWallet = async (payload) => {
       organizationCode: row.organization_code,
       walletType: row.wallet_type,
       fullName: row.full_name,
-      customerName: row.full_name,
-      customerType: row.wallet_type,
-      nationality: row.national_id_hash,
-      idType: row.ledger_doc_type,
-      idNumber: row.ledger_key,
       nationalIdHash: row.national_id_hash,
-      ledgerDocType: row.ledger_doc_type,
-      ledgerKey: row.ledger_key,
       mobileHash: row.mobile_hash,
       emailHash: row.email_hash,
       status: row.status,
+      initialBalance,
       requestSource,
       sourceSystem,
       createdBy,
@@ -365,7 +309,7 @@ exports.createWallet = async (payload) => {
 };
 
 /**
- * Wallet login by customer ID
+ * Wallet login by customer ID.
  */
 exports.loginWallet = async ({ customerId, password }) => {
   if (!customerId) {

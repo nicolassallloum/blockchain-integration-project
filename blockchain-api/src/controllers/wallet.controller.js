@@ -1,302 +1,203 @@
 'use strict';
 
 const walletService = require('../services/wallet.service');
-const auditService = require('../services/audit.service');
-const walletAuthService = require('../services/wallet-auth.service');
 
-const {
-  AUDIT_EVENT_TYPES,
-  AUDIT_EVENT_STATUS,
-  AUDIT_EVENT_CATEGORY
-} = require('../constants/audit.constants');
-
-function getRequestContext(req) {
-  return auditService.buildRequestContext(req);
+function getRequestId(req) {
+  return req.requestId || req.headers['x-request-id'] || null;
 }
 
-class WalletController {
-  /**
-   * Create wallet
-   * POST /api/v1/wallets
-   */
-  async createWallet(req, res, next) {
-    const context = getRequestContext(req);
+/**
+ * GET /api/v1/wallets?page=1&limit=13&search=
+ * Reads wallets from PostgreSQL table blockchain.wallets
+ */
+exports.listWallets = async (req, res) => {
+  try {
+    const page = Math.max(parseInt(req.query.page || '1', 10), 1);
+    const limit = Math.min(Math.max(parseInt(req.query.limit || '13', 10), 1), 100);
+    const offset = (page - 1) * limit;
+    const search = (req.query.search || '').trim();
 
-    try {
-      await auditService.log({
-        ...context,
-        eventType: AUDIT_EVENT_TYPES.WALLET_CREATE_REQUEST,
-        eventCategory: AUDIT_EVENT_CATEGORY.WALLET,
-        eventStatus: AUDIT_EVENT_STATUS.PENDING,
-        customerId: req.body.customerId,
-        organizationCode: req.body.organizationId,
-        requestPayload: req.body,
-        controllerName: 'wallet.controller',
-        serviceName: 'wallet.service'
-      });
+    const result = await walletService.listWallets({
+      page,
+      limit,
+      offset,
+      search
+    });
 
-      const result = await walletService.createWallet(req.body, {
-        requestId: req.requestId,
-        correlationId: req.correlationId,
-        sourceSystem: req.sourceSystem,
-        requestSource: req.requestSource,
-        createdBy: req.body.createdBy || 'system'
-      });
-
-      await auditService.log({
-        ...context,
-        eventType: AUDIT_EVENT_TYPES.WALLET_CREATE_SUCCESS,
-        eventCategory: AUDIT_EVENT_CATEGORY.WALLET,
-        eventStatus: AUDIT_EVENT_STATUS.SUCCESS,
-        customerId:
-          result?.data?.wallet?.customerId ||
-          result?.wallet?.customerId ||
-          req.body.customerId,
-        organizationId:
-          result?.data?.wallet?.organizationId ||
-          result?.wallet?.organizationId ||
-          null,
-        organizationCode:
-          result?.data?.wallet?.organizationCode ||
-          result?.wallet?.organizationCode ||
-          req.body.organizationId,
-        walletAddress:
-          result?.data?.wallet?.walletAddress ||
-          result?.wallet?.walletAddress ||
-          null,
-        fabricTxId:
-          result?.data?.fabricTxId ||
-          result?.fabricTxId ||
-          result?.txId ||
-          null,
-        responsePayload: result,
-        controllerName: 'wallet.controller',
-        serviceName: 'wallet.service'
-      });
-
-      return res.status(201).json({
-        ...result,
-        requestId: req.requestId,
-        correlationId: req.correlationId
-      });
-    } catch (error) {
-      await auditService.log({
-        ...context,
-        eventType: AUDIT_EVENT_TYPES.WALLET_CREATE_FAILED,
-        eventCategory: AUDIT_EVENT_CATEGORY.WALLET,
-        eventStatus: AUDIT_EVENT_STATUS.FAILED,
-        customerId: req.body.customerId,
-        organizationCode: req.body.organizationId,
-        errorCode: error.code || 'WALLET_CREATE_ERROR',
-        errorMessage: error.message,
-        errorStack: error.stack,
-        requestPayload: req.body,
-        controllerName: 'wallet.controller',
-        serviceName: 'wallet.service'
-      });
-
-      return next(error);
-    }
+    return res.status(200).json({
+      success: true,
+      message: 'Wallet list retrieved successfully',
+      data: result.data,
+      pagination: {
+        page,
+        limit,
+        totalRecords: result.totalRecords,
+        totalPages: Math.ceil(result.totalRecords / limit),
+        hasNextPage: page < Math.ceil(result.totalRecords / limit),
+        hasPreviousPage: page > 1
+      },
+      filters: {
+        search: search || null
+      },
+      source: 'postgres',
+      requestId: getRequestId(req)
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve wallet list',
+      error: {
+        message: error.message,
+        stack: process.env.NODE_ENV === 'production' ? undefined : error.stack
+      },
+      requestId: getRequestId(req)
+    });
   }
+};
 
-  /**
-   * Wallet login
-   * POST /api/v1/wallets/login
-   */
-  /**
-   * Wallet login
-   * POST /api/v1/wallets/login
-   */
-  async loginWallet(req, res, next) {
-    const context = getRequestContext(req);
+/**
+ * POST /api/v1/wallets
+ */
+exports.createWallet = async (req, res) => {
+  try {
+    const result = await walletService.createWallet(req.body);
 
-    try {
-      await auditService.log({
-        ...context,
-        eventType: AUDIT_EVENT_TYPES.WALLET_LOGIN_REQUEST,
-        eventCategory: AUDIT_EVENT_CATEGORY.AUTHENTICATION,
-        eventStatus: AUDIT_EVENT_STATUS.PENDING,
-        customerId: req.body.customerId,
-        requestPayload: req.body,
-        controllerName: 'wallet.controller',
-        serviceName: 'wallet-auth.service'
-      });
-
-      const result = await walletAuthService.loginWallet(req.body, {
-        requestId: req.requestId,
-        correlationId: req.correlationId,
-        sourceSystem: req.sourceSystem,
-        requestSource: req.requestSource,
-        ipAddress:
-          req.headers['x-forwarded-for'] ||
-          req.socket?.remoteAddress ||
-          req.ip ||
-          null,
-        userAgent: req.headers['user-agent'] || null
-      });
-
-      const normalizedStatusCode =
-        result?.statusCode || (result?.success === false ? 401 : 200);
-
-      const normalizedBody = result?.body || result;
-
-      const isLoginSuccess =
-        normalizedStatusCode >= 200 &&
-        normalizedStatusCode < 300 &&
-        normalizedBody?.success !== false;
-
-      if (!normalizedBody || !isLoginSuccess) {
-        await auditService.log({
-          ...context,
-          eventType: AUDIT_EVENT_TYPES.WALLET_LOGIN_FAILED,
-          eventCategory: AUDIT_EVENT_CATEGORY.AUTHENTICATION,
-          eventStatus: AUDIT_EVENT_STATUS.FAILED,
-          customerId: req.body.customerId,
-          errorCode: normalizedBody?.errorCode || 'INVALID_CREDENTIALS',
-          errorMessage:
-            normalizedBody?.message || 'Invalid wallet login credentials',
-          requestPayload: req.body,
-          responsePayload: normalizedBody,
-          controllerName: 'wallet.controller',
-          serviceName: 'wallet-auth.service'
-        });
-
-        return res.status(normalizedStatusCode || 401).json({
-          success: false,
-          message: normalizedBody?.message || 'Invalid login credentials',
-          errorCode: normalizedBody?.errorCode || 'INVALID_CREDENTIALS',
-          data: normalizedBody?.data || null,
-          requestId: req.requestId,
-          correlationId: req.correlationId
-        });
-      }
-
-      await auditService.log({
-        ...context,
-        eventType: AUDIT_EVENT_TYPES.WALLET_LOGIN_SUCCESS,
-        eventCategory: AUDIT_EVENT_CATEGORY.AUTHENTICATION,
-        eventStatus: AUDIT_EVENT_STATUS.SUCCESS,
-        customerId:
-          normalizedBody?.data?.customerId ||
-          normalizedBody?.customerId ||
-          req.body.customerId,
-        walletAddress:
-          normalizedBody?.data?.walletAddress ||
-          normalizedBody?.walletAddress ||
-          null,
-        responsePayload: {
-          success: true,
-          message: 'Wallet login successful',
-          token: '***MASKED***'
-        },
-        controllerName: 'wallet.controller',
-        serviceName: 'wallet-auth.service'
-      });
-
-      return res.status(normalizedStatusCode || 200).json({
-        ...normalizedBody,
-        requestId: req.requestId,
-        correlationId: req.correlationId
-      });
-    } catch (error) {
-      await auditService.log({
-        ...context,
-        eventType: AUDIT_EVENT_TYPES.WALLET_LOGIN_FAILED,
-        eventCategory: AUDIT_EVENT_CATEGORY.AUTHENTICATION,
-        eventStatus: AUDIT_EVENT_STATUS.ERROR,
-        customerId: req.body.customerId,
-        errorCode: error.code || 'WALLET_LOGIN_ERROR',
-        errorMessage: error.message,
-        errorStack: error.stack,
-        requestPayload: req.body,
-        controllerName: 'wallet.controller',
-        serviceName: 'wallet-auth.service'
-      });
-
-      return next(error);
-    }
+    return res.status(201).json({
+      success: true,
+      message: 'Wallet created successfully',
+      data: result,
+      requestId: getRequestId(req)
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: 'Failed to create wallet',
+      error: {
+        message: error.message,
+        stack: process.env.NODE_ENV === 'production' ? undefined : error.stack
+      },
+      requestId: getRequestId(req)
+    });
   }
+};
 
-  /**
-   * Get wallet by customer ID
-   * GET /api/v1/wallets/customer/:customerId
-   */
-  async getWalletByCustomerId(req, res, next) {
-    try {
-      const customerId = req.params.customerId || req.query.customerId;
+/**
+ * POST /api/v1/wallets/login
+ */
+exports.loginWallet = async (req, res) => {
+  try {
+    const { customerId, password } = req.body;
 
-      const result = await walletService.getWalletByCustomerId(customerId, {
-        requestId: req.requestId,
-        correlationId: req.correlationId,
-        sourceSystem: req.sourceSystem,
-        requestSource: req.requestSource
+    const result = await walletService.loginWallet({
+      customerId,
+      password
+    });
+
+    if (!result) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid login credentials',
+        errorCode: 'INVALID_CREDENTIALS',
+        data: null,
+        requestId: getRequestId(req)
       });
-
-      return res.status(200).json({
-        success: true,
-        message: 'Wallet retrieved successfully',
-        data: result?.data || result,
-        requestId: req.requestId,
-        correlationId: req.correlationId
-      });
-    } catch (error) {
-      return next(error);
     }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Wallet login successful',
+      data: result,
+      requestId: getRequestId(req)
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Wallet login failed',
+      error: {
+        message: error.message,
+        stack: process.env.NODE_ENV === 'production' ? undefined : error.stack
+      },
+      requestId: getRequestId(req)
+    });
   }
+};
 
-  /**
-   * Get wallet by wallet address
-   * GET /api/v1/wallets/:walletAddress
-   */
-  async getWalletByAddress(req, res, next) {
-    try {
-      const walletAddress = req.params.walletAddress;
+/**
+ * GET /api/v1/wallets/customer/:customerId
+ */
+exports.getWalletByCustomerId = async (req, res) => {
+  try {
+    const { customerId } = req.params;
 
-      const result = await walletService.getWalletByAddress(walletAddress, {
-        requestId: req.requestId,
-        correlationId: req.correlationId,
-        sourceSystem: req.sourceSystem,
-        requestSource: req.requestSource
+    const wallet = await walletService.getWalletByCustomerId(customerId);
+
+    if (!wallet) {
+      return res.status(404).json({
+        success: false,
+        message: `Wallet not found for customerId: ${customerId}`,
+        data: null,
+        requestId: getRequestId(req)
       });
-
-      return res.status(200).json({
-        success: true,
-        message: 'Wallet retrieved successfully',
-        data: result?.data || result,
-        requestId: req.requestId,
-        correlationId: req.correlationId
-      });
-    } catch (error) {
-      return next(error);
     }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Wallet retrieved successfully',
+      data: {
+        wallet
+      },
+      source: 'postgres',
+      requestId: getRequestId(req)
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve wallet by customer ID',
+      error: {
+        message: error.message,
+        stack: process.env.NODE_ENV === 'production' ? undefined : error.stack
+      },
+      requestId: getRequestId(req)
+    });
   }
+};
 
-  /**
-   * Get wallet balance
-   * GET /api/v1/wallets/:walletAddress/balance
-   */
-  async getWalletBalance(req, res, next) {
-    try {
-      const walletAddress = req.params.walletAddress;
+/**
+ * GET /api/v1/wallets/:walletAddress
+ */
+exports.getWalletByAddress = async (req, res) => {
+  try {
+    const { walletAddress } = req.params;
 
-      const result = await walletService.getWalletBalance(walletAddress, {
-        requestId: req.requestId,
-        correlationId: req.correlationId,
-        sourceSystem: req.sourceSystem,
-        requestSource: req.requestSource
+    const wallet = await walletService.getWalletByAddress(walletAddress);
+
+    if (!wallet) {
+      return res.status(404).json({
+        success: false,
+        message: `Wallet not found for walletAddress: ${walletAddress}`,
+        data: null,
+        requestId: getRequestId(req)
       });
-
-      return res.status(200).json({
-        success: true,
-        message: 'Wallet balance retrieved successfully',
-        data: result?.data || result,
-        requestId: req.requestId,
-        correlationId: req.correlationId
-      });
-    } catch (error) {
-      return next(error);
     }
-  }
-}
 
-module.exports = new WalletController();
+    return res.status(200).json({
+      success: true,
+      message: 'Wallet retrieved successfully',
+      data: {
+        wallet
+      },
+      source: 'postgres',
+      requestId: getRequestId(req)
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve wallet by wallet address',
+      error: {
+        message: error.message,
+        stack: process.env.NODE_ENV === 'production' ? undefined : error.stack
+      },
+      requestId: getRequestId(req)
+    });
+  }
+};

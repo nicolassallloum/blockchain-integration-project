@@ -9,16 +9,16 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
   styleUrl: './app.scss'
 })
 export class App {
-  appName = 'Blockchain Test UI';
+  appName = 'VALORES';
 
   menuItems = [
-    { label: 'Dashboard', route: '/dashboard', icon: '📊' },
-    { label: 'Wallet Create', route: '/wallet-create', icon: '👤' },
-    { label: 'Wallet Login', route: '/wallet-login', icon: '🔐' },
-    { label: 'Wallet Query', route: '/wallet-query', icon: '🔎' },
-    { label: 'Wallet Transfer', route: '/wallet-transfer', icon: '💸' },
-    { label: 'Organization Transfer', route: '/organization-transfer', icon: '🏦' },
-    { label: 'Transaction History', route: '/transaction-history', icon: '📜' },
-    { label: 'Fabric Test', route: '/fabric-test', icon: '⛓️' }
+    { label: 'Dashboard', route: '/dashboard', icon: '●' },
+    { label: 'Wallet Create', route: '/wallet-create', icon: '●' },
+    { label: 'Wallet Login', route: '/wallet-login', icon: '●' },
+    { label: 'Wallet Query', route: '/wallet-query', icon: '●' },
+    { label: 'Wallet Transfer', route: '/wallet-transfer', icon: '●' },
+    { label: 'Organization Transfer', route: '/organization-transfer', icon: '●' },
+    { label: 'Transaction History', route: '/transaction-history', icon: '●' },
+    { label: 'Fabric Test', route: '/fabric-test', icon: '●' }
   ];
 }
