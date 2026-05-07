@@ -2,28 +2,38 @@ import { HttpInterceptorFn } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 
 export const apiAuthInterceptor: HttpInterceptorFn = (req, next) => {
+  const requestId = `REQ_UI_${Date.now()}`;
+
+  const normalizedUrl = req.url.startsWith('/')
+    ? req.url
+    : `/${req.url}`;
+
+  const isReferenceApi = normalizedUrl.includes('/api/v1/reference/');
+  const isFabricApi = normalizedUrl.includes('/api/v1/fabric/');
+  const isProtectedTransactionApi =
+    normalizedUrl.includes('/api/v1/transactions/organization-transfer');
+
   /**
-   * Keep reference APIs clean to avoid unnecessary browser preflight.
+   * Keep reference APIs simple.
    */
-  if (req.url.includes('/api/v1/reference/')) {
+  if (isReferenceApi) {
     return next(req);
   }
-
-  const requestId = `REQ_UI_${Date.now()}`;
 
   const headers: Record<string, string> = {
     'x-request-id': requestId
   };
 
   /**
-   * Fabric routes are protected by API key.
+   * Required for Fabric Test and protected service routes.
    */
-  if (req.url.includes('/api/v1/fabric/')) {
-    if (environment.fabricApiKey && environment.fabricApiKey !== 'PASTE_BACKEND_API_KEY_HERE') {
-      headers['x-api-key'] = environment.fabricApiKey;
-    }
+  if (isFabricApi || isProtectedTransactionApi) {
+    headers['x-api-key'] = environment.fabricApiKey;
   }
 
+  /**
+   * Optional wallet token after login.
+   */
   const walletToken =
     localStorage.getItem('digital_kyc_wallet_token') ||
     '';
@@ -32,9 +42,9 @@ export const apiAuthInterceptor: HttpInterceptorFn = (req, next) => {
     headers['Authorization'] = `Bearer ${walletToken}`;
   }
 
-  const clonedRequest = req.clone({
-    setHeaders: headers
-  });
-
-  return next(clonedRequest);
+  return next(
+    req.clone({
+      setHeaders: headers
+    })
+  );
 };

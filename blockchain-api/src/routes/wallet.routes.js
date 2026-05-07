@@ -4,7 +4,7 @@ const express = require('express');
 const router = express.Router();
 
 const walletController = require('../controllers/wallet.controller');
-
+router.get('/next-customer-id', walletController.getNextCustomerId);
 /**
  * STEP 30 / 31 — Wallet Routes
  *

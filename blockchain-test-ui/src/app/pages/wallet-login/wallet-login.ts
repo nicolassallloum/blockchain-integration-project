@@ -25,7 +25,7 @@ export class WalletLogin implements OnInit {
   redirectTo = '/digital-kyc/wallet-transfer';
 
   form = {
-    customerId: '',
+    walletAddress: '',
     password: ''
   };
 
@@ -45,8 +45,6 @@ export class WalletLogin implements OnInit {
     creationDateTime: '-'
   };
 
-  countries: any[] = [];
-
   constructor(
     private walletService: WalletService,
     private walletSessionService: WalletSessionService,
@@ -58,39 +56,11 @@ export class WalletLogin implements OnInit {
     this.redirectTo =
       this.route.snapshot.queryParamMap.get('redirectTo') ||
       '/digital-kyc/wallet-transfer';
-
-    this.loadCountries();
-  }
-
-  loadCountries(): void {
-    this.walletService.getCountries().subscribe({
-      next: (response: any) => {
-        if (Array.isArray(response)) {
-          this.countries = response;
-          return;
-        }
-
-        if (Array.isArray(response?.data)) {
-          this.countries = response.data;
-          return;
-        }
-
-        if (Array.isArray(response?.data?.countries)) {
-          this.countries = response.data.countries;
-          return;
-        }
-
-        this.countries = [];
-      },
-      error: () => {
-        this.countries = [];
-      }
-    });
   }
 
   fillSampleData(): void {
     this.form = {
-      customerId: '19',
+      walletAddress: 'WALLET_177814333918_F039E75D04FE3',
       password: ''
     };
 
@@ -107,7 +77,7 @@ export class WalletLogin implements OnInit {
 
   resetForm(): void {
     this.form = {
-      customerId: '',
+      walletAddress: '',
       password: ''
     };
 
@@ -141,8 +111,8 @@ export class WalletLogin implements OnInit {
     this.apiResponse = null;
     this.token = '';
 
-    if (!this.form.customerId) {
-      this.errorMessage = 'Customer ID is required.';
+    if (!this.form.walletAddress) {
+      this.errorMessage = 'Wallet Address is required.';
       return;
     }
 
@@ -154,7 +124,7 @@ export class WalletLogin implements OnInit {
     this.loading = true;
 
     const payload = {
-      customerId: String(this.form.customerId).trim(),
+      walletAddress: String(this.form.walletAddress).trim(),
       password: String(this.form.password)
     };
 
@@ -266,7 +236,6 @@ export class WalletLogin implements OnInit {
         };
 
         this.walletSessionService.setSession(normalizedSession);
-
         this.walletService.saveWalletToken(this.token);
         this.walletService.saveWalletProfile({
           token: this.token,
@@ -288,7 +257,7 @@ export class WalletLogin implements OnInit {
         this.errorMessage =
           error?.error?.message ||
           error?.message ||
-          'Wallet login failed. Please check the customer ID and password.';
+          'Wallet login failed. Please check the wallet address and password.';
       }
     });
   }

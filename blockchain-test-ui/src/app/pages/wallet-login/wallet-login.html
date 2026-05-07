@@ -2,7 +2,7 @@
   <div class="page-header">
     <div>
       <h2>Wallet Login</h2>
-      <p>Authenticate a customer wallet and view the verified blockchain identity profile.</p>
+      <p>Authenticate using wallet address and password.</p>
     </div>
 
     <div class="actions">
@@ -16,23 +16,16 @@
     </div>
   </div>
 
-  <div class="card login-card">
-    <div class="section-title">
-      <div>
-        <h3>Authentication</h3>
-        <p>Enter the customer credentials to validate wallet ownership.</p>
-      </div>
-    </div>
-
+  <div class="card">
     <form (ngSubmit)="loginWallet()">
-      <div class="login-grid">
+      <div class="grid">
         <div class="field">
-          <label>Customer ID</label>
+          <label>Wallet Address</label>
           <input
             type="text"
-            name="customerId"
-            [(ngModel)]="form.customerId"
-            placeholder="Example: CUST000017 or 17"
+            name="walletAddress"
+            [(ngModel)]="form.walletAddress"
+            placeholder="Enter wallet address"
             required
           />
         </div>
@@ -51,7 +44,7 @@
 
       <div class="submit-row">
         <button type="submit" class="primary-btn" [disabled]="loading">
-          {{ loading ? 'Authenticating Wallet...' : 'Login Wallet' }}
+          {{ loading ? 'Logging in...' : 'Login Wallet' }}
         </button>
       </div>
     </form>
@@ -65,144 +58,9 @@
     {{ errorMessage }}
   </div>
 
-  <div *ngIf="responseData?.success" class="wallet-profile">
-    <div class="profile-header">
-      <div class="profile-left">
-        <div class="success-icon">✓</div>
-
-        <div>
-          <h3>Wallet Identity Summary</h3>
-          <p>Authenticated wallet profile loaded from the Blockchain API Middleware.</p>
-        </div>
-      </div>
-
-      <div class="profile-status">
-        <span>Status</span>
-        <strong>{{ walletSummary.status }}</strong>
-      </div>
-    </div>
-
-    <div class="profile-banner">
-      <div>
-        <span>Wallet Address / Login ID</span>
-        <strong>{{ walletSummary.walletAddress }}</strong>
-      </div>
-
-      <button type="button" class="copy-btn" (click)="copyWalletAddress()">
-        Copy Address
-      </button>
-    </div>
-
-    <div class="kpi-grid">
-      <div class="kpi-card">
-        <span>Customer</span>
-        <strong>{{ walletSummary.customerName }}</strong>
-        <small>{{ walletSummary.customerId }}</small>
-      </div>
-
-      <div class="kpi-card">
-        <span>Organization</span>
-        <strong>{{ walletSummary.organizationName }}</strong>
-        <small>{{ walletSummary.organizationId }}</small>
-      </div>
-
-      <div class="kpi-card">
-        <span>Current Balance</span>
-        <strong>{{ walletSummary.balance }}</strong>
-        <small>{{ walletSummary.currency }}</small>
-      </div>
-
-      <div class="kpi-card">
-        <span>Country</span>
-        <strong>{{ walletSummary.countryName }}</strong>
-        <small>{{ walletSummary.countryId }}</small>
-      </div>
-    </div>
-
-    <div class="details-section">
-      <div class="section-title compact">
-        <div>
-          <h3>Identity & KYC Details</h3>
-          <p>Professional mapping of customer, organization, country, contact, and wallet fields.</p>
-        </div>
-      </div>
-
-      <div class="details-grid">
-        <div class="detail-item">
-          <span>CUSTOMER_ID</span>
-          <strong>{{ walletSummary.customerId }}</strong>
-        </div>
-
-        <div class="detail-item">
-          <span>CUSTOMER_NAME / FULL_NAME</span>
-          <strong>{{ walletSummary.customerName }}</strong>
-        </div>
-
-        <div class="detail-item">
-          <span>ORGANIZATION_ID</span>
-          <strong>{{ walletSummary.organizationId }}</strong>
-        </div>
-
-        <div class="detail-item">
-          <span>ORGANIZATION_NAME</span>
-          <strong>{{ walletSummary.organizationName }}</strong>
-        </div>
-
-        <div class="detail-item">
-          <span>COUNTRY_ID / NATIONAL_ID_HASH</span>
-          <strong>{{ walletSummary.countryId }}</strong>
-        </div>
-
-        <div class="detail-item">
-          <span>COUNTRY_NAME / COU_NAME</span>
-          <strong>{{ walletSummary.countryName }}</strong>
-        </div>
-
-        <div class="detail-item">
-          <span>EMAIL_ADDRESS / EMAIL_HASH</span>
-          <strong>{{ walletSummary.emailAddress }}</strong>
-        </div>
-
-        <div class="detail-item">
-          <span>MOBILE_PHONE / MOBILE_HASH</span>
-          <strong>{{ walletSummary.mobilePhone }}</strong>
-        </div>
-
-        <div class="detail-item highlight">
-          <span>BALANCE / CURRENT_BALANCE</span>
-          <strong>{{ walletSummary.balance }}</strong>
-        </div>
-
-        <div class="detail-item highlight">
-          <span>CURRENCY / CURRENCY_CODE</span>
-          <strong>{{ walletSummary.currency }}</strong>
-        </div>
-
-        <div class="detail-item full-width">
-          <span>CREATION_DATE_TIME / CREATED_AT</span>
-          <strong>{{ walletSummary.creationDateTime }}</strong>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div *ngIf="token" class="token-card">
-    <div class="token-header">
-      <div>
-        <h3>JWT Access Token</h3>
-        <p>Token saved in browser local storage for protected wallet operations.</p>
-      </div>
-
-      <button type="button" class="secondary-btn" (click)="copyToken()">
-        Copy Token
-      </button>
-    </div>
-
-    <textarea readonly>{{ token }}</textarea>
-  </div>
-
-  <div *ngIf="responseData" class="response-card">
+  <div *ngIf="apiResponse" class="card response-card">
     <h3>Raw API Response</h3>
-    <pre>{{ responseData | json }}</pre>
+
+    <pre>{{ apiResponse | json }}</pre>
   </div>
 </div>

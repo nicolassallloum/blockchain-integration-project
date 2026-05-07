@@ -5,7 +5,23 @@ const walletService = require('../services/wallet.service');
 function getRequestId(req) {
   return req.requestId || req.headers['x-request-id'] || null;
 }
+exports.getNextCustomerId = async (req, res, next) => {
+  try {
+    const result = await walletService.getNextCustomerId();
 
+    return res.status(200).json({
+      success: true,
+      message: 'Next customer ID generated successfully',
+      data: {
+        customerId: result.customerId,
+        customer_id: result.customerId
+      },
+      requestId: req.requestId
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
 /**
  * GET /api/v1/wallets?page=1&limit=13&search=
  * Reads wallets from PostgreSQL table blockchain.wallets
@@ -84,22 +100,51 @@ exports.createWallet = async (req, res) => {
 /**
  * POST /api/v1/wallets/login
  */
-exports.loginWallet = async (req, res) => {
+exports.loginWallet = async (req, res, next) => {
   try {
-    const { customerId, password } = req.body;
+    const walletAddress =
+      req.body.walletAddress ||
+      req.body.wallet_address ||
+      req.body.loginId ||
+      req.body.customerId;
+
+    const password = req.body.password;
+
+    if (!walletAddress) {
+      return res.status(400).json({
+        success: false,
+        message: 'walletAddress is required',
+        error: {
+          message: 'walletAddress is required'
+        },
+        requestId: req.requestId
+      });
+    }
+
+    if (!password) {
+      return res.status(400).json({
+        success: false,
+        message: 'password is required',
+        error: {
+          message: 'password is required'
+        },
+        requestId: req.requestId
+      });
+    }
 
     const result = await walletService.loginWallet({
-      customerId,
+      walletAddress,
       password
     });
 
     if (!result) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid login credentials',
-        errorCode: 'INVALID_CREDENTIALS',
-        data: null,
-        requestId: getRequestId(req)
+        message: 'Wallet login failed',
+        error: {
+          message: 'Invalid wallet address or password'
+        },
+        requestId: req.requestId
       });
     }
 
@@ -107,18 +152,10 @@ exports.loginWallet = async (req, res) => {
       success: true,
       message: 'Wallet login successful',
       data: result,
-      requestId: getRequestId(req)
+      requestId: req.requestId
     });
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: 'Wallet login failed',
-      error: {
-        message: error.message,
-        stack: process.env.NODE_ENV === 'production' ? undefined : error.stack
-      },
-      requestId: getRequestId(req)
-    });
+    return next(error);
   }
 };
 

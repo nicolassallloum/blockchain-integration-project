@@ -21,6 +21,14 @@
       Loading customer ID, organizations, and countries...
     </div>
 
+    <div *ngIf="organizationErrorMessage" class="alert error">
+      {{ organizationErrorMessage }}
+
+      <button type="button" class="secondary-btn" (click)="reloadOrganizations()">
+        Retry Organizations
+      </button>
+    </div>
+
     <div *ngIf="!pageLoading" class="card">
       <form (ngSubmit)="createWallet()">
         <div class="grid">
@@ -30,7 +38,8 @@
               type="text"
               name="customerId"
               [(ngModel)]="form.customerId"
-              readonly
+              placeholder="Auto-generated or enter customer ID"
+              required
             />
           </div>
 
@@ -39,9 +48,12 @@
             <select
               name="organizationId"
               [(ngModel)]="form.organizationId"
+              (change)="onOrganizationChange()"
               required
             >
-              <option value="">Select organization</option>
+              <option value="">
+                {{ organizationsLoading ? 'Loading organizations...' : 'Select organization' }}
+              </option>
 
               <option
                 *ngFor="let org of organizations"
@@ -94,9 +106,10 @@
               name="selectedCountryId"
               [(ngModel)]="selectedCountryId"
               (change)="onCountryChange()"
-              required
             >
-              <option value="">Select nationality</option>
+              <option value="">
+                {{ countriesLoading ? 'Loading nationalities...' : 'Select nationality' }}
+              </option>
 
               <option
                 *ngFor="let country of countries"
@@ -113,6 +126,7 @@
               type="text"
               name="nationalIdHash"
               [(ngModel)]="form.nationalIdHash"
+              placeholder="Auto-filled from nationality"
               readonly
             />
           </div>
@@ -134,7 +148,7 @@
               type="text"
               name="emailHash"
               [(ngModel)]="form.emailHash"
-              placeholder="Nsalloum95@gmail.com"
+              placeholder="nsalloum95@gmail.com"
               required
             />
           </div>
@@ -162,7 +176,11 @@
         </div>
 
         <div class="submit-row">
-          <button type="submit" class="primary-btn" [disabled]="loading">
+          <button
+            type="submit"
+            class="primary-btn"
+            [disabled]="loading || organizations.length === 0"
+          >
             {{ loading ? 'Creating Wallet...' : 'Generate Wallet' }}
           </button>
         </div>
@@ -199,6 +217,13 @@
         <div class="info-label">Wallet Address</div>
         <div class="info-value small-box">
           {{ resultData.walletAddress }}
+        </div>
+      </div>
+
+      <div class="info-box">
+        <div class="info-label">Organization</div>
+        <div class="info-value small-box">
+          {{ resultData.organizationName || getSelectedOrganizationName() || 'N/A' }}
         </div>
       </div>
 

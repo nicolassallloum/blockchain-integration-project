@@ -415,7 +415,8 @@ async function walletTransfer(payload, context = {}) {
 
     await updateWalletBalance(client, senderWalletAddress, -transferAmount);
     await updateWalletBalance(client, receiverWalletAddress, transferAmount);
-
+    const updatedSenderWallet = await getWalletByAddressInternal(client, senderWalletAddress);
+    const updatedReceiverWallet = await getWalletByAddressInternal(client, receiverWalletAddress);
     const transaction = await insertTransaction(client, {
       transactionId,
       requestId,
@@ -452,6 +453,9 @@ async function walletTransfer(payload, context = {}) {
         amount: String(transferAmount),
         currency: normalizedCurrency,
         status: 'COMPLETED',
+        senderBalanceBefore: senderBalance,
+        senderBalanceAfter: Number(updatedSenderWallet?.currentBalance || 0),
+        receiverBalanceAfter: Number(updatedReceiverWallet?.currentBalance || 0),
         transaction
       }
     };

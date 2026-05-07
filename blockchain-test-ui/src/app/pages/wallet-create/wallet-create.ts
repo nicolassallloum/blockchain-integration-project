@@ -1,12 +1,17 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
+
 import { WalletService } from '../../services/wallet.service';
+import { environment } from '../../../environments/environment';
 
 interface Organization {
   organizationId: string;
   organizationName: string;
   organizationCode?: string;
+  organizationType?: string;
+  status?: string;
 }
 
 interface Country {
@@ -25,8 +30,12 @@ interface Country {
 export class WalletCreate implements OnInit {
   loading = false;
   pageLoading = false;
+  organizationsLoading = false;
+  countriesLoading = false;
+
   successMessage = '';
   errorMessage = '';
+  organizationErrorMessage = '';
 
   organizations: Organization[] = [];
   countries: Country[] = [];
@@ -42,7 +51,8 @@ export class WalletCreate implements OnInit {
     oneTimePassword: '',
     recoveryPhrase: '',
     currentBalance: 0,
-    currencyCode: 'USD'
+    currencyCode: 'USD',
+    organizationName: ''
   };
 
   form = {
@@ -61,7 +71,10 @@ export class WalletCreate implements OnInit {
     createdBy: 'nix'
   };
 
-  constructor(private walletService: WalletService) {}
+  constructor(
+    private walletService: WalletService,
+    private http: HttpClient
+  ) {}
 
   ngOnInit(): void {
     this.initializeForm();
@@ -71,82 +84,147 @@ export class WalletCreate implements OnInit {
     this.pageLoading = true;
     this.successMessage = '';
     this.errorMessage = '';
+    this.organizationErrorMessage = '';
     this.showSuccessScreen = false;
 
     this.generatePassword();
+    this.loadNextCustomerId();
+  }
 
+  loadNextCustomerId(): void {
     this.walletService.getNextCustomerId().subscribe({
       next: (res: any) => {
         this.form.customerId =
           res?.data?.customer_id ||
           res?.data?.customerId ||
+          res?.customer_id ||
           res?.customerId ||
           '';
 
         this.loadOrganizations();
       },
-      error: (err: any) => {
-        this.pageLoading = false;
-        this.errorMessage =
-          err?.error?.message ||
-          err?.message ||
-          'Failed to load customer ID sequence';
+      error: () => {
+        /**
+         * Do not block the page if sequence API is not available.
+         * User can still enter Customer ID manually if needed.
+         */
+        this.form.customerId = '';
+        this.loadOrganizations();
       }
     });
   }
 
   loadOrganizations(): void {
-    this.walletService.getOrganizations().subscribe({
-      next: (res: any) => {
-        const rawOrganizations =
-          res?.data?.organizations ||
-          res?.data ||
-          res?.organizations ||
-          [];
+    this.organizationsLoading = true;
+    this.organizationErrorMessage = '';
 
-        this.organizations = Array.isArray(rawOrganizations)
-          ? rawOrganizations.map((org: any) => ({
-              organizationId:
-                org.organizationId ||
-                org.organization_id ||
-                org.id ||
-                '',
-              organizationName:
-                org.organizationName ||
-                org.organization_name ||
-                org.name ||
-                org.organization_code ||
-                '',
-              organizationCode:
-                org.organizationCode ||
-                org.organization_code ||
-                ''
-            }))
-          : [];
+    /**
+     * Primary route:
+     *   /api/v1/reference/organizations
+     *
+     * Fallback route:
+     *   /api/v1/organizations
+     */
+    this.http.get(`${environment.apiBaseUrl}/reference/organizations`).subscribe({
+      next: (res: any) => {
+        this.organizations = this.normalizeOrganizations(res);
 
         if (this.organizations.length > 0 && !this.form.organizationId) {
           this.form.organizationId = this.organizations[0].organizationId;
         }
 
+        this.organizationsLoading = false;
         this.loadCountries();
       },
-      error: (err: any) => {
-        this.pageLoading = false;
-        this.errorMessage =
-          err?.error?.message ||
-          err?.message ||
-          'Failed to load organizations';
+      error: () => {
+        this.http.get(`${environment.apiBaseUrl}/organizations`).subscribe({
+          next: (res: any) => {
+            this.organizations = this.normalizeOrganizations(res);
+
+            if (this.organizations.length > 0 && !this.form.organizationId) {
+              this.form.organizationId = this.organizations[0].organizationId;
+            }
+
+            this.organizationsLoading = false;
+            this.loadCountries();
+          },
+          error: (err: any) => {
+            this.organizations = [];
+            this.organizationsLoading = false;
+            this.pageLoading = false;
+
+            this.organizationErrorMessage =
+              err?.error?.message ||
+              err?.message ||
+              'Failed to load organizations from backend.';
+          }
+        });
       }
     });
   }
 
+  normalizeOrganizations(response: any): Organization[] {
+    const rawOrganizations =
+      response?.data?.organizations ||
+      response?.data ||
+      response?.organizations ||
+      response ||
+      [];
+
+    if (!Array.isArray(rawOrganizations)) {
+      return [];
+    }
+
+    return rawOrganizations
+      .map((org: any) => ({
+        organizationId:
+          org.organizationId ||
+          org.organization_id ||
+          org.id ||
+          '',
+
+        organizationName:
+          org.organizationName ||
+          org.organization_name ||
+          org.name ||
+          org.organization_code ||
+          '',
+
+        organizationCode:
+          org.organizationCode ||
+          org.organization_code ||
+          org.registration_number ||
+          '',
+
+        organizationType:
+          org.organizationType ||
+          org.organization_type ||
+          '',
+
+        status:
+          org.status ||
+          ''
+      }))
+      .filter((org: Organization) => !!org.organizationId && !!org.organizationName);
+  }
+
   loadCountries(): void {
+    this.countriesLoading = true;
+
     this.walletService.getCountries().subscribe({
       next: (res: any) => {
-        this.countries = res?.data || [];
+        const rawCountries =
+          res?.data?.countries ||
+          res?.data ||
+          res?.countries ||
+          [];
+
+        this.countries = Array.isArray(rawCountries) ? rawCountries : [];
 
         const lebanon = this.countries.find(
-          (country) => country.iso_cou_code_alpha === 'LB'
+          (country) =>
+            country.iso_cou_code_alpha === 'LB' ||
+            country.cou_name?.toLowerCase() === 'lebanon'
         );
 
         const defaultCountry = lebanon || this.countries[0];
@@ -157,14 +235,13 @@ export class WalletCreate implements OnInit {
           this.form.nationalIdHash = String(defaultCountry.cou_id);
         }
 
+        this.countriesLoading = false;
         this.pageLoading = false;
       },
-      error: (err: any) => {
+      error: () => {
+        this.countries = [];
+        this.countriesLoading = false;
         this.pageLoading = false;
-        this.errorMessage =
-          err?.error?.message ||
-          err?.message ||
-          'Failed to load countries';
       }
     });
   }
@@ -178,6 +255,18 @@ export class WalletCreate implements OnInit {
       this.form.nationality = selectedCountry.cou_name;
       this.form.nationalIdHash = String(selectedCountry.cou_id);
     }
+  }
+
+  onOrganizationChange(): void {
+    this.organizationErrorMessage = '';
+  }
+
+  getSelectedOrganizationName(): string {
+    const selectedOrganization = this.organizations.find(
+      (org) => org.organizationId === this.form.organizationId
+    );
+
+    return selectedOrganization?.organizationName || '';
   }
 
   generatePassword(length: number = 16): void {
@@ -195,9 +284,16 @@ export class WalletCreate implements OnInit {
   }
 
   fillSampleData(): void {
+    this.successMessage = '';
+    this.errorMessage = '';
+
+    if (!this.form.customerId) {
+      this.form.customerId = String(Date.now()).slice(-6);
+    }
+
     this.form.fullName = 'NICOLAS SALLOUM';
     this.form.mobileHash = '79170430';
-    this.form.emailHash = 'Nsalloum95@gmail.com';
+    this.form.emailHash = 'nsalloum95@gmail.com';
     this.form.initialBalance = '1000';
     this.form.currencyCode = 'USD';
 
@@ -206,7 +302,9 @@ export class WalletCreate implements OnInit {
     }
 
     const lebanon = this.countries.find(
-      (country) => country.iso_cou_code_alpha === 'LB'
+      (country) =>
+        country.iso_cou_code_alpha === 'LB' ||
+        country.cou_name?.toLowerCase() === 'lebanon'
     );
 
     const selectedCountry = lebanon || this.countries[0];
@@ -221,6 +319,12 @@ export class WalletCreate implements OnInit {
   }
 
   resetForm(): void {
+    this.loading = false;
+    this.successMessage = '';
+    this.errorMessage = '';
+    this.organizationErrorMessage = '';
+    this.showSuccessScreen = false;
+
     this.form = {
       customerId: '',
       organizationId: '',
@@ -245,33 +349,74 @@ export class WalletCreate implements OnInit {
       oneTimePassword: '',
       recoveryPhrase: '',
       currentBalance: 0,
-      currencyCode: 'USD'
+      currencyCode: 'USD',
+      organizationName: ''
     };
 
     this.initializeForm();
   }
 
-  createWallet(): void {
-    this.loading = true;
-    this.successMessage = '';
-    this.errorMessage = '';
+  validateForm(): boolean {
+    if (!this.form.customerId) {
+      this.errorMessage = 'Customer ID is required.';
+      return false;
+    }
+
+    if (!this.form.organizationId) {
+      this.errorMessage = 'Organization is required.';
+      return false;
+    }
+
+    if (!this.form.fullName) {
+      this.errorMessage = 'Full Name is required.';
+      return false;
+    }
+
+    if (!this.form.mobileHash) {
+      this.errorMessage = 'Mobile Hash is required.';
+      return false;
+    }
+
+    if (!this.form.emailHash) {
+      this.errorMessage = 'Email Hash is required.';
+      return false;
+    }
+
+    if (!this.form.passwordHash) {
+      this.errorMessage = 'Password is required.';
+      return false;
+    }
 
     const initialBalance = Number(this.form.initialBalance || 0);
 
     if (!Number.isFinite(initialBalance) || initialBalance < 0) {
-      this.loading = false;
       this.errorMessage = 'Initial Balance must be zero or greater.';
+      return false;
+    }
+
+    return true;
+  }
+
+  createWallet(): void {
+    this.successMessage = '';
+    this.errorMessage = '';
+
+    if (!this.validateForm()) {
       return;
     }
 
+    this.loading = true;
+
+    const initialBalance = Number(this.form.initialBalance || 0);
+
     const payload = {
-      customerId: this.form.customerId,
+      customerId: String(this.form.customerId).trim(),
       organizationId: this.form.organizationId,
-      fullName: this.form.fullName,
+      fullName: String(this.form.fullName).trim(),
       nationality: this.form.nationality,
       nationalIdHash: this.form.nationalIdHash,
-      mobileHash: this.form.mobileHash,
-      emailHash: this.form.emailHash,
+      mobileHash: String(this.form.mobileHash).trim(),
+      emailHash: String(this.form.emailHash).trim(),
       passwordHash: this.form.passwordHash,
       initialBalance,
       currentBalance: initialBalance,
@@ -332,23 +477,38 @@ export class WalletCreate implements OnInit {
             wallet?.currency_code ||
             wallet?.currency ||
             this.form.currencyCode ||
-            'USD'
+            'USD',
+
+          organizationName:
+            wallet?.organizationName ||
+            wallet?.organization_name ||
+            this.getSelectedOrganizationName()
         };
 
-        this.successMessage = res?.message || 'Wallet created successfully';
+        this.successMessage = res?.message || 'Wallet created successfully.';
         this.showSuccessScreen = true;
       },
       error: (err: any) => {
         this.loading = false;
+
+        console.error('Create wallet failed:', err?.error || err);
+
         this.errorMessage =
           err?.error?.message ||
+          err?.error?.error?.message ||
+          err?.error?.detail ||
+          err?.error?.errorCode ||
           err?.message ||
-          'Failed to create wallet';
+          'Failed to create wallet.';
       }
     });
   }
 
   goToNewRegistration(): void {
     this.resetForm();
+  }
+
+  reloadOrganizations(): void {
+    this.loadOrganizations();
   }
 }

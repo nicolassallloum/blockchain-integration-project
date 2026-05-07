@@ -117,11 +117,38 @@ export class WalletTransferComponent implements OnInit {
       next: (response: any) => {
         this.loading = false;
         this.apiResponse = response;
+
         this.transactionId =
           response?.data?.transactionId ||
           response?.transactionId ||
           response?.data?.id ||
           '';
+
+        /*
+         * STEP 32.1 — Update wallet balance after successful transaction.
+         *
+         * Backend should return:
+         * response.data.senderBalanceAfter
+         *
+         * Example:
+         * current balance: 14500
+         * transaction: 1500
+         * senderBalanceAfter: 13000
+         */
+        const senderBalanceAfter =
+          response?.data?.senderBalanceAfter ??
+          response?.senderBalanceAfter ??
+          null;
+
+        if (senderBalanceAfter !== null && senderBalanceAfter !== undefined) {
+          this.walletSessionService.updateBalance(Number(senderBalanceAfter));
+          this.session = this.walletSessionService.getSession();
+
+          if (this.session) {
+            this.form.senderWalletAddress = this.session.walletAddress;
+            this.form.currency = this.session.currencyCode || 'USD';
+          }
+        }
 
         this.successMessage = 'Wallet-to-wallet transfer completed successfully.';
       },

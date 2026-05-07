@@ -31,7 +31,13 @@ export class WalletService {
   createWallet(payload: any): Observable<any> {
     const normalizedPayload = {
       ...payload,
+      customerId: String(payload.customerId || payload.customer_id || '').trim(),
       organizationId: payload.organizationId || payload.organization_id,
+      fullName: payload.fullName || payload.full_name,
+      nationalIdHash: payload.nationalIdHash || payload.national_id_hash,
+      mobileHash: payload.mobileHash || payload.mobile_hash,
+      emailHash: payload.emailHash || payload.email_hash,
+      passwordHash: payload.passwordHash || payload.password_hash,
       initialBalance: Number(payload.initialBalance ?? payload.currentBalance ?? 0),
       currentBalance: Number(payload.initialBalance ?? payload.currentBalance ?? 0),
       currencyCode: payload.currencyCode || payload.currency_code || payload.currency || 'USD'
@@ -49,12 +55,12 @@ export class WalletService {
   }
 
   getWalletByAddress(walletAddress: string): Observable<any> {
-    return this.http.get(`${this.baseUrl}/wallets/address/${encodeURIComponent(walletAddress)}`);
+    return this.http.get(`${this.baseUrl}/wallets/${encodeURIComponent(walletAddress)}`);
   }
 
   getOrganizations(): Observable<any> {
-    return this.http.get(`${this.baseUrl}/organizations`).pipe(
-      catchError(() => this.http.get(`${this.baseUrl}/reference/organizations`)),
+    return this.http.get(`${this.baseUrl}/reference/organizations`).pipe(
+      catchError(() => this.http.get(`${this.baseUrl}/organizations`)),
       map((response: any) => {
         const rawOrganizations =
           response?.data?.organizations ||
@@ -79,6 +85,7 @@ export class WalletService {
               organizationCode:
                 org.organizationCode ||
                 org.organization_code ||
+                org.registration_number ||
                 ''
             }))
           : [];

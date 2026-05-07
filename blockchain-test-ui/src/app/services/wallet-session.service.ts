@@ -108,4 +108,21 @@ export class WalletSessionService {
     const session = this.getSession();
     return !!session?.customerId && !!session?.walletAddress;
   }
+  updateBalance(newBalance: number): void {
+    const session = this.getSession();
+
+    if (!session) {
+      return;
+    }
+
+    const updatedSession = {
+      ...session,
+      currentBalance: Number(newBalance)
+    };
+
+    localStorage.setItem(this.SESSION_KEY, JSON.stringify(updatedSession));
+    localStorage.setItem('digital_kyc_wallet_profile', JSON.stringify(updatedSession));
+
+    this.sessionSubject.next(updatedSession);
+  }
 }
