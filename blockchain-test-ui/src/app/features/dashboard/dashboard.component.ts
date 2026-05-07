@@ -522,12 +522,12 @@ export class DashboardComponent implements OnInit {
   filters = {
     search: '',
     page: 1,
-    limit: 13
+    limit: 100
   };
 
   pagination = {
     page: 1,
-    limit: 13,
+    limit: 100,
     totalRecords: 0,
     totalPages: 0,
     hasNextPage: false,
@@ -652,7 +652,7 @@ export class DashboardComponent implements OnInit {
     const pagination = response?.pagination || {};
 
     const page = Number(pagination.page || this.filters.page || 1);
-    const limit = Number(pagination.limit || this.filters.limit || 13);
+    const limit = Number(pagination.limit || this.filters.limit || 100);
     const totalRecords = Number(
       pagination.totalRecords ??
         pagination.total ??

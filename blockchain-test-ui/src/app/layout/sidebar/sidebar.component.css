@@ -17,25 +17,25 @@
   font-weight: 800;
   letter-spacing: 0.5px;
 }
-
+/* 
 .brand-text {
   display: flex;
   flex-direction: column;
   line-height: 1.2;
-}
+} */
 
-.brand-name {
+/* .brand-name {
   font-size: 16px;
   font-weight: 800;
   color: #0f172a;
   letter-spacing: 0.8px;
-}
+} */
 
-.brand-subtitle {
+/* .brand-subtitle {
   font-size: 11px;
   color: #64748b;
   margin-top: 3px;
-}
+} */
 
 .menu-title {
   font-size: 11px;
@@ -99,4 +99,116 @@
 
 .logout-link:hover {
   background: #ffe4e6;
+}
+
+.sidebar-logo {
+  padding: 20px 18px 16px;
+}
+
+.brand-mark {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-logo-img {
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 6px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.brand-name {
+  font-size: 17px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 0.6px;
+}
+
+.brand-subtitle {
+  margin-top: 3px;
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.72);
+}
+/* Valoores Logo Update */
+.sidebar-logo {
+  padding: 20px 18px 16px;
+}
+
+.brand-mark {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-logo-img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  border-radius: 14px;
+  background: #ffffff;
+  padding: 6px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+}
+
+.brand-icon {
+  display: none;
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.brand-name {
+  font-size: 17px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 0.8px;
+}
+
+.brand-subtitle {
+  margin-top: 3px;
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+/* ================================
+   Valoores Official Logo
+================================ */
+.sidebar-logo {
+  height: 72px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  background: #ffffff;
+}
+
+.valoores-logo-img {
+  width: 165px;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+  display: block;
+}
+
+.brand-mark,
+.brand-icon,
+.brand-text,
+.brand-name,
+.brand-subtitle {
+  display: none !important;
 }

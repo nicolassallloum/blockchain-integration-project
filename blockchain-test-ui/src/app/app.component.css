@@ -1,0 +1,44 @@
+
+/* Main Valoores Logo */
+.logo-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  height: 56px;
+  padding: 0 22px;
+}
+
+.main-logo-img {
+  width: 155px;
+  height: auto;
+  object-fit: contain;
+  display: block;
+}
+
+.logo-text,
+.logo-blue,
+.logo-green {
+  display: none !important;
+}
+
+/* Main Valoores Logo */
+.logo-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  height: 56px;
+  padding: 0 22px;
+}
+
+.main-logo-img {
+  width: 155px;
+  height: auto;
+  object-fit: contain;
+  display: block;
+}
+
+.logo-text,
+.logo-blue,
+.logo-green {
+  display: none !important;
+}
