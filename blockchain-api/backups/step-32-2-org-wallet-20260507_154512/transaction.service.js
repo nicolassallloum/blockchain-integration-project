@@ -1,13 +1,16 @@
 'use strict';
 
 /**
- * STEP 32.2 — Transaction Service
+ * STEP 32 — Transaction Service
  * Blockchain Integration Project
  *
- * Rules:
- * - Wallet-to-wallet transfer is allowed only from CUSTOMER wallet.
- * - Organization-to-wallet transfer is allowed only from ORGANIZATION wallet.
- * - Organization-to-wallet receiver must be CUSTOMER wallet.
+ * Supports both table naming styles:
+ * - blockchain.wallets
+ * - blockchain.blockchain_wallet
+ *
+ * And transaction table naming styles:
+ * - blockchain.transactions
+ * - blockchain.blockchain_transaction
  */
 
 const crypto = require('crypto');
@@ -92,16 +95,6 @@ function getAny(obj, keys, defaultValue = null) {
   return defaultValue;
 }
 
-function normalizeWalletType(value) {
-  const walletType = String(value || 'CUSTOMER').trim().toUpperCase();
-
-  if (walletType === 'ORGANIZATION' || walletType === 'ORG') {
-    return 'ORGANIZATION';
-  }
-
-  return 'CUSTOMER';
-}
-
 function normalizeWallet(row) {
   if (!row) return null;
 
@@ -113,8 +106,7 @@ function normalizeWallet(row) {
     organizationName: getAny(row, ['organization_name', 'organizationName']),
     organizationCode: getAny(row, ['organization_code', 'organizationCode']),
     fullName: getAny(row, ['full_name', 'fullName']),
-    walletType: normalizeWalletType(getAny(row, ['wallet_type', 'walletType'], 'CUSTOMER')),
-    currentBalance: Number(getAny(row, ['current_balance', 'currentBalance'], 0)),
+    currentBalance: getAny(row, ['current_balance', 'currentBalance'], 0),
     currencyCode: getAny(row, ['currency_code', 'currencyCode', 'currency'], 'USD'),
     status: getAny(row, ['status', 'wallet_status', 'walletStatus'], 'ACTIVE'),
     createdAt: getAny(row, ['created_at', 'createdAt']),
@@ -188,6 +180,39 @@ async function getWalletByAddressInternal(client, walletAddress) {
   );
 
   return normalizeWallet(result.rows[0]);
+}
+
+async function getOrganizationByIdInternal(client, organizationId) {
+  const possibleTables = [
+    'organizations',
+    'blockchain_organization'
+  ];
+
+  for (const tableName of possibleTables) {
+    const exists = await tableExists(client, 'blockchain', tableName);
+
+    if (!exists) continue;
+
+    try {
+      const result = await client.query(
+        `
+        SELECT *
+        FROM blockchain.${tableName}
+        WHERE organization_id::text = $1
+        LIMIT 1
+        `,
+        [String(organizationId)]
+      );
+
+      if (result.rowCount > 0) {
+        return result.rows[0];
+      }
+    } catch (error) {
+      continue;
+    }
+  }
+
+  return null;
 }
 
 async function updateWalletBalance(client, walletAddress, amountDelta) {
@@ -344,20 +369,6 @@ async function walletTransfer(payload, context = {}) {
       };
     }
 
-    if (senderWallet.walletType !== 'CUSTOMER') {
-      await client.query('ROLLBACK');
-
-      return {
-        success: false,
-        message: 'Wallet-to-wallet transfer is allowed only when logged in using a customer wallet',
-        errorCode: 'CUSTOMER_WALLET_REQUIRED',
-        data: {
-          senderWalletAddress,
-          senderWalletType: senderWallet.walletType
-        }
-      };
-    }
-
     const receiverWallet = await getWalletByAddressInternal(client, receiverWalletAddress);
 
     if (!receiverWallet) {
@@ -368,20 +379,6 @@ async function walletTransfer(payload, context = {}) {
         message: 'Receiver wallet not found',
         errorCode: 'RECEIVER_WALLET_NOT_FOUND',
         data: null
-      };
-    }
-
-    if (receiverWallet.walletType !== 'CUSTOMER') {
-      await client.query('ROLLBACK');
-
-      return {
-        success: false,
-        message: 'Wallet-to-wallet receiver must be a customer wallet',
-        errorCode: 'RECEIVER_CUSTOMER_WALLET_REQUIRED',
-        data: {
-          receiverWalletAddress,
-          receiverWalletType: receiverWallet.walletType
-        }
       };
     }
 
@@ -418,10 +415,8 @@ async function walletTransfer(payload, context = {}) {
 
     await updateWalletBalance(client, senderWalletAddress, -transferAmount);
     await updateWalletBalance(client, receiverWalletAddress, transferAmount);
-
     const updatedSenderWallet = await getWalletByAddressInternal(client, senderWalletAddress);
     const updatedReceiverWallet = await getWalletByAddressInternal(client, receiverWalletAddress);
-
     const transaction = await insertTransaction(client, {
       transactionId,
       requestId,
@@ -464,7 +459,7 @@ async function walletTransfer(payload, context = {}) {
         transaction
       }
     };
-  } catch (error) {
+} catch (error) {
     await client.query('ROLLBACK');
 
     console.error('[STEP32_WALLET_TRANSFER_DB_ERROR]', {
@@ -502,8 +497,8 @@ async function organizationTransfer(payload, context = {}) {
   if (!senderWalletAddress) {
     return {
       success: false,
-      message: 'Sender organization wallet address is required',
-      errorCode: 'SENDER_ORGANIZATION_WALLET_REQUIRED',
+      message: 'Sender wallet address is required',
+      errorCode: 'SENDER_WALLET_REQUIRED',
       data: null
     };
   }
@@ -511,7 +506,7 @@ async function organizationTransfer(payload, context = {}) {
   if (!receiverWalletAddress) {
     return {
       success: false,
-      message: 'Receiver customer wallet address is required',
+      message: 'Receiver wallet address is required',
       errorCode: 'RECEIVER_WALLET_REQUIRED',
       data: null
     };
@@ -550,23 +545,9 @@ async function organizationTransfer(payload, context = {}) {
 
       return {
         success: false,
-        message: 'Sender organization wallet not found',
+        message: 'Sender wallet not found',
         errorCode: 'SENDER_WALLET_NOT_FOUND',
         data: null
-      };
-    }
-
-    if (senderWallet.walletType !== 'ORGANIZATION') {
-      await client.query('ROLLBACK');
-
-      return {
-        success: false,
-        message: 'Organization-to-wallet transfer is allowed only when logged in using an organization wallet',
-        errorCode: 'ORGANIZATION_WALLET_REQUIRED',
-        data: {
-          senderWalletAddress,
-          senderWalletType: senderWallet.walletType
-        }
       };
     }
 
@@ -577,22 +558,28 @@ async function organizationTransfer(payload, context = {}) {
 
       return {
         success: false,
-        message: 'Receiver customer wallet not found',
+        message: 'Receiver wallet not found',
         errorCode: 'RECEIVER_WALLET_NOT_FOUND',
         data: null
       };
     }
 
-    if (receiverWallet.walletType !== 'CUSTOMER') {
+    if (
+      senderWallet.organizationId &&
+      receiverWallet.organizationId &&
+      String(senderWallet.organizationId) === String(receiverWallet.organizationId)
+    ) {
       await client.query('ROLLBACK');
 
       return {
         success: false,
-        message: 'Organization-to-wallet transfer receiver must be a customer wallet',
-        errorCode: 'RECEIVER_CUSTOMER_WALLET_REQUIRED',
+        message: 'Organization Transfer is only allowed between customers from different organizations',
+        errorCode: 'SAME_ORGANIZATION_TRANSFER_NOT_ALLOWED',
         data: {
+          senderWalletAddress,
           receiverWalletAddress,
-          receiverWalletType: receiverWallet.walletType
+          senderOrganizationId: senderWallet.organizationId,
+          receiverOrganizationId: receiverWallet.organizationId
         }
       };
     }
@@ -604,7 +591,7 @@ async function organizationTransfer(payload, context = {}) {
 
       return {
         success: false,
-        message: `Insufficient organization wallet balance. Current balance is ${senderBalance}.`,
+        message: `Insufficient wallet balance. Current balance is ${senderBalance}.`,
         errorCode: 'INSUFFICIENT_BALANCE',
         data: {
           senderWalletAddress,
@@ -631,25 +618,32 @@ async function organizationTransfer(payload, context = {}) {
     await updateWalletBalance(client, senderWalletAddress, -transferAmount);
     await updateWalletBalance(client, receiverWalletAddress, transferAmount);
 
-    const updatedSenderWallet = await getWalletByAddressInternal(client, senderWalletAddress);
-    const updatedReceiverWallet = await getWalletByAddressInternal(client, receiverWalletAddress);
-
     const transaction = await insertTransaction(client, {
       transactionId,
       requestId,
       transactionType: 'ORGANIZATION_TRANSFER',
       senderWalletAddress,
       receiverWalletAddress,
+      /*
+       * Organization Transfer business meaning:
+       * customer wallet -> customer wallet from a different organization.
+       *
+       * Do NOT insert organization_id here because blockchain.transactions.organization_id
+       * is protected by fk_blockchain_transactions_organization and is intended for
+       * direct organization/payment records.
+       *
+       * Sender/receiver organizations are validated from wallet records above.
+       */
       organizationId: null,
       organizationName: null,
       amount: transferAmount,
       currency: normalizedCurrency,
       transactionPurpose:
         payload.transactionPurpose ||
-        'Organization-to-wallet transfer',
+        'Inter-organization customer transfer',
       transactionDescription:
         payload.transactionDescription ||
-        'Organization wallet transfers to customer wallet',
+        'Customer wallet transfer to another customer from a different organization',
       status: 'COMPLETED',
       dbStatus: 'PENDING',
       transactionStatus: 'COMPLETED',
@@ -663,7 +657,7 @@ async function organizationTransfer(payload, context = {}) {
 
     return {
       success: true,
-      message: 'Organization-to-wallet transfer completed successfully',
+      message: 'Inter-organization customer transfer completed successfully',
       data: {
         transactionId,
         requestId,
@@ -675,16 +669,13 @@ async function organizationTransfer(payload, context = {}) {
         amount: String(transferAmount),
         currency: normalizedCurrency,
         status: 'COMPLETED',
-        senderBalanceBefore: senderBalance,
-        senderBalanceAfter: Number(updatedSenderWallet?.currentBalance || 0),
-        receiverBalanceAfter: Number(updatedReceiverWallet?.currentBalance || 0),
         transaction
       }
     };
   } catch (error) {
     await client.query('ROLLBACK');
 
-    console.error('[STEP32_2_ORGANIZATION_TRANSFER_DB_ERROR]', {
+    console.error('[STEP32_1_ORGANIZATION_TRANSFER_DB_ERROR]', {
       code: error.code,
       message: error.message,
       detail: error.detail,
@@ -695,15 +686,6 @@ async function organizationTransfer(payload, context = {}) {
     });
 
     error.message = `Organization transfer failed: ${error.message}`;
-    error.debug = {
-      code: error.code,
-      detail: error.detail,
-      constraint: error.constraint,
-      table: error.table,
-      column: error.column,
-      schema: error.schema
-    };
-
     throw error;
   } finally {
     client.release();

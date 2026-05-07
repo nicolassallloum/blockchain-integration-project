@@ -56,26 +56,12 @@ async function getWalletColumns() {
 
 function normalizeNumber(value, defaultValue = 0) {
   const numberValue = Number(value);
-  return Number.isFinite(numberValue) ? numberValue : defaultValue;
-}
 
-function normalizeWalletType(value) {
-  const normalized = String(value || 'CUSTOMER').trim().toUpperCase();
-
-  if (normalized === 'ORGANIZATION' || normalized === 'ORG') {
-    return 'ORGANIZATION';
+  if (!Number.isFinite(numberValue)) {
+    return defaultValue;
   }
 
-  return 'CUSTOMER';
-}
-
-function buildOrganizationEmail(organizationName) {
-  const slug = String(organizationName || 'organization')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '.')
-    .replace(/^\.+|\.+$/g, '');
-
-  return `${slug || 'organization'}@gmail.com`;
+  return numberValue;
 }
 
 function mapWalletProfile(profile) {
@@ -83,18 +69,15 @@ function mapWalletProfile(profile) {
     return null;
   }
 
-  const walletType = normalizeWalletType(profile.walletType);
-
   return {
     walletAddress: profile.walletAddress,
     customerId: profile.customerId,
     organizationId: profile.organizationId,
     organizationName: profile.organizationName,
-    organizationCode: profile.organizationCode || null,
-    walletType,
+    walletType: 'CUSTOMER',
     fullName: profile.fullName,
     customerName: profile.fullName,
-    customerType: walletType,
+    customerType: 'CUSTOMER',
     nationality: profile.nationalIdHash,
     countryName: profile.countryName,
     idType: 'wallet',
@@ -107,26 +90,6 @@ function mapWalletProfile(profile) {
     status: profile.status,
     createdAt: profile.createdAt
   };
-}
-
-async function getOrganizationById(organizationId) {
-  const result = await db.query(
-    `
-    SELECT
-      organization_id::text AS organization_id,
-      organization_name,
-      organization_type,
-      registration_number,
-      country_code,
-      status
-    FROM blockchain.blockchain_organization
-    WHERE organization_id::text = $1
-    LIMIT 1
-    `,
-    [String(organizationId)]
-  );
-
-  return result.rows[0] || null;
 }
 
 exports.listWallets = async ({ limit = 13, offset = 0, search = '' }) => {
@@ -197,12 +160,12 @@ exports.listWallets = async ({ limit = 13, offset = 0, search = '' }) => {
       organizationId: row.organization_id,
       organizationCode: row.organization_code,
       customerName: row.full_name,
-      customerType: normalizeWalletType(row.wallet_type),
+      customerType: row.wallet_type,
       nationality: row.national_id_hash,
       idType: row.ledger_doc_type,
       idNumber: row.ledger_key,
       fullName: row.full_name,
-      walletType: normalizeWalletType(row.wallet_type),
+      walletType: row.wallet_type,
       nationalIdHash: row.national_id_hash,
       ledgerDocType: row.ledger_doc_type,
       ledgerKey: row.ledger_key,
@@ -218,69 +181,129 @@ exports.listWallets = async ({ limit = 13, offset = 0, search = '' }) => {
 };
 
 const getProfessionalWalletProfileByCustomerId = async (customerId) => {
-  const result = await db.query(
-    `
-    SELECT
-        w.customer_id                                  AS "customerId",
-        w.wallet_address                              AS "walletAddress",
-        w.organization_id                             AS "organizationId",
-        w.organization_code                           AS "organizationCode",
-        bo.organization_name                          AS "organizationName",
-        w.wallet_type                                 AS "walletType",
-        w.full_name                                   AS "fullName",
-        w.national_id_hash                            AS "nationalIdHash",
-        c.cou_name                                    AS "countryName",
-        w.email_hash                                  AS "emailHash",
-        w.mobile_hash                                 AS "mobileHash",
-        COALESCE(w.current_balance, 0)                AS "currentBalance",
-        COALESCE(w.currency_code, 'USD')              AS "currencyCode",
-        w.created_at                                  AS "createdAt",
-        w.status                                      AS "status"
-    FROM blockchain.wallets w
-    LEFT JOIN blockchain.blockchain_organization bo
-        ON bo.organization_id = w.organization_id
-    LEFT JOIN blockchain.countries c
-        ON c.cou_id::text = w.national_id_hash::text
-    WHERE w.customer_id = $1
-    LIMIT 1
-    `,
-    [customerId]
-  );
+  try {
+    const result = await db.query(
+      `
+      SELECT
+          w.customer_id                                  AS "customerId",
+          w.wallet_address                              AS "walletAddress",
+          w.organization_id                             AS "organizationId",
+          bo.organization_name                          AS "organizationName",
+          w.full_name                                   AS "fullName",
+          w.national_id_hash                            AS "nationalIdHash",
+          c.cou_name                                    AS "countryName",
+          w.email_hash                                  AS "emailHash",
+          w.mobile_hash                                 AS "mobileHash",
+          COALESCE(w.current_balance, 0)                AS "currentBalance",
+          COALESCE(w.currency_code, 'USD')              AS "currencyCode",
+          w.created_at                                  AS "createdAt",
+          w.status                                      AS "status"
+      FROM blockchain.wallets w
+      LEFT JOIN blockchain.blockchain_organization bo
+          ON bo.organization_id = w.organization_id
+      LEFT JOIN blockchain.countries c
+          ON c.cou_id::text = w.national_id_hash::text
+      WHERE w.customer_id = $1
+      LIMIT 1
+      `,
+      [customerId]
+    );
 
-  return result.rows[0] || null;
+    return result.rows[0] || null;
+  } catch (error) {
+    console.warn(
+      'Professional wallet profile by customer ID full query failed. Falling back to safe query:',
+      error.message
+    );
+
+    const fallbackResult = await db.query(
+      `
+      SELECT
+          w.customer_id                         AS "customerId",
+          w.wallet_address                     AS "walletAddress",
+          w.organization_id                    AS "organizationId",
+          NULL                                 AS "organizationName",
+          w.full_name                          AS "fullName",
+          w.national_id_hash                   AS "nationalIdHash",
+          NULL                                 AS "countryName",
+          w.email_hash                         AS "emailHash",
+          w.mobile_hash                        AS "mobileHash",
+          COALESCE(w.current_balance, 0)       AS "currentBalance",
+          COALESCE(w.currency_code, 'USD')     AS "currencyCode",
+          w.created_at                         AS "createdAt",
+          w.status                             AS "status"
+      FROM blockchain.wallets w
+      WHERE w.customer_id = $1
+      LIMIT 1
+      `,
+      [customerId]
+    );
+
+    return fallbackResult.rows[0] || null;
+  }
 };
 
 const getProfessionalWalletProfileByAddress = async (walletAddress) => {
-  const result = await db.query(
-    `
-    SELECT
-        w.customer_id                                  AS "customerId",
-        w.wallet_address                              AS "walletAddress",
-        w.organization_id                             AS "organizationId",
-        w.organization_code                           AS "organizationCode",
-        bo.organization_name                          AS "organizationName",
-        w.wallet_type                                 AS "walletType",
-        w.full_name                                   AS "fullName",
-        w.national_id_hash                            AS "nationalIdHash",
-        c.cou_name                                    AS "countryName",
-        w.email_hash                                  AS "emailHash",
-        w.mobile_hash                                 AS "mobileHash",
-        COALESCE(w.current_balance, 0)                AS "currentBalance",
-        COALESCE(w.currency_code, 'USD')              AS "currencyCode",
-        w.created_at                                  AS "createdAt",
-        w.status                                      AS "status"
-    FROM blockchain.wallets w
-    LEFT JOIN blockchain.blockchain_organization bo
-        ON bo.organization_id = w.organization_id
-    LEFT JOIN blockchain.countries c
-        ON c.cou_id::text = w.national_id_hash::text
-    WHERE w.wallet_address = $1
-    LIMIT 1
-    `,
-    [walletAddress]
-  );
+  try {
+    const result = await db.query(
+      `
+      SELECT
+          w.customer_id                                  AS "customerId",
+          w.wallet_address                              AS "walletAddress",
+          w.organization_id                             AS "organizationId",
+          bo.organization_name                          AS "organizationName",
+          w.full_name                                   AS "fullName",
+          w.national_id_hash                            AS "nationalIdHash",
+          c.cou_name                                    AS "countryName",
+          w.email_hash                                  AS "emailHash",
+          w.mobile_hash                                 AS "mobileHash",
+          COALESCE(w.current_balance, 0)                AS "currentBalance",
+          COALESCE(w.currency_code, 'USD')              AS "currencyCode",
+          w.created_at                                  AS "createdAt",
+          w.status                                      AS "status"
+      FROM blockchain.wallets w
+      LEFT JOIN blockchain.blockchain_organization bo
+          ON bo.organization_id = w.organization_id
+      LEFT JOIN blockchain.countries c
+          ON c.cou_id::text = w.national_id_hash::text
+      WHERE w.wallet_address = $1
+      LIMIT 1
+      `,
+      [walletAddress]
+    );
 
-  return result.rows[0] || null;
+    return result.rows[0] || null;
+  } catch (error) {
+    console.warn(
+      'Professional wallet profile by address full query failed. Falling back to safe query:',
+      error.message
+    );
+
+    const fallbackResult = await db.query(
+      `
+      SELECT
+          w.customer_id                         AS "customerId",
+          w.wallet_address                     AS "walletAddress",
+          w.organization_id                    AS "organizationId",
+          NULL                                 AS "organizationName",
+          w.full_name                          AS "fullName",
+          w.national_id_hash                   AS "nationalIdHash",
+          NULL                                 AS "countryName",
+          w.email_hash                         AS "emailHash",
+          w.mobile_hash                        AS "mobileHash",
+          COALESCE(w.current_balance, 0)       AS "currentBalance",
+          COALESCE(w.currency_code, 'USD')     AS "currencyCode",
+          w.created_at                         AS "createdAt",
+          w.status                             AS "status"
+      FROM blockchain.wallets w
+      WHERE w.wallet_address = $1
+      LIMIT 1
+      `,
+      [walletAddress]
+    );
+
+    return fallbackResult.rows[0] || null;
+  }
 };
 
 exports.getWalletByCustomerId = async (customerId) => {
@@ -292,31 +315,6 @@ exports.getWalletByAddress = async (walletAddress) => {
   const profile = await getProfessionalWalletProfileByAddress(walletAddress);
   return mapWalletProfile(profile);
 };
-
-async function insertWallet(valuesByColumn) {
-  const columns = await getWalletColumns();
-
-  const insertColumns = [];
-  const insertValues = [];
-  const placeholders = [];
-
-  Object.entries(valuesByColumn).forEach(([column, value]) => {
-    if (columns.includes(column)) {
-      insertColumns.push(column);
-      insertValues.push(value);
-      placeholders.push(`$${insertValues.length}`);
-    }
-  });
-
-  const sql = `
-    INSERT INTO blockchain.wallets (${insertColumns.join(', ')})
-    VALUES (${placeholders.join(', ')})
-    RETURNING *
-  `;
-
-  const result = await db.query(sql, insertValues);
-  return result.rows[0];
-}
 
 exports.createWallet = async (payload) => {
   const {
@@ -388,7 +386,9 @@ exports.createWallet = async (payload) => {
         ? await bcrypt.hash(passwordHash, 10)
         : null;
 
-  const row = await insertWallet({
+  const columns = await getWalletColumns();
+
+  const valuesByColumn = {
     wallet_address: walletAddress,
     customer_id: customerId,
     organization_id: organizationId,
@@ -406,112 +406,61 @@ exports.createWallet = async (payload) => {
     status: 'ACTIVE',
     created_at: new Date(),
     updated_at: new Date()
+  };
+
+  const insertColumns = [];
+  const insertValues = [];
+  const placeholders = [];
+
+  Object.entries(valuesByColumn).forEach(([column, value]) => {
+    if (columns.includes(column)) {
+      insertColumns.push(column);
+      insertValues.push(value);
+      placeholders.push(`$${insertValues.length}`);
+    }
   });
+
+  const sql = `
+    INSERT INTO blockchain.wallets (${insertColumns.join(', ')})
+    VALUES (${placeholders.join(', ')})
+    RETURNING *
+  `;
+
+  const result = await db.query(sql, insertValues);
+  const row = result.rows[0];
 
   const profile =
     (await getProfessionalWalletProfileByAddress(row.wallet_address)) ||
     (await getProfessionalWalletProfileByCustomerId(row.customer_id));
 
   return {
-    wallet: profile || row,
-    oneTimePassword: passwordHash || null
-  };
-};
-
-exports.createOrganizationWallet = async (payload) => {
-  const organizationId = payload.organizationId || payload.organization_id;
-
-  if (!organizationId) {
-    throw new Error('organizationId is required');
-  }
-
-  const organization = await getOrganizationById(organizationId);
-
-  if (!organization) {
-    throw new Error(`Organization not found: ${organizationId}`);
-  }
-
-  const existingOrgWallet = await db.query(
-    `
-    SELECT wallet_address
-    FROM blockchain.wallets
-    WHERE organization_id::text = $1
-      AND UPPER(wallet_type) = 'ORGANIZATION'
-    LIMIT 1
-    `,
-    [String(organizationId)]
-  );
-
-  if (existingOrgWallet.rowCount > 0) {
-    throw new Error(
-      `Organization wallet already exists for organizationId: ${organizationId}`
-    );
-  }
-
-  const initialBalance = normalizeNumber(
-    payload.initialBalance ?? payload.currentBalance ?? payload.current_balance,
-    0
-  );
-
-  if (initialBalance < 0) {
-    throw new Error('initialBalance must be zero or greater');
-  }
-
-  const currencyCode =
-    payload.currencyCode ||
-    payload.currency_code ||
-    payload.currency ||
-    'USD';
-
-  const plainPassword =
-    payload.passwordHash ||
-    payload.password ||
-    `Org@${Math.random().toString(36).slice(2, 10)}${Date.now()
-      .toString()
-      .slice(-4)}`;
-
-  const normalizedPasswordHash = plainPassword.startsWith('$2')
-    ? plainPassword
-    : await bcrypt.hash(plainPassword, 10);
-
-  const walletAddress = `ORG_WALLET_${Date.now()}_${Math.random()
-    .toString(16)
-    .slice(2)
-    .toUpperCase()}`;
-
-  const customerId = `ORG_${String(organization.organization_id).replace(/-/g, '').slice(0, 24)}`;
-  const organizationName = organization.organization_name;
-  const organizationCode =
-    organization.registration_number ||
-    organization.organization_code ||
-    String(organization.organization_id);
-  const emailHash = buildOrganizationEmail(organizationName);
-
-  const row = await insertWallet({
-    wallet_address: walletAddress,
-    customer_id: customerId,
-    organization_id: organization.organization_id,
-    organization_code: organizationCode,
-    wallet_type: 'ORGANIZATION',
-    full_name: organizationName,
-    national_id_hash: String(organization.organization_id),
-    ledger_doc_type: 'organization_wallet',
-    ledger_key: String(organization.organization_id),
-    mobile_hash: null,
-    email_hash: emailHash,
-    password_hash: normalizedPasswordHash,
-    current_balance: initialBalance,
-    currency_code: currencyCode,
-    status: 'ACTIVE',
-    created_at: new Date(),
-    updated_at: new Date()
-  });
-
-  const profile = await getProfessionalWalletProfileByAddress(row.wallet_address);
-
-  return {
-    wallet: profile || row,
-    oneTimePassword: plainPassword.startsWith('$2') ? null : plainPassword
+    wallet: profile || {
+      walletId: row.wallet_id,
+      walletAddress: row.wallet_address,
+      customerId: row.customer_id,
+      organizationId: row.organization_id,
+      organizationCode: row.organization_code,
+      walletType: row.wallet_type,
+      fullName: row.full_name,
+      customerName: row.full_name,
+      customerType: row.wallet_type,
+      nationality: row.national_id_hash,
+      idType: row.ledger_doc_type,
+      idNumber: row.ledger_key,
+      nationalIdHash: row.national_id_hash,
+      ledgerDocType: row.ledger_doc_type,
+      ledgerKey: row.ledger_key,
+      mobileHash: row.mobile_hash,
+      emailHash: row.email_hash,
+      currentBalance: row.current_balance ?? initialBalance,
+      currencyCode: row.currency_code || currencyCode,
+      status: row.status,
+      requestSource,
+      sourceSystem,
+      createdBy,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at
+    }
   };
 };
 
@@ -526,8 +475,7 @@ exports.loginWallet = async ({ walletAddress, customerId, password }) => {
     throw new Error('password is required');
   }
 
-  const result = await db.query(
-    `
+  const sql = `
     SELECT
       wallet_id,
       wallet_address,
@@ -541,9 +489,9 @@ exports.loginWallet = async ({ walletAddress, customerId, password }) => {
     FROM blockchain.wallets
     WHERE wallet_address = $1
     LIMIT 1
-    `,
-    [loginIdentifier]
-  );
+  `;
+
+  const result = await db.query(sql, [loginIdentifier]);
 
   if (result.rows.length === 0) {
     return null;
@@ -566,15 +514,13 @@ exports.loginWallet = async ({ walletAddress, customerId, password }) => {
     (await getProfessionalWalletProfileByCustomerId(wallet.customer_id)) ||
     {};
 
-  const walletType = normalizeWalletType(profile.walletType || wallet.wallet_type);
-
   const token = jwt.sign(
     {
       walletId: wallet.wallet_id,
       walletAddress: wallet.wallet_address,
       customerId: wallet.customer_id,
       organizationId: wallet.organization_id,
-      walletType
+      walletType: wallet.wallet_type
     },
     JWT_SECRET,
     {
@@ -590,8 +536,8 @@ exports.loginWallet = async ({ walletAddress, customerId, password }) => {
       customerId: profile.customerId || wallet.customer_id,
       organizationId: profile.organizationId || wallet.organization_id,
       organizationName: profile.organizationName || null,
-      organizationCode: profile.organizationCode || wallet.organization_code,
-      walletType,
+      organizationCode: wallet.organization_code,
+      walletType: wallet.wallet_type,
       fullName: profile.fullName || wallet.full_name,
       customerName: profile.fullName || wallet.full_name,
       nationalIdHash: profile.nationalIdHash || null,

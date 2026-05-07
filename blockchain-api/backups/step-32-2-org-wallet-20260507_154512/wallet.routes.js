@@ -26,8 +26,6 @@ router.get('/', walletController.listWallets);
  */
 router.post('/', walletController.createWallet);
 
-router.post('/organization-wallets', walletController.createOrganizationWallet);
-
 /**
  * Wallet login.
  *

@@ -3,7 +3,6 @@ import { Routes } from '@angular/router';
 import { DashboardComponent } from './features/dashboard/dashboard.component';
 
 import { WalletCreate } from './pages/wallet-create/wallet-create';
-import { OrganizationWalletCreate } from './pages/organization-wallet-create/organization-wallet-create';
 import { WalletLogin } from './pages/wallet-login/wallet-login';
 import { WalletQuery } from './pages/wallet-query/wallet-query';
 
@@ -29,11 +28,6 @@ export const routes: Routes = [
   {
     path: 'digital-kyc/wallet-create',
     component: WalletCreate
-  },
-
-  {
-    path: 'digital-kyc/organization-wallet-create',
-    component: OrganizationWalletCreate
   },
 
   {
@@ -86,11 +80,6 @@ export const routes: Routes = [
   {
     path: 'wallet-create',
     redirectTo: 'digital-kyc/wallet-create',
-    pathMatch: 'full'
-  },
-  {
-    path: 'organization-wallet-create',
-    redirectTo: 'digital-kyc/organization-wallet-create',
     pathMatch: 'full'
   },
   {

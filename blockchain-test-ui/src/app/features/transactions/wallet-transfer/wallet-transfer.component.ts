@@ -63,6 +63,10 @@ export class WalletTransferComponent implements OnInit {
       return 'No wallet session found. Please login first.';
     }
 
+    if (!this.walletSessionService.isCustomerWallet()) {
+      return 'Customer wallet login is required for wallet-to-wallet transfer.';
+    }
+
     if (!this.form.senderWalletAddress) {
       return 'Sender wallet address is required from the logged-in session.';
     }

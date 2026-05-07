@@ -97,33 +97,6 @@ exports.createWallet = async (req, res) => {
   }
 };
 
-
-/**
- * POST /api/v1/wallets/organization-wallets
- */
-exports.createOrganizationWallet = async (req, res) => {
-  try {
-    const result = await walletService.createOrganizationWallet(req.body);
-
-    return res.status(201).json({
-      success: true,
-      message: 'Organization wallet created successfully',
-      data: result,
-      requestId: getRequestId(req)
-    });
-  } catch (error) {
-    return res.status(400).json({
-      success: false,
-      message: 'Failed to create organization wallet',
-      error: {
-        message: error.message,
-        stack: process.env.NODE_ENV === 'production' ? undefined : error.stack
-      },
-      requestId: getRequestId(req)
-    });
-  }
-};
-
 /**
  * POST /api/v1/wallets/login
  */

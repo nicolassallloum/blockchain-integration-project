@@ -31,8 +31,8 @@ export class OrganizationTransferComponent implements OnInit {
     receiverWalletAddress: '',
     amount: '',
     currency: 'USD',
-    transactionPurpose: 'Organization-to-wallet transfer',
-    transactionDescription: 'Organization wallet transfers to customer wallet',
+    transactionPurpose: 'Inter-organization customer transfer',
+    transactionDescription: 'Customer from organization A transfers to customer from organization B',
     requestSource: 'ANGULAR_UI',
     sourceSystem: 'BLOCKCHAIN_TEST_UI',
     createdBy: 'nix'
@@ -60,18 +60,14 @@ export class OrganizationTransferComponent implements OnInit {
     this.form.receiverWalletAddress = 'WALLET_1778067488069_3704C026E691';
     this.form.amount = '50';
     this.form.currency = this.session?.currencyCode || 'USD';
-    this.form.transactionPurpose = 'Organization-to-wallet transfer';
+    this.form.transactionPurpose = 'Inter-organization customer transfer';
     this.form.transactionDescription =
-      'Organization wallet transfers to customer wallet';
+      'Customer from organization A transfers to customer from organization B';
   }
 
   validateForm(): string | null {
     if (!this.walletSessionService.isLoggedIn()) {
       return 'No wallet session found. Please login first.';
-    }
-
-    if (!this.walletSessionService.isOrganizationWallet()) {
-      return 'Organization wallet login is required for organization-to-wallet transfer.';
     }
 
     if (!this.form.senderWalletAddress) {
@@ -137,22 +133,7 @@ export class OrganizationTransferComponent implements OnInit {
           response?.data?.id ||
           '';
 
-        const senderBalanceAfter =
-          response?.data?.senderBalanceAfter ??
-          response?.senderBalanceAfter ??
-          null;
-
-        if (senderBalanceAfter !== null && senderBalanceAfter !== undefined) {
-          this.walletSessionService.updateBalance(Number(senderBalanceAfter));
-          this.session = this.walletSessionService.getSession();
-
-          if (this.session) {
-            this.form.senderWalletAddress = this.session.walletAddress || '';
-            this.form.currency = this.session.currencyCode || 'USD';
-          }
-        }
-
-        this.successMessage = 'Organization-to-wallet transfer completed successfully.';
+        this.successMessage = 'Inter-organization customer transfer completed successfully.';
       },
       error: (error: any) => {
         this.loading = false;
@@ -161,7 +142,7 @@ export class OrganizationTransferComponent implements OnInit {
         this.errorMessage =
           error?.error?.message ||
           error?.message ||
-          'Organization-to-wallet transfer failed.';
+          'Inter-organization customer transfer failed.';
       }
     });
   }

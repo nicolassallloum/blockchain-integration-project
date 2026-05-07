@@ -1,10 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
 
 import { WalletService } from '../../services/wallet.service';
-import { environment } from '../../../environments/environment';
 
 interface Organization {
   organizationId: string;
@@ -38,6 +36,8 @@ export class WalletCreate implements OnInit {
   organizationErrorMessage = '';
 
   organizations: Organization[] = [];
+  organizationTypes: string[] = [];
+  selectedOrganizationType = '';
   countries: Country[] = [];
 
   showSuccessScreen = false;
@@ -72,8 +72,7 @@ export class WalletCreate implements OnInit {
   };
 
   constructor(
-    private walletService: WalletService,
-    private http: HttpClient
+    private walletService: WalletService
   ) {}
 
   ngOnInit(): void {
@@ -101,7 +100,7 @@ export class WalletCreate implements OnInit {
           res?.customerId ||
           '';
 
-        this.loadOrganizations();
+        this.loadOrganizationTypes();
       },
       error: () => {
         /**
@@ -109,6 +108,43 @@ export class WalletCreate implements OnInit {
          * User can still enter Customer ID manually if needed.
          */
         this.form.customerId = '';
+        this.loadOrganizationTypes();
+      }
+    });
+  }
+
+
+  loadOrganizationTypes(): void {
+    this.organizationsLoading = true;
+    this.organizationErrorMessage = '';
+
+    this.walletService.getOrganizationTypes().subscribe({
+      next: (res: any) => {
+        const rawTypes =
+          res?.data?.organizationTypes ||
+          res?.data ||
+          res?.organizationTypes ||
+          [];
+
+        this.organizationTypes = Array.isArray(rawTypes)
+          ? rawTypes
+              .map((type: any) =>
+                typeof type === 'string'
+                  ? type
+                  : type.organizationType || type.organization_type || type.type || ''
+              )
+              .filter((type: string) => !!type)
+          : [];
+
+        if (this.organizationTypes.length > 0 && !this.selectedOrganizationType) {
+          this.selectedOrganizationType = this.organizationTypes[0];
+        }
+
+        this.loadOrganizations();
+      },
+      error: () => {
+        this.organizationTypes = [];
+        this.selectedOrganizationType = '';
         this.loadOrganizations();
       }
     });
@@ -117,48 +153,28 @@ export class WalletCreate implements OnInit {
   loadOrganizations(): void {
     this.organizationsLoading = true;
     this.organizationErrorMessage = '';
+    this.form.organizationId = '';
 
-    /**
-     * Primary route:
-     *   /api/v1/reference/organizations
-     *
-     * Fallback route:
-     *   /api/v1/organizations
-     */
-    this.http.get(`${environment.apiBaseUrl}/reference/organizations`).subscribe({
+    this.walletService.getOrganizations(this.selectedOrganizationType).subscribe({
       next: (res: any) => {
         this.organizations = this.normalizeOrganizations(res);
 
-        if (this.organizations.length > 0 && !this.form.organizationId) {
+        if (this.organizations.length > 0) {
           this.form.organizationId = this.organizations[0].organizationId;
         }
 
         this.organizationsLoading = false;
         this.loadCountries();
       },
-      error: () => {
-        this.http.get(`${environment.apiBaseUrl}/organizations`).subscribe({
-          next: (res: any) => {
-            this.organizations = this.normalizeOrganizations(res);
+      error: (err: any) => {
+        this.organizations = [];
+        this.organizationsLoading = false;
+        this.pageLoading = false;
 
-            if (this.organizations.length > 0 && !this.form.organizationId) {
-              this.form.organizationId = this.organizations[0].organizationId;
-            }
-
-            this.organizationsLoading = false;
-            this.loadCountries();
-          },
-          error: (err: any) => {
-            this.organizations = [];
-            this.organizationsLoading = false;
-            this.pageLoading = false;
-
-            this.organizationErrorMessage =
-              err?.error?.message ||
-              err?.message ||
-              'Failed to load organizations from backend.';
-          }
-        });
+        this.organizationErrorMessage =
+          err?.error?.message ||
+          err?.message ||
+          'Failed to load organizations from backend.';
       }
     });
   }
@@ -257,6 +273,11 @@ export class WalletCreate implements OnInit {
     }
   }
 
+  onOrganizationTypeChange(): void {
+    this.organizationErrorMessage = '';
+    this.loadOrganizations();
+  }
+
   onOrganizationChange(): void {
     this.organizationErrorMessage = '';
   }
@@ -342,6 +363,7 @@ export class WalletCreate implements OnInit {
     };
 
     this.selectedCountryId = '';
+    this.selectedOrganizationType = '';
 
     this.resultData = {
       customerId: '',

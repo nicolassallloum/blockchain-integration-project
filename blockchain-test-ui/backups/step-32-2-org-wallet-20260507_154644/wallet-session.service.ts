@@ -10,7 +10,6 @@ export interface WalletSession {
   currentBalance: number;
   currencyCode: string;
   token: string;
-  walletType: string;
 }
 
 @Injectable({
@@ -50,14 +49,7 @@ export class WalletSessionService {
         walletProfile.currency_code ||
         walletProfile.currency ||
         'USD',
-      token: walletProfile.token || '',
-      walletType: String(
-        walletProfile.walletType ||
-          walletProfile.wallet_type ||
-          walletProfile.customerType ||
-          walletProfile.customer_type ||
-          'CUSTOMER'
-      ).toUpperCase()
+      token: walletProfile.token || ''
     };
 
     localStorage.setItem(this.SESSION_KEY, JSON.stringify(normalizedSession));
@@ -103,18 +95,6 @@ export class WalletSessionService {
     return this.getSession()?.token || localStorage.getItem('digital_kyc_wallet_token') || '';
   }
 
-  getWalletType(): string {
-    return this.getSession()?.walletType || 'CUSTOMER';
-  }
-
-  isCustomerWallet(): boolean {
-    return this.getWalletType() === 'CUSTOMER';
-  }
-
-  isOrganizationWallet(): boolean {
-    return this.getWalletType() === 'ORGANIZATION';
-  }
-
   clearSession(): void {
     localStorage.removeItem(this.SESSION_KEY);
     localStorage.removeItem('digital_kyc_wallet_token');
@@ -126,9 +106,8 @@ export class WalletSessionService {
 
   isLoggedIn(): boolean {
     const session = this.getSession();
-    return !!session?.walletAddress;
+    return !!session?.customerId && !!session?.walletAddress;
   }
-
   updateBalance(newBalance: number): void {
     const session = this.getSession();
 
@@ -136,7 +115,7 @@ export class WalletSessionService {
       return;
     }
 
-    const updatedSession: WalletSession = {
+    const updatedSession = {
       ...session,
       currentBalance: Number(newBalance)
     };

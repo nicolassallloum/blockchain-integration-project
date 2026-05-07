@@ -44,6 +44,23 @@
           </div>
 
           <div class="field">
+            <label>Organization Type</label>
+            <select
+              name="organizationType"
+              [(ngModel)]="selectedOrganizationType"
+              (change)="onOrganizationTypeChange()"
+            >
+              <option value="">All organization types</option>
+              <option
+                *ngFor="let type of organizationTypes"
+                [value]="type"
+              >
+                {{ type }}
+              </option>
+            </select>
+          </div>
+
+          <div class="field">
             <label>Organization</label>
             <select
               name="organizationId"

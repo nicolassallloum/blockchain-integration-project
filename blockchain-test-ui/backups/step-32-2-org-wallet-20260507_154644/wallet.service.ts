@@ -46,19 +46,6 @@ export class WalletService {
     return this.http.post(`${this.baseUrl}/wallets`, normalizedPayload);
   }
 
-  createOrganizationWallet(payload: any): Observable<any> {
-    const normalizedPayload = {
-      ...payload,
-      organizationId: payload.organizationId || payload.organization_id,
-      passwordHash: payload.passwordHash || payload.password_hash || payload.password,
-      initialBalance: Number(payload.initialBalance ?? payload.currentBalance ?? 0),
-      currentBalance: Number(payload.initialBalance ?? payload.currentBalance ?? 0),
-      currencyCode: payload.currencyCode || payload.currency_code || payload.currency || 'USD'
-    };
-
-    return this.http.post(`${this.baseUrl}/wallets/organization-wallets`, normalizedPayload);
-  }
-
   loginWallet(payload: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/wallets/login`, payload);
   }
@@ -71,45 +58,9 @@ export class WalletService {
     return this.http.get(`${this.baseUrl}/wallets/${encodeURIComponent(walletAddress)}`);
   }
 
-  getOrganizationTypes(): Observable<any> {
-    return this.http.get(`${this.baseUrl}/reference/organization-types`).pipe(
-      catchError(() => of({ success: true, data: [] })),
-      map((response: any) => {
-        const rawTypes =
-          response?.data?.organizationTypes ||
-          response?.data ||
-          response?.organizationTypes ||
-          response ||
-          [];
-
-        const organizationTypes = Array.isArray(rawTypes)
-          ? rawTypes
-              .map((item: any) =>
-                item.organizationType ||
-                item.organization_type ||
-                item.type ||
-                item
-              )
-              .filter((type: any) => !!type)
-          : [];
-
-        return {
-          success: true,
-          data: organizationTypes
-        };
-      })
-    );
-  }
-
-  getOrganizations(organizationType?: string): Observable<any> {
-    let params = new HttpParams();
-
-    if (organizationType) {
-      params = params.set('organizationType', organizationType);
-    }
-
-    return this.http.get(`${this.baseUrl}/reference/organizations`, { params }).pipe(
-      catchError(() => this.http.get(`${this.baseUrl}/organizations`, { params })),
+  getOrganizations(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/reference/organizations`).pipe(
+      catchError(() => this.http.get(`${this.baseUrl}/organizations`)),
       map((response: any) => {
         const rawOrganizations =
           response?.data?.organizations ||
@@ -135,11 +86,6 @@ export class WalletService {
                 org.organizationCode ||
                 org.organization_code ||
                 org.registration_number ||
-                '',
-              organizationType:
-                org.organizationType ||
-                org.organization_type ||
-                org.type ||
                 ''
             }))
           : [];

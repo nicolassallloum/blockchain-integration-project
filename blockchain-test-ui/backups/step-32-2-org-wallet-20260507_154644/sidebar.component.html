@@ -33,14 +33,6 @@
       </a>
 
       <a
-        routerLink="/digital-kyc/organization-wallet-create"
-        routerLinkActive="active"
-        class="sidebar-link"
-      >
-        <span>Organization Wallet Create</span>
-      </a>
-
-      <a
         routerLink="/digital-kyc/wallet-login"
         routerLinkActive="active"
         class="sidebar-link"
@@ -85,11 +77,6 @@
       </div>
 
       <div class="session-row">
-        <span>Wallet Type</span>
-        <strong>{{ walletSession?.walletType || 'CUSTOMER' }}</strong>
-      </div>
-
-      <div class="session-row">
         <span>Balance</span>
         <strong>
           {{ walletSession?.currentBalance ?? 0 }}
@@ -102,7 +89,6 @@
 
     <nav class="sidebar-nav">
       <a
-        *ngIf="walletSession?.walletType === 'CUSTOMER'"
         routerLink="/digital-kyc/wallet-transfer"
         routerLinkActive="active"
         class="sidebar-link"
@@ -111,7 +97,6 @@
       </a>
 
       <a
-        *ngIf="walletSession?.walletType === 'ORGANIZATION'"
         routerLink="/digital-kyc/organization-transfer"
         routerLinkActive="active"
         class="sidebar-link"
