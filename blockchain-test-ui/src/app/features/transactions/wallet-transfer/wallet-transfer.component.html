@@ -11,17 +11,31 @@
       <p>Test customer-session-based blockchain wallet transfers.</p>
     </div>
 
-    <button class="secondary-btn" type="button" (click)="fillSample()" [disabled]="!session">
+    <button
+      class="secondary-btn"
+      type="button"
+      (click)="fillSample()"
+      [disabled]="!session || loading"
+    >
       Fill Sample
     </button>
   </div>
 
   <div *ngIf="!session" class="warning-card">
     <h3>No wallet session found. Please login first.</h3>
+
     <p>
       Before submitting wallet transfers, the customer must login from the Wallet Login screen.
+      After successful login, you will return automatically to this Wallet Transfer page.
     </p>
-    <a routerLink="/digital-kyc/wallet-login" class="primary-link">Go to Wallet Login</a>
+
+    <a
+      routerLink="/digital-kyc/wallet-login"
+      [queryParams]="{ redirectTo: '/digital-kyc/wallet-transfer' }"
+      class="primary-link"
+    >
+      Go to Wallet Login
+    </a>
   </div>
 
   <div *ngIf="session" class="summary-card">
@@ -29,21 +43,25 @@
       <label>Customer ID</label>
       <strong>{{ session.customerId || '-' }}</strong>
     </div>
+
     <div>
       <label>Full Name</label>
       <strong>{{ session.fullName || '-' }}</strong>
     </div>
+
     <div>
       <label>Wallet Address</label>
       <strong class="mono">{{ session.walletAddress || '-' }}</strong>
     </div>
+
     <div>
       <label>Balance</label>
       <strong>{{ session.currentBalance ?? 0 }} {{ session.currencyCode || 'USD' }}</strong>
     </div>
+
     <div>
       <label>Organization</label>
-      <strong>{{ session.organizationName || '-' }}</strong>
+      <strong>{{ session.organizationName || session.organizationId || '-' }}</strong>
     </div>
   </div>
 
@@ -61,6 +79,7 @@
               [(ngModel)]="form.senderWalletAddress"
               readonly
               class="readonly-input"
+              placeholder="Loaded automatically from wallet session"
             />
           </div>
 
@@ -108,6 +127,7 @@
               type="text"
               name="transactionPurpose"
               [(ngModel)]="form.transactionPurpose"
+              placeholder="Wallet transfer test"
               [disabled]="!session || loading"
             />
           </div>
@@ -118,6 +138,7 @@
               name="transactionDescription"
               rows="4"
               [(ngModel)]="form.transactionDescription"
+              placeholder="STEP 32 wallet-to-wallet transfer from Angular UI"
               [disabled]="!session || loading"
             ></textarea>
           </div>
@@ -125,6 +146,7 @@
 
         <div class="message success" *ngIf="successMessage">
           {{ successMessage }}
+
           <div *ngIf="transactionId">
             Transaction ID:
             <strong class="mono">{{ transactionId }}</strong>
@@ -149,7 +171,9 @@
 
     <div class="card">
       <h2>API Response Preview</h2>
+
       <pre *ngIf="apiResponse">{{ apiResponse | json }}</pre>
+
       <div class="empty-json" *ngIf="!apiResponse">
         API response will appear here after submission.
       </div>

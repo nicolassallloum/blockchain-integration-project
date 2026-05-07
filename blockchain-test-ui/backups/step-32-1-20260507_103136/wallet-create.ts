@@ -4,9 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { WalletService } from '../../services/wallet.service';
 
 interface Organization {
-  organizationId: string;
-  organizationName: string;
-  organizationCode?: string;
+  organization_id: string;
+  organization_name: string;
 }
 
 interface Country {
@@ -40,9 +39,7 @@ export class WalletCreate implements OnInit {
     customerId: '',
     walletAddress: '',
     oneTimePassword: '',
-    recoveryPhrase: '',
-    currentBalance: 0,
-    currencyCode: 'USD'
+    recoveryPhrase: ''
   };
 
   form = {
@@ -55,7 +52,6 @@ export class WalletCreate implements OnInit {
     emailHash: '',
     passwordHash: '',
     initialBalance: '1000',
-    currencyCode: 'USD',
     requestSource: 'ANGULAR_UI',
     sourceSystem: 'BLOCKCHAIN_TEST_UI',
     createdBy: 'nix'
@@ -80,7 +76,6 @@ export class WalletCreate implements OnInit {
         this.form.customerId =
           res?.data?.customer_id ||
           res?.data?.customerId ||
-          res?.customerId ||
           '';
 
         this.loadOrganizations();
@@ -98,34 +93,10 @@ export class WalletCreate implements OnInit {
   loadOrganizations(): void {
     this.walletService.getOrganizations().subscribe({
       next: (res: any) => {
-        const rawOrganizations =
-          res?.data?.organizations ||
-          res?.data ||
-          res?.organizations ||
-          [];
-
-        this.organizations = Array.isArray(rawOrganizations)
-          ? rawOrganizations.map((org: any) => ({
-              organizationId:
-                org.organizationId ||
-                org.organization_id ||
-                org.id ||
-                '',
-              organizationName:
-                org.organizationName ||
-                org.organization_name ||
-                org.name ||
-                org.organization_code ||
-                '',
-              organizationCode:
-                org.organizationCode ||
-                org.organization_code ||
-                ''
-            }))
-          : [];
+        this.organizations = res?.data || [];
 
         if (this.organizations.length > 0 && !this.form.organizationId) {
-          this.form.organizationId = this.organizations[0].organizationId;
+          this.form.organizationId = this.organizations[0].organization_id;
         }
 
         this.loadCountries();
@@ -199,10 +170,9 @@ export class WalletCreate implements OnInit {
     this.form.mobileHash = '79170430';
     this.form.emailHash = 'Nsalloum95@gmail.com';
     this.form.initialBalance = '1000';
-    this.form.currencyCode = 'USD';
 
     if (this.organizations.length > 0) {
-      this.form.organizationId = this.organizations[0].organizationId;
+      this.form.organizationId = this.organizations[0].organization_id;
     }
 
     const lebanon = this.countries.find(
@@ -231,7 +201,6 @@ export class WalletCreate implements OnInit {
       emailHash: '',
       passwordHash: '',
       initialBalance: '1000',
-      currencyCode: 'USD',
       requestSource: 'ANGULAR_UI',
       sourceSystem: 'BLOCKCHAIN_TEST_UI',
       createdBy: 'nix'
@@ -243,9 +212,7 @@ export class WalletCreate implements OnInit {
       customerId: '',
       walletAddress: '',
       oneTimePassword: '',
-      recoveryPhrase: '',
-      currentBalance: 0,
-      currencyCode: 'USD'
+      recoveryPhrase: ''
     };
 
     this.initializeForm();
@@ -256,14 +223,6 @@ export class WalletCreate implements OnInit {
     this.successMessage = '';
     this.errorMessage = '';
 
-    const initialBalance = Number(this.form.initialBalance || 0);
-
-    if (!Number.isFinite(initialBalance) || initialBalance < 0) {
-      this.loading = false;
-      this.errorMessage = 'Initial Balance must be zero or greater.';
-      return;
-    }
-
     const payload = {
       customerId: this.form.customerId,
       organizationId: this.form.organizationId,
@@ -273,9 +232,7 @@ export class WalletCreate implements OnInit {
       mobileHash: this.form.mobileHash,
       emailHash: this.form.emailHash,
       passwordHash: this.form.passwordHash,
-      initialBalance,
-      currentBalance: initialBalance,
-      currencyCode: this.form.currencyCode || 'USD',
+      initialBalance: this.form.initialBalance,
       requestSource: this.form.requestSource,
       sourceSystem: this.form.sourceSystem,
       createdBy: this.form.createdBy
@@ -317,22 +274,7 @@ export class WalletCreate implements OnInit {
 
           recoveryPhrase: Array.isArray(recoveryValue)
             ? recoveryValue.join(' ')
-            : recoveryValue,
-
-          currentBalance:
-            Number(
-              wallet?.currentBalance ??
-                wallet?.current_balance ??
-                wallet?.balance ??
-                initialBalance
-            ),
-
-          currencyCode:
-            wallet?.currencyCode ||
-            wallet?.currency_code ||
-            wallet?.currency ||
-            this.form.currencyCode ||
-            'USD'
+            : recoveryValue
         };
 
         this.successMessage = res?.message || 'Wallet created successfully';

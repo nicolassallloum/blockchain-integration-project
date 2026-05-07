@@ -42,12 +42,11 @@
               required
             >
               <option value="">Select organization</option>
-
               <option
                 *ngFor="let org of organizations"
-                [value]="org.organizationId"
+                [value]="org.organization_id"
               >
-                {{ org.organizationName }}
+                {{ org.organization_name }}
               </option>
             </select>
           </div>
@@ -69,23 +68,8 @@
               type="number"
               name="initialBalance"
               [(ngModel)]="form.initialBalance"
-              min="0"
-              step="0.01"
               required
             />
-          </div>
-
-          <div class="field">
-            <label>Currency</label>
-            <select
-              name="currencyCode"
-              [(ngModel)]="form.currencyCode"
-              required
-            >
-              <option value="USD">USD</option>
-              <option value="LBP">LBP</option>
-              <option value="EUR">EUR</option>
-            </select>
           </div>
 
           <div class="field">
@@ -97,7 +81,6 @@
               required
             >
               <option value="">Select nationality</option>
-
               <option
                 *ngFor="let country of countries"
                 [value]="country.cou_id"
@@ -182,35 +165,28 @@
     <div class="success-card">
       <div class="success-icon">✓</div>
 
-      <h2>Registration Complete</h2>
+      <h2>Registration Complete!</h2>
 
       <p class="success-text">
-        The blockchain wallet identity has been successfully created.
+        Your blockchain wallet identity has been successfully created.
       </p>
 
       <div class="info-box">
-        <div class="info-label">Customer ID</div>
+        <div class="info-label">CUSTOMER ID</div>
         <div class="info-value blue">
           {{ resultData.customerId }}
         </div>
       </div>
 
       <div class="info-box">
-        <div class="info-label">Wallet Address</div>
+        <div class="info-label">WALLET ADDRESS (LOGIN ID)</div>
         <div class="info-value small-box">
           {{ resultData.walletAddress }}
         </div>
       </div>
 
       <div class="info-box">
-        <div class="info-label">Initial Balance</div>
-        <div class="info-value blue">
-          {{ resultData.currentBalance }} {{ resultData.currencyCode }}
-        </div>
-      </div>
-
-      <div class="info-box">
-        <div class="info-label">One-Time Password</div>
+        <div class="info-label">ONE-TIME PASSWORD</div>
         <div class="info-value red small-box">
           {{ resultData.oneTimePassword }}
         </div>
@@ -221,15 +197,21 @@
       </div>
 
       <div class="info-box">
-        <div class="info-label">Recovery Phrase</div>
+        <div class="info-label">RECOVERY PHRASE (Under Development)</div>
         <div class="info-value phrase-box">
           {{ resultData.recoveryPhrase || 'No recovery phrase returned from API' }}
         </div>
 
         <div class="phrase-warning">
-          Store this phrase offline and never share it.
+          This phrase is the ONLY way to recover your wallet if you lose access.
+          Store it offline and never share it.
         </div>
       </div>
+
+      <p class="confirmation-text">
+        By continuing, you confirm that you have safely stored both your
+        password and recovery phrase.
+      </p>
 
       <div class="success-actions">
         <button class="primary-btn large-btn" (click)="goToNewRegistration()">

@@ -1,0 +1,102 @@
+.brand-mark {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 16px;
+}
+
+.brand-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #0f4c81, #1a8f5a);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.brand-name {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: 0.8px;
+}
+
+.brand-subtitle {
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 3px;
+}
+
+.menu-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 14px 18px 8px;
+}
+
+.wallet-session-card {
+  margin: 14px;
+  padding: 14px;
+  border-radius: 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.session-label {
+  font-size: 11px;
+  color: #64748b;
+  text-transform: uppercase;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.session-name {
+  font-size: 14px;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 10px;
+}
+
+.session-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 8px;
+}
+
+.session-row span {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.session-row strong {
+  font-size: 12px;
+  color: #0f172a;
+  word-break: break-word;
+}
+
+.logout-link {
+  width: calc(100% - 24px);
+  margin: 8px 12px;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+  background: #fff1f2;
+  color: #be123c;
+}
+
+.logout-link:hover {
+  background: #ffe4e6;
+}

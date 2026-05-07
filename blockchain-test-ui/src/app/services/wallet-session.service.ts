@@ -1,4 +1,16 @@
 import { Injectable } from '@angular/core';
+import { BehaviorSubject } from 'rxjs';
+
+export interface WalletSession {
+  customerId: string;
+  walletAddress: string;
+  organizationId: string;
+  organizationName: string;
+  fullName: string;
+  currentBalance: number;
+  currencyCode: string;
+  token: string;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -6,26 +18,52 @@ import { Injectable } from '@angular/core';
 export class WalletSessionService {
   private readonly SESSION_KEY = 'digital_kyc_wallet_session';
 
+  private sessionSubject = new BehaviorSubject<WalletSession | null>(this.getSession());
+
+  sessionChanges$ = this.sessionSubject.asObservable();
+
   setSession(walletProfile: any): void {
     if (!walletProfile) {
       return;
     }
 
-    const normalizedSession = {
-      customerId: walletProfile.customerId || '',
-      walletAddress: walletProfile.walletAddress || '',
-      organizationId: walletProfile.organizationId || '',
-      organizationName: walletProfile.organizationName || '',
-      fullName: walletProfile.fullName || '',
-      currentBalance: walletProfile.currentBalance ?? 0,
-      currencyCode: walletProfile.currencyCode || walletProfile.currency || 'USD',
+    const normalizedSession: WalletSession = {
+      customerId: walletProfile.customerId || walletProfile.customer_id || '',
+      walletAddress: walletProfile.walletAddress || walletProfile.wallet_address || '',
+      organizationId: walletProfile.organizationId || walletProfile.organization_id || '',
+      organizationName: walletProfile.organizationName || walletProfile.organization_name || '',
+      fullName:
+        walletProfile.fullName ||
+        walletProfile.full_name ||
+        walletProfile.customerName ||
+        walletProfile.customer_name ||
+        '',
+      currentBalance: Number(
+        walletProfile.currentBalance ??
+          walletProfile.current_balance ??
+          walletProfile.balance ??
+          0
+      ),
+      currencyCode:
+        walletProfile.currencyCode ||
+        walletProfile.currency_code ||
+        walletProfile.currency ||
+        'USD',
       token: walletProfile.token || ''
     };
 
     localStorage.setItem(this.SESSION_KEY, JSON.stringify(normalizedSession));
+
+    if (normalizedSession.token) {
+      localStorage.setItem('digital_kyc_wallet_token', normalizedSession.token);
+    }
+
+    localStorage.setItem('digital_kyc_wallet_profile', JSON.stringify(normalizedSession));
+
+    this.sessionSubject.next(normalizedSession);
   }
 
-  getSession(): any | null {
+  getSession(): WalletSession | null {
     const rawSession = localStorage.getItem(this.SESSION_KEY);
 
     if (!rawSession) {
@@ -49,8 +87,21 @@ export class WalletSessionService {
     return this.getSession()?.customerId || '';
   }
 
+  getOrganizationId(): string {
+    return this.getSession()?.organizationId || '';
+  }
+
+  getToken(): string {
+    return this.getSession()?.token || localStorage.getItem('digital_kyc_wallet_token') || '';
+  }
+
   clearSession(): void {
     localStorage.removeItem(this.SESSION_KEY);
+    localStorage.removeItem('digital_kyc_wallet_token');
+    localStorage.removeItem('digital_kyc_wallet_profile');
+    sessionStorage.removeItem(this.SESSION_KEY);
+
+    this.sessionSubject.next(null);
   }
 
   isLoggedIn(): boolean {

@@ -18,11 +18,15 @@ export class WalletLogin implements OnInit {
   successMessage = '';
   errorMessage = '';
 
+  /**
+   * Existing template compatibility.
+   * wallet-login.html uses these names.
+   */
   responseData: any = null;
   apiResponse: any = null;
   token = '';
 
-  redirectTo = '/digital-kyc/wallet-transfer';
+  redirectTo = '/digital-kyc/dashboard';
 
   form = {
     customerId: '',
@@ -57,12 +61,16 @@ export class WalletLogin implements OnInit {
   ngOnInit(): void {
     this.redirectTo =
       this.route.snapshot.queryParamMap.get('redirectTo') ||
-      '/digital-kyc/wallet-transfer';
+      '/digital-kyc/dashboard';
 
     this.loadCountries();
   }
 
   loadCountries(): void {
+    if (!this.walletService.getCountries) {
+      return;
+    }
+
     this.walletService.getCountries().subscribe({
       next: (response: any) => {
         if (Array.isArray(response)) {
@@ -260,24 +268,29 @@ export class WalletLogin implements OnInit {
           organizationId: this.walletSummary.organizationId,
           organizationName: this.walletSummary.organizationName,
           fullName: this.walletSummary.customerName,
-          currentBalance: Number(this.walletSummary.balance || 0),
+          currentBalance: this.walletSummary.balance,
           currencyCode: this.walletSummary.currency,
           token: this.token
         };
 
         this.walletSessionService.setSession(normalizedSession);
 
-        this.walletService.saveWalletToken(this.token);
-        this.walletService.saveWalletProfile({
-          token: this.token,
-          wallet
-        });
+        if (this.walletService.saveWalletToken) {
+          this.walletService.saveWalletToken(this.token);
+        }
 
-        this.successMessage = 'Wallet login successful. Opening transaction menu...';
+        if (this.walletService.saveWalletProfile) {
+          this.walletService.saveWalletProfile({
+            token: this.token,
+            wallet
+          });
+        }
+
+        this.successMessage = 'Wallet login successful. Redirecting to the requested page...';
 
         setTimeout(() => {
           this.router.navigateByUrl(this.redirectTo);
-        }, 300);
+        }, 600);
       },
       error: (error: any) => {
         this.loading = false;

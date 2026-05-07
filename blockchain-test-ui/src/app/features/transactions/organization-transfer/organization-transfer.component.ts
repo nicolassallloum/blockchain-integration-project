@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+
 import { TransactionService } from '../../../services/transaction.service';
 import { WalletSessionService } from '../../../services/wallet-session.service';
 
@@ -14,19 +15,24 @@ import { WalletSessionService } from '../../../services/wallet-session.service';
 })
 export class OrganizationTransferComponent implements OnInit {
   session: any = null;
+
   loading = false;
   successMessage = '';
   errorMessage = '';
   transactionId = '';
   apiResponse: any = null;
 
+  /**
+   * Organization Transfer business meaning:
+   * Customer wallet from Organization A transfers to customer wallet from Organization B.
+   */
   form = {
     senderWalletAddress: '',
-    organizationId: '',
+    receiverWalletAddress: '',
     amount: '',
     currency: 'USD',
-    transactionPurpose: 'Organization payment test',
-    transactionDescription: 'STEP 32 wallet-to-organization transfer from Angular UI',
+    transactionPurpose: 'Inter-organization customer transfer',
+    transactionDescription: 'Customer from organization A transfers to customer from organization B',
     requestSource: 'ANGULAR_UI',
     sourceSystem: 'BLOCKCHAIN_TEST_UI',
     createdBy: 'nix'
@@ -45,19 +51,18 @@ export class OrganizationTransferComponent implements OnInit {
     this.session = this.walletSessionService.getSession();
 
     if (this.session) {
-      this.form.senderWalletAddress = this.session.walletAddress;
-      this.form.organizationId = this.session.organizationId || '';
+      this.form.senderWalletAddress = this.session.walletAddress || '';
       this.form.currency = this.session.currencyCode || 'USD';
     }
   }
 
   fillSample(): void {
-    this.form.organizationId =
-      this.session?.organizationId || '26af0fd4-80c4-4da6-9240-b66ff88a7023';
-    this.form.amount = '100';
+    this.form.receiverWalletAddress = 'WALLET_1778067488069_3704C026E691';
+    this.form.amount = '50';
     this.form.currency = this.session?.currencyCode || 'USD';
-    this.form.transactionPurpose = 'Organization payment test';
-    this.form.transactionDescription = 'STEP 32 wallet-to-organization transfer from Angular UI';
+    this.form.transactionPurpose = 'Inter-organization customer transfer';
+    this.form.transactionDescription =
+      'Customer from organization A transfers to customer from organization B';
   }
 
   validateForm(): string | null {
@@ -69,11 +74,17 @@ export class OrganizationTransferComponent implements OnInit {
       return 'Sender wallet address is required from the logged-in session.';
     }
 
-    if (!this.form.organizationId) {
-      return 'Organization ID is required.';
+    if (!this.form.receiverWalletAddress) {
+      return 'Receiver customer wallet address is required.';
     }
 
-    if (!this.form.amount || Number(this.form.amount) <= 0) {
+    if (this.form.senderWalletAddress === this.form.receiverWalletAddress) {
+      return 'Receiver wallet address cannot be the same as sender wallet address.';
+    }
+
+    const transferAmount = Number(this.form.amount);
+
+    if (!Number.isFinite(transferAmount) || transferAmount <= 0) {
       return 'Amount is required and must be greater than zero.';
     }
 
@@ -99,7 +110,7 @@ export class OrganizationTransferComponent implements OnInit {
 
     const payload = {
       senderWalletAddress: this.form.senderWalletAddress,
-      organizationId: this.form.organizationId,
+      receiverWalletAddress: this.form.receiverWalletAddress,
       amount: String(this.form.amount),
       currency: this.form.currency,
       transactionPurpose: this.form.transactionPurpose,
@@ -115,21 +126,23 @@ export class OrganizationTransferComponent implements OnInit {
       next: (response: any) => {
         this.loading = false;
         this.apiResponse = response;
+
         this.transactionId =
           response?.data?.transactionId ||
           response?.transactionId ||
           response?.data?.id ||
           '';
 
-        this.successMessage = 'Wallet-to-organization transfer completed successfully.';
+        this.successMessage = 'Inter-organization customer transfer completed successfully.';
       },
       error: (error: any) => {
         this.loading = false;
         this.apiResponse = error?.error || error;
+
         this.errorMessage =
           error?.error?.message ||
           error?.message ||
-          'Wallet-to-organization transfer failed.';
+          'Inter-organization customer transfer failed.';
       }
     });
   }

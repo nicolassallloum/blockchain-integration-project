@@ -280,9 +280,8 @@ async function insertTransaction(client, transactionData) {
     transaction_description: transactionData.transactionDescription,
     description: transactionData.transactionDescription,
 
-    status: transactionData.dbStatus || transactionData.status || 'PENDING',
-    transaction_status: transactionData.transactionStatus || transactionData.status || 'COMPLETED',
-    fabric_status: transactionData.fabricStatus || 'PENDING',
+    status: transactionData.status,
+    transaction_status: transactionData.status,
 
     request_source: transactionData.requestSource,
     source: transactionData.requestSource,
@@ -429,10 +428,7 @@ async function walletTransfer(payload, context = {}) {
       transactionPurpose: payload.transactionPurpose || 'Wallet transfer test',
       transactionDescription:
         payload.transactionDescription || 'Wallet-to-wallet transfer from Blockchain API',
-      status: 'COMPLETED',
-      dbStatus: 'PENDING',
-      transactionStatus: 'COMPLETED',
-      fabricStatus: 'PENDING',
+      status: 'SUCCESS',
       requestSource: payload.requestSource || 'BLOCKCHAIN_API',
       sourceSystem: payload.sourceSystem || 'BLOCKCHAIN_API',
       createdBy: payload.createdBy || 'system'
@@ -451,7 +447,7 @@ async function walletTransfer(payload, context = {}) {
         receiverWalletAddress,
         amount: String(transferAmount),
         currency: normalizedCurrency,
-        status: 'COMPLETED',
+        status: 'SUCCESS',
         transaction
       }
     };
@@ -486,7 +482,7 @@ async function walletTransfer(payload, context = {}) {
 
 async function organizationTransfer(payload, context = {}) {
   const senderWalletAddress = payload.senderWalletAddress;
-  const receiverWalletAddress = payload.receiverWalletAddress;
+  const organizationId = payload.organizationId;
   const amount = payload.amount;
   const currency = payload.currency || 'USD';
 
@@ -499,20 +495,11 @@ async function organizationTransfer(payload, context = {}) {
     };
   }
 
-  if (!receiverWalletAddress) {
+  if (!organizationId) {
     return {
       success: false,
-      message: 'Receiver wallet address is required',
-      errorCode: 'RECEIVER_WALLET_REQUIRED',
-      data: null
-    };
-  }
-
-  if (senderWalletAddress === receiverWalletAddress) {
-    return {
-      success: false,
-      message: 'Sender wallet address and receiver wallet address cannot be the same',
-      errorCode: 'SAME_WALLET_TRANSFER_NOT_ALLOWED',
+      message: 'Organization ID is required',
+      errorCode: 'ORGANIZATION_ID_REQUIRED',
       data: null
     };
   }
@@ -547,39 +534,6 @@ async function organizationTransfer(payload, context = {}) {
       };
     }
 
-    const receiverWallet = await getWalletByAddressInternal(client, receiverWalletAddress);
-
-    if (!receiverWallet) {
-      await client.query('ROLLBACK');
-
-      return {
-        success: false,
-        message: 'Receiver wallet not found',
-        errorCode: 'RECEIVER_WALLET_NOT_FOUND',
-        data: null
-      };
-    }
-
-    if (
-      senderWallet.organizationId &&
-      receiverWallet.organizationId &&
-      String(senderWallet.organizationId) === String(receiverWallet.organizationId)
-    ) {
-      await client.query('ROLLBACK');
-
-      return {
-        success: false,
-        message: 'Organization Transfer is only allowed between customers from different organizations',
-        errorCode: 'SAME_ORGANIZATION_TRANSFER_NOT_ALLOWED',
-        data: {
-          senderWalletAddress,
-          receiverWalletAddress,
-          senderOrganizationId: senderWallet.organizationId,
-          receiverOrganizationId: receiverWallet.organizationId
-        }
-      };
-    }
-
     const senderBalance = Number(senderWallet.currentBalance || 0);
 
     if (senderBalance < transferAmount) {
@@ -598,6 +552,8 @@ async function organizationTransfer(payload, context = {}) {
       };
     }
 
+    const organization = await getOrganizationByIdInternal(client, organizationId);
+
     const requestId =
       context.requestId ||
       payload.requestId ||
@@ -608,42 +564,27 @@ async function organizationTransfer(payload, context = {}) {
     const normalizedCurrency =
       currency ||
       senderWallet.currencyCode ||
-      receiverWallet.currencyCode ||
       'USD';
 
     await updateWalletBalance(client, senderWalletAddress, -transferAmount);
-    await updateWalletBalance(client, receiverWalletAddress, transferAmount);
 
     const transaction = await insertTransaction(client, {
       transactionId,
       requestId,
       transactionType: 'ORGANIZATION_TRANSFER',
       senderWalletAddress,
-      receiverWalletAddress,
-      /*
-       * Organization Transfer business meaning:
-       * customer wallet -> customer wallet from a different organization.
-       *
-       * Do NOT insert organization_id here because blockchain.transactions.organization_id
-       * is protected by fk_blockchain_transactions_organization and is intended for
-       * direct organization/payment records.
-       *
-       * Sender/receiver organizations are validated from wallet records above.
-       */
-      organizationId: null,
-      organizationName: null,
+      receiverWalletAddress: null,
+      organizationId,
+      organizationName:
+        organization?.organization_name ||
+        organization?.organizationName ||
+        null,
       amount: transferAmount,
       currency: normalizedCurrency,
-      transactionPurpose:
-        payload.transactionPurpose ||
-        'Inter-organization customer transfer',
+      transactionPurpose: payload.transactionPurpose || 'Organization payment test',
       transactionDescription:
-        payload.transactionDescription ||
-        'Customer wallet transfer to another customer from a different organization',
-      status: 'COMPLETED',
-      dbStatus: 'PENDING',
-      transactionStatus: 'COMPLETED',
-      fabricStatus: 'PENDING',
+        payload.transactionDescription || 'Wallet-to-organization transfer from Blockchain API',
+      status: 'SUCCESS',
       requestSource: payload.requestSource || 'BLOCKCHAIN_API',
       sourceSystem: payload.sourceSystem || 'BLOCKCHAIN_API',
       createdBy: payload.createdBy || 'system'
@@ -653,34 +594,25 @@ async function organizationTransfer(payload, context = {}) {
 
     return {
       success: true,
-      message: 'Inter-organization customer transfer completed successfully',
+      message: 'Wallet-to-organization transfer completed successfully',
       data: {
         transactionId,
         requestId,
         transactionType: 'ORGANIZATION_TRANSFER',
         senderWalletAddress,
-        receiverWalletAddress,
-        senderOrganizationId: senderWallet.organizationId,
-        receiverOrganizationId: receiverWallet.organizationId,
+        organizationId,
+        organizationName:
+          organization?.organization_name ||
+          organization?.organizationName ||
+          null,
         amount: String(transferAmount),
         currency: normalizedCurrency,
-        status: 'COMPLETED',
+        status: 'SUCCESS',
         transaction
       }
     };
   } catch (error) {
     await client.query('ROLLBACK');
-
-    console.error('[STEP32_1_ORGANIZATION_TRANSFER_DB_ERROR]', {
-      code: error.code,
-      message: error.message,
-      detail: error.detail,
-      constraint: error.constraint,
-      table: error.table,
-      column: error.column,
-      schema: error.schema
-    });
-
     error.message = `Organization transfer failed: ${error.message}`;
     throw error;
   } finally {

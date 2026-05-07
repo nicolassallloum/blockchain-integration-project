@@ -1,167 +1,116 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, catchError, map, of } from 'rxjs';
+
 import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class WalletService {
-  private readonly apiBaseUrl = environment.apiBaseUrl;
-  private readonly baseUrl = `${environment.apiBaseUrl}/wallets`;
-
-  private readonly WALLET_TOKEN_KEY = 'wallet_token';
-  private readonly WALLET_PROFILE_KEY = 'wallet_profile';
-  private readonly WALLET_SESSION_KEY = 'digital_kyc_wallet_session';
+  private readonly baseUrl = environment.apiBaseUrl;
 
   constructor(private http: HttpClient) {}
 
-  /**
-   * Wallet creation
-   */
-  createWallet(payload: any): Observable<any> {
-    return this.http.post(`${this.baseUrl}`, payload);
-  }
+  getWallets(params?: any): Observable<any> {
+    let httpParams = new HttpParams();
 
-  /**
-   * Wallet login
-   */
-  loginWallet(payload: any): Observable<any> {
-    return this.http.post(`${this.baseUrl}/login`, payload);
-  }
-
-  /**
-   * Wallet query by customer ID
-   */
-  getWalletByCustomerId(customerId: string): Observable<any> {
-    return this.http.get(`${this.baseUrl}/customer/${encodeURIComponent(customerId)}`);
-  }
-
-  /**
-   * Wallet query by wallet address
-   */
-  getWalletByAddress(walletAddress: string): Observable<any> {
-    return this.http.get(`${this.baseUrl}/address/${encodeURIComponent(walletAddress)}`);
-  }
-
-  /**
-   * Wallet list / dashboard
-   */
-  getWallets(paramsData: any = {}): Observable<any> {
-    let params = new HttpParams();
-
-    Object.keys(paramsData || {}).forEach((key) => {
-      const value = paramsData[key];
-
-      if (value !== null && value !== undefined && value !== '') {
-        params = params.set(key, value);
+    Object.keys(params || {}).forEach((key) => {
+      if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
+        httpParams = httpParams.set(key, params[key]);
       }
     });
 
-    return this.http.get(`${this.baseUrl}`, { params });
+    return this.http.get(`${this.baseUrl}/wallets`, { params: httpParams });
   }
 
-  /**
-   * Compatibility alias if old pages call getAllWallets()
-   */
-  getAllWallets(paramsData: any = {}): Observable<any> {
-    return this.getWallets(paramsData);
-  }
-
-  /**
-   * Reference APIs
-   */
   getNextCustomerId(): Observable<any> {
-    return this.http.get(`${this.apiBaseUrl}/reference/next-customer-id`);
+    return this.http.get(`${this.baseUrl}/wallets/next-customer-id`);
+  }
+
+  createWallet(payload: any): Observable<any> {
+    const normalizedPayload = {
+      ...payload,
+      organizationId: payload.organizationId || payload.organization_id,
+      initialBalance: Number(payload.initialBalance ?? payload.currentBalance ?? 0),
+      currentBalance: Number(payload.initialBalance ?? payload.currentBalance ?? 0),
+      currencyCode: payload.currencyCode || payload.currency_code || payload.currency || 'USD'
+    };
+
+    return this.http.post(`${this.baseUrl}/wallets`, normalizedPayload);
+  }
+
+  loginWallet(payload: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/wallets/login`, payload);
+  }
+
+  getWalletByCustomerId(customerId: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/wallets/customer/${encodeURIComponent(customerId)}`);
+  }
+
+  getWalletByAddress(walletAddress: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/wallets/address/${encodeURIComponent(walletAddress)}`);
   }
 
   getOrganizations(): Observable<any> {
-    return this.http.get(`${this.apiBaseUrl}/organizations`);
+    return this.http.get(`${this.baseUrl}/organizations`).pipe(
+      catchError(() => this.http.get(`${this.baseUrl}/reference/organizations`)),
+      map((response: any) => {
+        const rawOrganizations =
+          response?.data?.organizations ||
+          response?.data ||
+          response?.organizations ||
+          response ||
+          [];
+
+        const organizations = Array.isArray(rawOrganizations)
+          ? rawOrganizations.map((org: any) => ({
+              organizationId:
+                org.organizationId ||
+                org.organization_id ||
+                org.id ||
+                '',
+              organizationName:
+                org.organizationName ||
+                org.organization_name ||
+                org.name ||
+                org.organization_code ||
+                '',
+              organizationCode:
+                org.organizationCode ||
+                org.organization_code ||
+                ''
+            }))
+          : [];
+
+        return {
+          success: true,
+          data: organizations
+        };
+      })
+    );
   }
 
   getCountries(): Observable<any> {
-    return this.http.get(`${this.apiBaseUrl}/reference/countries`);
+    return this.http.get(`${this.baseUrl}/reference/countries`).pipe(
+      catchError(() => of({ success: true, data: [] }))
+    );
   }
 
-  getNationalities(): Observable<any> {
-    return this.http.get(`${this.apiBaseUrl}/reference/nationalities`);
-  }
-
-  /**
-   * Token/session helpers used by wallet-login.ts
-   */
   saveWalletToken(token: string): void {
-    if (!token) {
-      return;
+    if (token) {
+      localStorage.setItem('digital_kyc_wallet_token', token);
     }
-
-    localStorage.setItem(this.WALLET_TOKEN_KEY, token);
-  }
-
-  getWalletToken(): string | null {
-    return localStorage.getItem(this.WALLET_TOKEN_KEY);
-  }
-
-  clearWalletToken(): void {
-    localStorage.removeItem(this.WALLET_TOKEN_KEY);
   }
 
   saveWalletProfile(profile: any): void {
-    if (!profile) {
-      return;
-    }
-
-    localStorage.setItem(this.WALLET_PROFILE_KEY, JSON.stringify(profile));
-
-    const wallet = profile?.wallet || profile;
-
-    const normalizedSession = {
-      customerId: wallet?.customerId || wallet?.customer_id || '',
-      walletAddress: wallet?.walletAddress || wallet?.wallet_address || '',
-      organizationId: wallet?.organizationId || wallet?.organization_id || '',
-      organizationName: wallet?.organizationName || wallet?.organization_name || '',
-      fullName: wallet?.fullName || wallet?.full_name || wallet?.customerName || '',
-      currentBalance: wallet?.currentBalance ?? wallet?.current_balance ?? 0,
-      currencyCode: wallet?.currencyCode || wallet?.currency_code || wallet?.currency || 'USD',
-      token: profile?.token || this.getWalletToken() || ''
-    };
-
-    localStorage.setItem(this.WALLET_SESSION_KEY, JSON.stringify(normalizedSession));
-  }
-
-  getWalletProfile(): any | null {
-    const raw = localStorage.getItem(this.WALLET_PROFILE_KEY);
-
-    if (!raw) {
-      return null;
-    }
-
-    try {
-      return JSON.parse(raw);
-    } catch {
-      localStorage.removeItem(this.WALLET_PROFILE_KEY);
-      return null;
+    if (profile) {
+      localStorage.setItem('digital_kyc_wallet_profile', JSON.stringify(profile));
     }
   }
 
-  getWalletSession(): any | null {
-    const raw = localStorage.getItem(this.WALLET_SESSION_KEY);
-
-    if (!raw) {
-      return null;
-    }
-
-    try {
-      return JSON.parse(raw);
-    } catch {
-      localStorage.removeItem(this.WALLET_SESSION_KEY);
-      return null;
-    }
-  }
-
-  clearWalletSession(): void {
-    localStorage.removeItem(this.WALLET_TOKEN_KEY);
-    localStorage.removeItem(this.WALLET_PROFILE_KEY);
-    localStorage.removeItem(this.WALLET_SESSION_KEY);
+  clearWalletAuth(): void {
+    localStorage.removeItem('digital_kyc_wallet_token');
+    localStorage.removeItem('digital_kyc_wallet_profile');
   }
 }

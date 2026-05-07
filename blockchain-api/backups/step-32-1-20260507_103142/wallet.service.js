@@ -10,47 +10,19 @@ const JWT_SECRET =
   process.env.APP_JWT_SECRET ||
   'CHANGE_ME_DEV_SECRET';
 
-async function tableColumnExists(tableName, columnName) {
-  const result = await db.query(
-    `
-    SELECT EXISTS (
-      SELECT 1
-      FROM information_schema.columns
-      WHERE table_schema = 'blockchain'
-        AND table_name = $1
-        AND column_name = $2
-    ) AS exists
-    `,
-    [tableName, columnName]
-  );
-
-  return result.rows[0]?.exists === true;
-}
-
-async function getWalletColumns() {
-  const result = await db.query(
-    `
-    SELECT column_name
-    FROM information_schema.columns
-    WHERE table_schema = 'blockchain'
-      AND table_name = 'wallets'
-    ORDER BY ordinal_position
-    `
-  );
-
-  return result.rows.map((row) => row.column_name);
-}
-
-function normalizeNumber(value, defaultValue = 0) {
-  const numberValue = Number(value);
-
-  if (!Number.isFinite(numberValue)) {
-    return defaultValue;
-  }
-
-  return numberValue;
-}
-
+/**
+ * STEP 30 — Dashboard Wallet List
+ *
+ * Source table:
+ *   blockchain.wallets
+ *
+ * Dashboard column mapping:
+ *   full_name        -> Customer Name
+ *   wallet_type      -> Customer Type
+ *   national_id_hash -> Nationality
+ *   ledger_doc_type  -> ID Type
+ *   ledger_key       -> ID Number
+ */
 exports.listWallets = async ({ limit = 13, offset = 0, search = '' }) => {
   const values = [];
   let whereClause = '';
@@ -70,9 +42,6 @@ exports.listWallets = async ({ limit = 13, offset = 0, search = '' }) => {
         OR COALESCE(organization_code, '') ILIKE $1
     `;
   }
-
-  const hasCurrentBalance = await tableColumnExists('wallets', 'current_balance');
-  const hasCurrencyCode = await tableColumnExists('wallets', 'currency_code');
 
   const countSql = `
     SELECT COUNT(*)::int AS total
@@ -95,8 +64,6 @@ exports.listWallets = async ({ limit = 13, offset = 0, search = '' }) => {
       mobile_hash,
       email_hash,
       status,
-      ${hasCurrentBalance ? 'current_balance' : '0 AS current_balance'},
-      ${hasCurrencyCode ? 'currency_code' : `'USD' AS currency_code`},
       created_at,
       updated_at
     FROM blockchain.wallets
@@ -133,14 +100,18 @@ exports.listWallets = async ({ limit = 13, offset = 0, search = '' }) => {
       mobileHash: row.mobile_hash,
       emailHash: row.email_hash,
       status: row.status,
-      currentBalance: row.current_balance,
-      currencyCode: row.currency_code,
       createdAt: row.created_at,
       updatedAt: row.updated_at
     }))
   };
 };
 
+/**
+ * Professional Wallet Profile for Login / Query screens.
+ *
+ * First tries your requested full query.
+ * If some optional columns do not exist, it falls back to a safe profile query.
+ */
 const getProfessionalWalletProfileByCustomerId = async (customerId) => {
   try {
     const result = await db.query(
@@ -155,8 +126,8 @@ const getProfessionalWalletProfileByCustomerId = async (customerId) => {
           c.cou_name                                    AS "countryName",
           w.email_hash                                  AS "emailHash",
           w.mobile_hash                                 AS "mobileHash",
-          COALESCE(w.current_balance, 0)                AS "currentBalance",
-          COALESCE(w.currency_code, 'USD')              AS "currencyCode",
+          COALESCE(w.current_balance, w.current_Balance, 0) AS "currentBalance",
+          COALESCE(w.currency_code, w.currency, 'USD')  AS "currencyCode",
           w.created_at                                  AS "createdAt",
           w.status                                      AS "status"
       FROM blockchain.wallets w
@@ -183,10 +154,10 @@ const getProfessionalWalletProfileByCustomerId = async (customerId) => {
           w.customer_id                         AS "customerId",
           w.wallet_address                     AS "walletAddress",
           w.organization_id                    AS "organizationId",
-          NULL                                 AS "organizationName",
+          bo.organization_name                 AS "organizationName",
           w.full_name                          AS "fullName",
           w.national_id_hash                   AS "nationalIdHash",
-          NULL                                 AS "countryName",
+          c.cou_name                           AS "countryName",
           w.email_hash                         AS "emailHash",
           w.mobile_hash                        AS "mobileHash",
           0                                    AS "currentBalance",
@@ -194,6 +165,10 @@ const getProfessionalWalletProfileByCustomerId = async (customerId) => {
           w.created_at                         AS "createdAt",
           w.status                             AS "status"
       FROM blockchain.wallets w
+      LEFT JOIN blockchain.blockchain_organization bo
+          ON bo.organization_id = w.organization_id
+      LEFT JOIN blockchain.countries c
+          ON c.cou_id::text = w.national_id_hash::text
       WHERE w.customer_id = $1
       LIMIT 1
       `,
@@ -204,6 +179,9 @@ const getProfessionalWalletProfileByCustomerId = async (customerId) => {
   }
 };
 
+/**
+ * Professional Wallet Profile by wallet address.
+ */
 const getProfessionalWalletProfileByAddress = async (walletAddress) => {
   try {
     const result = await db.query(
@@ -218,8 +196,8 @@ const getProfessionalWalletProfileByAddress = async (walletAddress) => {
           c.cou_name                                    AS "countryName",
           w.email_hash                                  AS "emailHash",
           w.mobile_hash                                 AS "mobileHash",
-          COALESCE(w.current_balance, 0)                AS "currentBalance",
-          COALESCE(w.currency_code, 'USD')              AS "currencyCode",
+          COALESCE(w.current_balance, w.current_Balance, 0) AS "currentBalance",
+          COALESCE(w.currency_code, w.currency, 'USD')  AS "currencyCode",
           w.created_at                                  AS "createdAt",
           w.status                                      AS "status"
       FROM blockchain.wallets w
@@ -246,10 +224,10 @@ const getProfessionalWalletProfileByAddress = async (walletAddress) => {
           w.customer_id                         AS "customerId",
           w.wallet_address                     AS "walletAddress",
           w.organization_id                    AS "organizationId",
-          NULL                                 AS "organizationName",
+          bo.organization_name                 AS "organizationName",
           w.full_name                          AS "fullName",
           w.national_id_hash                   AS "nationalIdHash",
-          NULL                                 AS "countryName",
+          c.cou_name                           AS "countryName",
           w.email_hash                         AS "emailHash",
           w.mobile_hash                        AS "mobileHash",
           0                                    AS "currentBalance",
@@ -257,6 +235,10 @@ const getProfessionalWalletProfileByAddress = async (walletAddress) => {
           w.created_at                         AS "createdAt",
           w.status                             AS "status"
       FROM blockchain.wallets w
+      LEFT JOIN blockchain.blockchain_organization bo
+          ON bo.organization_id = w.organization_id
+      LEFT JOIN blockchain.countries c
+          ON c.cou_id::text = w.national_id_hash::text
       WHERE w.wallet_address = $1
       LIMIT 1
       `,
@@ -267,6 +249,9 @@ const getProfessionalWalletProfileByAddress = async (walletAddress) => {
   }
 };
 
+/**
+ * Get wallet by customer ID
+ */
 exports.getWalletByCustomerId = async (customerId) => {
   const profile = await getProfessionalWalletProfileByCustomerId(customerId);
 
@@ -275,14 +260,16 @@ exports.getWalletByCustomerId = async (customerId) => {
   }
 
   return {
+    id: profile.walletId || null,
+    walletId: profile.walletId || null,
     walletAddress: profile.walletAddress,
     customerId: profile.customerId,
     organizationId: profile.organizationId,
     organizationName: profile.organizationName,
-    walletType: 'CUSTOMER',
+    walletType: profile.walletType || 'CUSTOMER',
     fullName: profile.fullName,
     customerName: profile.fullName,
-    customerType: 'CUSTOMER',
+    customerType: profile.walletType || 'CUSTOMER',
     nationality: profile.nationalIdHash,
     countryName: profile.countryName,
     idType: 'wallet',
@@ -297,6 +284,9 @@ exports.getWalletByCustomerId = async (customerId) => {
   };
 };
 
+/**
+ * Get wallet by wallet address
+ */
 exports.getWalletByAddress = async (walletAddress) => {
   const profile = await getProfessionalWalletProfileByAddress(walletAddress);
 
@@ -305,14 +295,16 @@ exports.getWalletByAddress = async (walletAddress) => {
   }
 
   return {
+    id: profile.walletId || null,
+    walletId: profile.walletId || null,
     walletAddress: profile.walletAddress,
     customerId: profile.customerId,
     organizationId: profile.organizationId,
     organizationName: profile.organizationName,
-    walletType: 'CUSTOMER',
+    walletType: profile.walletType || 'CUSTOMER',
     fullName: profile.fullName,
     customerName: profile.fullName,
-    customerType: 'CUSTOMER',
+    customerType: profile.walletType || 'CUSTOMER',
     nationality: profile.nationalIdHash,
     countryName: profile.countryName,
     idType: 'wallet',
@@ -327,6 +319,11 @@ exports.getWalletByAddress = async (walletAddress) => {
   };
 };
 
+/**
+ * Create wallet directly in PostgreSQL.
+ *
+ * Kept from your working version.
+ */
 exports.createWallet = async (payload) => {
   const {
     customerId,
@@ -344,17 +341,6 @@ exports.createWallet = async (payload) => {
     createdBy = 'angular-test-ui'
   } = payload;
 
-  const initialBalance = normalizeNumber(
-    payload.initialBalance ?? payload.currentBalance ?? payload.current_balance,
-    0
-  );
-
-  const currencyCode =
-    payload.currencyCode ||
-    payload.currency_code ||
-    payload.currency ||
-    'USD';
-
   if (!customerId) {
     throw new Error('customerId is required');
   }
@@ -365,10 +351,6 @@ exports.createWallet = async (payload) => {
 
   if (!fullName) {
     throw new Error('fullName is required');
-  }
-
-  if (initialBalance < 0) {
-    throw new Error('initialBalance must be zero or greater');
   }
 
   const walletAddress = `WALLET_${Date.now()}_${Math.random()
@@ -383,53 +365,67 @@ exports.createWallet = async (payload) => {
         ? await bcrypt.hash(passwordHash, 10)
         : null;
 
-  const columns = await getWalletColumns();
-
-  const valuesByColumn = {
-    wallet_address: walletAddress,
-    customer_id: customerId,
-    organization_id: organizationId,
-    organization_code: organizationCode,
-    wallet_type: 'CUSTOMER',
-    full_name: fullName,
-    national_id_hash: nationalIdHash,
-    ledger_doc_type: ledgerDocType,
-    ledger_key: ledgerKey,
-    mobile_hash: mobileHash,
-    email_hash: emailHash,
-    password_hash: normalizedPasswordHash,
-    current_balance: initialBalance,
-    currency_code: currencyCode,
-    status: 'ACTIVE',
-    created_at: new Date(),
-    updated_at: new Date()
-  };
-
-  const insertColumns = [];
-  const insertValues = [];
-  const placeholders = [];
-
-  Object.entries(valuesByColumn).forEach(([column, value]) => {
-    if (columns.includes(column)) {
-      insertColumns.push(column);
-      insertValues.push(value);
-      placeholders.push(`$${insertValues.length}`);
-    }
-  });
-
   const sql = `
-    INSERT INTO blockchain.wallets (${insertColumns.join(', ')})
-    VALUES (${placeholders.join(', ')})
-    RETURNING *
+    INSERT INTO blockchain.wallets (
+      wallet_address,
+      customer_id,
+      organization_id,
+      organization_code,
+      wallet_type,
+      full_name,
+      national_id_hash,
+      ledger_doc_type,
+      ledger_key,
+      mobile_hash,
+      email_hash,
+      password_hash,
+      status,
+      created_at,
+      updated_at
+    )
+    VALUES (
+      $1, $2, $3, $4, 'CUSTOMER', $5, $6, $7, $8, $9, $10, $11, 'ACTIVE', NOW(), NOW()
+    )
+    RETURNING
+      wallet_id,
+      wallet_address,
+      customer_id,
+      organization_id,
+      organization_code,
+      wallet_type,
+      full_name,
+      national_id_hash,
+      ledger_doc_type,
+      ledger_key,
+      mobile_hash,
+      email_hash,
+      status,
+      created_at,
+      updated_at
   `;
 
-  const result = await db.query(sql, insertValues);
+  const values = [
+    walletAddress,
+    customerId,
+    organizationId,
+    organizationCode,
+    fullName,
+    nationalIdHash,
+    ledgerDocType,
+    ledgerKey,
+    mobileHash,
+    emailHash,
+    normalizedPasswordHash
+  ];
+
+  const result = await db.query(sql, values);
   const row = result.rows[0];
 
   const profile = await getProfessionalWalletProfileByCustomerId(row.customer_id);
 
   return {
     wallet: profile || {
+      id: row.wallet_id,
       walletId: row.wallet_id,
       walletAddress: row.wallet_address,
       customerId: row.customer_id,
@@ -447,8 +443,6 @@ exports.createWallet = async (payload) => {
       ledgerKey: row.ledger_key,
       mobileHash: row.mobile_hash,
       emailHash: row.email_hash,
-      currentBalance: row.current_balance ?? initialBalance,
-      currencyCode: row.currency_code || currencyCode,
       status: row.status,
       requestSource,
       sourceSystem,
@@ -459,6 +453,12 @@ exports.createWallet = async (payload) => {
   };
 };
 
+/**
+ * Wallet login by customer ID
+ *
+ * Kept bcrypt validation from your working version,
+ * but now returns a professional enriched wallet profile.
+ */
 exports.loginWallet = async ({ customerId, password }) => {
   if (!customerId) {
     throw new Error('customerId is required');
@@ -543,6 +543,9 @@ exports.loginWallet = async ({ customerId, password }) => {
   };
 };
 
+/**
+ * Compatibility exports for controllers that may call these names.
+ */
 exports.login = exports.loginWallet;
 exports.getByCustomerId = exports.getWalletByCustomerId;
 exports.getByWalletAddress = exports.getWalletByAddress;
