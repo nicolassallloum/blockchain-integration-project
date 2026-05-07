@@ -20,64 +20,47 @@ export const routes: Routes = [
     redirectTo: 'digital-kyc/dashboard',
     pathMatch: 'full'
   },
-
   {
     path: 'digital-kyc/dashboard',
     component: DashboardComponent
   },
-
   {
     path: 'digital-kyc/wallet-create',
     component: WalletCreate
   },
-
   {
     path: 'digital-kyc/organization-wallet-create',
     component: OrganizationWalletCreate
   },
-
   {
     path: 'digital-kyc/wallet-login',
     component: WalletLogin
   },
-
   {
     path: 'digital-kyc/wallet-query',
     component: WalletQuery
   },
-
-  /*
-   * Keep this alias because your sidebar currently uses Wallet Query,
-   * and STEP 32 also introduced Balance Query.
-   */
   {
     path: 'digital-kyc/balance-query',
-    component: WalletQuery
+    component: BalanceQueryComponent
   },
-
   {
     path: 'digital-kyc/wallet-transfer',
     component: WalletTransferComponent
   },
-
   {
     path: 'digital-kyc/organization-transfer',
     component: OrganizationTransferComponent
   },
-
   {
     path: 'digital-kyc/transaction-history',
     component: TransactionHistoryComponent
   },
-
   {
     path: 'digital-kyc/fabric-test',
     component: FabricTestComponent
   },
 
-  /*
-   * Compatibility redirects for old/simple URLs.
-   */
   {
     path: 'dashboard',
     redirectTo: 'digital-kyc/dashboard',
@@ -105,7 +88,7 @@ export const routes: Routes = [
   },
   {
     path: 'balance-query',
-    redirectTo: 'digital-kyc/wallet-query',
+    redirectTo: 'digital-kyc/balance-query',
     pathMatch: 'full'
   },
   {

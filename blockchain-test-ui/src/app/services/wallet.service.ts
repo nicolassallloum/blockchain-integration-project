@@ -4,6 +4,23 @@ import { Observable, catchError, map, of } from 'rxjs';
 
 import { environment } from '../../environments/environment';
 
+export interface BulkWalletRequest {
+  customerId: string;
+  fullName: string;
+  nationalIdHash: string;
+  emailHash?: string;
+  mobileHash?: string;
+  countryId?: string | number;
+  organizationId: string;
+  organizationType?: string;
+  initialBalance: number;
+  currencyCode: string;
+  passwordHash?: string;
+  requestSource?: string;
+  sourceSystem?: string;
+  createdBy?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -34,16 +51,32 @@ export class WalletService {
       customerId: String(payload.customerId || payload.customer_id || '').trim(),
       organizationId: payload.organizationId || payload.organization_id,
       fullName: payload.fullName || payload.full_name,
-      nationalIdHash: payload.nationalIdHash || payload.national_id_hash,
-      mobileHash: payload.mobileHash || payload.mobile_hash,
-      emailHash: payload.emailHash || payload.email_hash,
-      passwordHash: payload.passwordHash || payload.password_hash,
+      nationalIdHash:
+        payload.nationalIdHash ||
+        payload.national_id_hash ||
+        payload.countryId ||
+        payload.country_id ||
+        '',
+      mobileHash: payload.mobileHash || payload.mobile_hash || '',
+      emailHash: payload.emailHash || payload.email_hash || '',
+      passwordHash:
+        payload.passwordHash ||
+        payload.password_hash ||
+        payload.password ||
+        this.generatePassword(),
       initialBalance: Number(payload.initialBalance ?? payload.currentBalance ?? 0),
       currentBalance: Number(payload.initialBalance ?? payload.currentBalance ?? 0),
-      currencyCode: payload.currencyCode || payload.currency_code || payload.currency || 'USD'
+      currencyCode: payload.currencyCode || payload.currency_code || payload.currency || 'USD',
+      requestSource: payload.requestSource || 'ANGULAR_UI',
+      sourceSystem: payload.sourceSystem || 'BLOCKCHAIN_TEST_UI',
+      createdBy: payload.createdBy || 'nix'
     };
 
     return this.http.post(`${this.baseUrl}/wallets`, normalizedPayload);
+  }
+
+  bulkCreateWallets(wallets: BulkWalletRequest[]): Observable<any> {
+    return this.http.post(`${this.baseUrl}/wallets/bulk-create`, { wallets });
   }
 
   createOrganizationWallet(payload: any): Observable<any> {
@@ -53,7 +86,10 @@ export class WalletService {
       passwordHash: payload.passwordHash || payload.password_hash || payload.password,
       initialBalance: Number(payload.initialBalance ?? payload.currentBalance ?? 0),
       currentBalance: Number(payload.initialBalance ?? payload.currentBalance ?? 0),
-      currencyCode: payload.currencyCode || payload.currency_code || payload.currency || 'USD'
+      currencyCode: payload.currencyCode || payload.currency_code || payload.currency || 'USD',
+      requestSource: payload.requestSource || 'ANGULAR_UI',
+      sourceSystem: payload.sourceSystem || 'BLOCKCHAIN_TEST_UI',
+      createdBy: payload.createdBy || 'nix'
     };
 
     return this.http.post(`${this.baseUrl}/wallets/organization-wallets`, normalizedPayload);
@@ -140,6 +176,9 @@ export class WalletService {
                 org.organizationType ||
                 org.organization_type ||
                 org.type ||
+                '',
+              status:
+                org.status ||
                 ''
             }))
           : [];
@@ -150,6 +189,10 @@ export class WalletService {
         };
       })
     );
+  }
+
+  getOrganizationsByType(organizationType: string): Observable<any> {
+    return this.getOrganizations(organizationType);
   }
 
   getCountries(): Observable<any> {
@@ -173,5 +216,16 @@ export class WalletService {
   clearWalletAuth(): void {
     localStorage.removeItem('digital_kyc_wallet_token');
     localStorage.removeItem('digital_kyc_wallet_profile');
+  }
+
+  private generatePassword(length: number = 16): string {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*';
+    let password = '';
+
+    for (let i = 0; i < length; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+
+    return password;
   }
 }
