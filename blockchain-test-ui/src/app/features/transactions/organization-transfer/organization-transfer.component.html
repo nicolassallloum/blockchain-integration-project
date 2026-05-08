@@ -5,15 +5,7 @@
     <strong>Inter-Organization Customer Transfer</strong>
   </div>
 
-  <div class="page-header">
-    <div>
-      <h1>Inter-Organization Customer Transfer</h1>
-      <p>
-        Transfer funds from the logged-in customer wallet to another customer wallet
-        belonging to a different organization.
-      </p>
-    </div>
-
+  <div class="header-actions">
     <button
       class="secondary-btn"
       type="button"
@@ -21,6 +13,16 @@
       [disabled]="!session || loading"
     >
       Fill Sample
+    </button>
+
+    <button
+      class="logout-btn"
+      type="button"
+      *ngIf="session"
+      (click)="logoutWallet()"
+      [disabled]="loading"
+    >
+      Logout Wallet
     </button>
   </div>
 

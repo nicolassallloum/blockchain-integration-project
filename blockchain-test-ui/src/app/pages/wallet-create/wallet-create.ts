@@ -80,7 +80,7 @@ export class WalletCreate implements OnInit {
   }
 
   initializeForm(): void {
-    this.pageLoading = true;
+    this.pageLoading = false;
     this.successMessage = '';
     this.errorMessage = '';
     this.organizationErrorMessage = '';

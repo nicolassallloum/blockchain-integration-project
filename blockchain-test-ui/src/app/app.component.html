@@ -1,15 +1,63 @@
-<a routerLink="/dashboard" routerLinkActive="active-link">
-  Dashboard
-</a>
+<div class="app-shell">
+  <aside class="app-sidebar">
+    <div class="logo-row">
+      <img
+        src="assets/images/valoores-logo.png"
+        alt="Valoores Logo"
+        class="main-logo-img"
+      />
+    </div>
 
-<a routerLink="/wallet-create" routerLinkActive="active-link">
-  Wallet Create
-</a>
+    <div class="menu-title">Main Menu</div>
 
-<a routerLink="/wallet-login" routerLinkActive="active-link">
-  Wallet Login
-</a>
+    <nav class="main-nav">
+      <a routerLink="/digital-kyc/dashboard" routerLinkActive="active-link">
+        Dashboard
+      </a>
 
-<a routerLink="/wallet-query" routerLinkActive="active-link">
-  Wallet Query
-</a>
+      <a routerLink="/digital-kyc/wallet-create" routerLinkActive="active-link">
+        Wallet Create
+      </a>
+
+      <a routerLink="/digital-kyc/organization-wallet-create" routerLinkActive="active-link">
+        Organization Wallet Create
+      </a>
+
+      <a routerLink="/digital-kyc/wallet-login" routerLinkActive="active-link">
+        Wallet Login
+      </a>
+
+      <a routerLink="/digital-kyc/wallet-query" routerLinkActive="active-link">
+        Wallet Query
+      </a>
+
+      <a routerLink="/digital-kyc/fabric-test" routerLinkActive="active-link">
+        Fabric Test
+      </a>
+    </nav>
+
+    <div class="menu-title">Wallet Session</div>
+
+    <nav class="main-nav">
+      <a routerLink="/digital-kyc/wallet-information" routerLinkActive="active-link">
+        Wallet Information
+      </a>
+
+      <a routerLink="/digital-kyc/wallet-transfer" routerLinkActive="active-link">
+        Wallet Transfer
+      </a>
+
+      <a routerLink="/digital-kyc/organization-transfer" routerLinkActive="active-link">
+        Organization Transfer
+      </a>
+
+      <a routerLink="/digital-kyc/transaction-history" routerLinkActive="active-link">
+        Transaction History
+      </a>
+    </nav>
+  </aside>
+
+  <main class="app-content">
+    <router-outlet></router-outlet>
+  </main>
+</div>

@@ -1,9 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { environment } from '../../../environments/environment';
 import { WalletApiService } from '../../core/services/wallet-api.service';
-
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -534,7 +533,10 @@ export class DashboardComponent implements OnInit {
     hasPreviousPage: false
   };
 
-  constructor(private walletApiService: WalletApiService) {}
+  constructor(
+    private walletApiService: WalletApiService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
     this.loadDashboard();
@@ -568,6 +570,7 @@ export class DashboardComponent implements OnInit {
         this.tableName = response?.table || 'blockchain.wallets';
 
         this.successMessage = 'Dashboard data loaded successfully.';
+        this.cdr.detectChanges();
       },
       error: (error: any) => {
         this.loading = false;

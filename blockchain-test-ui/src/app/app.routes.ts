@@ -6,6 +6,7 @@ import { WalletCreate } from './pages/wallet-create/wallet-create';
 import { OrganizationWalletCreate } from './pages/organization-wallet-create/organization-wallet-create';
 import { WalletLogin } from './pages/wallet-login/wallet-login';
 import { WalletQuery } from './pages/wallet-query/wallet-query';
+import { WalletInformationComponent } from './pages/wallet-information/wallet-information.component';
 
 import { WalletTransferComponent } from './features/transactions/wallet-transfer/wallet-transfer.component';
 import { OrganizationTransferComponent } from './features/transactions/organization-transfer/organization-transfer.component';
@@ -20,6 +21,7 @@ export const routes: Routes = [
     redirectTo: 'digital-kyc/dashboard',
     pathMatch: 'full'
   },
+
   {
     path: 'digital-kyc/dashboard',
     component: DashboardComponent
@@ -39,6 +41,10 @@ export const routes: Routes = [
   {
     path: 'digital-kyc/wallet-query',
     component: WalletQuery
+  },
+  {
+    path: 'digital-kyc/wallet-information',
+    component: WalletInformationComponent
   },
   {
     path: 'digital-kyc/balance-query',
@@ -84,6 +90,11 @@ export const routes: Routes = [
   {
     path: 'wallet-query',
     redirectTo: 'digital-kyc/wallet-query',
+    pathMatch: 'full'
+  },
+  {
+    path: 'wallet-information',
+    redirectTo: 'digital-kyc/wallet-information',
     pathMatch: 'full'
   },
   {

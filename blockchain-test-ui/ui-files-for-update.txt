@@ -1,0 +1,5739 @@
+===== app.routes.ts =====
+import { Routes } from '@angular/router';
+
+import { DashboardComponent } from './features/dashboard/dashboard.component';
+
+import { WalletCreate } from './pages/wallet-create/wallet-create';
+import { OrganizationWalletCreate } from './pages/organization-wallet-create/organization-wallet-create';
+import { WalletLogin } from './pages/wallet-login/wallet-login';
+import { WalletQuery } from './pages/wallet-query/wallet-query';
+
+import { WalletTransferComponent } from './features/transactions/wallet-transfer/wallet-transfer.component';
+import { OrganizationTransferComponent } from './features/transactions/organization-transfer/organization-transfer.component';
+import { TransactionHistoryComponent } from './features/transactions/transaction-history/transaction-history.component';
+import { BalanceQueryComponent } from './features/transactions/balance-query/balance-query.component';
+
+import { FabricTestComponent } from './features/fabric-test/fabric-test.component';
+
+export const routes: Routes = [
+  {
+    path: '',
+    redirectTo: 'digital-kyc/dashboard',
+    pathMatch: 'full'
+  },
+  {
+    path: 'digital-kyc/dashboard',
+    component: DashboardComponent
+  },
+  {
+    path: 'digital-kyc/wallet-create',
+    component: WalletCreate
+  },
+  {
+    path: 'digital-kyc/organization-wallet-create',
+    component: OrganizationWalletCreate
+  },
+  {
+    path: 'digital-kyc/wallet-login',
+    component: WalletLogin
+  },
+  {
+    path: 'digital-kyc/wallet-query',
+    component: WalletQuery
+  },
+  {
+    path: 'digital-kyc/balance-query',
+    component: BalanceQueryComponent
+  },
+  {
+    path: 'digital-kyc/wallet-transfer',
+    component: WalletTransferComponent
+  },
+  {
+    path: 'digital-kyc/organization-transfer',
+    component: OrganizationTransferComponent
+  },
+  {
+    path: 'digital-kyc/transaction-history',
+    component: TransactionHistoryComponent
+  },
+  {
+    path: 'digital-kyc/fabric-test',
+    component: FabricTestComponent
+  },
+
+  {
+    path: 'dashboard',
+    redirectTo: 'digital-kyc/dashboard',
+    pathMatch: 'full'
+  },
+  {
+    path: 'wallet-create',
+    redirectTo: 'digital-kyc/wallet-create',
+    pathMatch: 'full'
+  },
+  {
+    path: 'organization-wallet-create',
+    redirectTo: 'digital-kyc/organization-wallet-create',
+    pathMatch: 'full'
+  },
+  {
+    path: 'wallet-login',
+    redirectTo: 'digital-kyc/wallet-login',
+    pathMatch: 'full'
+  },
+  {
+    path: 'wallet-query',
+    redirectTo: 'digital-kyc/wallet-query',
+    pathMatch: 'full'
+  },
+  {
+    path: 'balance-query',
+    redirectTo: 'digital-kyc/balance-query',
+    pathMatch: 'full'
+  },
+  {
+    path: 'wallet-transfer',
+    redirectTo: 'digital-kyc/wallet-transfer',
+    pathMatch: 'full'
+  },
+  {
+    path: 'organization-transfer',
+    redirectTo: 'digital-kyc/organization-transfer',
+    pathMatch: 'full'
+  },
+  {
+    path: 'transaction-history',
+    redirectTo: 'digital-kyc/transaction-history',
+    pathMatch: 'full'
+  },
+  {
+    path: 'fabric-test',
+    redirectTo: 'digital-kyc/fabric-test',
+    pathMatch: 'full'
+  },
+
+  {
+    path: '**',
+    redirectTo: 'digital-kyc/dashboard'
+  }
+];
+===== wallet.service.ts =====
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable, catchError, map, of } from 'rxjs';
+
+import { environment } from '../../environments/environment';
+
+export interface BulkWalletRequest {
+  customerId: string;
+  fullName: string;
+  nationalIdHash: string;
+  emailHash?: string;
+  mobileHash?: string;
+  countryId?: string | number;
+  organizationId: string;
+  organizationType?: string;
+  initialBalance: number;
+  currencyCode: string;
+  passwordHash?: string;
+  requestSource?: string;
+  sourceSystem?: string;
+  createdBy?: string;
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class WalletService {
+  private readonly baseUrl = environment.apiBaseUrl;
+
+  constructor(private http: HttpClient) {}
+
+  getWallets(params?: any): Observable<any> {
+    let httpParams = new HttpParams();
+
+    Object.keys(params || {}).forEach((key) => {
+      if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
+        httpParams = httpParams.set(key, params[key]);
+      }
+    });
+
+    return this.http.get(`${this.baseUrl}/wallets`, { params: httpParams });
+  }
+
+  getNextCustomerId(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/wallets/next-customer-id`);
+  }
+
+  createWallet(payload: any): Observable<any> {
+    const normalizedPayload = {
+      ...payload,
+      customerId: String(payload.customerId || payload.customer_id || '').trim(),
+      organizationId: payload.organizationId || payload.organization_id,
+      fullName: payload.fullName || payload.full_name,
+      nationalIdHash:
+        payload.nationalIdHash ||
+        payload.national_id_hash ||
+        payload.countryId ||
+        payload.country_id ||
+        '',
+      mobileHash: payload.mobileHash || payload.mobile_hash || '',
+      emailHash: payload.emailHash || payload.email_hash || '',
+      passwordHash:
+        payload.passwordHash ||
+        payload.password_hash ||
+        payload.password ||
+        this.generatePassword(),
+      initialBalance: Number(payload.initialBalance ?? payload.currentBalance ?? 0),
+      currentBalance: Number(payload.initialBalance ?? payload.currentBalance ?? 0),
+      currencyCode: payload.currencyCode || payload.currency_code || payload.currency || 'USD',
+      requestSource: payload.requestSource || 'ANGULAR_UI',
+      sourceSystem: payload.sourceSystem || 'BLOCKCHAIN_TEST_UI',
+      createdBy: payload.createdBy || 'nix'
+    };
+
+    return this.http.post(`${this.baseUrl}/wallets`, normalizedPayload);
+  }
+
+  bulkCreateWallets(wallets: BulkWalletRequest[]): Observable<any> {
+    return this.http.post(`${this.baseUrl}/wallets/bulk-create`, { wallets });
+  }
+
+  createOrganizationWallet(payload: any): Observable<any> {
+    const normalizedPayload = {
+      ...payload,
+      organizationId: payload.organizationId || payload.organization_id,
+      passwordHash: payload.passwordHash || payload.password_hash || payload.password,
+      initialBalance: Number(payload.initialBalance ?? payload.currentBalance ?? 0),
+      currentBalance: Number(payload.initialBalance ?? payload.currentBalance ?? 0),
+      currencyCode: payload.currencyCode || payload.currency_code || payload.currency || 'USD',
+      requestSource: payload.requestSource || 'ANGULAR_UI',
+      sourceSystem: payload.sourceSystem || 'BLOCKCHAIN_TEST_UI',
+      createdBy: payload.createdBy || 'nix'
+    };
+
+    return this.http.post(`${this.baseUrl}/wallets/organization-wallets`, normalizedPayload);
+  }
+
+  loginWallet(payload: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/wallets/login`, payload);
+  }
+
+  getWalletByCustomerId(customerId: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/wallets/customer/${encodeURIComponent(customerId)}`);
+  }
+
+  getWalletByAddress(walletAddress: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/wallets/${encodeURIComponent(walletAddress)}`);
+  }
+
+  getOrganizationTypes(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/reference/organization-types`).pipe(
+      catchError(() => of({ success: true, data: [] })),
+      map((response: any) => {
+        const rawTypes =
+          response?.data?.organizationTypes ||
+          response?.data ||
+          response?.organizationTypes ||
+          response ||
+          [];
+
+        const organizationTypes = Array.isArray(rawTypes)
+          ? rawTypes
+              .map((item: any) =>
+                item.organizationType ||
+                item.organization_type ||
+                item.type ||
+                item
+              )
+              .filter((type: any) => !!type)
+          : [];
+
+        return {
+          success: true,
+          data: organizationTypes
+        };
+      })
+    );
+  }
+
+  getOrganizations(organizationType?: string): Observable<any> {
+    let params = new HttpParams();
+
+    if (organizationType) {
+      params = params.set('organizationType', organizationType);
+    }
+
+    return this.http.get(`${this.baseUrl}/reference/organizations`, { params }).pipe(
+      catchError(() => this.http.get(`${this.baseUrl}/organizations`, { params })),
+      map((response: any) => {
+        const rawOrganizations =
+          response?.data?.organizations ||
+          response?.data ||
+          response?.organizations ||
+          response ||
+          [];
+
+        const organizations = Array.isArray(rawOrganizations)
+          ? rawOrganizations.map((org: any) => ({
+              organizationId:
+                org.organizationId ||
+                org.organization_id ||
+                org.id ||
+                '',
+              organizationName:
+                org.organizationName ||
+                org.organization_name ||
+                org.name ||
+                org.organization_code ||
+                '',
+              organizationCode:
+                org.organizationCode ||
+                org.organization_code ||
+                org.registration_number ||
+                '',
+              organizationType:
+                org.organizationType ||
+                org.organization_type ||
+                org.type ||
+                '',
+              status:
+                org.status ||
+                ''
+            }))
+          : [];
+
+        return {
+          success: true,
+          data: organizations
+        };
+      })
+    );
+  }
+
+  getOrganizationsByType(organizationType: string): Observable<any> {
+    return this.getOrganizations(organizationType);
+  }
+
+  getCountries(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/reference/countries`).pipe(
+      catchError(() => of({ success: true, data: [] }))
+    );
+  }
+
+  saveWalletToken(token: string): void {
+    if (token) {
+      localStorage.setItem('digital_kyc_wallet_token', token);
+    }
+  }
+
+  saveWalletProfile(profile: any): void {
+    if (profile) {
+      localStorage.setItem('digital_kyc_wallet_profile', JSON.stringify(profile));
+    }
+  }
+
+  clearWalletAuth(): void {
+    localStorage.removeItem('digital_kyc_wallet_token');
+    localStorage.removeItem('digital_kyc_wallet_profile');
+  }
+
+  private generatePassword(length: number = 16): string {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*';
+    let password = '';
+
+    for (let i = 0; i < length; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+
+    return password;
+  }
+}
+===== transaction.service.ts =====
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { Observable } from 'rxjs';
+
+import { environment } from '../../environments/environment';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class TransactionService {
+  private readonly baseUrl = environment.apiBaseUrl;
+
+  /**
+   * IMPORTANT:
+   * Backend API security is enabled:
+   * ENABLE_API_KEY_PROTECTION=true
+   *
+   * Therefore all protected transaction calls must include x-api-key.
+   */
+  private readonly apiKey =
+    '774101c2e4e6e8d46a8bb6c02571f0239ac7c8bd548c22db1162671e502278f7';
+
+  constructor(private http: HttpClient) {}
+
+  private getHeaders(): HttpHeaders {
+    const requestId = `REQ_UI_${Date.now()}_${Math.random()
+      .toString(16)
+      .slice(2)
+      .toUpperCase()}`;
+
+    let headers = new HttpHeaders()
+      .set('Content-Type', 'application/json')
+      .set('Accept', 'application/json')
+      .set('x-api-key', this.apiKey)
+      .set('x-request-id', requestId)
+      .set('x-correlation-id', requestId)
+      .set('x-source-system', 'BLOCKCHAIN_TEST_UI')
+      .set('x-request-source', 'ANGULAR_UI');
+
+    const token =
+      localStorage.getItem('digital_kyc_wallet_token') ||
+      sessionStorage.getItem('digital_kyc_wallet_token');
+
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+
+    return headers;
+  }
+
+  walletTransfer(payload: any): Observable<any> {
+    return this.http.post(
+      `${this.baseUrl}/transactions/wallet-transfer`,
+      payload,
+      { headers: this.getHeaders() }
+    );
+  }
+
+  organizationTransfer(payload: any): Observable<any> {
+    return this.http.post(
+      `${this.baseUrl}/transactions/organization-transfer`,
+      payload,
+      { headers: this.getHeaders() }
+    );
+  }
+
+  getTransactions(filters: any = {}): Observable<any> {
+    let params = new HttpParams();
+
+    Object.keys(filters || {}).forEach((key) => {
+      const value = filters[key];
+
+      if (value !== undefined && value !== null && value !== '') {
+        params = params.set(key, value);
+      }
+    });
+
+    return this.http.get(
+      `${this.baseUrl}/transactions`,
+      {
+        headers: this.getHeaders(),
+        params
+      }
+    );
+  }
+
+  getTransactionById(transactionId: string): Observable<any> {
+    return this.http.get(
+      `${this.baseUrl}/transactions/${encodeURIComponent(transactionId)}`,
+      { headers: this.getHeaders() }
+    );
+  }
+}
+===== dashboard.component.ts =====
+import { CommonModule } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { environment } from '../../../environments/environment';
+import { WalletApiService } from '../../core/services/wallet-api.service';
+
+@Component({
+  selector: 'app-dashboard',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  template: `
+    <div class="dashboard-page">
+      <div class="page-header">
+        <div>
+          <h1>Digital KYC Dashboard</h1>
+          <p>Professional overview of created blockchain wallet identities.</p>
+        </div>
+
+        <button class="secondary-btn" type="button" (click)="refresh()" [disabled]="loading">
+          {{ loading ? 'Refreshing...' : 'Refresh' }}
+        </button>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span>Total Wallets</span>
+          <strong>{{ totalWallets }}</strong>
+          <p>Registered blockchain identities</p>
+        </div>
+
+        <div class="stat-card">
+          <span>Active Wallets</span>
+          <strong>{{ activeWallets }}</strong>
+          <p>Status = ACTIVE</p>
+        </div>
+
+        <div class="stat-card">
+          <span>Current Page</span>
+          <strong>{{ pagination.page }}</strong>
+          <p>Limit {{ pagination.limit }} records</p>
+        </div>
+
+        <div class="stat-card">
+          <span>Data Source</span>
+          <strong class="source">{{ dataSource }}</strong>
+          <p>{{ tableName }}</p>
+        </div>
+      </div>
+
+      <div class="search-card">
+        <h2>Search Wallets</h2>
+
+        <div class="search-row">
+          <input
+            type="text"
+            [(ngModel)]="filters.search"
+            name="search"
+            placeholder="Search customer, wallet, organization, national ID..."
+            (keyup.enter)="searchWallets()"
+          />
+
+          <button class="primary-btn" type="button" (click)="searchWallets()" [disabled]="loading">
+            Search
+          </button>
+
+          <button class="light-btn" type="button" (click)="clearSearch()" [disabled]="loading">
+            Clear
+          </button>
+        </div>
+      </div>
+
+      <div class="error-box" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+
+      <div class="success-box" *ngIf="successMessage">
+        {{ successMessage }}
+      </div>
+
+      <div class="wallets-card">
+        <div class="section-header">
+          <div>
+            <h2>Wallet Records</h2>
+            <p>Latest wallet identities loaded from the backend API.</p>
+          </div>
+
+          <div class="api-url">
+            API:
+            <span>{{ apiBaseUrl }}/wallets</span>
+          </div>
+        </div>
+
+        <div class="loading" *ngIf="loading">
+          Loading wallet data...
+        </div>
+
+        <div class="empty-state" *ngIf="!loading && wallets.length === 0">
+          <h3>No wallets found</h3>
+          <p>No wallet records were returned from the backend for the selected filters.</p>
+        </div>
+
+        <div class="table-wrapper" *ngIf="!loading && wallets.length > 0">
+          <table>
+            <thead>
+              <tr>
+                <th>Customer ID</th>
+                <th>Wallet Address</th>
+                <th>Full Name</th>
+                <th>Organization</th>
+                <th>Balance</th>
+                <th>Currency</th>
+                <th>Status</th>
+                <th>Created At</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr *ngFor="let wallet of wallets">
+                <td>{{ getField(wallet, 'customerId', 'customer_id') }}</td>
+                <td class="mono">{{ getField(wallet, 'walletAddress', 'wallet_address') }}</td>
+                <td>{{ getField(wallet, 'fullName', 'full_name', 'customerName', 'customer_name') }}</td>
+                <td>
+                  {{
+                    getField(
+                      wallet,
+                      'organizationName',
+                      'organization_name',
+                      'organizationCode',
+                      'organization_code',
+                      'organizationId',
+                      'organization_id'
+                    )
+                  }}
+                </td>
+                <td>{{ getField(wallet, 'currentBalance', 'current_balance') }}</td>
+                <td>{{ getField(wallet, 'currencyCode', 'currency_code', 'currency') }}</td>
+                <td>
+                  <span
+                    class="status-pill"
+                    [class.active]="String(getField(wallet, 'status', 'wallet_status')).toUpperCase() === 'ACTIVE'"
+                  >
+                    {{ getField(wallet, 'status', 'wallet_status') }}
+                  </span>
+                </td>
+                <td>{{ getField(wallet, 'createdAt', 'created_at') }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="pagination" *ngIf="!loading">
+          <button
+            class="light-btn"
+            type="button"
+            (click)="previousPage()"
+            [disabled]="!pagination.hasPreviousPage"
+          >
+            Previous
+          </button>
+
+          <span>
+            Page {{ pagination.page }} of {{ pagination.totalPages || 1 }}
+          </span>
+
+          <button
+            class="light-btn"
+            type="button"
+            (click)="nextPage()"
+            [disabled]="!pagination.hasNextPage"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+
+      <div class="raw-card" *ngIf="apiResponse">
+        <h2>Raw API Response</h2>
+        <pre>{{ apiResponse | json }}</pre>
+      </div>
+    </div>
+  `,
+  styles: [
+    `
+      .dashboard-page {
+        min-height: 100vh;
+        padding: 32px;
+        background: #eef3f8;
+      }
+
+      .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+
+      .page-header h1 {
+        margin: 0;
+        color: #004aad;
+        font-size: 30px;
+        font-weight: 800;
+      }
+
+      .page-header p {
+        margin: 6px 0 0;
+        color: #52647d;
+        font-size: 15px;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+        margin-bottom: 24px;
+      }
+
+      .stat-card,
+      .search-card,
+      .wallets-card,
+      .raw-card {
+        background: #ffffff;
+        border-radius: 16px;
+        border: 1px solid #e1e8f0;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+      }
+
+      .stat-card {
+        padding: 20px;
+      }
+
+      .stat-card span {
+        display: block;
+        color: #52647d;
+        font-size: 13px;
+        font-weight: 700;
+        margin-bottom: 10px;
+      }
+
+      .stat-card strong {
+        display: block;
+        color: #004aad;
+        font-size: 28px;
+        font-weight: 900;
+        margin-bottom: 6px;
+      }
+
+      .stat-card strong.source {
+        font-size: 26px;
+      }
+
+      .stat-card p {
+        margin: 0;
+        color: #52647d;
+        font-size: 13px;
+      }
+
+      .search-card {
+        padding: 20px;
+        margin-bottom: 20px;
+      }
+
+      .search-card h2,
+      .wallets-card h2,
+      .raw-card h2 {
+        margin: 0 0 12px;
+        color: #004aad;
+        font-size: 20px;
+        font-weight: 800;
+      }
+
+      .search-row {
+        display: grid;
+        grid-template-columns: 1fr auto auto;
+        gap: 12px;
+      }
+
+      input {
+        width: 100%;
+        height: 44px;
+        border: 1px solid #cbd8e6;
+        border-radius: 12px;
+        padding: 0 14px;
+        outline: none;
+        font-size: 14px;
+      }
+
+      input:focus {
+        border-color: #004aad;
+        box-shadow: 0 0 0 3px rgba(0, 74, 173, 0.12);
+      }
+
+      .primary-btn,
+      .secondary-btn,
+      .light-btn {
+        border: none;
+        border-radius: 12px;
+        padding: 12px 18px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .primary-btn {
+        background: #004aad;
+        color: #ffffff;
+        box-shadow: 0 8px 18px rgba(0, 74, 173, 0.25);
+      }
+
+      .secondary-btn {
+        background: #eef5ff;
+        color: #004aad;
+      }
+
+      .light-btn {
+        background: #f2f4f7;
+        color: #111827;
+      }
+
+      .primary-btn:disabled,
+      .secondary-btn:disabled,
+      .light-btn:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+
+      .error-box {
+        background: #fff1f1;
+        color: #b91c1c;
+        border: 1px solid #fecaca;
+        border-radius: 14px;
+        padding: 14px 18px;
+        margin-bottom: 20px;
+        font-weight: 700;
+      }
+
+      .success-box {
+        background: #ecfdf5;
+        color: #047857;
+        border: 1px solid #a7f3d0;
+        border-radius: 14px;
+        padding: 14px 18px;
+        margin-bottom: 20px;
+        font-weight: 700;
+      }
+
+      .wallets-card {
+        padding: 20px;
+      }
+
+      .section-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        align-items: flex-start;
+        margin-bottom: 16px;
+      }
+
+      .section-header p {
+        margin: 0;
+        color: #52647d;
+      }
+
+      .api-url {
+        color: #52647d;
+        font-size: 13px;
+        text-align: right;
+      }
+
+      .api-url span {
+        display: block;
+        color: #004aad;
+        font-weight: 700;
+        margin-top: 4px;
+      }
+
+      .loading,
+      .empty-state {
+        padding: 32px;
+        text-align: center;
+        border-radius: 14px;
+        background: #f8fafc;
+        color: #52647d;
+      }
+
+      .empty-state h3 {
+        margin: 0 0 8px;
+        color: #004aad;
+      }
+
+      .empty-state p {
+        margin: 0;
+      }
+
+      .table-wrapper {
+        overflow-x: auto;
+      }
+
+      table {
+        width: 100%;
+        min-width: 1100px;
+        border-collapse: collapse;
+      }
+
+      th {
+        background: #f8fafc;
+        color: #334155;
+        text-align: left;
+        padding: 12px;
+        border-bottom: 1px solid #e2e8f0;
+        font-size: 13px;
+      }
+
+      td {
+        padding: 12px;
+        border-bottom: 1px solid #e2e8f0;
+        font-size: 13px;
+        color: #0f172a;
+        vertical-align: top;
+      }
+
+      .mono {
+        font-family: Consolas, Monaco, monospace;
+        font-size: 12px;
+      }
+
+      .status-pill {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 999px;
+        background: #e5e7eb;
+        color: #374151;
+        font-weight: 800;
+        font-size: 12px;
+      }
+
+      .status-pill.active {
+        background: #dcfce7;
+        color: #047857;
+      }
+
+      .pagination {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 14px;
+        margin-top: 18px;
+      }
+
+      .pagination span {
+        color: #52647d;
+        font-weight: 700;
+      }
+
+      .raw-card {
+        padding: 20px;
+        margin-top: 20px;
+      }
+
+      pre {
+        background: #071124;
+        color: #e5e7eb;
+        border-radius: 14px;
+        padding: 18px;
+        overflow: auto;
+        max-height: 420px;
+        font-size: 12px;
+      }
+
+      @media (max-width: 1100px) {
+        .stats-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        .search-row {
+          grid-template-columns: 1fr;
+        }
+
+        .section-header {
+          flex-direction: column;
+        }
+
+        .api-url {
+          text-align: left;
+        }
+      }
+
+      @media (max-width: 700px) {
+        .dashboard-page {
+          padding: 18px;
+        }
+
+        .stats-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .page-header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+      }
+    `
+  ]
+})
+export class DashboardComponent implements OnInit {
+  protected readonly String = String;
+
+  apiBaseUrl = environment.apiBaseUrl;
+
+  loading = false;
+  errorMessage = '';
+  successMessage = '';
+
+  wallets: any[] = [];
+  apiResponse: any = null;
+
+  totalWallets = 0;
+  activeWallets = 0;
+  dataSource = 'PostgreSQL';
+  tableName = 'blockchain.wallets';
+
+  filters = {
+    search: '',
+    page: 1,
+    limit: 100
+  };
+
+  pagination = {
+    page: 1,
+    limit: 100,
+    totalRecords: 0,
+    totalPages: 0,
+    hasNextPage: false,
+    hasPreviousPage: false
+  };
+
+  constructor(private walletApiService: WalletApiService) {}
+
+  ngOnInit(): void {
+    this.loadDashboard();
+  }
+
+  loadDashboard(): void {
+    this.loading = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    this.walletApiService.getWallets(this.filters).subscribe({
+      next: (response: any) => {
+        this.loading = false;
+        this.apiResponse = response;
+
+        this.wallets = this.extractWallets(response);
+        this.pagination = this.extractPagination(response);
+
+        this.totalWallets =
+          response?.pagination?.totalRecords ??
+          response?.pagination?.total ??
+          response?.totalRecords ??
+          this.wallets.length;
+
+        this.activeWallets = this.wallets.filter((wallet: any) => {
+          const status = this.getField(wallet, 'status', 'wallet_status');
+          return String(status).toUpperCase() === 'ACTIVE';
+        }).length;
+
+        this.dataSource = response?.source || 'PostgreSQL';
+        this.tableName = response?.table || 'blockchain.wallets';
+
+        this.successMessage = 'Dashboard data loaded successfully.';
+      },
+      error: (error: any) => {
+        this.loading = false;
+        this.apiResponse = error?.error || error;
+
+        this.wallets = [];
+        this.totalWallets = 0;
+        this.activeWallets = 0;
+
+        this.errorMessage =
+          error?.error?.message ||
+          error?.message ||
+          `Http failure while loading ${this.apiBaseUrl}/wallets`;
+      }
+    });
+  }
+
+  refresh(): void {
+    this.loadDashboard();
+  }
+
+  searchWallets(): void {
+    this.filters.page = 1;
+    this.loadDashboard();
+  }
+
+  clearSearch(): void {
+    this.filters.search = '';
+    this.filters.page = 1;
+    this.loadDashboard();
+  }
+
+  nextPage(): void {
+    if (!this.pagination.hasNextPage) {
+      return;
+    }
+
+    this.filters.page = Number(this.filters.page) + 1;
+    this.loadDashboard();
+  }
+
+  previousPage(): void {
+    if (!this.pagination.hasPreviousPage || Number(this.filters.page) <= 1) {
+      return;
+    }
+
+    this.filters.page = Number(this.filters.page) - 1;
+    this.loadDashboard();
+  }
+
+  getField(row: any, ...keys: string[]): any {
+    for (const key of keys) {
+      if (row?.[key] !== undefined && row?.[key] !== null && row?.[key] !== '') {
+        return row[key];
+      }
+    }
+
+    return '-';
+  }
+
+  private extractWallets(response: any): any[] {
+    if (Array.isArray(response)) {
+      return response;
+    }
+
+    if (Array.isArray(response?.data)) {
+      return response.data;
+    }
+
+    if (Array.isArray(response?.data?.wallets)) {
+      return response.data.wallets;
+    }
+
+    if (Array.isArray(response?.wallets)) {
+      return response.wallets;
+    }
+
+    return [];
+  }
+
+  private extractPagination(response: any): any {
+    const pagination = response?.pagination || {};
+
+    const page = Number(pagination.page || this.filters.page || 1);
+    const limit = Number(pagination.limit || this.filters.limit || 100);
+    const totalRecords = Number(
+      pagination.totalRecords ??
+        pagination.total ??
+        response?.totalRecords ??
+        this.wallets.length ??
+        0
+    );
+
+    const totalPages = Number(
+      pagination.totalPages || Math.ceil(totalRecords / limit) || 0
+    );
+
+    return {
+      page,
+      limit,
+      totalRecords,
+      totalPages,
+      hasNextPage:
+        pagination.hasNextPage !== undefined
+          ? pagination.hasNextPage
+          : page < totalPages,
+      hasPreviousPage:
+        pagination.hasPreviousPage !== undefined
+          ? pagination.hasPreviousPage
+          : page > 1
+    };
+  }
+}===== dashboard.component.html =====
+===== dashboard.component.css =====
+:host {
+  display: block;
+}
+
+.dashboard-page {
+  width: 100%;
+}
+
+.dashboard-header,
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+
+.dashboard-header h1,
+.page-header h1,
+.page-header h2 {
+  margin: 0;
+  color: #004b9b;
+  font-size: 32px;
+  font-weight: 900;
+  letter-spacing: 0.3px;
+}
+
+.dashboard-header p,
+.page-header p {
+  margin: 7px 0 0;
+  color: #536174;
+  font-size: 16px;
+}
+
+.refresh-btn {
+  background: #ffffff;
+  color: #004b9b;
+  border: 1px solid #d8e0ea;
+  border-radius: 9px;
+  min-height: 42px;
+  padding: 0 22px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
+}
+
+.stats-grid,
+.kpi-grid,
+.dashboard-cards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 22px;
+  margin-bottom: 28px;
+}
+
+.stat-card,
+.kpi-card,
+.dashboard-card {
+  background: #ffffff;
+  border: 1px solid #dfe5ec;
+  border-radius: 12px;
+  padding: 22px 26px;
+  min-height: 118px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.055);
+}
+
+.stat-title,
+.kpi-title,
+.card-label {
+  color: #334155;
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.stat-value,
+.kpi-value,
+.card-value {
+  color: #004b9b;
+  font-size: 30px;
+  font-weight: 900;
+  letter-spacing: 4px;
+}
+
+.stat-desc,
+.kpi-desc,
+.card-desc {
+  color: #536174;
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.search-card,
+.search-panel {
+  background: #ffffff;
+  border: 1px solid #dfe5ec;
+  border-radius: 12px;
+  padding: 22px 24px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.055);
+  margin-bottom: 24px;
+}
+
+.search-card h3,
+.search-panel h3 {
+  margin: 0 0 16px;
+  color: #004b9b;
+  font-size: 23px;
+  font-weight: 900;
+}
+
+.search-row {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.search-row input,
+.search-input {
+  flex: 1;
+  height: 44px;
+  border: 1px solid #cfd8e3;
+  border-radius: 9px;
+  padding: 0 14px;
+  font-size: 14px;
+}
+
+.primary-btn,
+.search-btn {
+  background: #004b9b;
+  color: #ffffff;
+  border: 1px solid #004b9b;
+  border-radius: 9px;
+  height: 44px;
+  padding: 0 24px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.clear-btn,
+.secondary-btn {
+  background: #ffffff;
+  color: #111827;
+  border: 1px solid #d8e0ea;
+  border-radius: 9px;
+  height: 44px;
+  padding: 0 24px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.success-alert,
+.alert.success {
+  background: #ecfff4;
+  border: 1px solid #9ee7bd;
+  color: #067a3d;
+  border-radius: 10px;
+  padding: 15px 18px;
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+
+.records-card,
+.table-card {
+  background: #ffffff;
+  border: 1px solid #dfe5ec;
+  border-radius: 12px;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.06);
+  padding: 22px 24px;
+}
+
+.records-header,
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.records-header h3,
+.table-title h3 {
+  margin: 0;
+  color: #004b9b;
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.records-header p,
+.table-title p {
+  margin: 8px 0 0;
+  color: #536174;
+  font-size: 15px;
+}
+
+.api-info {
+  text-align: right;
+  color: #334155;
+  font-size: 14px;
+}
+
+.api-info strong,
+.api-info a {
+  color: #004b9b;
+  font-weight: 800;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  border: 1px solid #e5eaf0;
+  border-radius: 9px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
+}
+
+thead {
+  background: #f8fafc;
+}
+
+th {
+  color: #111827;
+  font-size: 13px;
+  font-weight: 900;
+  text-align: left;
+  padding: 14px;
+  border-bottom: 1px solid #dfe5ec;
+  white-space: nowrap;
+}
+
+td {
+  color: #111827;
+  font-size: 13px;
+  padding: 14px;
+  border-bottom: 1px solid #e5eaf0;
+  vertical-align: middle;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+.status-active,
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #dff8e8;
+  color: #04743b;
+  border-radius: 7px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+@media (max-width: 1200px) {
+  .stats-grid,
+  .kpi-grid,
+  .dashboard-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+===== wallet-create.ts =====
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+
+import { WalletService } from '../../services/wallet.service';
+
+interface Organization {
+  organizationId: string;
+  organizationName: string;
+  organizationCode?: string;
+  organizationType?: string;
+  status?: string;
+}
+
+interface Country {
+  cou_id: number;
+  cou_name: string;
+  iso_cou_code_alpha: string;
+}
+
+@Component({
+  selector: 'app-wallet-create',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  templateUrl: './wallet-create.html',
+  styleUrl: './wallet-create.css'
+})
+export class WalletCreate implements OnInit {
+  loading = false;
+  pageLoading = false;
+  organizationsLoading = false;
+  countriesLoading = false;
+
+  successMessage = '';
+  errorMessage = '';
+  organizationErrorMessage = '';
+
+  organizations: Organization[] = [];
+  organizationTypes: string[] = [];
+  selectedOrganizationType = '';
+  countries: Country[] = [];
+
+  showSuccessScreen = false;
+  generatedPassword = '';
+
+  selectedCountryId = '';
+
+  resultData = {
+    customerId: '',
+    walletAddress: '',
+    oneTimePassword: '',
+    recoveryPhrase: '',
+    currentBalance: 0,
+    currencyCode: 'USD',
+    organizationName: ''
+  };
+
+  form = {
+    customerId: '',
+    organizationId: '',
+    fullName: '',
+    nationality: '',
+    nationalIdHash: '',
+    mobileHash: '',
+    emailHash: '',
+    passwordHash: '',
+    initialBalance: '1000',
+    currencyCode: 'USD',
+    requestSource: 'ANGULAR_UI',
+    sourceSystem: 'BLOCKCHAIN_TEST_UI',
+    createdBy: 'nix'
+  };
+
+  constructor(
+    private walletService: WalletService
+  ) {}
+
+  ngOnInit(): void {
+    this.initializeForm();
+  }
+
+  initializeForm(): void {
+    this.pageLoading = true;
+    this.successMessage = '';
+    this.errorMessage = '';
+    this.organizationErrorMessage = '';
+    this.showSuccessScreen = false;
+
+    this.generatePassword();
+    this.loadNextCustomerId();
+  }
+
+  loadNextCustomerId(): void {
+    this.walletService.getNextCustomerId().subscribe({
+      next: (res: any) => {
+        this.form.customerId =
+          res?.data?.customer_id ||
+          res?.data?.customerId ||
+          res?.customer_id ||
+          res?.customerId ||
+          '';
+
+        this.loadOrganizationTypes();
+      },
+      error: () => {
+        /**
+         * Do not block the page if sequence API is not available.
+         * User can still enter Customer ID manually if needed.
+         */
+        this.form.customerId = '';
+        this.loadOrganizationTypes();
+      }
+    });
+  }
+
+
+  loadOrganizationTypes(): void {
+    this.organizationsLoading = true;
+    this.organizationErrorMessage = '';
+
+    this.walletService.getOrganizationTypes().subscribe({
+      next: (res: any) => {
+        const rawTypes =
+          res?.data?.organizationTypes ||
+          res?.data ||
+          res?.organizationTypes ||
+          [];
+
+        this.organizationTypes = Array.isArray(rawTypes)
+          ? rawTypes
+              .map((type: any) =>
+                typeof type === 'string'
+                  ? type
+                  : type.organizationType || type.organization_type || type.type || ''
+              )
+              .filter((type: string) => !!type)
+          : [];
+
+        if (this.organizationTypes.length > 0 && !this.selectedOrganizationType) {
+          this.selectedOrganizationType = this.organizationTypes[0];
+        }
+
+        this.loadOrganizations();
+      },
+      error: () => {
+        this.organizationTypes = [];
+        this.selectedOrganizationType = '';
+        this.loadOrganizations();
+      }
+    });
+  }
+
+  loadOrganizations(): void {
+    this.organizationsLoading = true;
+    this.organizationErrorMessage = '';
+    this.form.organizationId = '';
+
+    this.walletService.getOrganizations(this.selectedOrganizationType).subscribe({
+      next: (res: any) => {
+        this.organizations = this.normalizeOrganizations(res);
+
+        if (this.organizations.length > 0) {
+          this.form.organizationId = this.organizations[0].organizationId;
+        }
+
+        this.organizationsLoading = false;
+        this.loadCountries();
+      },
+      error: (err: any) => {
+        this.organizations = [];
+        this.organizationsLoading = false;
+        this.pageLoading = false;
+
+        this.organizationErrorMessage =
+          err?.error?.message ||
+          err?.message ||
+          'Failed to load organizations from backend.';
+      }
+    });
+  }
+
+  normalizeOrganizations(response: any): Organization[] {
+    const rawOrganizations =
+      response?.data?.organizations ||
+      response?.data ||
+      response?.organizations ||
+      response ||
+      [];
+
+    if (!Array.isArray(rawOrganizations)) {
+      return [];
+    }
+
+    return rawOrganizations
+      .map((org: any) => ({
+        organizationId:
+          org.organizationId ||
+          org.organization_id ||
+          org.id ||
+          '',
+
+        organizationName:
+          org.organizationName ||
+          org.organization_name ||
+          org.name ||
+          org.organization_code ||
+          '',
+
+        organizationCode:
+          org.organizationCode ||
+          org.organization_code ||
+          org.registration_number ||
+          '',
+
+        organizationType:
+          org.organizationType ||
+          org.organization_type ||
+          '',
+
+        status:
+          org.status ||
+          ''
+      }))
+      .filter((org: Organization) => !!org.organizationId && !!org.organizationName);
+  }
+
+  loadCountries(): void {
+    this.countriesLoading = true;
+
+    this.walletService.getCountries().subscribe({
+      next: (res: any) => {
+        const rawCountries =
+          res?.data?.countries ||
+          res?.data ||
+          res?.countries ||
+          [];
+
+        this.countries = Array.isArray(rawCountries) ? rawCountries : [];
+
+        const lebanon = this.countries.find(
+          (country) =>
+            country.iso_cou_code_alpha === 'LB' ||
+            country.cou_name?.toLowerCase() === 'lebanon'
+        );
+
+        const defaultCountry = lebanon || this.countries[0];
+
+        if (defaultCountry) {
+          this.selectedCountryId = String(defaultCountry.cou_id);
+          this.form.nationality = defaultCountry.cou_name;
+          this.form.nationalIdHash = String(defaultCountry.cou_id);
+        }
+
+        this.countriesLoading = false;
+        this.pageLoading = false;
+      },
+      error: () => {
+        this.countries = [];
+        this.countriesLoading = false;
+        this.pageLoading = false;
+      }
+    });
+  }
+
+  onCountryChange(): void {
+    const selectedCountry = this.countries.find(
+      (country) => String(country.cou_id) === String(this.selectedCountryId)
+    );
+
+    if (selectedCountry) {
+      this.form.nationality = selectedCountry.cou_name;
+      this.form.nationalIdHash = String(selectedCountry.cou_id);
+    }
+  }
+
+  onOrganizationTypeChange(): void {
+    this.organizationErrorMessage = '';
+    this.loadOrganizations();
+  }
+
+  onOrganizationChange(): void {
+    this.organizationErrorMessage = '';
+  }
+
+  getSelectedOrganizationName(): string {
+    const selectedOrganization = this.organizations.find(
+      (org) => org.organizationId === this.form.organizationId
+    );
+
+    return selectedOrganization?.organizationName || '';
+  }
+
+  generatePassword(length: number = 16): void {
+    const chars =
+      'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*';
+
+    let password = '';
+
+    for (let i = 0; i < length; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+
+    this.generatedPassword = password;
+    this.form.passwordHash = password;
+  }
+
+  fillSampleData(): void {
+    this.successMessage = '';
+    this.errorMessage = '';
+
+    if (!this.form.customerId) {
+      this.form.customerId = String(Date.now()).slice(-6);
+    }
+
+    this.form.fullName = 'NICOLAS SALLOUM';
+    this.form.mobileHash = '79170430';
+    this.form.emailHash = 'nsalloum95@gmail.com';
+    this.form.initialBalance = '1000';
+    this.form.currencyCode = 'USD';
+
+    if (this.organizations.length > 0) {
+      this.form.organizationId = this.organizations[0].organizationId;
+    }
+
+    const lebanon = this.countries.find(
+      (country) =>
+        country.iso_cou_code_alpha === 'LB' ||
+        country.cou_name?.toLowerCase() === 'lebanon'
+    );
+
+    const selectedCountry = lebanon || this.countries[0];
+
+    if (selectedCountry) {
+      this.selectedCountryId = String(selectedCountry.cou_id);
+      this.form.nationality = selectedCountry.cou_name;
+      this.form.nationalIdHash = String(selectedCountry.cou_id);
+    }
+
+    this.generatePassword();
+  }
+
+  resetForm(): void {
+    this.loading = false;
+    this.successMessage = '';
+    this.errorMessage = '';
+    this.organizationErrorMessage = '';
+    this.showSuccessScreen = false;
+
+    this.form = {
+      customerId: '',
+      organizationId: '',
+      fullName: '',
+      nationality: '',
+      nationalIdHash: '',
+      mobileHash: '',
+      emailHash: '',
+      passwordHash: '',
+      initialBalance: '1000',
+      currencyCode: 'USD',
+      requestSource: 'ANGULAR_UI',
+      sourceSystem: 'BLOCKCHAIN_TEST_UI',
+      createdBy: 'nix'
+    };
+
+    this.selectedCountryId = '';
+    this.selectedOrganizationType = '';
+
+    this.resultData = {
+      customerId: '',
+      walletAddress: '',
+      oneTimePassword: '',
+      recoveryPhrase: '',
+      currentBalance: 0,
+      currencyCode: 'USD',
+      organizationName: ''
+    };
+
+    this.initializeForm();
+  }
+
+  validateForm(): boolean {
+    if (!this.form.customerId) {
+      this.errorMessage = 'Customer ID is required.';
+      return false;
+    }
+
+    if (!this.form.organizationId) {
+      this.errorMessage = 'Organization is required.';
+      return false;
+    }
+
+    if (!this.form.fullName) {
+      this.errorMessage = 'Full Name is required.';
+      return false;
+    }
+
+    if (!this.form.mobileHash) {
+      this.errorMessage = 'Mobile Hash is required.';
+      return false;
+    }
+
+    if (!this.form.emailHash) {
+      this.errorMessage = 'Email Hash is required.';
+      return false;
+    }
+
+    if (!this.form.passwordHash) {
+      this.errorMessage = 'Password is required.';
+      return false;
+    }
+
+    const initialBalance = Number(this.form.initialBalance || 0);
+
+    if (!Number.isFinite(initialBalance) || initialBalance < 0) {
+      this.errorMessage = 'Initial Balance must be zero or greater.';
+      return false;
+    }
+
+    return true;
+  }
+
+  createWallet(): void {
+    this.successMessage = '';
+    this.errorMessage = '';
+
+    if (!this.validateForm()) {
+      return;
+    }
+
+    this.loading = true;
+
+    const initialBalance = Number(this.form.initialBalance || 0);
+
+    const payload = {
+      customerId: String(this.form.customerId).trim(),
+      organizationId: this.form.organizationId,
+      fullName: String(this.form.fullName).trim(),
+      nationality: this.form.nationality,
+      nationalIdHash: this.form.nationalIdHash,
+      mobileHash: String(this.form.mobileHash).trim(),
+      emailHash: String(this.form.emailHash).trim(),
+      passwordHash: this.form.passwordHash,
+      initialBalance,
+      currentBalance: initialBalance,
+      currencyCode: this.form.currencyCode || 'USD',
+      requestSource: this.form.requestSource,
+      sourceSystem: this.form.sourceSystem,
+      createdBy: this.form.createdBy
+    };
+
+    this.walletService.createWallet(payload).subscribe({
+      next: (res: any) => {
+        this.loading = false;
+
+        const responsePayload = res?.data || {};
+        const wallet = responsePayload?.wallet || responsePayload;
+
+        const recoveryValue =
+          responsePayload?.recoveryPhrase ||
+          responsePayload?.recovery_phrase ||
+          responsePayload?.mnemonic ||
+          responsePayload?.recoveryWords ||
+          responsePayload?.recovery_words ||
+          '';
+
+        this.resultData = {
+          customerId:
+            wallet?.customerId ||
+            wallet?.customer_id ||
+            this.form.customerId,
+
+          walletAddress:
+            wallet?.walletAddress ||
+            wallet?.wallet_address ||
+            responsePayload?.walletAddress ||
+            responsePayload?.wallet_address ||
+            '',
+
+          oneTimePassword:
+            responsePayload?.oneTimePassword ||
+            responsePayload?.one_time_password ||
+            responsePayload?.otp ||
+            this.generatedPassword,
+
+          recoveryPhrase: Array.isArray(recoveryValue)
+            ? recoveryValue.join(' ')
+            : recoveryValue,
+
+          currentBalance:
+            Number(
+              wallet?.currentBalance ??
+                wallet?.current_balance ??
+                wallet?.balance ??
+                initialBalance
+            ),
+
+          currencyCode:
+            wallet?.currencyCode ||
+            wallet?.currency_code ||
+            wallet?.currency ||
+            this.form.currencyCode ||
+            'USD',
+
+          organizationName:
+            wallet?.organizationName ||
+            wallet?.organization_name ||
+            this.getSelectedOrganizationName()
+        };
+
+        this.successMessage = res?.message || 'Wallet created successfully.';
+        this.showSuccessScreen = true;
+      },
+      error: (err: any) => {
+        this.loading = false;
+
+        console.error('Create wallet failed:', err?.error || err);
+
+        this.errorMessage =
+          err?.error?.message ||
+          err?.error?.error?.message ||
+          err?.error?.detail ||
+          err?.error?.errorCode ||
+          err?.message ||
+          'Failed to create wallet.';
+      }
+    });
+  }
+
+  goToNewRegistration(): void {
+    this.resetForm();
+  }
+
+  reloadOrganizations(): void {
+    this.loadOrganizations();
+  }
+}
+===== wallet-create.html =====
+<div class="page-container">
+  <div *ngIf="!showSuccessScreen">
+    <div class="page-header">
+      <div>
+        <h2>Create Wallet</h2>
+        <p>Create a new customer wallet through the Blockchain API Middleware.</p>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="secondary-btn" (click)="fillSampleData()">
+          Fill Sample
+        </button>
+
+        <button type="button" class="reset-btn" (click)="resetForm()">
+          Reset
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="pageLoading" class="loading-card">
+      Loading customer ID, organizations, and countries...
+    </div>
+
+    <div *ngIf="organizationErrorMessage" class="alert error">
+      {{ organizationErrorMessage }}
+
+      <button type="button" class="secondary-btn" (click)="reloadOrganizations()">
+        Retry Organizations
+      </button>
+    </div>
+
+    <div *ngIf="!pageLoading" class="card">
+      <form (ngSubmit)="createWallet()">
+        <div class="grid">
+          <div class="field">
+            <label>Customer ID</label>
+            <input
+              type="text"
+              name="customerId"
+              [(ngModel)]="form.customerId"
+              placeholder="Auto-generated or enter customer ID"
+              required
+            />
+          </div>
+
+          <div class="field">
+            <label>Organization Type</label>
+            <select
+              name="organizationType"
+              [(ngModel)]="selectedOrganizationType"
+              (change)="onOrganizationTypeChange()"
+            >
+              <option value="">All organization types</option>
+              <option
+                *ngFor="let type of organizationTypes"
+                [value]="type"
+              >
+                {{ type }}
+              </option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Organization</label>
+            <select
+              name="organizationId"
+              [(ngModel)]="form.organizationId"
+              (change)="onOrganizationChange()"
+              required
+            >
+              <option value="">
+                {{ organizationsLoading ? 'Loading organizations...' : 'Select organization' }}
+              </option>
+
+              <option
+                *ngFor="let org of organizations"
+                [value]="org.organizationId"
+              >
+                {{ org.organizationName }}
+              </option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Full Name</label>
+            <input
+              type="text"
+              name="fullName"
+              [(ngModel)]="form.fullName"
+              placeholder="NICOLAS SALLOUM"
+              required
+            />
+          </div>
+
+          <div class="field">
+            <label>Initial Balance</label>
+            <input
+              type="number"
+              name="initialBalance"
+              [(ngModel)]="form.initialBalance"
+              min="0"
+              step="0.01"
+              required
+            />
+          </div>
+
+          <div class="field">
+            <label>Currency</label>
+            <select
+              name="currencyCode"
+              [(ngModel)]="form.currencyCode"
+              required
+            >
+              <option value="USD">USD</option>
+              <option value="LBP">LBP</option>
+              <option value="EUR">EUR</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Nationality</label>
+            <select
+              name="selectedCountryId"
+              [(ngModel)]="selectedCountryId"
+              (change)="onCountryChange()"
+            >
+              <option value="">
+                {{ countriesLoading ? 'Loading nationalities...' : 'Select nationality' }}
+              </option>
+
+              <option
+                *ngFor="let country of countries"
+                [value]="country.cou_id"
+              >
+                {{ country.cou_name }}
+              </option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>National ID Hash</label>
+            <input
+              type="text"
+              name="nationalIdHash"
+              [(ngModel)]="form.nationalIdHash"
+              placeholder="Auto-filled from nationality"
+              readonly
+            />
+          </div>
+
+          <div class="field">
+            <label>Mobile Hash</label>
+            <input
+              type="text"
+              name="mobileHash"
+              [(ngModel)]="form.mobileHash"
+              placeholder="79170430"
+              required
+            />
+          </div>
+
+          <div class="field">
+            <label>Email Hash</label>
+            <input
+              type="text"
+              name="emailHash"
+              [(ngModel)]="form.emailHash"
+              placeholder="nsalloum95@gmail.com"
+              required
+            />
+          </div>
+
+          <div class="field full-width">
+            <label>Auto Generated Password</label>
+
+            <div class="password-row">
+              <input
+                type="text"
+                name="passwordHash"
+                [(ngModel)]="form.passwordHash"
+                readonly
+              />
+
+              <button
+                type="button"
+                class="secondary-btn"
+                (click)="generatePassword()"
+              >
+                Regenerate
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="submit-row">
+          <button
+            type="submit"
+            class="primary-btn"
+            [disabled]="loading || organizations.length === 0"
+          >
+            {{ loading ? 'Creating Wallet...' : 'Generate Wallet' }}
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div *ngIf="successMessage" class="alert success">
+      {{ successMessage }}
+    </div>
+
+    <div *ngIf="errorMessage" class="alert error">
+      {{ errorMessage }}
+    </div>
+  </div>
+
+  <div *ngIf="showSuccessScreen" class="success-screen-wrapper">
+    <div class="success-card">
+      <div class="success-icon">✓</div>
+
+      <h2>Registration Complete</h2>
+
+      <p class="success-text">
+        The blockchain wallet identity has been successfully created.
+      </p>
+
+      <div class="info-box">
+        <div class="info-label">Customer ID</div>
+        <div class="info-value blue">
+          {{ resultData.customerId }}
+        </div>
+      </div>
+
+      <div class="info-box">
+        <div class="info-label">Wallet Address</div>
+        <div class="info-value small-box">
+          {{ resultData.walletAddress }}
+        </div>
+      </div>
+
+      <div class="info-box">
+        <div class="info-label">Organization</div>
+        <div class="info-value small-box">
+          {{ resultData.organizationName || getSelectedOrganizationName() || 'N/A' }}
+        </div>
+      </div>
+
+      <div class="info-box">
+        <div class="info-label">Initial Balance</div>
+        <div class="info-value blue">
+          {{ resultData.currentBalance }} {{ resultData.currencyCode }}
+        </div>
+      </div>
+
+      <div class="info-box">
+        <div class="info-label">One-Time Password</div>
+        <div class="info-value red small-box">
+          {{ resultData.oneTimePassword }}
+        </div>
+
+        <div class="warning-text">
+          Save this password immediately. It cannot be recovered.
+        </div>
+      </div>
+
+      <div class="info-box">
+        <div class="info-label">Recovery Phrase</div>
+        <div class="info-value phrase-box">
+          {{ resultData.recoveryPhrase || 'No recovery phrase returned from API' }}
+        </div>
+
+        <div class="phrase-warning">
+          Store this phrase offline and never share it.
+        </div>
+      </div>
+
+      <div class="success-actions">
+        <button class="primary-btn large-btn" (click)="goToNewRegistration()">
+          Create Another Wallet
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+===== wallet-create.css =====
+.page-container {
+  padding: 28px;
+  color: #10233f;
+}
+
+/* Page Header */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.page-header h2 {
+  margin: 0;
+  color: #004aad;
+  font-size: 26px;
+  font-weight: 800;
+}
+
+.page-header p {
+  margin: 6px 0 0 0;
+  color: #64748b;
+  font-size: 15px;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+}
+
+/* Main Form Card */
+.card,
+.loading-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+  border: 1px solid #e5e7eb;
+}
+
+.loading-card {
+  text-align: center;
+  color: #475569;
+  font-weight: 700;
+}
+
+/* Form Grid */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(260px, 1fr));
+  gap: 18px;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+}
+
+.field label {
+  color: #004aad;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.field input,
+.field select {
+  height: 46px;
+  padding: 0 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #020617;
+  outline: none;
+  font-size: 14px;
+}
+
+.field input:focus,
+.field select:focus {
+  border-color: #004aad;
+  box-shadow: 0 0 0 3px rgba(0, 74, 173, 0.12);
+}
+
+.field input[readonly] {
+  background: #f8fafc;
+}
+
+.password-row {
+  display: flex;
+  gap: 12px;
+}
+
+.password-row input {
+  flex: 1;
+}
+
+/* Buttons */
+.primary-btn,
+.secondary-btn,
+.reset-btn {
+  border: none;
+  border-radius: 10px;
+  height: 42px;
+  padding: 0 18px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.primary-btn {
+  background: #004aad;
+  color: #ffffff;
+}
+
+.primary-btn:hover {
+  background: #003b8a;
+}
+
+.primary-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.secondary-btn {
+  background: #e8f1ff;
+  color: #004aad;
+}
+
+.secondary-btn:hover {
+  background: #dbeafe;
+}
+
+.reset-btn {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.reset-btn:hover {
+  background: #e5e7eb;
+}
+
+.submit-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
+/* Alerts */
+.alert {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  font-weight: 700;
+}
+
+.success {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+.error {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+/* Success Screen */
+.success-screen-wrapper {
+  min-height: calc(100vh - 120px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 36px;
+}
+
+.success-card {
+  width: 100%;
+  max-width: 520px;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 32px;
+  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.14);
+  border: 1px solid #e5e7eb;
+  text-align: center;
+}
+
+.success-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  background: #d1fae5;
+  color: #16a34a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 18px auto;
+  font-size: 28px;
+  font-weight: 900;
+}
+
+.success-card h2 {
+  margin: 0 0 10px 0;
+  color: #020617;
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.success-text {
+  margin: 0 0 24px 0;
+  color: #475569;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.info-box {
+  text-align: left;
+  margin-bottom: 18px;
+}
+
+.info-label {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+  margin-bottom: 8px;
+  letter-spacing: 0.02em;
+}
+
+.info-value {
+  color: #0f172a;
+  font-weight: 800;
+  font-size: 16px;
+  word-break: break-word;
+}
+
+.info-value.blue {
+  color: #4338ca;
+  font-size: 18px;
+}
+
+.info-value.red {
+  color: #ef4444;
+}
+
+.small-box,
+.phrase-box {
+  padding: 12px 14px;
+  border: 1px solid #dbe2ea;
+  border-radius: 10px;
+  background: #f8fafc;
+  min-height: 22px;
+  line-height: 1.5;
+}
+
+.phrase-box {
+  color: #1d4ed8;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 14px;
+}
+
+.warning-text {
+  margin-top: 8px;
+  color: #ef4444;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.phrase-warning {
+  margin-top: 8px;
+  color: #2563eb;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.confirmation-text {
+  margin: 22px 0 0 0;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.success-actions {
+  margin-top: 24px;
+}
+
+.large-btn {
+  width: 100%;
+  height: 48px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #4f46e5, #4338ca);
+}
+
+.large-btn:hover {
+  background: linear-gradient(90deg, #4338ca, #3730a3);
+}
+
+/* Optional API Response Box */
+.response-card {
+  margin-top: 20px;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 22px;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+  border: 1px solid #e5e7eb;
+}
+
+.response-card h3 {
+  margin: 0 0 12px 0;
+  color: #004aad;
+}
+
+pre {
+  background: #0f172a;
+  color: #dbeafe;
+  padding: 16px;
+  border-radius: 12px;
+  overflow-x: auto;
+  font-size: 13px;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .page-container {
+    padding: 22px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .password-row {
+    flex-direction: column;
+  }
+
+  .success-screen-wrapper {
+    padding-top: 16px;
+  }
+
+  .success-card {
+    max-width: 100%;
+    padding: 24px;
+  }
+}
+===== wallet-login.ts =====
+import { CommonModule } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+
+import { WalletService } from '../../services/wallet.service';
+import { WalletSessionService } from '../../services/wallet-session.service';
+
+@Component({
+  selector: 'app-wallet-login',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  templateUrl: './wallet-login.html',
+  styleUrl: './wallet-login.css'
+})
+export class WalletLogin implements OnInit {
+  loading = false;
+  successMessage = '';
+  errorMessage = '';
+
+  responseData: any = null;
+  apiResponse: any = null;
+  token = '';
+
+  redirectTo = '/digital-kyc/wallet-transfer';
+
+  form = {
+    walletAddress: '',
+    password: ''
+  };
+
+  walletSummary = {
+    status: '-',
+    walletAddress: '-',
+    customerId: '-',
+    customerName: '-',
+    organizationId: '-',
+    organizationName: '-',
+    countryId: '-',
+    countryName: '-',
+    emailAddress: '-',
+    mobilePhone: '-',
+    balance: '-',
+    currency: 'USD',
+    creationDateTime: '-'
+  };
+
+  constructor(
+    private walletService: WalletService,
+    private walletSessionService: WalletSessionService,
+    private router: Router,
+    private route: ActivatedRoute
+  ) {}
+
+  ngOnInit(): void {
+    this.redirectTo =
+      this.route.snapshot.queryParamMap.get('redirectTo') ||
+      '/digital-kyc/wallet-transfer';
+  }
+
+  fillSampleData(): void {
+    this.form = {
+      walletAddress: 'WALLET_177814333918_F039E75D04FE3',
+      password: ''
+    };
+
+    this.successMessage = '';
+    this.errorMessage = '';
+    this.responseData = null;
+    this.apiResponse = null;
+    this.token = '';
+  }
+
+  fillSample(): void {
+    this.fillSampleData();
+  }
+
+  resetForm(): void {
+    this.form = {
+      walletAddress: '',
+      password: ''
+    };
+
+    this.successMessage = '';
+    this.errorMessage = '';
+    this.responseData = null;
+    this.apiResponse = null;
+    this.token = '';
+
+    this.walletSummary = {
+      status: '-',
+      walletAddress: '-',
+      customerId: '-',
+      customerName: '-',
+      organizationId: '-',
+      organizationName: '-',
+      countryId: '-',
+      countryName: '-',
+      emailAddress: '-',
+      mobilePhone: '-',
+      balance: '-',
+      currency: 'USD',
+      creationDateTime: '-'
+    };
+  }
+
+  loginWallet(): void {
+    this.successMessage = '';
+    this.errorMessage = '';
+    this.responseData = null;
+    this.apiResponse = null;
+    this.token = '';
+
+    if (!this.form.walletAddress) {
+      this.errorMessage = 'Wallet Address is required.';
+      return;
+    }
+
+    if (!this.form.password) {
+      this.errorMessage = 'Password is required.';
+      return;
+    }
+
+    this.loading = true;
+
+    const payload = {
+      walletAddress: String(this.form.walletAddress).trim(),
+      password: String(this.form.password)
+    };
+
+    this.walletService.loginWallet(payload).subscribe({
+      next: (response: any) => {
+        this.loading = false;
+
+        this.responseData = response;
+        this.apiResponse = response;
+
+        const wallet =
+          response?.data?.wallet ||
+          response?.wallet ||
+          response?.data ||
+          {};
+
+        this.token =
+          response?.data?.token ||
+          response?.token ||
+          '';
+
+        this.walletSummary = {
+          status:
+            wallet?.status ||
+            wallet?.walletStatus ||
+            wallet?.wallet_status ||
+            '-',
+
+          walletAddress:
+            wallet?.walletAddress ||
+            wallet?.wallet_address ||
+            '-',
+
+          customerId:
+            wallet?.customerId ||
+            wallet?.customer_id ||
+            '-',
+
+          customerName:
+            wallet?.customerName ||
+            wallet?.customer_name ||
+            wallet?.fullName ||
+            wallet?.full_name ||
+            '-',
+
+          organizationId:
+            wallet?.organizationId ||
+            wallet?.organization_id ||
+            '-',
+
+          organizationName:
+            wallet?.organizationName ||
+            wallet?.organization_name ||
+            '-',
+
+          countryId:
+            wallet?.countryId ||
+            wallet?.country_id ||
+            '-',
+
+          countryName:
+            wallet?.countryName ||
+            wallet?.country_name ||
+            '-',
+
+          emailAddress:
+            wallet?.emailAddress ||
+            wallet?.email_address ||
+            wallet?.emailHash ||
+            wallet?.email_hash ||
+            '-',
+
+          mobilePhone:
+            wallet?.mobilePhone ||
+            wallet?.mobile_phone ||
+            wallet?.mobileHash ||
+            wallet?.mobile_hash ||
+            '-',
+
+          balance:
+            wallet?.currentBalance ??
+            wallet?.current_balance ??
+            wallet?.balance ??
+            '-',
+
+          currency:
+            wallet?.currencyCode ||
+            wallet?.currency_code ||
+            wallet?.currency ||
+            'USD',
+
+          creationDateTime:
+            wallet?.createdAt ||
+            wallet?.created_at ||
+            wallet?.creationDateTime ||
+            wallet?.creation_date_time ||
+            '-'
+        };
+
+        const normalizedSession = {
+          customerId: this.walletSummary.customerId,
+          walletAddress: this.walletSummary.walletAddress,
+          organizationId: this.walletSummary.organizationId,
+          organizationName: this.walletSummary.organizationName,
+          fullName: this.walletSummary.customerName,
+          currentBalance: Number(this.walletSummary.balance || 0),
+          currencyCode: this.walletSummary.currency,
+          token: this.token
+        };
+
+        this.walletSessionService.setSession(normalizedSession);
+        this.walletService.saveWalletToken(this.token);
+        this.walletService.saveWalletProfile({
+          token: this.token,
+          wallet
+        });
+
+        this.successMessage = 'Wallet login successful. Opening transaction menu...';
+
+        setTimeout(() => {
+          this.router.navigateByUrl(this.redirectTo);
+        }, 300);
+      },
+      error: (error: any) => {
+        this.loading = false;
+
+        this.responseData = error?.error || error;
+        this.apiResponse = error?.error || error;
+
+        this.errorMessage =
+          error?.error?.message ||
+          error?.message ||
+          'Wallet login failed. Please check the wallet address and password.';
+      }
+    });
+  }
+
+  copyWalletAddress(): void {
+    const walletAddress = this.walletSummary?.walletAddress;
+
+    if (!walletAddress || walletAddress === '-') {
+      this.errorMessage = 'No wallet address available to copy.';
+      return;
+    }
+
+    navigator.clipboard
+      .writeText(walletAddress)
+      .then(() => {
+        this.successMessage = 'Wallet address copied successfully.';
+      })
+      .catch(() => {
+        this.errorMessage = 'Failed to copy wallet address.';
+      });
+  }
+
+  copyToken(): void {
+    if (!this.token) {
+      this.errorMessage = 'No token available to copy.';
+      return;
+    }
+
+    navigator.clipboard
+      .writeText(this.token)
+      .then(() => {
+        this.successMessage = 'Token copied successfully.';
+      })
+      .catch(() => {
+        this.errorMessage = 'Failed to copy token.';
+      });
+  }
+  private normalizeWalletSession(rawWallet: any): any {
+    const wallet = rawWallet || {};
+
+    const walletAddress = String(
+      wallet.walletAddress ||
+      wallet.wallet_address ||
+      ''
+    );
+
+    const customerId = String(
+      wallet.customerId ||
+      wallet.customer_id ||
+      ''
+    );
+
+    const rawWalletType = String(
+      wallet.walletType ||
+      wallet.wallet_type ||
+      wallet.type ||
+      ''
+    ).trim().toUpperCase();
+
+    let walletType = rawWalletType;
+
+    if (
+      rawWalletType === 'ORG' ||
+      rawWalletType === 'ORGANIZATION' ||
+      walletAddress.toUpperCase().startsWith('ORG_WALLET_') ||
+      customerId.toUpperCase().startsWith('ORG_')
+    ) {
+      walletType = 'ORGANIZATION';
+    } else {
+      walletType = 'CUSTOMER';
+    }
+
+    return {
+      ...wallet,
+      walletAddress,
+      wallet_address: walletAddress,
+      customerId,
+      customer_id: customerId,
+      walletType,
+      wallet_type: walletType,
+      currencyCode:
+        wallet.currencyCode ||
+        wallet.currency_code ||
+        wallet.currency ||
+        'USD',
+      currency_code:
+        wallet.currencyCode ||
+        wallet.currency_code ||
+        wallet.currency ||
+        'USD',
+      currentBalance:
+        wallet.currentBalance ??
+        wallet.current_balance ??
+        0,
+      current_balance:
+        wallet.currentBalance ??
+        wallet.current_balance ??
+        0
+    };
+  }
+
+}
+===== wallet-login.html =====
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h2>Wallet Login</h2>
+      <p>Authenticate using wallet address and password.</p>
+    </div>
+
+    <div class="actions">
+      <button type="button" class="secondary-btn" (click)="fillSampleData()">
+        Fill Sample
+      </button>
+
+      <button type="button" class="reset-btn" (click)="resetForm()">
+        Reset
+      </button>
+    </div>
+  </div>
+
+  <div class="card">
+    <form (ngSubmit)="loginWallet()">
+      <div class="grid">
+        <div class="field">
+          <label>Wallet Address</label>
+          <input
+            type="text"
+            name="walletAddress"
+            [(ngModel)]="form.walletAddress"
+            placeholder="Enter wallet address"
+            required
+          />
+        </div>
+
+        <div class="field">
+          <label>Password</label>
+          <input
+            type="password"
+            name="password"
+            [(ngModel)]="form.password"
+            placeholder="Enter wallet password"
+            required
+          />
+        </div>
+      </div>
+
+      <div class="submit-row">
+        <button type="submit" class="primary-btn" [disabled]="loading">
+          {{ loading ? 'Logging in...' : 'Login Wallet' }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <div *ngIf="successMessage" class="alert success">
+    {{ successMessage }}
+  </div>
+
+  <div *ngIf="errorMessage" class="alert error">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="apiResponse" class="card response-card">
+    <h3>Raw API Response</h3>
+
+    <pre>{{ apiResponse | json }}</pre>
+  </div>
+</div>
+===== wallet-login.css =====
+.page-container {
+  width: 100%;
+  max-width: 100%;
+  padding: 28px;
+  color: #10233f;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+/* Header */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  gap: 16px;
+}
+
+.page-header h2 {
+  margin: 0;
+  color: #004aad;
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.page-header p {
+  margin: 6px 0 0 0;
+  color: #64748b;
+  font-size: 15px;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+/* Shared Cards */
+.card,
+.wallet-profile,
+.token-card,
+.response-card {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+
+.login-card {
+  max-width: 960px;
+}
+
+/* Section Title */
+.section-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.section-title.compact {
+  margin-bottom: 16px;
+}
+
+.section-title h3 {
+  margin: 0;
+  color: #004aad;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.section-title p {
+  margin: 5px 0 0 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+/* Form */
+.login-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.field label {
+  color: #004aad;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.field input {
+  width: 100%;
+  box-sizing: border-box;
+  height: 48px;
+  padding: 0 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #020617;
+  outline: none;
+  font-size: 14px;
+  transition: 0.2s ease;
+}
+
+.field input:focus {
+  border-color: #004aad;
+  box-shadow: 0 0 0 3px rgba(0, 74, 173, 0.12);
+}
+
+.submit-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 22px;
+}
+
+/* Buttons */
+.primary-btn,
+.secondary-btn,
+.reset-btn,
+.copy-btn {
+  border: none;
+  border-radius: 12px;
+  height: 44px;
+  padding: 0 18px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.primary-btn {
+  background: #004aad;
+  color: #ffffff;
+  box-shadow: 0 8px 18px rgba(0, 74, 173, 0.22);
+}
+
+.primary-btn:hover {
+  background: #003b8a;
+  transform: translateY(-1px);
+}
+
+.primary-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.secondary-btn,
+.copy-btn {
+  background: #e8f1ff;
+  color: #004aad;
+}
+
+.secondary-btn:hover,
+.copy-btn:hover {
+  background: #dbeafe;
+}
+
+.reset-btn {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.reset-btn:hover {
+  background: #e5e7eb;
+}
+
+/* Alerts */
+.alert {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  font-weight: 800;
+  box-sizing: border-box;
+}
+
+.success {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+.error {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+/* Professional Wallet Profile */
+.wallet-profile {
+  margin-top: 24px;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+.profile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  padding: 24px;
+  background: linear-gradient(135deg, #f8fbff 0%, #eef6ff 100%);
+  border-bottom: 1px solid #dbeafe;
+  box-sizing: border-box;
+}
+
+.profile-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.success-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 999px;
+  background: #d1fae5;
+  color: #16a34a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 900;
+  flex: 0 0 auto;
+}
+
+.profile-left h3 {
+  margin: 0;
+  color: #004aad;
+  font-size: 24px;
+  font-weight: 950;
+  letter-spacing: -0.02em;
+}
+
+.profile-left p {
+  margin: 6px 0 0 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.profile-status {
+  min-width: 110px;
+  text-align: center;
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+  border-radius: 14px;
+  padding: 10px 14px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.profile-status span {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  color: #059669;
+  margin-bottom: 3px;
+}
+
+.profile-status strong {
+  font-size: 14px;
+  font-weight: 950;
+}
+
+/* Wallet Address Banner */
+.profile-banner {
+  margin: 22px 24px 0 24px;
+  padding: 18px;
+  border-radius: 16px;
+  background: #0f172a;
+  color: #ffffff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.profile-banner > div {
+  min-width: 0;
+  flex: 1;
+}
+
+.profile-banner span {
+  display: block;
+  color: #93c5fd;
+  font-size: 12px;
+  font-weight: 900;
+  margin-bottom: 6px;
+}
+
+.profile-banner strong {
+  display: block;
+  color: #ffffff;
+  font-size: 15px;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  letter-spacing: 0.01em;
+}
+
+/* KPI Cards */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  padding: 22px 24px 0 24px;
+  box-sizing: border-box;
+}
+
+.kpi-card {
+  min-width: 0;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 16px;
+  min-height: 94px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.kpi-card span {
+  display: block;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 900;
+  margin-bottom: 8px;
+}
+
+.kpi-card strong {
+  display: block;
+  color: #0f172a;
+  font-size: 16px;
+  font-weight: 950;
+  line-height: 1.25;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.kpi-card small {
+  display: block;
+  margin-top: 8px;
+  color: #64748b;
+  font-size: 12px;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+/* Details */
+.details-section {
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.detail-item {
+  min-width: 0;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 16px;
+  min-height: 78px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.detail-item span {
+  display: block;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 900;
+  margin-bottom: 8px;
+  letter-spacing: 0.02em;
+}
+
+.detail-item strong {
+  display: block;
+  color: #0f172a;
+  font-size: 15px;
+  font-weight: 900;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.detail-item.highlight {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.detail-item.highlight span {
+  color: #004aad;
+}
+
+.detail-item.highlight strong {
+  color: #004aad;
+  font-size: 18px;
+}
+
+.detail-item.full-width {
+  grid-column: 1 / -1;
+}
+
+/* Token */
+.token-card,
+.response-card {
+  margin-top: 22px;
+}
+
+.token-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.token-header h3,
+.response-card h3 {
+  margin: 0;
+  color: #004aad;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.token-header p {
+  margin: 5px 0 0 0;
+  color: #64748b;
+}
+
+textarea {
+  width: 100%;
+  box-sizing: border-box;
+  height: 130px;
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  resize: vertical;
+  font-size: 13px;
+  color: #0f172a;
+  overflow-x: auto;
+}
+
+pre {
+  max-width: 100%;
+  box-sizing: border-box;
+  background: #0f172a;
+  color: #dbeafe;
+  padding: 16px;
+  border-radius: 12px;
+  overflow-x: auto;
+  font-size: 13px;
+}
+
+/* Responsive */
+@media (max-width: 1400px) {
+  .kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1100px) {
+  .page-container {
+    padding: 22px;
+  }
+
+  .profile-header,
+  .profile-banner,
+  .token-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .profile-status {
+    text-align: left;
+  }
+}
+
+@media (max-width: 900px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .login-grid,
+  .details-grid,
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-item.full-width {
+    grid-column: auto;
+  }
+
+  .actions {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+}
+/* =========================================================
+   SCREEN FIT FIX — Prevent horizontal overflow
+   ========================================================= */
+/* =========================================================
+   VERTICAL PROFILE LAYOUT — One-column professional display
+   ========================================================= */
+
+:host {
+  display: block;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.page-container {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  overflow-x: hidden;
+}
+
+/* Keep the login form compact */
+.login-card {
+  max-width: 900px;
+}
+
+/* Main wallet profile becomes vertical and centered */
+.wallet-profile {
+  width: 100%;
+  max-width: 1180px;
+  margin: 24px auto 0 auto;
+  overflow: hidden;
+}
+
+/* Header stays clean */
+.profile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Wallet address is full-width vertical */
+.profile-banner {
+  width: auto;
+  margin: 22px 24px 0 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.profile-banner .copy-btn {
+  margin-top: 12px;
+}
+
+.profile-banner strong {
+  width: 100%;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+/* KPI section becomes vertical */
+.kpi-grid {
+  grid-template-columns: 1fr !important;
+  padding: 22px 24px 0 24px;
+}
+
+.kpi-card {
+  width: 100%;
+  min-height: auto;
+}
+
+/* Details become vertical */
+.details-grid {
+  grid-template-columns: 1fr !important;
+}
+
+.detail-item,
+.detail-item.full-width {
+  grid-column: auto !important;
+  width: 100%;
+  min-height: auto;
+}
+
+/* Details spacing */
+.details-section {
+  padding: 24px;
+}
+
+/* Token section vertical and safe */
+.token-card,
+.response-card {
+  width: 100%;
+  max-width: 1180px;
+  margin: 22px auto 0 auto;
+  overflow: hidden;
+}
+
+.token-header {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+textarea,
+pre {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+/* Hide horizontal overflow from long token text */
+textarea {
+  overflow-x: hidden;
+}
+
+/* Better mobile fit */
+@media (max-width: 900px) {
+  .page-container {
+    max-width: 100%;
+    padding: 20px;
+  }
+
+  .profile-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .profile-status {
+    width: 100%;
+    text-align: left;
+  }
+
+  .profile-banner {
+    margin-left: 20px;
+    margin-right: 20px;
+  }
+}===== wallet-transfer.component.ts =====
+import { CommonModule } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
+import { TransactionService } from '../../../services/transaction.service';
+import { WalletSessionService } from '../../../services/wallet-session.service';
+
+@Component({
+  selector: 'app-wallet-transfer',
+  standalone: true,
+  imports: [CommonModule, FormsModule, RouterLink],
+  templateUrl: './wallet-transfer.component.html',
+  styleUrl: './wallet-transfer.component.css'
+})
+export class WalletTransferComponent implements OnInit {
+  session: any = null;
+  loading = false;
+  successMessage = '';
+  errorMessage = '';
+  transactionId = '';
+  apiResponse: any = null;
+
+  form = {
+    senderWalletAddress: '',
+    receiverWalletAddress: '',
+    amount: '',
+    currency: 'USD',
+    transactionPurpose: 'Wallet transfer test',
+    transactionDescription: 'STEP 32 wallet-to-wallet transfer from Angular UI',
+    requestSource: 'ANGULAR_UI',
+    sourceSystem: 'BLOCKCHAIN_TEST_UI',
+    createdBy: 'nix'
+  };
+
+  constructor(
+    private transactionService: TransactionService,
+    private walletSessionService: WalletSessionService
+  ) {}
+
+  ngOnInit(): void {
+    this.loadSession();
+  }
+
+  loadSession(): void {
+    this.session = this.walletSessionService.getSession();
+
+    if (this.session) {
+      this.form.senderWalletAddress = this.session.walletAddress;
+      this.form.currency = this.session.currencyCode || 'USD';
+    }
+  }
+
+  fillSample(): void {
+    this.form.receiverWalletAddress = 'WALLET_RECEIVER_SAMPLE_ADDRESS';
+    this.form.amount = '50';
+    this.form.currency = this.session?.currencyCode || 'USD';
+    this.form.transactionPurpose = 'Wallet transfer test';
+    this.form.transactionDescription = 'STEP 32 wallet-to-wallet transfer from Angular UI';
+  }
+
+  validateForm(): string | null {
+    if (!this.walletSessionService.isLoggedIn()) {
+      return 'No wallet session found. Please login first.';
+    }
+
+    if (!this.walletSessionService.isCustomerWallet()) {
+      return 'Customer wallet login is required for wallet-to-wallet transfer.';
+    }
+
+    if (!this.form.senderWalletAddress) {
+      return 'Sender wallet address is required from the logged-in session.';
+    }
+
+    if (!this.form.receiverWalletAddress) {
+      return 'Receiver wallet address is required.';
+    }
+
+    if (this.form.receiverWalletAddress === this.form.senderWalletAddress) {
+      return 'Receiver wallet address cannot be the same as sender wallet address.';
+    }
+
+    if (!this.form.amount || Number(this.form.amount) <= 0) {
+      return 'Amount is required and must be greater than zero.';
+    }
+
+    if (!this.form.currency) {
+      return 'Currency is required.';
+    }
+
+    return null;
+  }
+
+  submitTransfer(): void {
+    this.successMessage = '';
+    this.errorMessage = '';
+    this.transactionId = '';
+    this.apiResponse = null;
+
+    const validationError = this.validateForm();
+
+    if (validationError) {
+      this.errorMessage = validationError;
+      return;
+    }
+
+    const payload = {
+      senderWalletAddress: this.form.senderWalletAddress,
+      receiverWalletAddress: this.form.receiverWalletAddress,
+      amount: String(this.form.amount),
+      currency: this.form.currency,
+      transactionPurpose: this.form.transactionPurpose,
+      transactionDescription: this.form.transactionDescription,
+      requestSource: this.form.requestSource,
+      sourceSystem: this.form.sourceSystem,
+      createdBy: this.form.createdBy
+    };
+
+    this.loading = true;
+
+    this.transactionService.walletTransfer(payload).subscribe({
+      next: (response: any) => {
+        this.loading = false;
+        this.apiResponse = response;
+
+        this.transactionId =
+          response?.data?.transactionId ||
+          response?.transactionId ||
+          response?.data?.id ||
+          '';
+
+        /*
+         * STEP 32.1 — Update wallet balance after successful transaction.
+         *
+         * Backend should return:
+         * response.data.senderBalanceAfter
+         *
+         * Example:
+         * current balance: 14500
+         * transaction: 1500
+         * senderBalanceAfter: 13000
+         */
+        const senderBalanceAfter =
+          response?.data?.senderBalanceAfter ??
+          response?.senderBalanceAfter ??
+          null;
+
+        if (senderBalanceAfter !== null && senderBalanceAfter !== undefined) {
+          this.walletSessionService.updateBalance(Number(senderBalanceAfter));
+          this.session = this.walletSessionService.getSession();
+
+          if (this.session) {
+            this.form.senderWalletAddress = this.session.walletAddress;
+            this.form.currency = this.session.currencyCode || 'USD';
+          }
+        }
+
+        this.successMessage = 'Wallet-to-wallet transfer completed successfully.';
+      },
+      error: (error: any) => {
+        this.loading = false;
+        this.apiResponse = error?.error || error;
+        this.errorMessage =
+          error?.error?.message ||
+          error?.message ||
+          'Wallet-to-wallet transfer failed.';
+      }
+    });
+  }
+
+  clearMessages(): void {
+    this.successMessage = '';
+    this.errorMessage = '';
+    this.transactionId = '';
+    this.apiResponse = null;
+  }
+}===== wallet-transfer.component.html =====
+<div class="page">
+  <div class="breadcrumb">
+    <span>Digital KYC</span>
+    <span>/</span>
+    <strong>Wallet-to-Wallet Transfer</strong>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h1>Wallet-to-Wallet Transfer</h1>
+      <p>Test customer-session-based blockchain wallet transfers.</p>
+    </div>
+
+    <button
+      class="secondary-btn"
+      type="button"
+      (click)="fillSample()"
+      [disabled]="!session || loading"
+    >
+      Fill Sample
+    </button>
+  </div>
+
+  <div *ngIf="!session" class="warning-card">
+    <h3>No wallet session found. Please login first.</h3>
+
+    <p>
+      Before submitting wallet transfers, the customer must login from the Wallet Login screen.
+      After successful login, you will return automatically to this Wallet Transfer page.
+    </p>
+
+    <a
+      routerLink="/digital-kyc/wallet-login"
+      [queryParams]="{ redirectTo: '/digital-kyc/wallet-transfer' }"
+      class="primary-link"
+    >
+      Go to Wallet Login
+    </a>
+  </div>
+
+  <div *ngIf="session" class="summary-card">
+    <div>
+      <label>Customer ID</label>
+      <strong>{{ session.customerId || '-' }}</strong>
+    </div>
+
+    <div>
+      <label>Full Name</label>
+      <strong>{{ session.fullName || '-' }}</strong>
+    </div>
+
+    <div>
+      <label>Wallet Address</label>
+      <strong class="mono">{{ session.walletAddress || '-' }}</strong>
+    </div>
+
+    <div>
+      <label>Balance</label>
+      <strong>{{ session.currentBalance ?? 0 }} {{ session.currencyCode || 'USD' }}</strong>
+    </div>
+
+    <div>
+      <label>Organization</label>
+      <strong>{{ session.organizationName || session.organizationId || '-' }}</strong>
+    </div>
+  </div>
+
+  <div class="content-grid">
+    <div class="card">
+      <h2>Transfer Form</h2>
+
+      <form (ngSubmit)="submitTransfer()" #transferForm="ngForm">
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>Sender Wallet Address</label>
+            <input
+              type="text"
+              name="senderWalletAddress"
+              [(ngModel)]="form.senderWalletAddress"
+              readonly
+              class="readonly-input"
+              placeholder="Loaded automatically from wallet session"
+            />
+          </div>
+
+          <div class="form-group full">
+            <label>Receiver Wallet Address</label>
+            <input
+              type="text"
+              name="receiverWalletAddress"
+              [(ngModel)]="form.receiverWalletAddress"
+              placeholder="Enter receiver wallet address"
+              [disabled]="!session || loading"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Amount</label>
+            <input
+              type="number"
+              name="amount"
+              [(ngModel)]="form.amount"
+              placeholder="50"
+              min="0.01"
+              step="0.01"
+              [disabled]="!session || loading"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Currency</label>
+            <input
+              type="text"
+              name="currency"
+              [(ngModel)]="form.currency"
+              placeholder="USD"
+              [disabled]="!session || loading"
+              required
+            />
+          </div>
+
+          <div class="form-group full">
+            <label>Transaction Purpose</label>
+            <input
+              type="text"
+              name="transactionPurpose"
+              [(ngModel)]="form.transactionPurpose"
+              placeholder="Wallet transfer test"
+              [disabled]="!session || loading"
+            />
+          </div>
+
+          <div class="form-group full">
+            <label>Transaction Description</label>
+            <textarea
+              name="transactionDescription"
+              rows="4"
+              [(ngModel)]="form.transactionDescription"
+              placeholder="STEP 32 wallet-to-wallet transfer from Angular UI"
+              [disabled]="!session || loading"
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="message success" *ngIf="successMessage">
+          {{ successMessage }}
+
+          <div *ngIf="transactionId">
+            Transaction ID:
+            <strong class="mono">{{ transactionId }}</strong>
+          </div>
+        </div>
+
+        <div class="message error" *ngIf="errorMessage">
+          {{ errorMessage }}
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="primary-btn" [disabled]="!session || loading">
+            {{ loading ? 'Submitting Transfer...' : 'Submit Transfer' }}
+          </button>
+
+          <button type="button" class="secondary-btn" (click)="clearMessages()" [disabled]="loading">
+            Clear
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>API Response Preview</h2>
+
+      <pre *ngIf="apiResponse">{{ apiResponse | json }}</pre>
+
+      <div class="empty-json" *ngIf="!apiResponse">
+        API response will appear here after submission.
+      </div>
+    </div>
+  </div>
+</div>===== wallet-transfer.component.css =====
+.page {
+  padding: 24px;
+  background: #f4f7fb;
+  min-height: 100vh;
+}
+
+.breadcrumb {
+  display: flex;
+  gap: 8px;
+  color: #64748b;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.page-header h1 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 28px;
+}
+
+.page-header p {
+  margin: 6px 0 0;
+  color: #64748b;
+}
+
+.summary-card,
+.card,
+.warning-card {
+  background: #ffffff;
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  border: 1px solid #e5e7eb;
+}
+
+.summary-card {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.summary-card label {
+  display: block;
+  color: #64748b;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.summary-card strong {
+  color: #0f172a;
+  font-size: 14px;
+  word-break: break-word;
+}
+
+.warning-card {
+  padding: 24px;
+  margin-bottom: 20px;
+  border-left: 5px solid #f59e0b;
+}
+
+.warning-card h3 {
+  margin: 0 0 8px;
+  color: #92400e;
+}
+
+.warning-card p {
+  color: #64748b;
+}
+
+.primary-link {
+  display: inline-block;
+  margin-top: 10px;
+  color: #ffffff;
+  background: #2563eb;
+  padding: 10px 16px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 20px;
+}
+
+.card {
+  padding: 22px;
+}
+
+.card h2 {
+  margin: 0 0 18px;
+  color: #0f172a;
+  font-size: 20px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.form-group.full {
+  grid-column: span 2;
+}
+
+.form-group label {
+  display: block;
+  color: #334155;
+  font-weight: 600;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+input,
+textarea,
+select {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  padding: 11px 12px;
+  font-size: 14px;
+  outline: none;
+  background: #ffffff;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.readonly-input {
+  background: #f8fafc;
+  color: #475569;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.primary-btn,
+.secondary-btn {
+  border: none;
+  border-radius: 12px;
+  padding: 11px 18px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.primary-btn {
+  background: #2563eb;
+  color: white;
+}
+
+.secondary-btn {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.primary-btn:disabled,
+.secondary-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.message {
+  padding: 13px;
+  border-radius: 12px;
+  margin-top: 16px;
+  font-size: 14px;
+}
+
+.success {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+.error {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+pre {
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 16px;
+  border-radius: 14px;
+  overflow: auto;
+  max-height: 520px;
+  font-size: 12px;
+}
+
+.empty-json {
+  color: #64748b;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 14px;
+  padding: 24px;
+  text-align: center;
+}
+
+.mono {
+  font-family: Consolas, Monaco, monospace;
+}
+
+@media (max-width: 1100px) {
+  .summary-card,
+  .content-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-group.full {
+    grid-column: span 1;
+  }
+}===== organization-transfer.component.ts =====
+import { CommonModule } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
+import { TransactionService } from '../../../services/transaction.service';
+
+@Component({
+  selector: 'app-organization-transfer',
+  standalone: true,
+  imports: [CommonModule, FormsModule, RouterModule],
+  templateUrl: './organization-transfer.component.html',
+  styleUrl: './organization-transfer.component.css'
+})
+export class OrganizationTransferComponent implements OnInit {
+  session: any = null;
+
+  loading = false;
+  successMessage = '';
+  errorMessage = '';
+  transactionId = '';
+  apiResponse: any = null;
+
+  form = {
+    senderWalletAddress: '',
+    receiverWalletAddress: '',
+    amount: '',
+    currency: 'USD',
+    transactionPurpose: 'Organization-to-organization transfer',
+    transactionDescription: 'Organization wallet transfers to another organization wallet',
+    requestSource: 'ANGULAR_UI',
+    sourceSystem: 'BLOCKCHAIN_TEST_UI',
+    createdBy: 'nix'
+  };
+
+  constructor(private transactionService: TransactionService) {}
+
+  ngOnInit(): void {
+    this.loadSession();
+  }
+
+  loadSession(): void {
+    this.session = this.getLoggedInWallet();
+
+    if (!this.session) {
+      return;
+    }
+
+    this.form.senderWalletAddress =
+      this.session.walletAddress ||
+      this.session.wallet_address ||
+      '';
+
+    this.form.currency =
+      this.session.currencyCode ||
+      this.session.currency_code ||
+      this.session.currency ||
+      'USD';
+  }
+
+  fillSample(): void {
+    this.loadSession();
+
+    this.form.receiverWalletAddress = 'ORG_WALLET_1778160269059_6971AFBA84D6';
+    this.form.amount = '10';
+
+    this.form.currency =
+      this.session?.currencyCode ||
+      this.session?.currency_code ||
+      this.session?.currency ||
+      'USD';
+
+    this.form.transactionPurpose = 'Organization-to-organization transfer';
+    this.form.transactionDescription =
+      'Organization wallet transfers to another organization wallet';
+
+    this.clearMessages();
+  }
+
+  validateForm(): string | null {
+    this.loadSession();
+
+    if (!this.session) {
+      return 'No wallet session found. Please login first using an organization wallet.';
+    }
+
+    if (!this.isOrganizationWallet(this.session)) {
+      return 'Organization wallet login is required for organization-to-organization transfer.';
+    }
+
+    if (!this.form.senderWalletAddress) {
+      return 'Sender organization wallet address is required from the logged-in session.';
+    }
+
+    if (!this.form.receiverWalletAddress) {
+      return 'Receiver organization wallet address is required.';
+    }
+
+    if (this.form.senderWalletAddress === this.form.receiverWalletAddress) {
+      return 'Receiver organization wallet address cannot be the same as sender organization wallet address.';
+    }
+
+    const transferAmount = Number(this.form.amount);
+
+    if (!Number.isFinite(transferAmount) || transferAmount <= 0) {
+      return 'Amount is required and must be greater than zero.';
+    }
+
+    if (!this.form.currency) {
+      return 'Currency is required.';
+    }
+
+    return null;
+  }
+
+  submitTransfer(): void {
+    this.clearMessages();
+
+    const validationError = this.validateForm();
+
+    if (validationError) {
+      this.errorMessage = validationError;
+
+      console.warn('[ORG_TRANSFER_FRONTEND_VALIDATION_FAILED]', {
+        validationError,
+        session: this.session,
+        detectedWalletType: this.getWalletType(this.session),
+        senderWalletAddress: this.form.senderWalletAddress,
+        receiverWalletAddress: this.form.receiverWalletAddress
+      });
+
+      return;
+    }
+
+    const payload = {
+      senderWalletAddress: this.form.senderWalletAddress,
+      receiverWalletAddress: this.form.receiverWalletAddress,
+      amount: String(this.form.amount),
+      currency: this.form.currency,
+      transactionPurpose: this.form.transactionPurpose,
+      transactionDescription: this.form.transactionDescription,
+      requestSource: this.form.requestSource,
+      sourceSystem: this.form.sourceSystem,
+      createdBy: this.form.createdBy
+    };
+
+    this.loading = true;
+
+    this.transactionService.organizationTransfer(payload).subscribe({
+      next: (response: any) => {
+        this.loading = false;
+        this.apiResponse = response;
+
+        if (response?.success === false) {
+          this.errorMessage =
+            response?.message ||
+            'Organization-to-organization transfer failed.';
+          return;
+        }
+
+        this.transactionId =
+          response?.data?.transactionId ||
+          response?.transactionId ||
+          response?.data?.id ||
+          '';
+
+        const senderBalanceAfter =
+          response?.data?.senderBalanceAfter ??
+          response?.senderBalanceAfter ??
+          null;
+
+        if (senderBalanceAfter !== null && senderBalanceAfter !== undefined) {
+          this.updateLocalSessionBalance(Number(senderBalanceAfter));
+          this.loadSession();
+        }
+
+        this.successMessage =
+          response?.message ||
+          'Organization-to-organization transfer completed successfully.';
+      },
+      error: (error: any) => {
+        this.loading = false;
+        this.apiResponse = error?.error || error;
+
+        this.errorMessage =
+          error?.error?.message ||
+          error?.message ||
+          'Organization-to-organization transfer failed.';
+      }
+    });
+  }
+
+  clearForm(): void {
+    this.form.receiverWalletAddress = '';
+    this.form.amount = '';
+    this.form.transactionPurpose = 'Organization-to-organization transfer';
+    this.form.transactionDescription =
+      'Organization wallet transfers to another organization wallet';
+
+    this.clearMessages();
+  }
+
+  clearMessages(): void {
+    this.successMessage = '';
+    this.errorMessage = '';
+    this.transactionId = '';
+    this.apiResponse = null;
+  }
+
+  private getLoggedInWallet(): any | null {
+    const possibleKeys = [
+      'digital_kyc_wallet_session',
+      'digital_kyc_wallet_profile',
+      'digitalKycWalletSession',
+      'digitalKycWalletProfile',
+      'walletSession',
+      'walletProfile',
+      'loggedInWallet',
+      'currentWallet'
+    ];
+
+    for (const key of possibleKeys) {
+      const rawValue =
+        localStorage.getItem(key) ||
+        sessionStorage.getItem(key);
+
+      if (!rawValue) {
+        continue;
+      }
+
+      try {
+        const parsed = JSON.parse(rawValue);
+        const wallet = this.extractWalletFromSession(parsed);
+
+        if (wallet?.walletAddress || wallet?.wallet_address) {
+          return wallet;
+        }
+      } catch {
+        continue;
+      }
+    }
+
+    return null;
+  }
+
+  private extractWalletFromSession(parsed: any): any {
+    const wallet =
+      parsed?.data?.wallet ||
+      parsed?.data?.profile ||
+      parsed?.data?.walletProfile ||
+      parsed?.wallet ||
+      parsed?.profile ||
+      parsed?.walletProfile ||
+      parsed?.data ||
+      parsed;
+
+    return {
+      ...wallet,
+
+      walletAddress:
+        wallet?.walletAddress ||
+        wallet?.wallet_address ||
+        parsed?.walletAddress ||
+        parsed?.wallet_address ||
+        '',
+
+      customerId:
+        wallet?.customerId ||
+        wallet?.customer_id ||
+        parsed?.customerId ||
+        parsed?.customer_id ||
+        '',
+
+      walletType:
+        wallet?.walletType ||
+        wallet?.wallet_type ||
+        wallet?.type ||
+        parsed?.walletType ||
+        parsed?.wallet_type ||
+        parsed?.type ||
+        this.inferWalletType(wallet || parsed),
+
+      fullName:
+        wallet?.fullName ||
+        wallet?.full_name ||
+        parsed?.fullName ||
+        parsed?.full_name ||
+        '',
+
+      organizationId:
+        wallet?.organizationId ||
+        wallet?.organization_id ||
+        parsed?.organizationId ||
+        parsed?.organization_id ||
+        '',
+
+      organizationName:
+        wallet?.organizationName ||
+        wallet?.organization_name ||
+        parsed?.organizationName ||
+        parsed?.organization_name ||
+        '',
+
+      currencyCode:
+        wallet?.currencyCode ||
+        wallet?.currency_code ||
+        wallet?.currency ||
+        parsed?.currencyCode ||
+        parsed?.currency_code ||
+        parsed?.currency ||
+        'USD',
+
+      currentBalance:
+        wallet?.currentBalance ??
+        wallet?.current_balance ??
+        parsed?.currentBalance ??
+        parsed?.current_balance ??
+        0
+    };
+  }
+
+  private isOrganizationWallet(wallet: any): boolean {
+    return this.getWalletType(wallet) === 'ORGANIZATION';
+  }
+
+  private getWalletType(wallet: any): string {
+    const walletType = String(
+      wallet?.walletType ||
+      wallet?.wallet_type ||
+      wallet?.type ||
+      this.inferWalletType(wallet)
+    )
+      .trim()
+      .toUpperCase();
+
+    if (walletType === 'ORG') {
+      return 'ORGANIZATION';
+    }
+
+    return walletType;
+  }
+
+  private inferWalletType(wallet: any): string {
+    const walletAddress = String(
+      wallet?.walletAddress ||
+      wallet?.wallet_address ||
+      ''
+    ).toUpperCase();
+
+    const customerId = String(
+      wallet?.customerId ||
+      wallet?.customer_id ||
+      ''
+    ).toUpperCase();
+
+    if (
+      walletAddress.startsWith('ORG_WALLET_') ||
+      customerId.startsWith('ORG_')
+    ) {
+      return 'ORGANIZATION';
+    }
+
+    return 'CUSTOMER';
+  }
+
+  private updateLocalSessionBalance(newBalance: number): void {
+    const possibleKeys = [
+      'digital_kyc_wallet_session',
+      'digital_kyc_wallet_profile',
+      'digitalKycWalletSession',
+      'digitalKycWalletProfile',
+      'walletSession',
+      'walletProfile',
+      'loggedInWallet',
+      'currentWallet'
+    ];
+
+    for (const key of possibleKeys) {
+      const rawValue = localStorage.getItem(key);
+
+      if (!rawValue) {
+        continue;
+      }
+
+      try {
+        const parsed = JSON.parse(rawValue);
+
+        if (parsed?.data?.wallet) {
+          parsed.data.wallet.currentBalance = newBalance;
+          parsed.data.wallet.current_balance = newBalance;
+        } else if (parsed?.wallet) {
+          parsed.wallet.currentBalance = newBalance;
+          parsed.wallet.current_balance = newBalance;
+        } else if (parsed?.data) {
+          parsed.data.currentBalance = newBalance;
+          parsed.data.current_balance = newBalance;
+        } else {
+          parsed.currentBalance = newBalance;
+          parsed.current_balance = newBalance;
+        }
+
+        localStorage.setItem(key, JSON.stringify(parsed));
+      } catch {
+        continue;
+      }
+    }
+  }
+}
+===== organization-transfer.component.html =====
+<div class="page">
+  <div class="breadcrumb">
+    <span>Digital KYC</span>
+    <span>/</span>
+    <strong>Inter-Organization Customer Transfer</strong>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h1>Inter-Organization Customer Transfer</h1>
+      <p>
+        Transfer funds from the logged-in customer wallet to another customer wallet
+        belonging to a different organization.
+      </p>
+    </div>
+
+    <button
+      class="secondary-btn"
+      type="button"
+      (click)="fillSample()"
+      [disabled]="!session || loading"
+    >
+      Fill Sample
+    </button>
+  </div>
+
+  <div *ngIf="!session" class="warning-card">
+    <h3>No wallet session found. Please login first.</h3>
+
+    <p>
+      Before submitting an inter-organization customer transfer, the customer must login
+      from the Wallet Login screen. After successful login, you will return automatically
+      to this Organization Transfer page.
+    </p>
+
+    <a
+      routerLink="/digital-kyc/wallet-login"
+      [queryParams]="{ redirectTo: '/digital-kyc/organization-transfer' }"
+      class="primary-link"
+    >
+      Go to Wallet Login
+    </a>
+  </div>
+
+  <div *ngIf="session" class="summary-card">
+    <div>
+      <label>Sender Customer ID</label>
+      <strong>{{ session.customerId || '-' }}</strong>
+    </div>
+
+    <div>
+      <label>Sender Full Name</label>
+      <strong>{{ session.fullName || '-' }}</strong>
+    </div>
+
+    <div>
+      <label>Sender Wallet Address</label>
+      <strong class="mono">{{ session.walletAddress || '-' }}</strong>
+    </div>
+
+    <div>
+      <label>Sender Balance</label>
+      <strong>{{ session.currentBalance ?? 0 }} {{ session.currencyCode || 'USD' }}</strong>
+    </div>
+
+    <div>
+      <label>Sender Organization</label>
+      <strong>{{ session.organizationName || session.organizationId || '-' }}</strong>
+    </div>
+  </div>
+
+  <div class="content-grid">
+    <div class="card">
+      <h2>Inter-Organization Transfer Form</h2>
+
+      <form (ngSubmit)="submitTransfer()">
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>Sender Wallet Address</label>
+            <input
+              type="text"
+              name="senderWalletAddress"
+              [(ngModel)]="form.senderWalletAddress"
+              readonly
+              class="readonly-input"
+              placeholder="Loaded automatically from wallet session"
+            />
+          </div>
+
+          <!--
+            IMPORTANT:
+            This field is the receiver customer wallet address.
+            Backend should validate that sender organization and receiver organization are different.
+          -->
+          <div class="form-group full">
+            <label>Receiver Customer Wallet Address</label>
+            <input
+              type="text"
+              name="receiverWalletAddress"
+              [(ngModel)]="form.receiverWalletAddress"
+              placeholder="Enter receiver customer wallet address from another organization"
+              [disabled]="!session || loading"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Amount</label>
+            <input
+              type="number"
+              name="amount"
+              [(ngModel)]="form.amount"
+              placeholder="100"
+              min="0.01"
+              step="0.01"
+              [disabled]="!session || loading"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Currency</label>
+            <input
+              type="text"
+              name="currency"
+              [(ngModel)]="form.currency"
+              placeholder="USD"
+              [disabled]="!session || loading"
+              required
+            />
+          </div>
+
+          <div class="form-group full">
+            <label>Transaction Purpose</label>
+            <input
+              type="text"
+              name="transactionPurpose"
+              [(ngModel)]="form.transactionPurpose"
+              placeholder="Inter-organization customer transfer"
+              [disabled]="!session || loading"
+            />
+          </div>
+
+          <div class="form-group full">
+            <label>Transaction Description</label>
+            <textarea
+              name="transactionDescription"
+              rows="4"
+              [(ngModel)]="form.transactionDescription"
+              placeholder="Customer from organization A transfers to customer from organization B"
+              [disabled]="!session || loading"
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="message success" *ngIf="successMessage">
+          {{ successMessage }}
+
+          <div *ngIf="transactionId">
+            Transaction ID:
+            <strong class="mono">{{ transactionId }}</strong>
+          </div>
+        </div>
+
+        <div class="message error" *ngIf="errorMessage">
+          {{ errorMessage }}
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="primary-btn" [disabled]="!session || loading">
+            {{ loading ? 'Submitting Transfer...' : 'Submit Inter-Organization Transfer' }}
+          </button>
+
+          <button type="button" class="secondary-btn" (click)="clearMessages()" [disabled]="loading">
+            Clear
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>API Response Preview</h2>
+
+      <pre *ngIf="apiResponse">{{ apiResponse | json }}</pre>
+
+      <div class="empty-json" *ngIf="!apiResponse">
+        API response will appear here after submission.
+      </div>
+    </div>
+  </div>
+</div>===== organization-transfer.component.css =====
+@import '../wallet-transfer/wallet-transfer.component.css';===== transaction-history.component.ts =====
+import { CommonModule } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { TransactionService } from '../../../services/transaction.service';
+import { WalletSessionService } from '../../../services/wallet-session.service';
+
+@Component({
+  selector: 'app-transaction-history',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  templateUrl: './transaction-history.component.html',
+  styleUrl: './transaction-history.component.css'
+})
+export class TransactionHistoryComponent implements OnInit {
+  session: any = null;
+  loading = false;
+  errorMessage = '';
+  successMessage = '';
+  apiResponse: any = null;
+  transactions: any[] = [];
+  selectedTransaction: any = null;
+
+  filters = {
+    walletAddress: '',
+    customerId: '',
+    organizationId: '',
+    transactionType: '',
+    status: '',
+    dateFrom: '',
+    dateTo: '',
+    amountMin: '',
+    amountMax: '',
+    page: 1,
+    limit: 10
+  };
+
+  pagination = {
+    page: 1,
+    limit: 10,
+    totalRecords: 0,
+    totalPages: 0,
+    hasNextPage: false,
+    hasPreviousPage: false
+  };
+
+  constructor(
+    private transactionService: TransactionService,
+    private walletSessionService: WalletSessionService
+  ) {}
+
+  ngOnInit(): void {
+    this.session = this.walletSessionService.getSession();
+
+    if (this.session?.walletAddress) {
+      this.filters.walletAddress = this.session.walletAddress;
+    }
+
+    this.loadTransactions();
+  }
+
+  loadTransactions(): void {
+    this.loading = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.apiResponse = null;
+
+    this.transactionService.getTransactions(this.filters).subscribe({
+      next: (response: any) => {
+        this.loading = false;
+        this.apiResponse = response;
+        this.transactions = Array.isArray(response?.data) ? response.data : [];
+
+        this.pagination = {
+          page: response?.pagination?.page || Number(this.filters.page) || 1,
+          limit: response?.pagination?.limit || Number(this.filters.limit) || 10,
+          totalRecords: response?.pagination?.totalRecords || 0,
+          totalPages: response?.pagination?.totalPages || 0,
+          hasNextPage: response?.pagination?.hasNextPage || false,
+          hasPreviousPage: response?.pagination?.hasPreviousPage || false
+        };
+
+        this.successMessage = 'Transaction history loaded successfully.';
+      },
+      error: (error: any) => {
+        this.loading = false;
+        this.apiResponse = error?.error || error;
+        this.transactions = [];
+        this.errorMessage =
+          error?.error?.message ||
+          error?.message ||
+          'Failed to load transaction history.';
+      }
+    });
+  }
+
+  search(): void {
+    this.filters.page = 1;
+    this.loadTransactions();
+  }
+
+  refresh(): void {
+    this.loadTransactions();
+  }
+
+  clearFilters(): void {
+    this.filters = {
+      walletAddress: this.session?.walletAddress || '',
+      customerId: '',
+      organizationId: '',
+      transactionType: '',
+      status: '',
+      dateFrom: '',
+      dateTo: '',
+      amountMin: '',
+      amountMax: '',
+      page: 1,
+      limit: 10
+    };
+
+    this.selectedTransaction = null;
+    this.loadTransactions();
+  }
+
+  nextPage(): void {
+    if (!this.pagination.hasNextPage) {
+      return;
+    }
+
+    this.filters.page = Number(this.filters.page) + 1;
+    this.loadTransactions();
+  }
+
+  previousPage(): void {
+    if (!this.pagination.hasPreviousPage || Number(this.filters.page) <= 1) {
+      return;
+    }
+
+    this.filters.page = Number(this.filters.page) - 1;
+    this.loadTransactions();
+  }
+
+  viewDetails(transaction: any): void {
+    this.selectedTransaction = transaction;
+  }
+
+  closeDetails(): void {
+    this.selectedTransaction = null;
+  }
+
+  getField(row: any, ...keys: string[]): any {
+    for (const key of keys) {
+      if (row?.[key] !== undefined && row?.[key] !== null) {
+        return row[key];
+      }
+    }
+
+    return '-';
+  }
+}===== transaction-history.component.html =====
+<div class="page">
+  <div class="breadcrumb">
+    <span>Digital KYC</span>
+    <span>/</span>
+    <strong>Transaction History</strong>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h1>Transaction History</h1>
+      <p>Search and review blockchain transaction records from PostgreSQL.</p>
+    </div>
+
+    <button class="primary-btn" type="button" (click)="refresh()" [disabled]="loading">
+      {{ loading ? 'Refreshing...' : 'Refresh' }}
+    </button>
+  </div>
+
+  <div *ngIf="session" class="summary-card">
+    <div>
+      <label>Customer ID</label>
+      <strong>{{ session.customerId || '-' }}</strong>
+    </div>
+    <div>
+      <label>Full Name</label>
+      <strong>{{ session.fullName || '-' }}</strong>
+    </div>
+    <div>
+      <label>Wallet Address</label>
+      <strong class="mono">{{ session.walletAddress || '-' }}</strong>
+    </div>
+    <div>
+      <label>Balance</label>
+      <strong>{{ session.currentBalance ?? 0 }} {{ session.currencyCode || 'USD' }}</strong>
+    </div>
+    <div>
+      <label>Organization</label>
+      <strong>{{ session.organizationName || '-' }}</strong>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Advanced Filters</h2>
+
+    <div class="filter-grid">
+      <div class="form-group">
+        <label>Wallet Address</label>
+        <input type="text" [(ngModel)]="filters.walletAddress" name="walletAddress" />
+      </div>
+
+      <div class="form-group">
+        <label>Customer ID</label>
+        <input type="text" [(ngModel)]="filters.customerId" name="customerId" />
+      </div>
+
+      <div class="form-group">
+        <label>Organization ID</label>
+        <input type="text" [(ngModel)]="filters.organizationId" name="organizationId" />
+      </div>
+
+      <div class="form-group">
+        <label>Transaction Type</label>
+        <select [(ngModel)]="filters.transactionType" name="transactionType">
+          <option value="">All</option>
+          <option value="WALLET_TRANSFER">WALLET_TRANSFER</option>
+          <option value="ORGANIZATION_TRANSFER">ORGANIZATION_TRANSFER</option>
+          <option value="WALLET_TO_WALLET">WALLET_TO_WALLET</option>
+          <option value="WALLET_TO_ORGANIZATION">WALLET_TO_ORGANIZATION</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Status</label>
+        <select [(ngModel)]="filters.status" name="status">
+          <option value="">All</option>
+          <option value="COMPLETED">COMPLETED</option>
+          <option value="SUCCESS">SUCCESS</option>
+          <option value="FAILED">FAILED</option>
+          <option value="PENDING">PENDING</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Date From</label>
+        <input type="date" [(ngModel)]="filters.dateFrom" name="dateFrom" />
+      </div>
+
+      <div class="form-group">
+        <label>Date To</label>
+        <input type="date" [(ngModel)]="filters.dateTo" name="dateTo" />
+      </div>
+
+      <div class="form-group">
+        <label>Amount Min</label>
+        <input type="number" [(ngModel)]="filters.amountMin" name="amountMin" />
+      </div>
+
+      <div class="form-group">
+        <label>Amount Max</label>
+        <input type="number" [(ngModel)]="filters.amountMax" name="amountMax" />
+      </div>
+
+      <div class="form-group">
+        <label>Page</label>
+        <input type="number" [(ngModel)]="filters.page" name="page" min="1" />
+      </div>
+
+      <div class="form-group">
+        <label>Limit</label>
+        <input type="number" [(ngModel)]="filters.limit" name="limit" min="1" max="100" />
+      </div>
+    </div>
+
+    <div class="actions">
+      <button type="button" class="primary-btn" (click)="search()" [disabled]="loading">
+        {{ loading ? 'Searching...' : 'Search' }}
+      </button>
+
+      <button type="button" class="secondary-btn" (click)="clearFilters()" [disabled]="loading">
+        Clear Filters
+      </button>
+    </div>
+
+    <div class="message success" *ngIf="successMessage">
+      {{ successMessage }}
+    </div>
+
+    <div class="message error" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </div>
+  </div>
+
+  <div class="card table-card">
+    <div class="table-header">
+      <h2>Transactions</h2>
+      <span>{{ pagination.totalRecords }} record(s)</span>
+    </div>
+
+    <div class="loading-state" *ngIf="loading">
+      Loading transaction history...
+    </div>
+
+    <div class="empty-json" *ngIf="!loading && transactions.length === 0">
+      No transactions found for the selected filters.
+    </div>
+
+    <div class="table-wrapper" *ngIf="!loading && transactions.length > 0">
+      <table>
+        <thead>
+          <tr>
+            <th>Transaction ID</th>
+            <th>Request ID</th>
+            <th>Type</th>
+            <th>Sender Wallet</th>
+            <th>Receiver Wallet</th>
+            <th>Organization ID</th>
+            <th>Amount</th>
+            <th>Currency</th>
+            <th>Status</th>
+            <th>Created Date</th>
+            <th>Source</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let tx of transactions">
+            <td class="mono">{{ getField(tx, 'transactionId', 'transaction_id', 'id') }}</td>
+            <td class="mono">{{ getField(tx, 'requestId', 'request_id') }}</td>
+            <td>{{ getField(tx, 'transactionType', 'transaction_type', 'type') }}</td>
+            <td class="mono">{{ getField(tx, 'senderWalletAddress', 'sender_wallet_address', 'fromWalletAddress') }}</td>
+            <td class="mono">{{ getField(tx, 'receiverWalletAddress', 'receiver_wallet_address', 'toWalletAddress') }}</td>
+            <td class="mono">{{ getField(tx, 'organizationId', 'organization_id') }}</td>
+            <td>{{ getField(tx, 'amount', 'transactionAmount', 'transaction_amount') }}</td>
+            <td>{{ getField(tx, 'currency', 'currencyCode', 'currency_code') }}</td>
+            <td>
+              <span class="status-pill">
+                {{ getField(tx, 'status', 'transactionStatus', 'transaction_status') }}
+              </span>
+            </td>
+            <td>{{ getField(tx, 'createdAt', 'created_at') }}</td>
+            <td>{{ getField(tx, 'source', 'requestSource', 'request_source') }}</td>
+            <td>
+              <button class="small-btn" type="button" (click)="viewDetails(tx)">
+                Details
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination">
+      <button class="secondary-btn" type="button" (click)="previousPage()" [disabled]="!pagination.hasPreviousPage || loading">
+        Previous
+      </button>
+
+      <span>
+        Page {{ pagination.page }} of {{ pagination.totalPages || 1 }}
+      </span>
+
+      <button class="secondary-btn" type="button" (click)="nextPage()" [disabled]="!pagination.hasNextPage || loading">
+        Next
+      </button>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" *ngIf="selectedTransaction">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Transaction Details</h2>
+        <button type="button" class="close-btn" (click)="closeDetails()">×</button>
+      </div>
+
+      <pre>{{ selectedTransaction | json }}</pre>
+    </div>
+  </div>
+
+  <div class="card response-card">
+    <h2>API Response Preview</h2>
+    <pre *ngIf="apiResponse">{{ apiResponse | json }}</pre>
+    <div class="empty-json" *ngIf="!apiResponse">
+      API response will appear here.
+    </div>
+  </div>
+</div>===== transaction-history.component.css =====
+@import '../wallet-transfer/wallet-transfer.component.css';
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.table-card {
+  margin-top: 20px;
+}
+
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.table-header h2 {
+  margin: 0;
+}
+
+.table-header span {
+  color: #64748b;
+  font-size: 14px;
+}
+
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 1400px;
+}
+
+th {
+  background: #f8fafc;
+  color: #334155;
+  text-align: left;
+  font-size: 12px;
+  padding: 12px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+td {
+  padding: 12px;
+  border-bottom: 1px solid #e2e8f0;
+  color: #0f172a;
+  font-size: 13px;
+  vertical-align: top;
+}
+
+.status-pill {
+  display: inline-block;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-weight: 700;
+  font-size: 11px;
+}
+
+.small-btn {
+  border: none;
+  border-radius: 9px;
+  padding: 7px 11px;
+  background: #2563eb;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.pagination {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.loading-state {
+  padding: 24px;
+  border-radius: 14px;
+  background: #f8fafc;
+  color: #2563eb;
+  text-align: center;
+  font-weight: 700;
+}
+
+.response-card {
+  margin-top: 20px;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 24px;
+}
+
+.modal {
+  width: min(900px, 96vw);
+  max-height: 86vh;
+  overflow: auto;
+  background: #ffffff;
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.35);
+  padding: 22px;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.close-btn {
+  border: none;
+  background: #ef4444;
+  color: #ffffff;
+  border-radius: 10px;
+  width: 34px;
+  height: 34px;
+  cursor: pointer;
+  font-size: 22px;
+  line-height: 1;
+}
+
+@media (max-width: 1100px) {
+  .filter-grid {
+    grid-template-columns: 1fr;
+  }
+}===== sidebar files list =====
+src/app/layout/sidebar/sidebar.component.html
+src/app/layout/sidebar/sidebar.component.html.bak_logo_update
+src/app/layout/sidebar/sidebar.component.html.bak_logo_image_only
+src/app/layout/sidebar/sidebar.component.css.bak_logo_update
+src/app/layout/sidebar/sidebar.component.css
+src/app/layout/sidebar/sidebar.component.css.bak_logo_image_only
+===== sidebar.component.html =====
+  <div class="sidebar-logo">
+  <img
+    src="assets/images/valoores-logo.png"
+    alt="Valoores Logo"
+    class="valoores-logo-img"
+  />
+</div>
+  </div>
+
+
+
+
+  <div class="sidebar-divider"></div>
+
+  <div *ngIf="!isWalletLoggedIn" class="menu-section">
+    <div class="menu-title">Main Menu</div>
+
+    <nav class="sidebar-nav">
+      <a
+        routerLink="/digital-kyc/dashboard"
+        routerLinkActive="active"
+        class="sidebar-link"
+      >
+        <span>Dashboard</span>
+      </a>
+
+      <a
+        routerLink="/digital-kyc/wallet-create"
+        routerLinkActive="active"
+        class="sidebar-link"
+      >
+        <span>Wallet Create</span>
+      </a>
+
+      <a
+        routerLink="/digital-kyc/organization-wallet-create"
+        routerLinkActive="active"
+        class="sidebar-link"
+      >
+        <span>Organization Wallet Create</span>
+      </a>
+
+      <a
+        routerLink="/digital-kyc/wallet-login"
+        routerLinkActive="active"
+        class="sidebar-link"
+      >
+        <span>Wallet Login</span>
+      </a>
+
+      <a
+        routerLink="/digital-kyc/wallet-query"
+        routerLinkActive="active"
+        class="sidebar-link"
+      >
+        <span>Wallet Query</span>
+      </a>
+
+      <a
+        routerLink="/digital-kyc/fabric-test"
+        routerLinkActive="active"
+        class="sidebar-link"
+      >
+        <span>Fabric Test (Under Development)</span>
+      </a>
+    </nav>
+  </div>
+
+  <div *ngIf="isWalletLoggedIn" class="menu-section">
+    <div class="wallet-session-card">
+      <div class="session-label">Logged-in Wallet</div>
+
+      <div class="session-name">
+        {{ walletSession?.fullName || 'Customer Wallet' }}
+      </div>
+
+      <div class="session-row">
+        <span>Customer</span>
+        <strong>{{ walletSession?.customerId || '-' }}</strong>
+      </div>
+
+      <div class="session-row">
+        <span>Organization</span>
+        <strong>{{ walletSession?.organizationName || walletSession?.organizationId || '-' }}</strong>
+      </div>
+
+      <div class="session-row">
+        <span>Wallet Type</span>
+        <strong>{{ walletSession?.walletType || 'CUSTOMER' }}</strong>
+      </div>
+
+      <div class="session-row">
+        <span>Balance</span>
+        <strong>
+          {{ walletSession?.currentBalance ?? 0 }}
+          {{ walletSession?.currencyCode || 'USD' }}
+        </strong>
+      </div>
+    </div>
+
+    <div class="menu-title">Transaction Menu</div>
+
+    <nav class="sidebar-nav">
+      <a
+        *ngIf="walletSession?.walletType === 'CUSTOMER'"
+        routerLink="/digital-kyc/wallet-transfer"
+        routerLinkActive="active"
+        class="sidebar-link"
+      >
+        <span>Wallet Transfer</span>
+      </a>
+
+      <a
+        *ngIf="walletSession?.walletType === 'ORGANIZATION'"
+        routerLink="/digital-kyc/organization-transfer"
+        routerLinkActive="active"
+        class="sidebar-link"
+      >
+        <span>Organization Transfer</span>
+      </a>
+
+      <a
+        routerLink="/digital-kyc/transaction-history"
+        routerLinkActive="active"
+        class="sidebar-link"
+      >
+        <span>Transaction History</span>
+      </a>
+
+      <button type="button" class="sidebar-link logout-link" (click)="logoutWallet()">
+        <span>Logout</span>
+      </button>
+    </nav>
+  </div>
+</div>===== sidebar.component.css =====
+.brand-mark {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 16px;
+}
+
+.brand-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #0f4c81, #1a8f5a);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+/* 
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+} */
+
+/* .brand-name {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: 0.8px;
+} */
+
+/* .brand-subtitle {
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 3px;
+} */
+
+.menu-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 14px 18px 8px;
+}
+
+.wallet-session-card {
+  margin: 14px;
+  padding: 14px;
+  border-radius: 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.session-label {
+  font-size: 11px;
+  color: #64748b;
+  text-transform: uppercase;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.session-name {
+  font-size: 14px;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 10px;
+}
+
+.session-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 8px;
+}
+
+.session-row span {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.session-row strong {
+  font-size: 12px;
+  color: #0f172a;
+  word-break: break-word;
+}
+
+.logout-link {
+  width: calc(100% - 24px);
+  margin: 8px 12px;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+  background: #fff1f2;
+  color: #be123c;
+}
+
+.logout-link:hover {
+  background: #ffe4e6;
+}
+
+.sidebar-logo {
+  padding: 20px 18px 16px;
+}
+
+.brand-mark {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-logo-img {
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 6px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.brand-name {
+  font-size: 17px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 0.6px;
+}
+
+.brand-subtitle {
+  margin-top: 3px;
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.72);
+}
+/* Valoores Logo Update */
+.sidebar-logo {
+  padding: 20px 18px 16px;
+}
+
+.brand-mark {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-logo-img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  border-radius: 14px;
+  background: #ffffff;
+  padding: 6px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+}
+
+.brand-icon {
+  display: none;
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.brand-name {
+  font-size: 17px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 0.8px;
+}
+
+.brand-subtitle {
+  margin-top: 3px;
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+/* ================================
+   Valoores Official Logo
+================================ */
+.sidebar-logo {
+  height: 72px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  background: #ffffff;
+}
+
+.valoores-logo-img {
+  width: 165px;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+  display: block;
+}
+
+.brand-mark,
+.brand-icon,
+.brand-text,
+.brand-name,
+.brand-subtitle {
+  display: none !important;
+}
+===== sidebar.component.ts if exists =====
+No sidebar.component.ts found

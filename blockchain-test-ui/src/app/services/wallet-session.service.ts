@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
 
-export interface WalletSession {
+export interface LoggedWalletSession {
   customerId: string;
   walletAddress: string;
   organizationId: string;
@@ -9,124 +8,106 @@ export interface WalletSession {
   fullName: string;
   currentBalance: number;
   currencyCode: string;
-  token: string;
-  walletType: string;
+  walletType: 'CUSTOMER' | 'ORGANIZATION';
+  token?: string;
+  loginTime?: string;
+  sessionSource?: string;
+  raw?: any;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class WalletSessionService {
-  private readonly SESSION_KEY = 'digital_kyc_wallet_session';
+  private readonly mainKey = 'blockchain_logged_wallet';
 
-  private sessionSubject = new BehaviorSubject<WalletSession | null>(this.getSession());
+  private readonly legacyKeys = [
+    'walletProfile',
+    'loggedInWallet',
+    'loggedWallet',
+    'currentWallet',
+    'wallet_session',
+    'digital_kyc_wallet_session',
+    'digital_kyc_wallet_profile',
+    'digitalKycWalletSession',
+    'digitalKycWalletProfile',
+    'walletSession',
+    'wallet_profile',
+    'wallet_token',
+    'digital_kyc_wallet_token',
+    'digital_kyc_wallet_profile'
+  ];
 
-  sessionChanges$ = this.sessionSubject.asObservable();
+  setSession(walletData: any): void {
+    const normalized = this.normalizeSession(walletData);
 
-  setSession(walletProfile: any): void {
-    if (!walletProfile) {
-      return;
+    localStorage.setItem(this.mainKey, JSON.stringify(normalized));
+    sessionStorage.setItem(this.mainKey, JSON.stringify(normalized));
+
+    if (normalized.token) {
+      localStorage.setItem('digital_kyc_wallet_token', normalized.token);
+      sessionStorage.setItem('digital_kyc_wallet_token', normalized.token);
     }
 
-    const normalizedSession: WalletSession = {
-      customerId: walletProfile.customerId || walletProfile.customer_id || '',
-      walletAddress: walletProfile.walletAddress || walletProfile.wallet_address || '',
-      organizationId: walletProfile.organizationId || walletProfile.organization_id || '',
-      organizationName: walletProfile.organizationName || walletProfile.organization_name || '',
-      fullName:
-        walletProfile.fullName ||
-        walletProfile.full_name ||
-        walletProfile.customerName ||
-        walletProfile.customer_name ||
-        '',
-      currentBalance: Number(
-        walletProfile.currentBalance ??
-          walletProfile.current_balance ??
-          walletProfile.balance ??
-          0
-      ),
-      currencyCode:
-        walletProfile.currencyCode ||
-        walletProfile.currency_code ||
-        walletProfile.currency ||
-        'USD',
-      token: walletProfile.token || '',
-      walletType: String(
-        walletProfile.walletType ||
-          walletProfile.wallet_type ||
-          walletProfile.customerType ||
-          walletProfile.customer_type ||
-          'CUSTOMER'
-      ).toUpperCase()
-    };
+    window.dispatchEvent(new Event('wallet-session-changed'));
+  }
 
-    localStorage.setItem(this.SESSION_KEY, JSON.stringify(normalizedSession));
+  getSession(): LoggedWalletSession | null {
+    const current =
+      localStorage.getItem(this.mainKey) ||
+      sessionStorage.getItem(this.mainKey);
 
-    if (normalizedSession.token) {
-      localStorage.setItem('digital_kyc_wallet_token', normalizedSession.token);
+    if (current) {
+      try {
+        return this.normalizeSession(JSON.parse(current));
+      } catch {
+        this.clearSession();
+        return null;
+      }
     }
 
-    localStorage.setItem('digital_kyc_wallet_profile', JSON.stringify(normalizedSession));
+    for (const key of this.legacyKeys) {
+      const raw =
+        localStorage.getItem(key) ||
+        sessionStorage.getItem(key);
 
-    this.sessionSubject.next(normalizedSession);
-  }
+      if (!raw) {
+        continue;
+      }
 
-  getSession(): WalletSession | null {
-    const rawSession = localStorage.getItem(this.SESSION_KEY);
+      try {
+        const parsed = JSON.parse(raw);
+        const session = this.normalizeSession(parsed);
 
-    if (!rawSession) {
-      return null;
+        if (session.walletAddress) {
+          this.setSession(session);
+          return session;
+        }
+      } catch {
+        continue;
+      }
     }
 
-    try {
-      return JSON.parse(rawSession);
-    } catch (error) {
-      console.error('Invalid wallet session found in localStorage:', error);
-      this.clearSession();
-      return null;
-    }
-  }
-
-  getWalletAddress(): string {
-    return this.getSession()?.walletAddress || '';
-  }
-
-  getCustomerId(): string {
-    return this.getSession()?.customerId || '';
-  }
-
-  getOrganizationId(): string {
-    return this.getSession()?.organizationId || '';
-  }
-
-  getToken(): string {
-    return this.getSession()?.token || localStorage.getItem('digital_kyc_wallet_token') || '';
-  }
-
-  getWalletType(): string {
-    return this.getSession()?.walletType || 'CUSTOMER';
-  }
-
-  isCustomerWallet(): boolean {
-    return this.getWalletType() === 'CUSTOMER';
-  }
-
-  isOrganizationWallet(): boolean {
-    return this.getWalletType() === 'ORGANIZATION';
-  }
-
-  clearSession(): void {
-    localStorage.removeItem(this.SESSION_KEY);
-    localStorage.removeItem('digital_kyc_wallet_token');
-    localStorage.removeItem('digital_kyc_wallet_profile');
-    sessionStorage.removeItem(this.SESSION_KEY);
-
-    this.sessionSubject.next(null);
+    return null;
   }
 
   isLoggedIn(): boolean {
-    const session = this.getSession();
-    return !!session?.walletAddress;
+    return !!this.getSession()?.walletAddress;
+  }
+
+  clearSession(): void {
+    localStorage.removeItem(this.mainKey);
+    sessionStorage.removeItem(this.mainKey);
+
+    this.legacyKeys.forEach((key) => {
+      localStorage.removeItem(key);
+      sessionStorage.removeItem(key);
+    });
+
+    localStorage.removeItem('digital_kyc_wallet_token');
+    sessionStorage.removeItem('digital_kyc_wallet_token');
+
+    window.dispatchEvent(new Event('wallet-session-changed'));
   }
 
   updateBalance(newBalance: number): void {
@@ -136,62 +117,124 @@ export class WalletSessionService {
       return;
     }
 
-    const updatedSession: WalletSession = {
-      ...session,
-      currentBalance: Number(newBalance)
-    };
-
-    localStorage.setItem(this.SESSION_KEY, JSON.stringify(updatedSession));
-    localStorage.setItem('digital_kyc_wallet_profile', JSON.stringify(updatedSession));
-
-    this.sessionSubject.next(updatedSession);
+    session.currentBalance = Number(newBalance || 0);
+    this.setSession(session);
   }
-  private normalizeSessionWallet(wallet: any): any {
-    if (!wallet) {
-      return wallet;
-    }
+
+  isCustomerWallet(): boolean {
+    return this.getSession()?.walletType === 'CUSTOMER';
+  }
+
+  isOrganizationWallet(): boolean {
+    return this.getSession()?.walletType === 'ORGANIZATION';
+  }
+
+  getToken(): string {
+    return (
+      this.getSession()?.token ||
+      localStorage.getItem('digital_kyc_wallet_token') ||
+      sessionStorage.getItem('digital_kyc_wallet_token') ||
+      ''
+    );
+  }
+
+  private normalizeSession(input: any): LoggedWalletSession {
+    const wallet =
+      input?.data?.wallet ||
+      input?.data?.profile ||
+      input?.data?.walletProfile ||
+      input?.wallet ||
+      input?.profile ||
+      input?.walletProfile ||
+      input?.data ||
+      input ||
+      {};
 
     const walletAddress = String(
-      wallet.walletAddress ||
-      wallet.wallet_address ||
+      wallet?.walletAddress ||
+      wallet?.wallet_address ||
+      input?.walletAddress ||
+      input?.wallet_address ||
       ''
     );
 
     const customerId = String(
-      wallet.customerId ||
-      wallet.customer_id ||
+      wallet?.customerId ||
+      wallet?.customer_id ||
+      input?.customerId ||
+      input?.customer_id ||
       ''
     );
 
     const rawWalletType = String(
-      wallet.walletType ||
-      wallet.wallet_type ||
-      wallet.type ||
+      wallet?.walletType ||
+      wallet?.wallet_type ||
+      wallet?.type ||
+      input?.walletType ||
+      input?.wallet_type ||
+      input?.type ||
       ''
-    ).trim().toUpperCase();
+    )
+      .trim()
+      .toUpperCase();
 
-    let walletType = rawWalletType;
-
-    if (
+    const inferredWalletType =
       rawWalletType === 'ORG' ||
       rawWalletType === 'ORGANIZATION' ||
       walletAddress.toUpperCase().startsWith('ORG_WALLET_') ||
       customerId.toUpperCase().startsWith('ORG_')
-    ) {
-      walletType = 'ORGANIZATION';
-    } else {
-      walletType = 'CUSTOMER';
-    }
+        ? 'ORGANIZATION'
+        : 'CUSTOMER';
 
     return {
-      ...wallet,
-      walletAddress,
-      wallet_address: walletAddress,
       customerId,
-      customer_id: customerId,
-      walletType,
-      wallet_type: walletType
+      walletAddress,
+      organizationId:
+        wallet?.organizationId ||
+        wallet?.organization_id ||
+        input?.organizationId ||
+        input?.organization_id ||
+        '',
+      organizationName:
+        wallet?.organizationName ||
+        wallet?.organization_name ||
+        input?.organizationName ||
+        input?.organization_name ||
+        '',
+      fullName:
+        wallet?.fullName ||
+        wallet?.full_name ||
+        wallet?.customerName ||
+        wallet?.customer_name ||
+        input?.fullName ||
+        input?.full_name ||
+        '',
+      currentBalance: Number(
+        wallet?.currentBalance ??
+          wallet?.current_balance ??
+          wallet?.balance ??
+          input?.currentBalance ??
+          input?.current_balance ??
+          0
+      ),
+      currencyCode:
+        wallet?.currencyCode ||
+        wallet?.currency_code ||
+        wallet?.currency ||
+        input?.currencyCode ||
+        input?.currency_code ||
+        input?.currency ||
+        'USD',
+      walletType: inferredWalletType,
+      token:
+        input?.token ||
+        input?.data?.token ||
+        wallet?.token ||
+        localStorage.getItem('digital_kyc_wallet_token') ||
+        '',
+      loginTime: input?.loginTime || new Date().toISOString(),
+      sessionSource: this.mainKey,
+      raw: input
     };
   }
-
 }

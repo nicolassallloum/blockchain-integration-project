@@ -1,44 +1,88 @@
+.app-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  background: #f4f7fb;
+}
 
-/* Main Valoores Logo */
+.app-sidebar {
+  background: #ffffff;
+  border-right: 1px solid #e5e7eb;
+  min-height: 100vh;
+  box-shadow: 8px 0 24px rgba(15, 23, 42, 0.05);
+}
+
+.app-content {
+  min-width: 0;
+  overflow-x: hidden;
+}
+
 .logo-row {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  height: 56px;
+  height: 74px;
   padding: 0 22px;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .main-logo-img {
-  width: 155px;
+  width: 165px;
   height: auto;
   object-fit: contain;
   display: block;
 }
 
-.logo-text,
-.logo-blue,
-.logo-green {
-  display: none !important;
+.menu-title {
+  font-size: 11px;
+  font-weight: 900;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 18px 20px 8px;
 }
 
-/* Main Valoores Logo */
-.logo-row {
+.main-nav {
   display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  height: 56px;
-  padding: 0 22px;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 14px;
 }
 
-.main-logo-img {
-  width: 155px;
-  height: auto;
-  object-fit: contain;
+.main-nav a {
   display: block;
+  color: #334155;
+  text-decoration: none;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 800;
 }
 
-.logo-text,
-.logo-blue,
-.logo-green {
-  display: none !important;
+.main-nav a:hover {
+  background: #f1f5f9;
+  color: #004aad;
+}
+
+.main-nav a.active-link {
+  background: #e8f1ff;
+  color: #004aad;
+}
+
+@media (max-width: 1000px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .app-sidebar {
+    min-height: auto;
+    border-right: none;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .main-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding-bottom: 14px;
+  }
 }

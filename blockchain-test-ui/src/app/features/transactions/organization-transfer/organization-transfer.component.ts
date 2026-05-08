@@ -1,8 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
+
 import { TransactionService } from '../../../services/transaction.service';
+import { WalletSessionService } from '../../../services/wallet-session.service';
 
 @Component({
   selector: 'app-organization-transfer',
@@ -25,21 +27,27 @@ export class OrganizationTransferComponent implements OnInit {
     receiverWalletAddress: '',
     amount: '',
     currency: 'USD',
-    transactionPurpose: 'Organization-to-organization transfer',
-    transactionDescription: 'Organization wallet transfers to another organization wallet',
+    transactionPurpose: 'Inter-organization customer transfer',
+    transactionDescription: 'Customer wallet transfer to another customer wallet in a different organization',
     requestSource: 'ANGULAR_UI',
     sourceSystem: 'BLOCKCHAIN_TEST_UI',
     createdBy: 'nix'
   };
 
-  constructor(private transactionService: TransactionService) {}
+  constructor(
+    private transactionService: TransactionService,
+    private walletSessionService: WalletSessionService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
     this.loadSession();
   }
 
   loadSession(): void {
-    this.session = this.getLoggedInWallet();
+    this.session =
+      this.walletSessionService.getSession() ||
+      this.getLoggedInWallet();
 
     if (!this.session) {
       return;
@@ -60,8 +68,8 @@ export class OrganizationTransferComponent implements OnInit {
   fillSample(): void {
     this.loadSession();
 
-    this.form.receiverWalletAddress = 'ORG_WALLET_1778160269059_6971AFBA84D6';
-    this.form.amount = '10';
+    this.form.receiverWalletAddress = 'WALLET_RECEIVER_FROM_OTHER_ORG';
+    this.form.amount = '100';
 
     this.form.currency =
       this.session?.currencyCode ||
@@ -69,9 +77,9 @@ export class OrganizationTransferComponent implements OnInit {
       this.session?.currency ||
       'USD';
 
-    this.form.transactionPurpose = 'Organization-to-organization transfer';
+    this.form.transactionPurpose = 'Inter-organization customer transfer';
     this.form.transactionDescription =
-      'Organization wallet transfers to another organization wallet';
+      'Customer wallet transfer to another customer wallet in a different organization';
 
     this.clearMessages();
   }
@@ -80,23 +88,26 @@ export class OrganizationTransferComponent implements OnInit {
     this.loadSession();
 
     if (!this.session) {
-      return 'No wallet session found. Please login first using an organization wallet.';
+      return 'No wallet session found. Please login first.';
     }
 
-    if (!this.isOrganizationWallet(this.session)) {
-      return 'Organization wallet login is required for organization-to-organization transfer.';
-    }
+    /*
+     * IMPORTANT BUSINESS RULE:
+     * This screen is Inter-Organization Customer Transfer.
+     * The logged-in sender can be a CUSTOMER wallet.
+     * Do not block the screen by requiring ORGANIZATION wallet type.
+     */
 
     if (!this.form.senderWalletAddress) {
-      return 'Sender organization wallet address is required from the logged-in session.';
+      return 'Sender wallet address is required from the logged-in session.';
     }
 
     if (!this.form.receiverWalletAddress) {
-      return 'Receiver organization wallet address is required.';
+      return 'Receiver customer wallet address is required.';
     }
 
     if (this.form.senderWalletAddress === this.form.receiverWalletAddress) {
-      return 'Receiver organization wallet address cannot be the same as sender organization wallet address.';
+      return 'Receiver wallet address cannot be the same as sender wallet address.';
     }
 
     const transferAmount = Number(this.form.amount);
@@ -120,7 +131,7 @@ export class OrganizationTransferComponent implements OnInit {
     if (validationError) {
       this.errorMessage = validationError;
 
-      console.warn('[ORG_TRANSFER_FRONTEND_VALIDATION_FAILED]', {
+      console.warn('[INTER_ORG_TRANSFER_FRONTEND_VALIDATION_FAILED]', {
         validationError,
         session: this.session,
         detectedWalletType: this.getWalletType(this.session),
@@ -153,7 +164,7 @@ export class OrganizationTransferComponent implements OnInit {
         if (response?.success === false) {
           this.errorMessage =
             response?.message ||
-            'Organization-to-organization transfer failed.';
+            'Inter-organization customer transfer failed.';
           return;
         }
 
@@ -169,13 +180,14 @@ export class OrganizationTransferComponent implements OnInit {
           null;
 
         if (senderBalanceAfter !== null && senderBalanceAfter !== undefined) {
+          this.walletSessionService.updateBalance(Number(senderBalanceAfter));
           this.updateLocalSessionBalance(Number(senderBalanceAfter));
           this.loadSession();
         }
 
         this.successMessage =
           response?.message ||
-          'Organization-to-organization transfer completed successfully.';
+          'Inter-organization customer transfer completed successfully.';
       },
       error: (error: any) => {
         this.loading = false;
@@ -184,7 +196,7 @@ export class OrganizationTransferComponent implements OnInit {
         this.errorMessage =
           error?.error?.message ||
           error?.message ||
-          'Organization-to-organization transfer failed.';
+          'Inter-organization customer transfer failed.';
       }
     });
   }
@@ -192,9 +204,9 @@ export class OrganizationTransferComponent implements OnInit {
   clearForm(): void {
     this.form.receiverWalletAddress = '';
     this.form.amount = '';
-    this.form.transactionPurpose = 'Organization-to-organization transfer';
+    this.form.transactionPurpose = 'Inter-organization customer transfer';
     this.form.transactionDescription =
-      'Organization wallet transfers to another organization wallet';
+      'Customer wallet transfer to another customer wallet in a different organization';
 
     this.clearMessages();
   }
@@ -206,8 +218,28 @@ export class OrganizationTransferComponent implements OnInit {
     this.apiResponse = null;
   }
 
+  logoutWallet(): void {
+    this.walletSessionService.clearSession();
+
+    this.session = null;
+
+    this.form.senderWalletAddress = '';
+    this.form.receiverWalletAddress = '';
+    this.form.amount = '';
+    this.form.currency = 'USD';
+
+    this.clearMessages();
+
+    this.router.navigateByUrl('/digital-kyc/wallet-login');
+  }
+
+  goToWalletInformation(): void {
+    this.router.navigateByUrl('/digital-kyc/wallet-information');
+  }
+
   private getLoggedInWallet(): any | null {
     const possibleKeys = [
+      'blockchain_logged_wallet',
       'digital_kyc_wallet_session',
       'digital_kyc_wallet_profile',
       'digitalKycWalletSession',
@@ -215,7 +247,10 @@ export class OrganizationTransferComponent implements OnInit {
       'walletSession',
       'walletProfile',
       'loggedInWallet',
-      'currentWallet'
+      'currentWallet',
+      'loggedWallet',
+      'wallet_session',
+      'wallet_profile'
     ];
 
     for (const key of possibleKeys) {
@@ -232,6 +267,7 @@ export class OrganizationTransferComponent implements OnInit {
         const wallet = this.extractWalletFromSession(parsed);
 
         if (wallet?.walletAddress || wallet?.wallet_address) {
+          this.walletSessionService.setSession(wallet);
           return wallet;
         }
       } catch {
@@ -253,24 +289,57 @@ export class OrganizationTransferComponent implements OnInit {
       parsed?.data ||
       parsed;
 
+    const walletAddress =
+      wallet?.walletAddress ||
+      wallet?.wallet_address ||
+      parsed?.walletAddress ||
+      parsed?.wallet_address ||
+      '';
+
+    const customerId =
+      wallet?.customerId ||
+      wallet?.customer_id ||
+      parsed?.customerId ||
+      parsed?.customer_id ||
+      '';
+
+    const currencyCode =
+      wallet?.currencyCode ||
+      wallet?.currency_code ||
+      wallet?.currency ||
+      parsed?.currencyCode ||
+      parsed?.currency_code ||
+      parsed?.currency ||
+      'USD';
+
+    const currentBalance =
+      wallet?.currentBalance ??
+      wallet?.current_balance ??
+      wallet?.balance ??
+      parsed?.currentBalance ??
+      parsed?.current_balance ??
+      parsed?.balance ??
+      0;
+
     return {
       ...wallet,
 
-      walletAddress:
-        wallet?.walletAddress ||
-        wallet?.wallet_address ||
-        parsed?.walletAddress ||
-        parsed?.wallet_address ||
-        '',
+      walletAddress,
+      wallet_address: walletAddress,
 
-      customerId:
-        wallet?.customerId ||
-        wallet?.customer_id ||
-        parsed?.customerId ||
-        parsed?.customer_id ||
-        '',
+      customerId,
+      customer_id: customerId,
 
       walletType:
+        wallet?.walletType ||
+        wallet?.wallet_type ||
+        wallet?.type ||
+        parsed?.walletType ||
+        parsed?.wallet_type ||
+        parsed?.type ||
+        this.inferWalletType(wallet || parsed),
+
+      wallet_type:
         wallet?.walletType ||
         wallet?.wallet_type ||
         wallet?.type ||
@@ -282,11 +351,33 @@ export class OrganizationTransferComponent implements OnInit {
       fullName:
         wallet?.fullName ||
         wallet?.full_name ||
+        wallet?.customerName ||
+        wallet?.customer_name ||
         parsed?.fullName ||
         parsed?.full_name ||
+        parsed?.customerName ||
+        parsed?.customer_name ||
+        '',
+
+      full_name:
+        wallet?.fullName ||
+        wallet?.full_name ||
+        wallet?.customerName ||
+        wallet?.customer_name ||
+        parsed?.fullName ||
+        parsed?.full_name ||
+        parsed?.customerName ||
+        parsed?.customer_name ||
         '',
 
       organizationId:
+        wallet?.organizationId ||
+        wallet?.organization_id ||
+        parsed?.organizationId ||
+        parsed?.organization_id ||
+        '',
+
+      organization_id:
         wallet?.organizationId ||
         wallet?.organization_id ||
         parsed?.organizationId ||
@@ -300,26 +391,36 @@ export class OrganizationTransferComponent implements OnInit {
         parsed?.organization_name ||
         '',
 
-      currencyCode:
-        wallet?.currencyCode ||
-        wallet?.currency_code ||
-        wallet?.currency ||
-        parsed?.currencyCode ||
-        parsed?.currency_code ||
-        parsed?.currency ||
-        'USD',
+      organization_name:
+        wallet?.organizationName ||
+        wallet?.organization_name ||
+        parsed?.organizationName ||
+        parsed?.organization_name ||
+        '',
 
-      currentBalance:
-        wallet?.currentBalance ??
-        wallet?.current_balance ??
-        parsed?.currentBalance ??
-        parsed?.current_balance ??
-        0
+      currencyCode,
+      currency_code: currencyCode,
+      currency: currencyCode,
+
+      currentBalance,
+      current_balance: currentBalance,
+
+      token:
+        wallet?.token ||
+        parsed?.token ||
+        parsed?.data?.token ||
+        localStorage.getItem('digital_kyc_wallet_token') ||
+        sessionStorage.getItem('digital_kyc_wallet_token') ||
+        ''
     };
   }
 
   private isOrganizationWallet(wallet: any): boolean {
     return this.getWalletType(wallet) === 'ORGANIZATION';
+  }
+
+  private isCustomerWallet(wallet: any): boolean {
+    return this.getWalletType(wallet) === 'CUSTOMER';
   }
 
   private getWalletType(wallet: any): string {
@@ -336,7 +437,15 @@ export class OrganizationTransferComponent implements OnInit {
       return 'ORGANIZATION';
     }
 
-    return walletType;
+    if (walletType === 'CUSTOMER_WALLET') {
+      return 'CUSTOMER';
+    }
+
+    if (walletType === 'ORGANIZATION_WALLET') {
+      return 'ORGANIZATION';
+    }
+
+    return walletType || 'CUSTOMER';
   }
 
   private inferWalletType(wallet: any): string {
@@ -364,6 +473,7 @@ export class OrganizationTransferComponent implements OnInit {
 
   private updateLocalSessionBalance(newBalance: number): void {
     const possibleKeys = [
+      'blockchain_logged_wallet',
       'digital_kyc_wallet_session',
       'digital_kyc_wallet_profile',
       'digitalKycWalletSession',
@@ -371,37 +481,52 @@ export class OrganizationTransferComponent implements OnInit {
       'walletSession',
       'walletProfile',
       'loggedInWallet',
-      'currentWallet'
+      'currentWallet',
+      'loggedWallet',
+      'wallet_session',
+      'wallet_profile'
     ];
 
     for (const key of possibleKeys) {
-      const rawValue = localStorage.getItem(key);
+      const localRawValue = localStorage.getItem(key);
+      const sessionRawValue = sessionStorage.getItem(key);
 
-      if (!rawValue) {
-        continue;
+      if (localRawValue) {
+        this.updateStorageBalance(localStorage, key, localRawValue, newBalance);
       }
 
-      try {
-        const parsed = JSON.parse(rawValue);
-
-        if (parsed?.data?.wallet) {
-          parsed.data.wallet.currentBalance = newBalance;
-          parsed.data.wallet.current_balance = newBalance;
-        } else if (parsed?.wallet) {
-          parsed.wallet.currentBalance = newBalance;
-          parsed.wallet.current_balance = newBalance;
-        } else if (parsed?.data) {
-          parsed.data.currentBalance = newBalance;
-          parsed.data.current_balance = newBalance;
-        } else {
-          parsed.currentBalance = newBalance;
-          parsed.current_balance = newBalance;
-        }
-
-        localStorage.setItem(key, JSON.stringify(parsed));
-      } catch {
-        continue;
+      if (sessionRawValue) {
+        this.updateStorageBalance(sessionStorage, key, sessionRawValue, newBalance);
       }
+    }
+  }
+
+  private updateStorageBalance(
+    storage: Storage,
+    key: string,
+    rawValue: string,
+    newBalance: number
+  ): void {
+    try {
+      const parsed = JSON.parse(rawValue);
+
+      if (parsed?.data?.wallet) {
+        parsed.data.wallet.currentBalance = newBalance;
+        parsed.data.wallet.current_balance = newBalance;
+      } else if (parsed?.wallet) {
+        parsed.wallet.currentBalance = newBalance;
+        parsed.wallet.current_balance = newBalance;
+      } else if (parsed?.data) {
+        parsed.data.currentBalance = newBalance;
+        parsed.data.current_balance = newBalance;
+      } else {
+        parsed.currentBalance = newBalance;
+        parsed.current_balance = newBalance;
+      }
+
+      storage.setItem(key, JSON.stringify(parsed));
+    } catch {
+      return;
     }
   }
 }

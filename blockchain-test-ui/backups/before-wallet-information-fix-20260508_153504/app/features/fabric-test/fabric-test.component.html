@@ -1,0 +1,63 @@
+<div class="fabric-test-page">
+  <div class="page-header">
+    <div>
+      <h1>Fabric Test</h1>
+      <p>Test direct Hyperledger Fabric evaluate and submit calls.</p>
+    </div>
+  </div>
+
+  <div class="form-card">
+    <h3>Fabric Function Test</h3>
+
+    <div class="form-grid">
+      <div class="field">
+        <label>Mode</label>
+        <select [(ngModel)]="form.mode">
+          <option value="evaluate">Evaluate</option>
+          <option value="submit">Submit</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Function Name</label>
+        <input
+          type="text"
+          [(ngModel)]="form.functionName"
+          placeholder="GetWalletByCustomerId"
+        />
+      </div>
+
+      <div class="field full-width">
+        <label>Arguments JSON Array</label>
+        <textarea
+          [(ngModel)]="form.argsText"
+          placeholder='["900478"]'
+        ></textarea>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button type="button" class="primary-btn" (click)="runTest()" [disabled]="loading">
+        {{ loading ? 'Running...' : 'Run Fabric Test' }}
+      </button>
+
+      <button type="button" class="secondary-btn" (click)="fillSample()" [disabled]="loading">
+        Fill Sample
+      </button>
+    </div>
+
+    <div *ngIf="successMessage" class="success-alert">
+      {{ successMessage }}
+    </div>
+
+    <div *ngIf="errorMessage" class="error-alert">
+      {{ errorMessage }}
+    </div>
+  </div>
+
+  <div class="response-card">
+    <h3>Raw API Response</h3>
+
+    <pre class="api-response">{{ apiResponse ? (apiResponse | json) : 'API response will appear here after submission.' }}</pre>
+  </div>
+</div>

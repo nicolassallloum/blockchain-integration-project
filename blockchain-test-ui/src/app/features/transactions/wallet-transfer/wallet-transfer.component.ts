@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { TransactionService } from '../../../services/transaction.service';
 import { WalletSessionService } from '../../../services/wallet-session.service';
-
+import { Router } from '@angular/router';
 @Component({
   selector: 'app-wallet-transfer',
   standalone: true,
@@ -34,7 +34,8 @@ export class WalletTransferComponent implements OnInit {
 
   constructor(
     private transactionService: TransactionService,
-    private walletSessionService: WalletSessionService
+    private walletSessionService: WalletSessionService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -173,4 +174,9 @@ export class WalletTransferComponent implements OnInit {
     this.transactionId = '';
     this.apiResponse = null;
   }
+  logoutWallet(): void {
+  this.walletSessionService.clearSession();
+  this.session = null;
+  this.router.navigateByUrl('/digital-kyc/wallet-login');
+}
 }

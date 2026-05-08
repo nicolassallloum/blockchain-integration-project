@@ -1,0 +1,135 @@
+  <div class="sidebar-logo">
+  <img
+    src="assets/images/valoores-logo.png"
+    alt="Valoores Logo"
+    class="valoores-logo-img"
+  />
+</div>
+  </div>
+
+
+
+
+  <div class="sidebar-divider"></div>
+
+  <div *ngIf="!isWalletLoggedIn" class="menu-section">
+    <div class="menu-title">Main Menu</div>
+
+    <nav class="sidebar-nav">
+      <a
+        routerLink="/digital-kyc/dashboard"
+        routerLinkActive="active"
+        class="sidebar-link"
+      >
+        <span>Dashboard</span>
+      </a>
+
+      <a
+        routerLink="/digital-kyc/wallet-create"
+        routerLinkActive="active"
+        class="sidebar-link"
+      >
+        <span>Wallet Create</span>
+      </a>
+
+      <a
+        routerLink="/digital-kyc/organization-wallet-create"
+        routerLinkActive="active"
+        class="sidebar-link"
+      >
+        <span>Organization Wallet Create</span>
+      </a>
+
+      <a
+        routerLink="/digital-kyc/wallet-login"
+        routerLinkActive="active"
+        class="sidebar-link"
+      >
+        <span>Wallet Login</span>
+      </a>
+
+      <a
+        routerLink="/digital-kyc/wallet-query"
+        routerLinkActive="active"
+        class="sidebar-link"
+      >
+        <span>Wallet Query</span>
+      </a>
+
+      <a
+        routerLink="/digital-kyc/fabric-test"
+        routerLinkActive="active"
+        class="sidebar-link"
+      >
+        <span>Fabric Test (Under Development)</span>
+      </a>
+    </nav>
+  </div>
+
+  <div *ngIf="isWalletLoggedIn" class="menu-section">
+    <div class="wallet-session-card">
+      <div class="session-label">Logged-in Wallet</div>
+
+      <div class="session-name">
+        {{ walletSession?.fullName || 'Customer Wallet' }}
+      </div>
+
+      <div class="session-row">
+        <span>Customer</span>
+        <strong>{{ walletSession?.customerId || '-' }}</strong>
+      </div>
+
+      <div class="session-row">
+        <span>Organization</span>
+        <strong>{{ walletSession?.organizationName || walletSession?.organizationId || '-' }}</strong>
+      </div>
+
+      <div class="session-row">
+        <span>Wallet Type</span>
+        <strong>{{ walletSession?.walletType || 'CUSTOMER' }}</strong>
+      </div>
+
+      <div class="session-row">
+        <span>Balance</span>
+        <strong>
+          {{ walletSession?.currentBalance ?? 0 }}
+          {{ walletSession?.currencyCode || 'USD' }}
+        </strong>
+      </div>
+    </div>
+
+    <div class="menu-title">Transaction Menu</div>
+
+    <nav class="sidebar-nav">
+      <a
+        *ngIf="walletSession?.walletType === 'CUSTOMER'"
+        routerLink="/digital-kyc/wallet-transfer"
+        routerLinkActive="active"
+        class="sidebar-link"
+      >
+        <span>Wallet Transfer</span>
+      </a>
+
+      <a
+        *ngIf="walletSession?.walletType === 'ORGANIZATION'"
+        routerLink="/digital-kyc/organization-transfer"
+        routerLinkActive="active"
+        class="sidebar-link"
+      >
+        <span>Organization Transfer</span>
+      </a>
+
+      <a
+        routerLink="/digital-kyc/transaction-history"
+        routerLinkActive="active"
+        class="sidebar-link"
+      >
+        <span>Transaction History</span>
+      </a>
+
+      <button type="button" class="sidebar-link logout-link" (click)="logoutWallet()">
+        <span>Logout</span>
+      </button>
+    </nav>
+  </div>
+</div>

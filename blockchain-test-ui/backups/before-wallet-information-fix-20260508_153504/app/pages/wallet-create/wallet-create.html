@@ -1,0 +1,283 @@
+<div class="page-container">
+  <div *ngIf="!showSuccessScreen">
+    <div class="page-header">
+      <div>
+        <h2>Create Wallet</h2>
+        <p>Create a new customer wallet through the Blockchain API Middleware.</p>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="secondary-btn" (click)="fillSampleData()">
+          Fill Sample
+        </button>
+
+        <button type="button" class="reset-btn" (click)="resetForm()">
+          Reset
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="pageLoading" class="loading-card">
+      Loading customer ID, organizations, and countries...
+    </div>
+
+    <div *ngIf="organizationErrorMessage" class="alert error">
+      {{ organizationErrorMessage }}
+
+      <button type="button" class="secondary-btn" (click)="reloadOrganizations()">
+        Retry Organizations
+      </button>
+    </div>
+
+    <div *ngIf="!pageLoading" class="card">
+      <form (ngSubmit)="createWallet()">
+        <div class="grid">
+          <div class="field">
+            <label>Customer ID</label>
+            <input
+              type="text"
+              name="customerId"
+              [(ngModel)]="form.customerId"
+              placeholder="Auto-generated or enter customer ID"
+              required
+            />
+          </div>
+
+          <div class="field">
+            <label>Organization Type</label>
+            <select
+              name="organizationType"
+              [(ngModel)]="selectedOrganizationType"
+              (change)="onOrganizationTypeChange()"
+            >
+              <option value="">All organization types</option>
+              <option
+                *ngFor="let type of organizationTypes"
+                [value]="type"
+              >
+                {{ type }}
+              </option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Organization</label>
+            <select
+              name="organizationId"
+              [(ngModel)]="form.organizationId"
+              (change)="onOrganizationChange()"
+              required
+            >
+              <option value="">
+                {{ organizationsLoading ? 'Loading organizations...' : 'Select organization' }}
+              </option>
+
+              <option
+                *ngFor="let org of organizations"
+                [value]="org.organizationId"
+              >
+                {{ org.organizationName }}
+              </option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Full Name</label>
+            <input
+              type="text"
+              name="fullName"
+              [(ngModel)]="form.fullName"
+              placeholder="NICOLAS SALLOUM"
+              required
+            />
+          </div>
+
+          <div class="field">
+            <label>Initial Balance</label>
+            <input
+              type="number"
+              name="initialBalance"
+              [(ngModel)]="form.initialBalance"
+              min="0"
+              step="0.01"
+              required
+            />
+          </div>
+
+          <div class="field">
+            <label>Currency</label>
+            <select
+              name="currencyCode"
+              [(ngModel)]="form.currencyCode"
+              required
+            >
+              <option value="USD">USD</option>
+              <option value="LBP">LBP</option>
+              <option value="EUR">EUR</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Nationality</label>
+            <select
+              name="selectedCountryId"
+              [(ngModel)]="selectedCountryId"
+              (change)="onCountryChange()"
+            >
+              <option value="">
+                {{ countriesLoading ? 'Loading nationalities...' : 'Select nationality' }}
+              </option>
+
+              <option
+                *ngFor="let country of countries"
+                [value]="country.cou_id"
+              >
+                {{ country.cou_name }}
+              </option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>National ID Hash</label>
+            <input
+              type="text"
+              name="nationalIdHash"
+              [(ngModel)]="form.nationalIdHash"
+              placeholder="Auto-filled from nationality"
+              readonly
+            />
+          </div>
+
+          <div class="field">
+            <label>Mobile Hash</label>
+            <input
+              type="text"
+              name="mobileHash"
+              [(ngModel)]="form.mobileHash"
+              placeholder="79170430"
+              required
+            />
+          </div>
+
+          <div class="field">
+            <label>Email Hash</label>
+            <input
+              type="text"
+              name="emailHash"
+              [(ngModel)]="form.emailHash"
+              placeholder="nsalloum95@gmail.com"
+              required
+            />
+          </div>
+
+          <div class="field full-width">
+            <label>Auto Generated Password</label>
+
+            <div class="password-row">
+              <input
+                type="text"
+                name="passwordHash"
+                [(ngModel)]="form.passwordHash"
+                readonly
+              />
+
+              <button
+                type="button"
+                class="secondary-btn"
+                (click)="generatePassword()"
+              >
+                Regenerate
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="submit-row">
+          <button
+            type="submit"
+            class="primary-btn"
+            [disabled]="loading || organizations.length === 0"
+          >
+            {{ loading ? 'Creating Wallet...' : 'Generate Wallet' }}
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div *ngIf="successMessage" class="alert success">
+      {{ successMessage }}
+    </div>
+
+    <div *ngIf="errorMessage" class="alert error">
+      {{ errorMessage }}
+    </div>
+  </div>
+
+  <div *ngIf="showSuccessScreen" class="success-screen-wrapper">
+    <div class="success-card">
+      <div class="success-icon">✓</div>
+
+      <h2>Registration Complete</h2>
+
+      <p class="success-text">
+        The blockchain wallet identity has been successfully created.
+      </p>
+
+      <div class="info-box">
+        <div class="info-label">Customer ID</div>
+        <div class="info-value blue">
+          {{ resultData.customerId }}
+        </div>
+      </div>
+
+      <div class="info-box">
+        <div class="info-label">Wallet Address</div>
+        <div class="info-value small-box">
+          {{ resultData.walletAddress }}
+        </div>
+      </div>
+
+      <div class="info-box">
+        <div class="info-label">Organization</div>
+        <div class="info-value small-box">
+          {{ resultData.organizationName || getSelectedOrganizationName() || 'N/A' }}
+        </div>
+      </div>
+
+      <div class="info-box">
+        <div class="info-label">Initial Balance</div>
+        <div class="info-value blue">
+          {{ resultData.currentBalance }} {{ resultData.currencyCode }}
+        </div>
+      </div>
+
+      <div class="info-box">
+        <div class="info-label">One-Time Password</div>
+        <div class="info-value red small-box">
+          {{ resultData.oneTimePassword }}
+        </div>
+
+        <div class="warning-text">
+          Save this password immediately. It cannot be recovered.
+        </div>
+      </div>
+
+      <div class="info-box">
+        <div class="info-label">Recovery Phrase</div>
+        <div class="info-value phrase-box">
+          {{ resultData.recoveryPhrase || 'No recovery phrase returned from API' }}
+        </div>
+
+        <div class="phrase-warning">
+          Store this phrase offline and never share it.
+        </div>
+      </div>
+
+      <div class="success-actions">
+        <button class="primary-btn large-btn" (click)="goToNewRegistration()">
+          Create Another Wallet
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

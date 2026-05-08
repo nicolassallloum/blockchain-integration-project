@@ -19,6 +19,16 @@
     >
       Fill Sample
     </button>
+
+    <button
+      class="logout-btn"
+      type="button"
+      *ngIf="session"
+      (click)="logoutWallet()"
+      [disabled]="loading"
+    >
+      Logout Wallet
+    </button>
   </div>
 
   <div *ngIf="!session" class="warning-card">

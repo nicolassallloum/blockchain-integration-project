@@ -1,17 +1,17 @@
+<div class="sidebar">
   <div class="sidebar-logo">
-  <img
-    src="assets/images/valoores-logo.png"
-    alt="Valoores Logo"
-    class="valoores-logo-img"
-  />
-</div>
+    <img
+      src="assets/images/valoores-logo.png"
+      alt="Valoores Logo"
+      class="valoores-logo-img"
+    />
   </div>
-
-
-
 
   <div class="sidebar-divider"></div>
 
+  <!-- =========================
+       FIRST MENU - BEFORE WALLET LOGIN
+       ========================= -->
   <div *ngIf="!isWalletLoggedIn" class="menu-section">
     <div class="menu-title">Main Menu</div>
 
@@ -66,6 +66,9 @@
     </nav>
   </div>
 
+  <!-- =========================
+       SECOND MENU - AFTER WALLET LOGIN
+       ========================= -->
   <div *ngIf="isWalletLoggedIn" class="menu-section">
     <div class="wallet-session-card">
       <div class="session-label">Logged-in Wallet</div>
@@ -81,7 +84,9 @@
 
       <div class="session-row">
         <span>Organization</span>
-        <strong>{{ walletSession?.organizationName || walletSession?.organizationId || '-' }}</strong>
+        <strong>
+          {{ walletSession?.organizationName || walletSession?.organizationId || '-' }}
+        </strong>
       </div>
 
       <div class="session-row">
@@ -102,7 +107,14 @@
 
     <nav class="sidebar-nav">
       <a
-        *ngIf="walletSession?.walletType === 'CUSTOMER'"
+        routerLink="/digital-kyc/wallet-information"
+        routerLinkActive="active"
+        class="sidebar-link"
+      >
+        <span>Wallet Information</span>
+      </a>
+
+      <a
         routerLink="/digital-kyc/wallet-transfer"
         routerLinkActive="active"
         class="sidebar-link"
@@ -111,7 +123,6 @@
       </a>
 
       <a
-        *ngIf="walletSession?.walletType === 'ORGANIZATION'"
         routerLink="/digital-kyc/organization-transfer"
         routerLinkActive="active"
         class="sidebar-link"
@@ -127,8 +138,12 @@
         <span>Transaction History</span>
       </a>
 
-      <button type="button" class="sidebar-link logout-link" (click)="logoutWallet()">
-        <span>Logout</span>
+      <button
+        type="button"
+        class="sidebar-link logout-link"
+        (click)="logoutWallet()"
+      >
+        <span>Logout Wallet</span>
       </button>
     </nav>
   </div>

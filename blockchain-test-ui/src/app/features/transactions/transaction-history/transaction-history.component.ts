@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TransactionService } from '../../../services/transaction.service';
 import { WalletSessionService } from '../../../services/wallet-session.service';
-
+import { Router } from '@angular/router';
 @Component({
   selector: 'app-transaction-history',
   standalone: true,
@@ -45,7 +45,9 @@ export class TransactionHistoryComponent implements OnInit {
 
   constructor(
     private transactionService: TransactionService,
-    private walletSessionService: WalletSessionService
+    private walletSessionService: WalletSessionService,
+    private router: Router
+ 
   ) {}
 
   ngOnInit(): void {
@@ -155,5 +157,11 @@ export class TransactionHistoryComponent implements OnInit {
     }
 
     return '-';
+  }
+  logoutWallet(): void {
+  this.walletSessionService.clearSession();
+  this.session = null;
+  this.transactions = [];
+  this.router.navigateByUrl('/digital-kyc/wallet-login');
   }
 }

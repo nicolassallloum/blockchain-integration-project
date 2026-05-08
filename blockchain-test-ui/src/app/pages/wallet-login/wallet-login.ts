@@ -22,7 +22,7 @@ export class WalletLogin implements OnInit {
   apiResponse: any = null;
   token = '';
 
-  redirectTo = '/digital-kyc/wallet-transfer';
+  redirectTo = '/digital-kyc/wallet-information';
 
   form = {
     walletAddress: '',
@@ -55,7 +55,7 @@ export class WalletLogin implements OnInit {
   ngOnInit(): void {
     this.redirectTo =
       this.route.snapshot.queryParamMap.get('redirectTo') ||
-      '/digital-kyc/wallet-transfer';
+      '/digital-kyc/wallet-information';
   }
 
   fillSampleData(): void {
@@ -242,7 +242,7 @@ export class WalletLogin implements OnInit {
           wallet
         });
 
-        this.successMessage = 'Wallet login successful. Opening transaction menu...';
+        this.successMessage = 'Wallet login successful. Opening wallet information...';
 
         setTimeout(() => {
           this.router.navigateByUrl(this.redirectTo);

@@ -1,0 +1,28 @@
+.fabric-test-page {
+  width: 100%;
+}
+
+.form-card,
+.response-card {
+  margin-bottom: 24px;
+}
+
+.form-card h3,
+.response-card h3 {
+  margin: 0 0 18px;
+  color: #004b9b;
+  font-size: 23px;
+  font-weight: 900;
+}
+
+.api-response {
+  background: #020817;
+  color: #e5e7eb;
+  border-radius: 10px;
+  padding: 20px;
+  min-height: 130px;
+  overflow: auto;
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}

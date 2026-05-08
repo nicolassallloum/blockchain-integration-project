@@ -1,0 +1,104 @@
+<div class="layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo-row">
+      <img
+        src="/assets/images/valoores-logo.png"
+        alt="Valoores Logo"
+        class="valoores-logo-img"
+      />
+
+      <button type="button" class="menu-toggle" aria-label="Toggle menu">
+        ☰
+      </button>
+    </div>
+
+    <div class="sidebar-search">
+      <span class="search-icon">⌕</span>
+      <input type="text" placeholder="Search menus..." />
+    </div>
+
+    <nav class="menu">
+      <a routerLink="/digital-kyc/dashboard" routerLinkActive="active" class="back-link">
+        <span class="back-icon">↩</span>
+        <span>Back</span>
+      </a>
+
+      <a routerLink="/digital-kyc/dashboard" routerLinkActive="active">
+        <span class="nav-dot"></span>
+        <span>Dashboard</span>
+      </a>
+
+      <a routerLink="/digital-kyc/wallet-create" routerLinkActive="active">
+        <span class="nav-dot"></span>
+        <span>Wallet Create</span>
+      </a>
+
+      <a routerLink="/digital-kyc/wallet-login" routerLinkActive="active">
+        <span class="nav-dot"></span>
+        <span>Wallet Login</span>
+      </a>
+
+      <a routerLink="/digital-kyc/wallet-query" routerLinkActive="active">
+        <span class="nav-dot"></span>
+        <span>Wallet Query</span>
+      </a>
+
+      <a routerLink="/digital-kyc/fabric-test" routerLinkActive="active">
+        <span class="nav-dot"></span>
+        <span>Fabric Test</span>
+      </a>
+
+      <div class="menu-divider"></div>
+
+      <a routerLink="/digital-kyc/wallet-transfer" routerLinkActive="active">
+        <span class="nav-dot"></span>
+        <span>Wallet Transfer</span>
+      </a>
+
+      <a routerLink="/digital-kyc/organization-transfer" routerLinkActive="active">
+        <span class="nav-dot"></span>
+        <span>Organization Transfer</span>
+      </a>
+
+      <a routerLink="/digital-kyc/transaction-history" routerLinkActive="active">
+        <span class="nav-dot"></span>
+        <span>Transaction History</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      VFDS/3.25
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <header class="topbar">
+      <div class="breadcrumb">
+        <span>TCR (The Crypto Road)</span>
+        <span class="breadcrumb-separator">›</span>
+        <span>Digital KYC</span>
+      </div>
+
+      <div class="header-actions">
+        <div class="header-icon">
+          🔔
+          <span class="header-badge">2</span>
+        </div>
+
+        <div class="user-avatar">
+          👤
+        </div>
+      </div>
+    </header>
+
+    <section class="page-content">
+      <router-outlet></router-outlet>
+    </section>
+
+    <button type="button" class="floating-chat" aria-label="Chat">
+      💬
+    </button>
+  </main>
+</div>
