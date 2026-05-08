@@ -146,4 +146,52 @@ export class WalletSessionService {
 
     this.sessionSubject.next(updatedSession);
   }
+  private normalizeSessionWallet(wallet: any): any {
+    if (!wallet) {
+      return wallet;
+    }
+
+    const walletAddress = String(
+      wallet.walletAddress ||
+      wallet.wallet_address ||
+      ''
+    );
+
+    const customerId = String(
+      wallet.customerId ||
+      wallet.customer_id ||
+      ''
+    );
+
+    const rawWalletType = String(
+      wallet.walletType ||
+      wallet.wallet_type ||
+      wallet.type ||
+      ''
+    ).trim().toUpperCase();
+
+    let walletType = rawWalletType;
+
+    if (
+      rawWalletType === 'ORG' ||
+      rawWalletType === 'ORGANIZATION' ||
+      walletAddress.toUpperCase().startsWith('ORG_WALLET_') ||
+      customerId.toUpperCase().startsWith('ORG_')
+    ) {
+      walletType = 'ORGANIZATION';
+    } else {
+      walletType = 'CUSTOMER';
+    }
+
+    return {
+      ...wallet,
+      walletAddress,
+      wallet_address: walletAddress,
+      customerId,
+      customer_id: customerId,
+      walletType,
+      wallet_type: walletType
+    };
+  }
+
 }

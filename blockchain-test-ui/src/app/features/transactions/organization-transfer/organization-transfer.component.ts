@@ -1,15 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
-
+import { RouterModule } from '@angular/router';
 import { TransactionService } from '../../../services/transaction.service';
-import { WalletSessionService } from '../../../services/wallet-session.service';
 
 @Component({
   selector: 'app-organization-transfer',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './organization-transfer.component.html',
   styleUrl: './organization-transfer.component.css'
 })
@@ -22,68 +20,83 @@ export class OrganizationTransferComponent implements OnInit {
   transactionId = '';
   apiResponse: any = null;
 
-  /**
-   * Organization Transfer business meaning:
-   * Customer wallet from Organization A transfers to customer wallet from Organization B.
-   */
   form = {
     senderWalletAddress: '',
     receiverWalletAddress: '',
     amount: '',
     currency: 'USD',
-    transactionPurpose: 'Organization-to-wallet transfer',
-    transactionDescription: 'Organization wallet transfers to customer wallet',
+    transactionPurpose: 'Organization-to-organization transfer',
+    transactionDescription: 'Organization wallet transfers to another organization wallet',
     requestSource: 'ANGULAR_UI',
     sourceSystem: 'BLOCKCHAIN_TEST_UI',
     createdBy: 'nix'
   };
 
-  constructor(
-    private transactionService: TransactionService,
-    private walletSessionService: WalletSessionService
-  ) {}
+  constructor(private transactionService: TransactionService) {}
 
   ngOnInit(): void {
     this.loadSession();
   }
 
   loadSession(): void {
-    this.session = this.walletSessionService.getSession();
+    this.session = this.getLoggedInWallet();
 
-    if (this.session) {
-      this.form.senderWalletAddress = this.session.walletAddress || '';
-      this.form.currency = this.session.currencyCode || 'USD';
+    if (!this.session) {
+      return;
     }
+
+    this.form.senderWalletAddress =
+      this.session.walletAddress ||
+      this.session.wallet_address ||
+      '';
+
+    this.form.currency =
+      this.session.currencyCode ||
+      this.session.currency_code ||
+      this.session.currency ||
+      'USD';
   }
 
   fillSample(): void {
-    this.form.receiverWalletAddress = 'WALLET_1778067488069_3704C026E691';
-    this.form.amount = '50';
-    this.form.currency = this.session?.currencyCode || 'USD';
-    this.form.transactionPurpose = 'Organization-to-wallet transfer';
+    this.loadSession();
+
+    this.form.receiverWalletAddress = 'ORG_WALLET_1778160269059_6971AFBA84D6';
+    this.form.amount = '10';
+
+    this.form.currency =
+      this.session?.currencyCode ||
+      this.session?.currency_code ||
+      this.session?.currency ||
+      'USD';
+
+    this.form.transactionPurpose = 'Organization-to-organization transfer';
     this.form.transactionDescription =
-      'Organization wallet transfers to customer wallet';
+      'Organization wallet transfers to another organization wallet';
+
+    this.clearMessages();
   }
 
   validateForm(): string | null {
-    if (!this.walletSessionService.isLoggedIn()) {
-      return 'No wallet session found. Please login first.';
+    this.loadSession();
+
+    if (!this.session) {
+      return 'No wallet session found. Please login first using an organization wallet.';
     }
 
-    if (!this.walletSessionService.isOrganizationWallet()) {
-      return 'Organization wallet login is required for organization-to-wallet transfer.';
+    if (!this.isOrganizationWallet(this.session)) {
+      return 'Organization wallet login is required for organization-to-organization transfer.';
     }
 
     if (!this.form.senderWalletAddress) {
-      return 'Sender wallet address is required from the logged-in session.';
+      return 'Sender organization wallet address is required from the logged-in session.';
     }
 
     if (!this.form.receiverWalletAddress) {
-      return 'Receiver customer wallet address is required.';
+      return 'Receiver organization wallet address is required.';
     }
 
     if (this.form.senderWalletAddress === this.form.receiverWalletAddress) {
-      return 'Receiver wallet address cannot be the same as sender wallet address.';
+      return 'Receiver organization wallet address cannot be the same as sender organization wallet address.';
     }
 
     const transferAmount = Number(this.form.amount);
@@ -100,15 +113,21 @@ export class OrganizationTransferComponent implements OnInit {
   }
 
   submitTransfer(): void {
-    this.successMessage = '';
-    this.errorMessage = '';
-    this.transactionId = '';
-    this.apiResponse = null;
+    this.clearMessages();
 
     const validationError = this.validateForm();
 
     if (validationError) {
       this.errorMessage = validationError;
+
+      console.warn('[ORG_TRANSFER_FRONTEND_VALIDATION_FAILED]', {
+        validationError,
+        session: this.session,
+        detectedWalletType: this.getWalletType(this.session),
+        senderWalletAddress: this.form.senderWalletAddress,
+        receiverWalletAddress: this.form.receiverWalletAddress
+      });
+
       return;
     }
 
@@ -131,6 +150,13 @@ export class OrganizationTransferComponent implements OnInit {
         this.loading = false;
         this.apiResponse = response;
 
+        if (response?.success === false) {
+          this.errorMessage =
+            response?.message ||
+            'Organization-to-organization transfer failed.';
+          return;
+        }
+
         this.transactionId =
           response?.data?.transactionId ||
           response?.transactionId ||
@@ -143,16 +169,13 @@ export class OrganizationTransferComponent implements OnInit {
           null;
 
         if (senderBalanceAfter !== null && senderBalanceAfter !== undefined) {
-          this.walletSessionService.updateBalance(Number(senderBalanceAfter));
-          this.session = this.walletSessionService.getSession();
-
-          if (this.session) {
-            this.form.senderWalletAddress = this.session.walletAddress || '';
-            this.form.currency = this.session.currencyCode || 'USD';
-          }
+          this.updateLocalSessionBalance(Number(senderBalanceAfter));
+          this.loadSession();
         }
 
-        this.successMessage = 'Organization-to-wallet transfer completed successfully.';
+        this.successMessage =
+          response?.message ||
+          'Organization-to-organization transfer completed successfully.';
       },
       error: (error: any) => {
         this.loading = false;
@@ -161,9 +184,19 @@ export class OrganizationTransferComponent implements OnInit {
         this.errorMessage =
           error?.error?.message ||
           error?.message ||
-          'Organization-to-wallet transfer failed.';
+          'Organization-to-organization transfer failed.';
       }
     });
+  }
+
+  clearForm(): void {
+    this.form.receiverWalletAddress = '';
+    this.form.amount = '';
+    this.form.transactionPurpose = 'Organization-to-organization transfer';
+    this.form.transactionDescription =
+      'Organization wallet transfers to another organization wallet';
+
+    this.clearMessages();
   }
 
   clearMessages(): void {
@@ -171,5 +204,204 @@ export class OrganizationTransferComponent implements OnInit {
     this.errorMessage = '';
     this.transactionId = '';
     this.apiResponse = null;
+  }
+
+  private getLoggedInWallet(): any | null {
+    const possibleKeys = [
+      'digital_kyc_wallet_session',
+      'digital_kyc_wallet_profile',
+      'digitalKycWalletSession',
+      'digitalKycWalletProfile',
+      'walletSession',
+      'walletProfile',
+      'loggedInWallet',
+      'currentWallet'
+    ];
+
+    for (const key of possibleKeys) {
+      const rawValue =
+        localStorage.getItem(key) ||
+        sessionStorage.getItem(key);
+
+      if (!rawValue) {
+        continue;
+      }
+
+      try {
+        const parsed = JSON.parse(rawValue);
+        const wallet = this.extractWalletFromSession(parsed);
+
+        if (wallet?.walletAddress || wallet?.wallet_address) {
+          return wallet;
+        }
+      } catch {
+        continue;
+      }
+    }
+
+    return null;
+  }
+
+  private extractWalletFromSession(parsed: any): any {
+    const wallet =
+      parsed?.data?.wallet ||
+      parsed?.data?.profile ||
+      parsed?.data?.walletProfile ||
+      parsed?.wallet ||
+      parsed?.profile ||
+      parsed?.walletProfile ||
+      parsed?.data ||
+      parsed;
+
+    return {
+      ...wallet,
+
+      walletAddress:
+        wallet?.walletAddress ||
+        wallet?.wallet_address ||
+        parsed?.walletAddress ||
+        parsed?.wallet_address ||
+        '',
+
+      customerId:
+        wallet?.customerId ||
+        wallet?.customer_id ||
+        parsed?.customerId ||
+        parsed?.customer_id ||
+        '',
+
+      walletType:
+        wallet?.walletType ||
+        wallet?.wallet_type ||
+        wallet?.type ||
+        parsed?.walletType ||
+        parsed?.wallet_type ||
+        parsed?.type ||
+        this.inferWalletType(wallet || parsed),
+
+      fullName:
+        wallet?.fullName ||
+        wallet?.full_name ||
+        parsed?.fullName ||
+        parsed?.full_name ||
+        '',
+
+      organizationId:
+        wallet?.organizationId ||
+        wallet?.organization_id ||
+        parsed?.organizationId ||
+        parsed?.organization_id ||
+        '',
+
+      organizationName:
+        wallet?.organizationName ||
+        wallet?.organization_name ||
+        parsed?.organizationName ||
+        parsed?.organization_name ||
+        '',
+
+      currencyCode:
+        wallet?.currencyCode ||
+        wallet?.currency_code ||
+        wallet?.currency ||
+        parsed?.currencyCode ||
+        parsed?.currency_code ||
+        parsed?.currency ||
+        'USD',
+
+      currentBalance:
+        wallet?.currentBalance ??
+        wallet?.current_balance ??
+        parsed?.currentBalance ??
+        parsed?.current_balance ??
+        0
+    };
+  }
+
+  private isOrganizationWallet(wallet: any): boolean {
+    return this.getWalletType(wallet) === 'ORGANIZATION';
+  }
+
+  private getWalletType(wallet: any): string {
+    const walletType = String(
+      wallet?.walletType ||
+      wallet?.wallet_type ||
+      wallet?.type ||
+      this.inferWalletType(wallet)
+    )
+      .trim()
+      .toUpperCase();
+
+    if (walletType === 'ORG') {
+      return 'ORGANIZATION';
+    }
+
+    return walletType;
+  }
+
+  private inferWalletType(wallet: any): string {
+    const walletAddress = String(
+      wallet?.walletAddress ||
+      wallet?.wallet_address ||
+      ''
+    ).toUpperCase();
+
+    const customerId = String(
+      wallet?.customerId ||
+      wallet?.customer_id ||
+      ''
+    ).toUpperCase();
+
+    if (
+      walletAddress.startsWith('ORG_WALLET_') ||
+      customerId.startsWith('ORG_')
+    ) {
+      return 'ORGANIZATION';
+    }
+
+    return 'CUSTOMER';
+  }
+
+  private updateLocalSessionBalance(newBalance: number): void {
+    const possibleKeys = [
+      'digital_kyc_wallet_session',
+      'digital_kyc_wallet_profile',
+      'digitalKycWalletSession',
+      'digitalKycWalletProfile',
+      'walletSession',
+      'walletProfile',
+      'loggedInWallet',
+      'currentWallet'
+    ];
+
+    for (const key of possibleKeys) {
+      const rawValue = localStorage.getItem(key);
+
+      if (!rawValue) {
+        continue;
+      }
+
+      try {
+        const parsed = JSON.parse(rawValue);
+
+        if (parsed?.data?.wallet) {
+          parsed.data.wallet.currentBalance = newBalance;
+          parsed.data.wallet.current_balance = newBalance;
+        } else if (parsed?.wallet) {
+          parsed.wallet.currentBalance = newBalance;
+          parsed.wallet.current_balance = newBalance;
+        } else if (parsed?.data) {
+          parsed.data.currentBalance = newBalance;
+          parsed.data.current_balance = newBalance;
+        } else {
+          parsed.currentBalance = newBalance;
+          parsed.current_balance = newBalance;
+        }
+
+        localStorage.setItem(key, JSON.stringify(parsed));
+      } catch {
+        continue;
+      }
+    }
   }
 }

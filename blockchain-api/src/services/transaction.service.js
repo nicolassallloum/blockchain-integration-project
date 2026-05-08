@@ -6,8 +6,8 @@
  *
  * Rules:
  * - Wallet-to-wallet transfer is allowed only from CUSTOMER wallet.
- * - Organization-to-wallet transfer is allowed only from ORGANIZATION wallet.
- * - Organization-to-wallet receiver must be CUSTOMER wallet.
+ * - Organization transfer is allowed only from ORGANIZATION wallet.
+ * - Organization transfer receiver must be ORGANIZATION wallet.
  */
 
 const crypto = require('crypto');
@@ -255,7 +255,7 @@ async function insertTransaction(client, transactionData) {
     transaction_description: transactionData.transactionDescription,
     description: transactionData.transactionDescription,
 
-    status: transactionData.dbStatus || transactionData.status || 'PENDING',
+    status: transactionData.dbStatus || transactionData.status || 'CONFIRMED',
     transaction_status: transactionData.transactionStatus || transactionData.status || 'COMPLETED',
     fabric_status: transactionData.fabricStatus || 'PENDING',
 
@@ -435,9 +435,9 @@ async function walletTransfer(payload, context = {}) {
       transactionPurpose: payload.transactionPurpose || 'Wallet transfer test',
       transactionDescription:
         payload.transactionDescription || 'Wallet-to-wallet transfer from Blockchain API',
-      status: 'COMPLETED',
+      status: 'CONFIRMED',
       dbStatus: 'PENDING',
-      transactionStatus: 'COMPLETED',
+      transactionStatus: 'CONFIRMED',
       fabricStatus: 'PENDING',
       requestSource: payload.requestSource || 'BLOCKCHAIN_API',
       sourceSystem: payload.sourceSystem || 'BLOCKCHAIN_API',
@@ -457,7 +457,7 @@ async function walletTransfer(payload, context = {}) {
         receiverWalletAddress,
         amount: String(transferAmount),
         currency: normalizedCurrency,
-        status: 'COMPLETED',
+        status: 'CONFIRMED',
         senderBalanceBefore: senderBalance,
         senderBalanceAfter: Number(updatedSenderWallet?.currentBalance || 0),
         receiverBalanceAfter: Number(updatedReceiverWallet?.currentBalance || 0),
@@ -511,7 +511,7 @@ async function organizationTransfer(payload, context = {}) {
   if (!receiverWalletAddress) {
     return {
       success: false,
-      message: 'Receiver customer wallet address is required',
+      message: 'Receiver organization wallet address is required',
       errorCode: 'RECEIVER_WALLET_REQUIRED',
       data: null
     };
@@ -561,7 +561,7 @@ async function organizationTransfer(payload, context = {}) {
 
       return {
         success: false,
-        message: 'Organization-to-wallet transfer is allowed only when logged in using an organization wallet',
+        message: 'Organization transfer is allowed only when logged in using an organization wallet',
         errorCode: 'ORGANIZATION_WALLET_REQUIRED',
         data: {
           senderWalletAddress,
@@ -577,19 +577,19 @@ async function organizationTransfer(payload, context = {}) {
 
       return {
         success: false,
-        message: 'Receiver customer wallet not found',
+        message: 'Receiver organization wallet not found',
         errorCode: 'RECEIVER_WALLET_NOT_FOUND',
         data: null
       };
     }
 
-    if (receiverWallet.walletType !== 'CUSTOMER') {
+    if (receiverWallet.walletType !== 'ORGANIZATION') {
       await client.query('ROLLBACK');
 
       return {
         success: false,
-        message: 'Organization-to-wallet transfer receiver must be a customer wallet',
-        errorCode: 'RECEIVER_CUSTOMER_WALLET_REQUIRED',
+        message: 'Organization transfer receiver must be an organization wallet',
+        errorCode: 'RECEIVER_ORGANIZATION_WALLET_REQUIRED',
         data: {
           receiverWalletAddress,
           receiverWalletType: receiverWallet.walletType
@@ -646,13 +646,13 @@ async function organizationTransfer(payload, context = {}) {
       currency: normalizedCurrency,
       transactionPurpose:
         payload.transactionPurpose ||
-        'Organization-to-wallet transfer',
+        'Organization-to-organization transfer',
       transactionDescription:
         payload.transactionDescription ||
-        'Organization wallet transfers to customer wallet',
-      status: 'COMPLETED',
+        'Organization wallet transfers to another organization wallet',
+      status: 'CONFIRMED',
       dbStatus: 'PENDING',
-      transactionStatus: 'COMPLETED',
+      transactionStatus: 'CONFIRMED',
       fabricStatus: 'PENDING',
       requestSource: payload.requestSource || 'BLOCKCHAIN_API',
       sourceSystem: payload.sourceSystem || 'BLOCKCHAIN_API',
@@ -663,7 +663,7 @@ async function organizationTransfer(payload, context = {}) {
 
     return {
       success: true,
-      message: 'Organization-to-wallet transfer completed successfully',
+      message: 'Organization-to-organization transfer completed successfully',
       data: {
         transactionId,
         requestId,
@@ -674,7 +674,7 @@ async function organizationTransfer(payload, context = {}) {
         receiverOrganizationId: receiverWallet.organizationId,
         amount: String(transferAmount),
         currency: normalizedCurrency,
-        status: 'COMPLETED',
+        status: 'CONFIRMED',
         senderBalanceBefore: senderBalance,
         senderBalanceAfter: Number(updatedSenderWallet?.currentBalance || 0),
         receiverBalanceAfter: Number(updatedReceiverWallet?.currentBalance || 0),

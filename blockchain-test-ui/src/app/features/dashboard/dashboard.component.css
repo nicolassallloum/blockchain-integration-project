@@ -11,7 +11,7 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 26px;
+  margin-bottom: 24px;
 }
 
 .dashboard-header h1,
@@ -19,29 +19,29 @@
 .page-header h2 {
   margin: 0;
   color: #004b9b;
-  font-size: 34px;
+  font-size: 32px;
   font-weight: 900;
-  letter-spacing: 0.2px;
+  letter-spacing: 0.3px;
 }
 
 .dashboard-header p,
 .page-header p {
-  margin: 8px 0 0;
-  color: #4b5563;
+  margin: 7px 0 0;
+  color: #536174;
   font-size: 16px;
 }
 
 .refresh-btn {
   background: #ffffff;
   color: #004b9b;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #d8e0ea;
   border-radius: 9px;
-  height: 46px;
+  min-height: 42px;
   padding: 0 22px;
   font-size: 14px;
   font-weight: 800;
   cursor: pointer;
-  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
 }
 
 .stats-grid,
@@ -61,13 +61,13 @@
   border-radius: 12px;
   padding: 22px 26px;
   min-height: 118px;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.055);
 }
 
 .stat-title,
 .kpi-title,
 .card-label {
-  color: #374151;
+  color: #334155;
   font-size: 14px;
   font-weight: 700;
   margin-bottom: 12px;
@@ -80,13 +80,12 @@
   font-size: 30px;
   font-weight: 900;
   letter-spacing: 4px;
-  line-height: 1.1;
 }
 
 .stat-desc,
 .kpi-desc,
 .card-desc {
-  color: #4b5563;
+  color: #536174;
   margin-top: 10px;
   font-size: 14px;
 }
@@ -97,7 +96,7 @@
   border: 1px solid #dfe5ec;
   border-radius: 12px;
   padding: 22px 24px;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.055);
   margin-bottom: 24px;
 }
 
@@ -105,7 +104,7 @@
 .search-panel h3 {
   margin: 0 0 16px;
   color: #004b9b;
-  font-size: 24px;
+  font-size: 23px;
   font-weight: 900;
 }
 
@@ -118,10 +117,10 @@
 .search-row input,
 .search-input {
   flex: 1;
-  height: 46px;
+  height: 44px;
   border: 1px solid #cfd8e3;
   border-radius: 9px;
-  padding: 0 16px;
+  padding: 0 14px;
   font-size: 14px;
 }
 
@@ -129,9 +128,9 @@
 .search-btn {
   background: #004b9b;
   color: #ffffff;
-  border: none;
+  border: 1px solid #004b9b;
   border-radius: 9px;
-  height: 46px;
+  height: 44px;
   padding: 0 24px;
   font-size: 14px;
   font-weight: 800;
@@ -142,9 +141,9 @@
 .secondary-btn {
   background: #ffffff;
   color: #111827;
-  border: 1px solid #d9e0e8;
+  border: 1px solid #d8e0ea;
   border-radius: 9px;
-  height: 46px;
+  height: 44px;
   padding: 0 24px;
   font-size: 14px;
   font-weight: 800;
@@ -157,7 +156,7 @@
   border: 1px solid #9ee7bd;
   color: #067a3d;
   border-radius: 10px;
-  padding: 15px 20px;
+  padding: 15px 18px;
   font-size: 15px;
   font-weight: 700;
   margin-bottom: 24px;
@@ -191,13 +190,13 @@
 .records-header p,
 .table-title p {
   margin: 8px 0 0;
-  color: #4b5563;
+  color: #536174;
   font-size: 15px;
 }
 
 .api-info {
   text-align: right;
-  color: #374151;
+  color: #334155;
   font-size: 14px;
 }
 
@@ -226,9 +225,9 @@ thead {
 th {
   color: #111827;
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 900;
   text-align: left;
-  padding: 14px 14px;
+  padding: 14px;
   border-bottom: 1px solid #dfe5ec;
   white-space: nowrap;
 }
@@ -236,7 +235,7 @@ th {
 td {
   color: #111827;
   font-size: 13px;
-  padding: 14px 14px;
+  padding: 14px;
   border-bottom: 1px solid #e5eaf0;
   vertical-align: middle;
 }

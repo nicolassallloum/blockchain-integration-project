@@ -295,4 +295,68 @@ export class WalletLogin implements OnInit {
         this.errorMessage = 'Failed to copy token.';
       });
   }
+  private normalizeWalletSession(rawWallet: any): any {
+    const wallet = rawWallet || {};
+
+    const walletAddress = String(
+      wallet.walletAddress ||
+      wallet.wallet_address ||
+      ''
+    );
+
+    const customerId = String(
+      wallet.customerId ||
+      wallet.customer_id ||
+      ''
+    );
+
+    const rawWalletType = String(
+      wallet.walletType ||
+      wallet.wallet_type ||
+      wallet.type ||
+      ''
+    ).trim().toUpperCase();
+
+    let walletType = rawWalletType;
+
+    if (
+      rawWalletType === 'ORG' ||
+      rawWalletType === 'ORGANIZATION' ||
+      walletAddress.toUpperCase().startsWith('ORG_WALLET_') ||
+      customerId.toUpperCase().startsWith('ORG_')
+    ) {
+      walletType = 'ORGANIZATION';
+    } else {
+      walletType = 'CUSTOMER';
+    }
+
+    return {
+      ...wallet,
+      walletAddress,
+      wallet_address: walletAddress,
+      customerId,
+      customer_id: customerId,
+      walletType,
+      wallet_type: walletType,
+      currencyCode:
+        wallet.currencyCode ||
+        wallet.currency_code ||
+        wallet.currency ||
+        'USD',
+      currency_code:
+        wallet.currencyCode ||
+        wallet.currency_code ||
+        wallet.currency ||
+        'USD',
+      currentBalance:
+        wallet.currentBalance ??
+        wallet.current_balance ??
+        0,
+      current_balance:
+        wallet.currentBalance ??
+        wallet.current_balance ??
+        0
+    };
+  }
+
 }
