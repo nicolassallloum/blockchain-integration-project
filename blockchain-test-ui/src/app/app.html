@@ -8,7 +8,9 @@
         class="valoores-logo-img"
       />
 
-      <button type="button" class="menu-toggle">☰</button>
+      <button type="button" class="menu-toggle" aria-label="Toggle menu">
+        ☰
+      </button>
     </div>
 
     <div class="sidebar-search">
@@ -17,8 +19,8 @@
     </div>
 
     <nav class="menu">
-      <a routerLink="/digital-kyc/dashboard" routerLinkActive="active">
-        <span class="nav-dot back-dot">‹</span>
+      <a routerLink="/digital-kyc/dashboard" routerLinkActive="active" class="back-link">
+        <span class="back-icon">↩</span>
         <span>Back</span>
       </a>
 
@@ -42,6 +44,13 @@
         <span>Wallet Query</span>
       </a>
 
+      <a routerLink="/digital-kyc/fabric-test" routerLinkActive="active">
+        <span class="nav-dot"></span>
+        <span>Fabric Test</span>
+      </a>
+
+      <div class="menu-divider"></div>
+
       <a routerLink="/digital-kyc/wallet-transfer" routerLinkActive="active">
         <span class="nav-dot"></span>
         <span>Wallet Transfer</span>
@@ -56,15 +65,10 @@
         <span class="nav-dot"></span>
         <span>Transaction History</span>
       </a>
-
-      <a routerLink="/digital-kyc/fabric-test" routerLinkActive="active">
-        <span class="nav-dot"></span>
-        <span>Fabric Test</span>
-      </a>
     </nav>
 
     <div class="sidebar-footer">
-      VBS - Valoores Blockchain Suite / 1.0
+      VFDS/3.25
     </div>
   </aside>
 
@@ -92,5 +96,9 @@
     <section class="page-content">
       <router-outlet></router-outlet>
     </section>
+
+    <button type="button" class="floating-chat" aria-label="Chat">
+      💬
+    </button>
   </main>
 </div>
