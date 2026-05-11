@@ -60,7 +60,7 @@ export class WalletLogin implements OnInit {
 
   fillSampleData(): void {
     this.form = {
-      walletAddress: 'WALLET_177814333918_F039E75D04FE3',
+      walletAddress: 'fe43dce35bdf18108fa5b0b9788858df518c36ff',
       password: ''
     };
 
@@ -146,6 +146,11 @@ export class WalletLogin implements OnInit {
           response?.token ||
           '';
 
+        const normalizedWallet = this.normalizeWalletSession({
+          ...wallet,
+          token: this.token
+        });
+
         this.walletSummary = {
           status:
             wallet?.status ||
@@ -154,13 +159,11 @@ export class WalletLogin implements OnInit {
             '-',
 
           walletAddress:
-            wallet?.walletAddress ||
-            wallet?.wallet_address ||
+            normalizedWallet.walletAddress ||
             '-',
 
           customerId:
-            wallet?.customerId ||
-            wallet?.customer_id ||
+            normalizedWallet.customerId ||
             '-',
 
           customerName:
@@ -171,8 +174,7 @@ export class WalletLogin implements OnInit {
             '-',
 
           organizationId:
-            wallet?.organizationId ||
-            wallet?.organization_id ||
+            normalizedWallet.organizationId ||
             '-',
 
           organizationName:
@@ -205,16 +207,10 @@ export class WalletLogin implements OnInit {
             '-',
 
           balance:
-            wallet?.currentBalance ??
-            wallet?.current_balance ??
-            wallet?.balance ??
-            '-',
+            normalizedWallet.currentBalance ?? '-',
 
           currency:
-            wallet?.currencyCode ||
-            wallet?.currency_code ||
-            wallet?.currency ||
-            'USD',
+            normalizedWallet.currencyCode || 'USD',
 
           creationDateTime:
             wallet?.createdAt ||
@@ -225,13 +221,19 @@ export class WalletLogin implements OnInit {
         };
 
         const normalizedSession = {
-          customerId: this.walletSummary.customerId,
-          walletAddress: this.walletSummary.walletAddress,
-          organizationId: this.walletSummary.organizationId,
-          organizationName: this.walletSummary.organizationName,
-          fullName: this.walletSummary.customerName,
-          currentBalance: Number(this.walletSummary.balance || 0),
-          currencyCode: this.walletSummary.currency,
+          customerId: normalizedWallet.customerId,
+          walletAddress: normalizedWallet.walletAddress,
+          organizationId: normalizedWallet.organizationId,
+          organizationName: normalizedWallet.organizationName,
+          fullName:
+            wallet?.customerName ||
+            wallet?.customer_name ||
+            wallet?.fullName ||
+            wallet?.full_name ||
+            '',
+          currentBalance: Number(normalizedWallet.currentBalance || 0),
+          currencyCode: normalizedWallet.currencyCode,
+          walletType: normalizedWallet.walletType,
           token: this.token
         };
 
@@ -239,7 +241,7 @@ export class WalletLogin implements OnInit {
         this.walletService.saveWalletToken(this.token);
         this.walletService.saveWalletProfile({
           token: this.token,
-          wallet
+          wallet: normalizedWallet
         });
 
         this.successMessage = 'Wallet login successful. Opening wallet information...';
@@ -295,6 +297,7 @@ export class WalletLogin implements OnInit {
         this.errorMessage = 'Failed to copy token.';
       });
   }
+
   private normalizeWalletSession(rawWallet: any): any {
     const wallet = rawWallet || {};
 
@@ -302,61 +305,96 @@ export class WalletLogin implements OnInit {
       wallet.walletAddress ||
       wallet.wallet_address ||
       ''
-    );
+    ).trim();
 
     const customerId = String(
       wallet.customerId ||
       wallet.customer_id ||
       ''
-    );
+    ).trim();
+
+    const organizationId = String(
+      wallet.organizationId ||
+      wallet.organization_id ||
+      ''
+    ).trim();
+
+    const organizationName = String(
+      wallet.organizationName ||
+      wallet.organization_name ||
+      ''
+    ).trim();
 
     const rawWalletType = String(
       wallet.walletType ||
       wallet.wallet_type ||
+      wallet.customerType ||
+      wallet.customer_type ||
       wallet.type ||
       ''
-    ).trim().toUpperCase();
+    )
+      .trim()
+      .toUpperCase();
 
-    let walletType = rawWalletType;
+    let walletType: 'CUSTOMER' | 'ORGANIZATION' = 'CUSTOMER';
 
+    /*
+     * New wallet addresses are 40-character hexadecimal values.
+     * Do not infer organization wallet from wallet address prefix anymore.
+     */
     if (
       rawWalletType === 'ORG' ||
       rawWalletType === 'ORGANIZATION' ||
-      walletAddress.toUpperCase().startsWith('ORG_WALLET_') ||
-      customerId.toUpperCase().startsWith('ORG_')
+      rawWalletType === 'ORGANIZATION_WALLET'
+    ) {
+      walletType = 'ORGANIZATION';
+    } else if (
+      customerId.toUpperCase().startsWith('ORG_') ||
+      organizationId.toUpperCase().startsWith('ORG_')
     ) {
       walletType = 'ORGANIZATION';
     } else {
       walletType = 'CUSTOMER';
     }
 
+    const currencyCode =
+      wallet.currencyCode ||
+      wallet.currency_code ||
+      wallet.currency ||
+      'USD';
+
+    const currentBalance =
+      wallet.currentBalance ??
+      wallet.current_balance ??
+      wallet.balance ??
+      0;
+
     return {
       ...wallet,
+
       walletAddress,
       wallet_address: walletAddress,
+
       customerId,
       customer_id: customerId,
+
+      organizationId,
+      organization_id: organizationId,
+
+      organizationName,
+      organization_name: organizationName,
+
       walletType,
       wallet_type: walletType,
-      currencyCode:
-        wallet.currencyCode ||
-        wallet.currency_code ||
-        wallet.currency ||
-        'USD',
-      currency_code:
-        wallet.currencyCode ||
-        wallet.currency_code ||
-        wallet.currency ||
-        'USD',
-      currentBalance:
-        wallet.currentBalance ??
-        wallet.current_balance ??
-        0,
-      current_balance:
-        wallet.currentBalance ??
-        wallet.current_balance ??
-        0
+
+      currencyCode,
+      currency_code: currencyCode,
+      currency: currencyCode,
+
+      currentBalance,
+      current_balance: currentBalance,
+
+      token: wallet.token || this.token || ''
     };
   }
-
 }

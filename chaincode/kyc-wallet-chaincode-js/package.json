@@ -4,7 +4,8 @@
   "description": "KYC Wallet Hyperledger Fabric JavaScript Chaincode",
   "main": "index.js",
   "scripts": {
-    "start": "fabric-chaincode-node start"
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js"
   },
   "dependencies": {
     "fabric-contract-api": "^2.5.0",

@@ -34,8 +34,7 @@ export class WalletSessionService {
     'walletSession',
     'wallet_profile',
     'wallet_token',
-    'digital_kyc_wallet_token',
-    'digital_kyc_wallet_profile'
+    'digital_kyc_wallet_token'
   ];
 
   setSession(walletData: any): void {
@@ -156,7 +155,7 @@ export class WalletSessionService {
       input?.walletAddress ||
       input?.wallet_address ||
       ''
-    );
+    ).trim();
 
     const customerId = String(
       wallet?.customerId ||
@@ -164,43 +163,52 @@ export class WalletSessionService {
       input?.customerId ||
       input?.customer_id ||
       ''
-    );
+    ).trim();
+
+    const organizationId = String(
+      wallet?.organizationId ||
+      wallet?.organization_id ||
+      input?.organizationId ||
+      input?.organization_id ||
+      ''
+    ).trim();
+
+    const organizationName = String(
+      wallet?.organizationName ||
+      wallet?.organization_name ||
+      input?.organizationName ||
+      input?.organization_name ||
+      ''
+    ).trim();
 
     const rawWalletType = String(
       wallet?.walletType ||
       wallet?.wallet_type ||
+      wallet?.customerType ||
+      wallet?.customer_type ||
       wallet?.type ||
       input?.walletType ||
       input?.wallet_type ||
+      input?.customerType ||
+      input?.customer_type ||
       input?.type ||
       ''
     )
       .trim()
       .toUpperCase();
 
-    const inferredWalletType =
-      rawWalletType === 'ORG' ||
-      rawWalletType === 'ORGANIZATION' ||
-      walletAddress.toUpperCase().startsWith('ORG_WALLET_') ||
-      customerId.toUpperCase().startsWith('ORG_')
-        ? 'ORGANIZATION'
-        : 'CUSTOMER';
+    const inferredWalletType = this.normalizeWalletType(
+      rawWalletType,
+      customerId,
+      organizationId
+    );
 
     return {
       customerId,
       walletAddress,
-      organizationId:
-        wallet?.organizationId ||
-        wallet?.organization_id ||
-        input?.organizationId ||
-        input?.organization_id ||
-        '',
-      organizationName:
-        wallet?.organizationName ||
-        wallet?.organization_name ||
-        input?.organizationName ||
-        input?.organization_name ||
-        '',
+      organizationId,
+      organizationName,
+
       fullName:
         wallet?.fullName ||
         wallet?.full_name ||
@@ -208,15 +216,20 @@ export class WalletSessionService {
         wallet?.customer_name ||
         input?.fullName ||
         input?.full_name ||
+        input?.customerName ||
+        input?.customer_name ||
         '',
+
       currentBalance: Number(
         wallet?.currentBalance ??
           wallet?.current_balance ??
           wallet?.balance ??
           input?.currentBalance ??
           input?.current_balance ??
+          input?.balance ??
           0
       ),
+
       currencyCode:
         wallet?.currencyCode ||
         wallet?.currency_code ||
@@ -225,16 +238,57 @@ export class WalletSessionService {
         input?.currency_code ||
         input?.currency ||
         'USD',
+
       walletType: inferredWalletType,
+
       token:
         input?.token ||
         input?.data?.token ||
         wallet?.token ||
         localStorage.getItem('digital_kyc_wallet_token') ||
+        sessionStorage.getItem('digital_kyc_wallet_token') ||
         '',
+
       loginTime: input?.loginTime || new Date().toISOString(),
       sessionSource: this.mainKey,
       raw: input
     };
+  }
+
+  private normalizeWalletType(
+    rawWalletType: string,
+    customerId: string,
+    organizationId: string
+  ): 'CUSTOMER' | 'ORGANIZATION' {
+    /*
+     * New wallet address format:
+     * fe43dce35bdf18108fa5b0b9788858df518c36ff
+     *
+     * Therefore wallet type must NOT be inferred from wallet address prefix.
+     */
+
+    if (
+      rawWalletType === 'ORG' ||
+      rawWalletType === 'ORGANIZATION' ||
+      rawWalletType === 'ORGANIZATION_WALLET'
+    ) {
+      return 'ORGANIZATION';
+    }
+
+    if (
+      rawWalletType === 'CUSTOMER' ||
+      rawWalletType === 'CUSTOMER_WALLET'
+    ) {
+      return 'CUSTOMER';
+    }
+
+    if (
+      customerId.toUpperCase().startsWith('ORG_') ||
+      organizationId.toUpperCase().startsWith('ORG_')
+    ) {
+      return 'ORGANIZATION';
+    }
+
+    return 'CUSTOMER';
   }
 }

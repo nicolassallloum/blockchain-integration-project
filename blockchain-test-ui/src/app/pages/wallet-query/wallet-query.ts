@@ -74,7 +74,7 @@ export class WalletQuery {
 
   fillSampleWalletAddress(): void {
     this.searchType = 'walletAddress';
-    this.searchValue = 'WALLET_1778070501985_A574CF7592927';
+    this.searchValue = 'fe43dce35bdf18108fa5b0b9788858df518c36ff';
   }
 
   resetForm(): void {

@@ -68,7 +68,7 @@ export class OrganizationTransferComponent implements OnInit {
   fillSample(): void {
     this.loadSession();
 
-    this.form.receiverWalletAddress = 'WALLET_RECEIVER_FROM_OTHER_ORG';
+    this.form.receiverWalletAddress = 'fe43dce35bdf18108fa5b0b9788858df518c36ff';
     this.form.amount = '100';
 
     this.form.currency =
@@ -321,6 +321,8 @@ export class OrganizationTransferComponent implements OnInit {
       parsed?.balance ??
       0;
 
+    const walletType = this.getWalletType(wallet || parsed);
+
     return {
       ...wallet,
 
@@ -330,23 +332,8 @@ export class OrganizationTransferComponent implements OnInit {
       customerId,
       customer_id: customerId,
 
-      walletType:
-        wallet?.walletType ||
-        wallet?.wallet_type ||
-        wallet?.type ||
-        parsed?.walletType ||
-        parsed?.wallet_type ||
-        parsed?.type ||
-        this.inferWalletType(wallet || parsed),
-
-      wallet_type:
-        wallet?.walletType ||
-        wallet?.wallet_type ||
-        wallet?.type ||
-        parsed?.walletType ||
-        parsed?.wallet_type ||
-        parsed?.type ||
-        this.inferWalletType(wallet || parsed),
+      walletType,
+      wallet_type: walletType,
 
       fullName:
         wallet?.fullName ||
@@ -427,44 +414,73 @@ export class OrganizationTransferComponent implements OnInit {
     const walletType = String(
       wallet?.walletType ||
       wallet?.wallet_type ||
+      wallet?.customerType ||
+      wallet?.customer_type ||
       wallet?.type ||
       this.inferWalletType(wallet)
     )
       .trim()
       .toUpperCase();
 
-    if (walletType === 'ORG') {
+    if (
+      walletType === 'ORG' ||
+      walletType === 'ORGANIZATION' ||
+      walletType === 'ORGANIZATION_WALLET'
+    ) {
       return 'ORGANIZATION';
     }
 
-    if (walletType === 'CUSTOMER_WALLET') {
+    if (
+      walletType === 'CUSTOMER' ||
+      walletType === 'CUSTOMER_WALLET'
+    ) {
       return 'CUSTOMER';
     }
 
-    if (walletType === 'ORGANIZATION_WALLET') {
-      return 'ORGANIZATION';
-    }
-
-    return walletType || 'CUSTOMER';
+    return 'CUSTOMER';
   }
 
   private inferWalletType(wallet: any): string {
-    const walletAddress = String(
-      wallet?.walletAddress ||
-      wallet?.wallet_address ||
+    const rawWalletType = String(
+      wallet?.walletType ||
+      wallet?.wallet_type ||
+      wallet?.customerType ||
+      wallet?.customer_type ||
+      wallet?.type ||
       ''
-    ).toUpperCase();
+    )
+      .trim()
+      .toUpperCase();
+
+    if (
+      rawWalletType === 'ORG' ||
+      rawWalletType === 'ORGANIZATION' ||
+      rawWalletType === 'ORGANIZATION_WALLET'
+    ) {
+      return 'ORGANIZATION';
+    }
 
     const customerId = String(
       wallet?.customerId ||
       wallet?.customer_id ||
       ''
-    ).toUpperCase();
+    )
+      .trim()
+      .toUpperCase();
 
-    if (
-      walletAddress.startsWith('ORG_WALLET_') ||
-      customerId.startsWith('ORG_')
-    ) {
+    const organizationId = String(
+      wallet?.organizationId ||
+      wallet?.organization_id ||
+      ''
+    )
+      .trim();
+
+    /*
+     * New wallet addresses are 40-character hexadecimal values.
+     * Do not infer wallet type from wallet address anymore.
+     * Only use explicit wallet type fields or safe organization/customer metadata.
+     */
+    if (customerId.startsWith('ORG_') || organizationId.startsWith('ORG_')) {
       return 'ORGANIZATION';
     }
 
@@ -526,7 +542,7 @@ export class OrganizationTransferComponent implements OnInit {
 
       storage.setItem(key, JSON.stringify(parsed));
     } catch {
-      return;
+      // Ignore invalid legacy session payloads.
     }
   }
 }

@@ -52,7 +52,7 @@ export class WalletTransferComponent implements OnInit {
   }
 
   fillSample(): void {
-    this.form.receiverWalletAddress = 'WALLET_RECEIVER_SAMPLE_ADDRESS';
+    this.form.receiverWalletAddress = 'fe43dce35bdf18108fa5b0b9788858df518c36ff';
     this.form.amount = '50';
     this.form.currency = this.session?.currencyCode || 'USD';
     this.form.transactionPurpose = 'Wallet transfer test';
