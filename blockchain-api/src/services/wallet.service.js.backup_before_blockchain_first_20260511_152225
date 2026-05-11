@@ -2,26 +2,13 @@
 
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
-
 const db = require('../config/database');
-const fabricService = require('./fabric.service');
-
+const { generateWalletAddress } = require('../utils/walletAddressGenerator');
 const DEFAULT_JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '8h';
 const JWT_SECRET =
   process.env.JWT_SECRET ||
   process.env.APP_JWT_SECRET ||
   'CHANGE_ME_DEV_SECRET';
-
-const DEFAULT_CHANNEL_NAME =
-  process.env.FABRIC_CHANNEL_NAME ||
-  process.env.CHANNEL_NAME ||
-  'kycchannelnix1';
-
-const DEFAULT_CHAINCODE_NAME =
-  process.env.FABRIC_CHAINCODE_NAME ||
-  process.env.CHAINCODE_NAME ||
-  'kyc-wallet-chaincode-js';
 
 exports.getNextCustomerId = async () => {
   const result = await db.query(`
@@ -35,7 +22,31 @@ exports.getNextCustomerId = async () => {
     customerId: String(result.rows[0]?.next_customer_id || Date.now())
   };
 };
+async function walletAddressExists(walletAddress) {
+  const result = await db.query(
+    `
+    SELECT 1
+    FROM blockchain.wallets
+    WHERE wallet_address = $1
+    LIMIT 1
+    `,
+    [walletAddress]
+  );
 
+  return result.rowCount > 0;
+}
+
+async function generateUniqueWalletAddress() {
+  let walletAddress;
+  let exists = true;
+
+  while (exists) {
+    walletAddress = generateWalletAddress();
+    exists = await walletAddressExists(walletAddress);
+  }
+
+  return walletAddress;
+}
 async function tableColumnExists(tableName, columnName) {
   const result = await db.query(
     `
@@ -91,12 +102,6 @@ function buildOrganizationEmail(organizationName) {
   return `${slug || 'organization'}@gmail.com`;
 }
 
-function generateOneTimePassword(prefix = 'Wallet') {
-  return `${prefix}@${crypto.randomBytes(4).toString('hex')}${Date.now()
-    .toString()
-    .slice(-4)}`;
-}
-
 function mapWalletProfile(profile) {
   if (!profile) {
     return null;
@@ -146,57 +151,6 @@ async function getOrganizationById(organizationId) {
   );
 
   return result.rows[0] || null;
-}
-
-function extractBlockchainWallet(fabricResult) {
-  const fabricData = fabricResult?.data || fabricResult || {};
-  const nestedData = fabricData?.data || {};
-
-  const wallet =
-    fabricData.wallet ||
-    nestedData.wallet ||
-    null;
-
-  const transaction =
-    fabricData.transaction ||
-    nestedData.transaction ||
-    null;
-
-  if (!wallet || !wallet.walletAddress) {
-    throw new Error('Blockchain CreateWallet did not return wallet.walletAddress');
-  }
-
-  return {
-    wallet,
-    transaction,
-    fabricData
-  };
-}
-
-function getFabricTransactionId(blockchainWallet, blockchainTransaction) {
-  return (
-    blockchainTransaction?.transactionId ||
-    blockchainTransaction?.createdTxId ||
-    blockchainWallet?.createdTxId ||
-    blockchainWallet?.updatedTxId ||
-    null
-  );
-}
-
-async function assertCustomerDoesNotExistInPostgres(customerId) {
-  const existingWallet = await db.query(
-    `
-    SELECT customer_id, wallet_address
-    FROM blockchain.wallets
-    WHERE customer_id = $1
-    LIMIT 1
-    `,
-    [customerId]
-  );
-
-  if (existingWallet.rowCount > 0) {
-    throw new Error(`Wallet already exists for customerId: ${customerId}`);
-  }
 }
 
 exports.listWallets = async ({ limit = 13, offset = 0, search = '' }) => {
@@ -399,6 +353,7 @@ exports.createWallet = async (payload) => {
     emailHash = null,
     passwordHash = null,
     ledgerDocType = 'wallet',
+    ledgerKey = null,
     requestSource = 'ANGULAR_TEST_UI',
     sourceSystem = 'BLOCKCHAIN_API',
     createdBy = 'angular-test-ui'
@@ -408,6 +363,12 @@ exports.createWallet = async (payload) => {
     payload.initialBalance ?? payload.currentBalance ?? payload.current_balance,
     0
   );
+
+  const currencyCode =
+    payload.currencyCode ||
+    payload.currency_code ||
+    payload.currency ||
+    'USD';
 
   if (!customerId) {
     throw new Error('customerId is required');
@@ -425,62 +386,28 @@ exports.createWallet = async (payload) => {
     throw new Error('initialBalance must be zero or greater');
   }
 
-  await assertCustomerDoesNotExistInPostgres(customerId);
+  const existingWallet = await db.query(
+    `
+    SELECT customer_id, wallet_address
+    FROM blockchain.wallets
+    WHERE customer_id = $1
+    LIMIT 1
+    `,
+    [customerId]
+  );
 
-  const plainPassword =
-    payload.password ||
-    payload.oneTimePassword ||
-    payload.plainPassword ||
-    null;
-
-  const generatedPassword =
-    !passwordHash && !plainPassword ? generateOneTimePassword('Wallet') : null;
-
-  const passwordForHash = passwordHash || plainPassword || generatedPassword;
-
-  const normalizedPasswordHash =
-    passwordForHash && String(passwordForHash).startsWith('$2')
-      ? String(passwordForHash)
-      : await bcrypt.hash(String(passwordForHash), 10);
-
-  let fabricResult;
-  let blockchainWallet;
-  let blockchainTransaction;
-
-  try {
-    fabricResult = await fabricService.submitTransaction(
-      'CreateWallet',
-      [
-        customerId,
-        organizationId,
-        fullName,
-        nationalIdHash || '',
-        mobileHash || '',
-        emailHash || '',
-        normalizedPasswordHash,
-        String(initialBalance)
-      ],
-      {
-        requestId: payload.requestId || payload.request_id || null,
-        correlationId: payload.correlationId || payload.correlation_id || null,
-        sourceSystem,
-        requestSource,
-        createdBy
-      }
-    );
-
-    const extracted = extractBlockchainWallet(fabricResult);
-    blockchainWallet = extracted.wallet;
-    blockchainTransaction = extracted.transaction;
-  } catch (error) {
-    throw new Error(`Blockchain wallet creation failed: ${error.message}`);
+  if (existingWallet.rowCount > 0) {
+    throw new Error(`Wallet already exists for customerId: ${customerId}`);
   }
 
-  const walletAddress = blockchainWallet.walletAddress;
-  const fabricTransactionId = getFabricTransactionId(
-    blockchainWallet,
-    blockchainTransaction
-  );
+const walletAddress = await generateUniqueWalletAddress();
+
+  const normalizedPasswordHash =
+    passwordHash && passwordHash.startsWith('$2')
+      ? passwordHash
+      : passwordHash
+        ? await bcrypt.hash(passwordHash, 10)
+        : null;
 
   const row = await insertWallet({
     wallet_address: walletAddress,
@@ -491,24 +418,13 @@ exports.createWallet = async (payload) => {
     full_name: fullName,
     national_id_hash: nationalIdHash,
     ledger_doc_type: ledgerDocType,
-    ledger_key: walletAddress,
+    ledger_key: ledgerKey,
     mobile_hash: mobileHash,
     email_hash: emailHash,
     password_hash: normalizedPasswordHash,
-    current_balance: blockchainWallet.balance ?? initialBalance,
-    currency_code: blockchainWallet.currency || 'TOKEN',
-    status: blockchainWallet.status || 'ACTIVE',
-    fabric_tx_id: fabricTransactionId,
-    fabric_transaction_id: fabricTransactionId,
-    fabric_channel_name: fabricResult.channelName || DEFAULT_CHANNEL_NAME,
-    chaincode_name: fabricResult.chaincodeName || DEFAULT_CHAINCODE_NAME,
-    blockchain_payload: blockchainWallet,
-    fabric_response: fabricResult,
-    request_id: payload.requestId || payload.request_id || null,
-    request_source: requestSource,
-    source_system: sourceSystem,
-    created_by: createdBy,
-    updated_by: createdBy,
+    current_balance: initialBalance,
+    currency_code: currencyCode,
+    status: 'ACTIVE',
     created_at: new Date(),
     updated_at: new Date()
   });
@@ -519,21 +435,7 @@ exports.createWallet = async (payload) => {
 
   return {
     wallet: profile || row,
-    blockchain: {
-      saved: true,
-      walletAddress,
-      fabricTransactionId,
-      channelName: fabricResult.channelName || DEFAULT_CHANNEL_NAME,
-      chaincodeName: fabricResult.chaincodeName || DEFAULT_CHAINCODE_NAME,
-      transaction: blockchainTransaction || null
-    },
-    postgres: {
-      saved: true,
-      walletId: row.wallet_id || null
-    },
-    oneTimePassword:
-      generatedPassword ||
-      (!String(passwordForHash).startsWith('$2') ? passwordForHash : null)
+    oneTimePassword: passwordHash || null
   };
 };
 
@@ -576,65 +478,32 @@ exports.createOrganizationWallet = async (payload) => {
     throw new Error('initialBalance must be zero or greater');
   }
 
+  const currencyCode =
+    payload.currencyCode ||
+    payload.currency_code ||
+    payload.currency ||
+    'USD';
+
   const plainPassword =
     payload.passwordHash ||
     payload.password ||
-    generateOneTimePassword('Org');
+    `Org@${Math.random().toString(36).slice(2, 10)}${Date.now()
+      .toString()
+      .slice(-4)}`;
 
-  const normalizedPasswordHash = String(plainPassword).startsWith('$2')
-    ? String(plainPassword)
-    : await bcrypt.hash(String(plainPassword), 10);
+  const normalizedPasswordHash = plainPassword.startsWith('$2')
+    ? plainPassword
+    : await bcrypt.hash(plainPassword, 10);
 
-  const customerId = `ORG_${String(organization.organization_id)
-    .replace(/-/g, '')
-    .slice(0, 24)}`;
+const walletAddress = await generateUniqueWalletAddress();
 
+  const customerId = `ORG_${String(organization.organization_id).replace(/-/g, '').slice(0, 24)}`;
   const organizationName = organization.organization_name;
   const organizationCode =
     organization.registration_number ||
     organization.organization_code ||
     String(organization.organization_id);
-
   const emailHash = buildOrganizationEmail(organizationName);
-
-  let fabricResult;
-  let blockchainWallet;
-  let blockchainTransaction;
-
-  try {
-    fabricResult = await fabricService.submitTransaction(
-      'CreateWallet',
-      [
-        customerId,
-        String(organization.organization_id),
-        organizationName,
-        String(organization.organization_id),
-        '',
-        emailHash,
-        normalizedPasswordHash,
-        String(initialBalance)
-      ],
-      {
-        requestId: payload.requestId || payload.request_id || null,
-        correlationId: payload.correlationId || payload.correlation_id || null,
-        sourceSystem: payload.sourceSystem || payload.source_system || 'BLOCKCHAIN_API',
-        requestSource: payload.requestSource || payload.request_source || 'ANGULAR_TEST_UI',
-        createdBy: payload.createdBy || payload.created_by || 'angular-test-ui'
-      }
-    );
-
-    const extracted = extractBlockchainWallet(fabricResult);
-    blockchainWallet = extracted.wallet;
-    blockchainTransaction = extracted.transaction;
-  } catch (error) {
-    throw new Error(`Blockchain organization wallet creation failed: ${error.message}`);
-  }
-
-  const walletAddress = blockchainWallet.walletAddress;
-  const fabricTransactionId = getFabricTransactionId(
-    blockchainWallet,
-    blockchainTransaction
-  );
 
   const row = await insertWallet({
     wallet_address: walletAddress,
@@ -645,24 +514,13 @@ exports.createOrganizationWallet = async (payload) => {
     full_name: organizationName,
     national_id_hash: String(organization.organization_id),
     ledger_doc_type: 'organization_wallet',
-    ledger_key: walletAddress,
+    ledger_key: String(organization.organization_id),
     mobile_hash: null,
     email_hash: emailHash,
     password_hash: normalizedPasswordHash,
-    current_balance: blockchainWallet.balance ?? initialBalance,
-    currency_code: blockchainWallet.currency || 'TOKEN',
-    status: blockchainWallet.status || 'ACTIVE',
-    fabric_tx_id: fabricTransactionId,
-    fabric_transaction_id: fabricTransactionId,
-    fabric_channel_name: fabricResult.channelName || DEFAULT_CHANNEL_NAME,
-    chaincode_name: fabricResult.chaincodeName || DEFAULT_CHAINCODE_NAME,
-    blockchain_payload: blockchainWallet,
-    fabric_response: fabricResult,
-    request_id: payload.requestId || payload.request_id || null,
-    request_source: payload.requestSource || payload.request_source || 'ANGULAR_TEST_UI',
-    source_system: payload.sourceSystem || payload.source_system || 'BLOCKCHAIN_API',
-    created_by: payload.createdBy || payload.created_by || 'angular-test-ui',
-    updated_by: payload.createdBy || payload.created_by || 'angular-test-ui',
+    current_balance: initialBalance,
+    currency_code: currencyCode,
+    status: 'ACTIVE',
     created_at: new Date(),
     updated_at: new Date()
   });
@@ -671,19 +529,7 @@ exports.createOrganizationWallet = async (payload) => {
 
   return {
     wallet: profile || row,
-    blockchain: {
-      saved: true,
-      walletAddress,
-      fabricTransactionId,
-      channelName: fabricResult.channelName || DEFAULT_CHANNEL_NAME,
-      chaincodeName: fabricResult.chaincodeName || DEFAULT_CHAINCODE_NAME,
-      transaction: blockchainTransaction || null
-    },
-    postgres: {
-      saved: true,
-      walletId: row.wallet_id || null
-    },
-    oneTimePassword: String(plainPassword).startsWith('$2') ? null : plainPassword
+    oneTimePassword: plainPassword.startsWith('$2') ? null : plainPassword
   };
 };
 
@@ -771,7 +617,7 @@ exports.loginWallet = async ({ walletAddress, customerId, password }) => {
       emailHash: profile.emailHash || null,
       mobileHash: profile.mobileHash || null,
       currentBalance: profile.currentBalance ?? 0,
-      currencyCode: profile.currencyCode || 'TOKEN',
+      currencyCode: profile.currencyCode || 'USD',
       createdAt: profile.createdAt || null,
       status: profile.status || wallet.status
     }

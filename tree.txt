@@ -11730,6 +11730,20 @@
 │   │       ├── package.json
 │   │       └── readme.md
 │   ├── outputs
+│   │   ├── backend-files-export
+│   │   │   ├── app.js.txt
+│   │   │   ├── index.js.txt
+│   │   │   ├── organization.controller.js.txt
+│   │   │   ├── organization.routes.js.txt
+│   │   │   ├── organization.service.js.txt
+│   │   │   ├── reference.controller.js.txt
+│   │   │   ├── reference.routes.js.txt
+│   │   │   ├── server.js.txt
+│   │   │   ├── wallet.controller.js.txt
+│   │   │   ├── wallet.routes.js.txt
+│   │   │   └── wallet.service.js.txt
+│   │   ├── backend-files-export.tar.gz
+│   │   ├── backend-files-full-export.txt
 │   │   ├── generated_wallet_transactions_2026-05-07T15-15-19-852Z.csv
 │   │   ├── generated_wallet_transactions_2026-05-07T15-19-10-300Z.csv
 │   │   ├── generated_wallet_transactions_2026-05-07T15-20-08-568Z.csv
@@ -11786,6 +11800,7 @@
 │   │   ├── controllers
 │   │   │   ├── auth.controller.js
 │   │   │   ├── blockchain.controller.js
+│   │   │   ├── data-generator.controller.js
 │   │   │   ├── fabric.controller.js
 │   │   │   ├── health.controller.js
 │   │   │   ├── organization.controller.js
@@ -11828,6 +11843,7 @@
 │   │   ├── routes
 │   │   │   ├── auth.routes.js
 │   │   │   ├── blockchain.routes.js
+│   │   │   ├── data-generator.routes.js
 │   │   │   ├── fabric.routes.js
 │   │   │   ├── health.routes.js
 │   │   │   ├── index.js
@@ -11839,6 +11855,9 @@
 │   │   │   ├── wallet-query.routes.js
 │   │   │   ├── wallet.routes.js
 │   │   │   └── wallet.routes.js.bak_next_customer_id
+│   │   ├── scripts
+│   │   │   ├── generate-wallets-transactions-fast.js
+│   │   │   └── generate-wallets-transactions.js
 │   │   ├── server.js
 │   │   ├── server.js.bak.before_options_fix_20260506_133738
 │   │   ├── server.js.bak.before_organizations_route_20260506_181742
@@ -11877,12 +11896,131 @@
 │   │       ├── logger.js
 │   │       ├── password.util.js
 │   │       ├── response.util.js
-│   │       └── token.util.js
+│   │       ├── token.util.js
+│   │       └── walletAddressGenerator.js
+│   ├── utils
+│   │   └── walletAddressGenerator.js
 │   └── wallet
 │       └── admin.id
 ├── blockchain-test-ui
 │   ├── angular.json
 │   ├── backups
+│   │   ├── before-wallet-information-fix-20260508_153504
+│   │   │   └── app
+│   │   │       ├── app.component.css
+│   │   │       ├── app.component.css.bak_logo_fix
+│   │   │       ├── app.component.html
+│   │   │       ├── app.component.html.bak_logo_fix
+│   │   │       ├── app.config.ts
+│   │   │       ├── app.html
+│   │   │       ├── app.html.bak_valoores_design_update
+│   │   │       ├── app.html.bak_valoores_reference_design
+│   │   │       ├── app.routes.ts
+│   │   │       ├── app.routes.ts.bak_fix_routes_build
+│   │   │       ├── app.scss
+│   │   │       ├── app.scss.bak_valoores_design_update
+│   │   │       ├── app.scss.bak_valoores_reference_design
+│   │   │       ├── app.ts
+│   │   │       ├── core
+│   │   │       │   ├── interceptors
+│   │   │       │   │   └── api-auth.interceptor.ts
+│   │   │       │   └── services
+│   │   │       │       ├── api-config.service.ts
+│   │   │       │       ├── dashboard-api.service.ts
+│   │   │       │       ├── fabric-api.service.ts
+│   │   │       │       ├── fabric-api.service.ts.bak_add_api_key_final
+│   │   │       │       ├── transaction-api.service.ts
+│   │   │       │       └── wallet-api.service.ts
+│   │   │       ├── features
+│   │   │       │   ├── dashboard
+│   │   │       │   │   ├── dashboard.component.css
+│   │   │       │   │   ├── dashboard.component.css.bak_valoores_reference_design
+│   │   │       │   │   └── dashboard.component.ts
+│   │   │       │   ├── fabric-test
+│   │   │       │   │   ├── fabric-test.component copy.ts
+│   │   │       │   │   ├── fabric-test.component.css
+│   │   │       │   │   ├── fabric-test.component.html
+│   │   │       │   │   ├── fabric-test.component.ts
+│   │   │       │   │   └── fabric-test.component.ts.bak_add_api_key
+│   │   │       │   └── transactions
+│   │   │       │       ├── balance-query
+│   │   │       │       │   ├── balance-query.component.css
+│   │   │       │       │   ├── balance-query.component.html
+│   │   │       │       │   └── balance-query.component.ts
+│   │   │       │       ├── organization-transfer
+│   │   │       │       │   ├── organization-transfer.component.css
+│   │   │       │       │   ├── organization-transfer.component.html
+│   │   │       │       │   ├── organization-transfer.component.ts
+│   │   │       │       │   ├── organization-transfer.component.ts.bak_fix_session_detection
+│   │   │       │       │   ├── organization-transfer.component.ts.bak_org_to_org_final
+│   │   │       │       │   └── organization-transfer.component.ts.bak_org_to_org_frontend_fix
+│   │   │       │       ├── transaction-history
+│   │   │       │       │   ├── transaction-history.component.css
+│   │   │       │       │   ├── transaction-history.component.html
+│   │   │       │       │   └── transaction-history.component.ts
+│   │   │       │       └── wallet-transfer
+│   │   │       │           ├── wallet-transfer.component.css
+│   │   │       │           ├── wallet-transfer.component.html
+│   │   │       │           └── wallet-transfer.component.ts
+│   │   │       ├── layout
+│   │   │       │   └── sidebar
+│   │   │       │       ├── sidebar.component.css
+│   │   │       │       ├── sidebar.component.css.bak_logo_image_only
+│   │   │       │       ├── sidebar.component.css.bak_logo_update
+│   │   │       │       ├── sidebar.component.html
+│   │   │       │       ├── sidebar.component.html.bak_logo_image_only
+│   │   │       │       └── sidebar.component.html.bak_logo_update
+│   │   │       ├── pages
+│   │   │       │   ├── organization-wallet-create
+│   │   │       │   │   ├── organization-wallet-create.css
+│   │   │       │   │   ├── organization-wallet-create.html
+│   │   │       │   │   └── organization-wallet-create.ts
+│   │   │       │   ├── wallet-bulk-table
+│   │   │       │   ├── wallet-create
+│   │   │       │   │   ├── wallet-create.css
+│   │   │       │   │   ├── wallet-create.html
+│   │   │       │   │   ├── wallet-create.html.bak_org_type_filter
+│   │   │       │   │   ├── wallet-create.html.bak_step_32_1
+│   │   │       │   │   ├── wallet-create.ts
+│   │   │       │   │   ├── wallet-create.ts.bak_fix_org_type_loop
+│   │   │       │   │   ├── wallet-create.ts.bak_org_type_filter
+│   │   │       │   │   ├── wallet-create.ts.bak_org_type_methods_fix
+│   │   │       │   │   └── wallet-create.ts.bak_step_32_1
+│   │   │       │   ├── wallet-information
+│   │   │       │   │   ├── wallet-information.component.css
+│   │   │       │   │   ├── wallet-information.component.html
+│   │   │       │   │   ├── wallet-information.component.ts
+│   │   │       │   │   ├── wallet-information.html
+│   │   │       │   │   ├── wallet-information.scss
+│   │   │       │   │   └── wallet-information.ts
+│   │   │       │   ├── wallet-login
+│   │   │       │   │   ├── wallet-login.css
+│   │   │       │   │   ├── wallet-login.html
+│   │   │       │   │   ├── wallet-login.html.bak_wallet_address_login
+│   │   │       │   │   ├── wallet-login.ts
+│   │   │       │   │   ├── wallet-login.ts.bak_fix_wallet_type_org
+│   │   │       │   │   └── wallet-login.ts.bak_wallet_address_login
+│   │   │       │   └── wallet-query
+│   │   │       │       ├── wallet-query.css
+│   │   │       │       ├── wallet-query.css~clear
+│   │   │       │       ├── wallet-query.html
+│   │   │       │       └── wallet-query.ts
+│   │   │       └── services
+│   │   │           ├── fabric.service.ts
+│   │   │           ├── fabric.service.ts.bak_add_api_key
+│   │   │           ├── organization.service.js
+│   │   │           ├── transaction.service.ts
+│   │   │           ├── transaction.service.ts.bak_add_api_key_header
+│   │   │           ├── wallet.service.ts
+│   │   │           ├── wallet.service.ts.bak_bulk_wallet_fix
+│   │   │           ├── wallet.service.ts.bak_fix_missing_methods
+│   │   │           ├── wallet.service.ts.bak_fix_wallet_routes
+│   │   │           ├── wallet.service.ts.bak_org_type_filter
+│   │   │           ├── wallet.service.ts.bak_restore_safe_bulk
+│   │   │           ├── wallet-session.service.ts
+│   │   │           ├── wallet-session.service.ts.bak_duplicate_wallet_type
+│   │   │           ├── wallet-session.service.ts.bak_fix_org_wallet_type
+│   │   │           └── wallet-session.ts
 │   │   ├── step-32-1-20260507_103136
 │   │   │   ├── api-auth.interceptor.ts
 │   │   │   ├── environment.ts
@@ -11921,7 +12059,7 @@
 │   │       │   │       └── valoores-logo.png
 │   │       │   ├── favicon.ico
 │   │       │   ├── index.html
-│   │       │   ├── main-ZLFMVK26.js
+│   │       │   ├── main-OE4GFI4T.js
 │   │       │   └── styles-5INURTSO.css
 │   │       └── prerendered-routes.json
 │   ├── node_modules
@@ -34723,8 +34861,128 @@
 │   │   │       └── valoores-logo.png
 │   │   └── favicon.ico
 │   ├── README.md
+│   ├── remaining-ui-files.txt
 │   ├── src
 │   │   ├── app
+│   │   │   ├── app.component.css
+│   │   │   ├── app.component.css.bak_logo_fix
+│   │   │   ├── app.component.html
+│   │   │   ├── app.component.html.bak_logo_fix
+│   │   │   ├── app.config.ts
+│   │   │   ├── app.html
+│   │   │   ├── app.html.bak_valoores_design_update
+│   │   │   ├── app.html.bak_valoores_reference_design
+│   │   │   ├── app.routes.ts
+│   │   │   ├── app.routes.ts.bak_fix_routes_build
+│   │   │   ├── app.scss
+│   │   │   ├── app.scss.bak_valoores_design_update
+│   │   │   ├── app.scss.bak_valoores_reference_design
+│   │   │   ├── app.ts
+│   │   │   ├── core
+│   │   │   │   ├── interceptors
+│   │   │   │   │   └── api-auth.interceptor.ts
+│   │   │   │   └── services
+│   │   │   │       ├── api-config.service.ts
+│   │   │   │       ├── dashboard-api.service.ts
+│   │   │   │       ├── fabric-api.service.ts
+│   │   │   │       ├── fabric-api.service.ts.bak_add_api_key_final
+│   │   │   │       ├── transaction-api.service.ts
+│   │   │   │       └── wallet-api.service.ts
+│   │   │   ├── features
+│   │   │   │   ├── dashboard
+│   │   │   │   │   ├── dashboard.component.css
+│   │   │   │   │   ├── dashboard.component.css.bak_valoores_reference_design
+│   │   │   │   │   └── dashboard.component.ts
+│   │   │   │   ├── fabric-test
+│   │   │   │   │   ├── fabric-test.component copy.ts
+│   │   │   │   │   ├── fabric-test.component.css
+│   │   │   │   │   ├── fabric-test.component.html
+│   │   │   │   │   ├── fabric-test.component.ts
+│   │   │   │   │   └── fabric-test.component.ts.bak_add_api_key
+│   │   │   │   └── transactions
+│   │   │   │       ├── balance-query
+│   │   │   │       │   ├── balance-query.component.css
+│   │   │   │       │   ├── balance-query.component.html
+│   │   │   │       │   └── balance-query.component.ts
+│   │   │   │       ├── organization-transfer
+│   │   │   │       │   ├── organization-transfer.component.css
+│   │   │   │       │   ├── organization-transfer.component.html
+│   │   │   │       │   ├── organization-transfer.component.ts
+│   │   │   │       │   ├── organization-transfer.component.ts.bak_fix_session_detection
+│   │   │   │       │   ├── organization-transfer.component.ts.bak_org_to_org_final
+│   │   │   │       │   └── organization-transfer.component.ts.bak_org_to_org_frontend_fix
+│   │   │   │       ├── transaction-history
+│   │   │   │       │   ├── transaction-history.component.css
+│   │   │   │       │   ├── transaction-history.component.html
+│   │   │   │       │   └── transaction-history.component.ts
+│   │   │   │       └── wallet-transfer
+│   │   │   │           ├── wallet-transfer.component.css
+│   │   │   │           ├── wallet-transfer.component.html
+│   │   │   │           └── wallet-transfer.component.ts
+│   │   │   ├── layout
+│   │   │   │   └── sidebar
+│   │   │   │       ├── sidebar.component.css
+│   │   │   │       ├── sidebar.component.css.bak_logo_image_only
+│   │   │   │       ├── sidebar.component.css.bak_logo_update
+│   │   │   │       ├── sidebar.component.html
+│   │   │   │       ├── sidebar.component.html.bak_logo_image_only
+│   │   │   │       └── sidebar.component.html.bak_logo_update
+│   │   │   ├── pages
+│   │   │   │   ├── data-generation-engine
+│   │   │   │   │   ├── data-generation-engine.html
+│   │   │   │   │   ├── data-generation-engine.scss
+│   │   │   │   │   └── data-generation-engine.ts
+│   │   │   │   ├── organization-wallet-create
+│   │   │   │   │   ├── organization-wallet-create.css
+│   │   │   │   │   ├── organization-wallet-create.html
+│   │   │   │   │   └── organization-wallet-create.ts
+│   │   │   │   ├── wallet-bulk-table
+│   │   │   │   ├── wallet-create
+│   │   │   │   │   ├── wallet-create.css
+│   │   │   │   │   ├── wallet-create.html
+│   │   │   │   │   ├── wallet-create.html.bak_org_type_filter
+│   │   │   │   │   ├── wallet-create.html.bak_step_32_1
+│   │   │   │   │   ├── wallet-create.ts
+│   │   │   │   │   ├── wallet-create.ts.bak_fix_org_type_loop
+│   │   │   │   │   ├── wallet-create.ts.bak_org_type_filter
+│   │   │   │   │   ├── wallet-create.ts.bak_org_type_methods_fix
+│   │   │   │   │   └── wallet-create.ts.bak_step_32_1
+│   │   │   │   ├── wallet-information
+│   │   │   │   │   ├── wallet-information.component.css
+│   │   │   │   │   ├── wallet-information.component.html
+│   │   │   │   │   ├── wallet-information.component.ts
+│   │   │   │   │   ├── wallet-information.html
+│   │   │   │   │   ├── wallet-information.scss
+│   │   │   │   │   └── wallet-information.ts
+│   │   │   │   ├── wallet-login
+│   │   │   │   │   ├── wallet-login.css
+│   │   │   │   │   ├── wallet-login.html
+│   │   │   │   │   ├── wallet-login.html.bak_wallet_address_login
+│   │   │   │   │   ├── wallet-login.ts
+│   │   │   │   │   ├── wallet-login.ts.bak_fix_wallet_type_org
+│   │   │   │   │   └── wallet-login.ts.bak_wallet_address_login
+│   │   │   │   └── wallet-query
+│   │   │   │       ├── wallet-query.css
+│   │   │   │       ├── wallet-query.css~clear
+│   │   │   │       ├── wallet-query.html
+│   │   │   │       └── wallet-query.ts
+│   │   │   └── services
+│   │   │       ├── fabric.service.ts
+│   │   │       ├── fabric.service.ts.bak_add_api_key
+│   │   │       ├── organization.service.js
+│   │   │       ├── transaction.service.ts
+│   │   │       ├── transaction.service.ts.bak_add_api_key_header
+│   │   │       ├── wallet.service.ts
+│   │   │       ├── wallet.service.ts.bak_bulk_wallet_fix
+│   │   │       ├── wallet.service.ts.bak_fix_missing_methods
+│   │   │       ├── wallet.service.ts.bak_fix_wallet_routes
+│   │   │       ├── wallet.service.ts.bak_org_type_filter
+│   │   │       ├── wallet.service.ts.bak_restore_safe_bulk
+│   │   │       ├── wallet-session.service.ts
+│   │   │       ├── wallet-session.service.ts.bak_duplicate_wallet_type
+│   │   │       ├── wallet-session.service.ts.bak_fix_org_wallet_type
+│   │   │       └── wallet-session.ts
+│   │   ├── app.bak_before_wallet_session_fix_20260508_154442
 │   │   │   ├── app.component.css
 │   │   │   ├── app.component.css.bak_logo_fix
 │   │   │   ├── app.component.html
@@ -34804,6 +35062,13 @@
 │   │   │   │   │   ├── wallet-create.ts.bak_org_type_filter
 │   │   │   │   │   ├── wallet-create.ts.bak_org_type_methods_fix
 │   │   │   │   │   └── wallet-create.ts.bak_step_32_1
+│   │   │   │   ├── wallet-information
+│   │   │   │   │   ├── wallet-information.component.css
+│   │   │   │   │   ├── wallet-information.component.html
+│   │   │   │   │   ├── wallet-information.component.ts
+│   │   │   │   │   ├── wallet-information.html
+│   │   │   │   │   ├── wallet-information.scss
+│   │   │   │   │   └── wallet-information.ts
 │   │   │   │   ├── wallet-login
 │   │   │   │   │   ├── wallet-login.css
 │   │   │   │   │   ├── wallet-login.html
@@ -34830,7 +35095,8 @@
 │   │   │       ├── wallet.service.ts.bak_restore_safe_bulk
 │   │   │       ├── wallet-session.service.ts
 │   │   │       ├── wallet-session.service.ts.bak_duplicate_wallet_type
-│   │   │       └── wallet-session.service.ts.bak_fix_org_wallet_type
+│   │   │       ├── wallet-session.service.ts.bak_fix_org_wallet_type
+│   │   │       └── wallet-session.ts
 │   │   ├── assets
 │   │   │   └── images
 │   │   │       └── valoores-logo.png
@@ -34850,7 +35116,8 @@
 │   │   └── styles.scss
 │   ├── tsconfig.app.json
 │   ├── tsconfig.json
-│   └── tsconfig.spec.json
+│   ├── tsconfig.spec.json
+│   └── ui-files-for-update.txt
 ├── chaincode
 │   ├── kyc-chaincode
 │   ├── kyc-wallet-chaincode
@@ -75620,7 +75887,9 @@
 │       ├── organization-sample.json
 │       ├── transaction-sample.json
 │       └── wallet-sample.json
+├── 🔹 STEP 33 — Spring Boot Integration Design.bash
 ├── STEP-5-DOCKER-RUNTIME-SETUP.sh
+├── tree_20261105.txt
 └── tree.txt
 
-8528 directories, 67096 files
+8578 directories, 67315 files

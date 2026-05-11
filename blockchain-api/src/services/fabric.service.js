@@ -69,7 +69,40 @@ class FabricService {
         process.env.FABRIC_KEY_DIRECTORY_PATH ||
         process.env.KEY_DIRECTORY_PATH ||
         process.env.PRIVATE_KEY_DIRECTORY_PATH ||
-        null
+        null,
+
+      evaluateTimeoutMs: Number(
+        process.env.FABRIC_EVALUATE_TIMEOUT_MS ||
+        process.env.FABRIC_DEFAULT_TIMEOUT_MS ||
+        10000
+      ),
+
+      endorseTimeoutMs: Number(
+        process.env.FABRIC_ENDORSE_TIMEOUT_MS ||
+        process.env.FABRIC_DEFAULT_TIMEOUT_MS ||
+        30000
+      ),
+
+      submitTimeoutMs: Number(
+        process.env.FABRIC_SUBMIT_TIMEOUT_MS ||
+        process.env.FABRIC_DEFAULT_TIMEOUT_MS ||
+        30000
+      ),
+
+      commitStatusTimeoutMs: Number(
+        process.env.FABRIC_COMMIT_STATUS_TIMEOUT_MS ||
+        process.env.FABRIC_DEFAULT_TIMEOUT_MS ||
+        60000
+      ),
+      endorsingOrganizations: String(
+        process.env.FABRIC_ENDORSING_ORGS ||
+        process.env.FABRIC_ENDORSING_ORGANIZATIONS ||
+        process.env.FABRIC_MSP_ID ||
+        'Org1MSP'
+      )
+        .split(',')
+        .map((item) => item.trim())
+        .filter(Boolean)
     };
   }
 
@@ -169,16 +202,16 @@ class FabricService {
       identity: await this.newIdentity(),
       signer: await this.newSigner(),
       evaluateOptions: () => {
-        return { deadline: Date.now() + 10000 };
+        return { deadline: Date.now() + config.evaluateTimeoutMs };
       },
       endorseOptions: () => {
-        return { deadline: Date.now() + 30000 };
+        return { deadline: Date.now() + config.endorseTimeoutMs };
       },
       submitOptions: () => {
-        return { deadline: Date.now() + 30000 };
+        return { deadline: Date.now() + config.submitTimeoutMs };
       },
       commitStatusOptions: () => {
-        return { deadline: Date.now() + 60000 };
+        return { deadline: Date.now() + config.commitStatusTimeoutMs };
       }
     });
 
@@ -249,10 +282,37 @@ class FabricService {
 
       const connection = await this.connect();
 
-      const resultBuffer = await connection.contract.submitTransaction(
-        functionName,
-        ...args.map((arg) => String(arg))
-      );
+      let resultBuffer;
+
+      if (
+        connection.contract &&
+        typeof connection.contract.newProposal === 'function' &&
+        config.endorsingOrganizations &&
+        config.endorsingOrganizations.length > 0
+      ) {
+        const proposal = connection.contract.newProposal(functionName, {
+          arguments: args.map((arg) => String(arg)),
+          endorsingOrganizations: config.endorsingOrganizations
+        });
+
+        const endorsedProposal = await proposal.endorse();
+        const submittedTransaction = await endorsedProposal.submit();
+
+        resultBuffer = endorsedProposal.getResult();
+
+        const commitStatus = await submittedTransaction.getStatus();
+
+        if (!commitStatus.successful) {
+          throw new Error(
+            `Transaction commit failed with code ${commitStatus.code} for transaction ${commitStatus.transactionId}`
+          );
+        }
+      } else {
+        resultBuffer = await connection.contract.submitTransaction(
+          functionName,
+          ...args.map((arg) => String(arg))
+        );
+      }
 
       const parsedResult = this.parseBufferResult(resultBuffer);
 

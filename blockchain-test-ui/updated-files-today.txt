@@ -1,0 +1,15 @@
+./proxy.conf.json
+./src/app/app.html
+./src/app/app.routes.ts
+./src/app/features/transactions/balance-query/balance-query.component.html
+./src/app/features/transactions/organization-transfer/organization-transfer.component.ts
+./src/app/features/transactions/wallet-transfer/wallet-transfer.component.ts
+./src/app/layout/sidebar/sidebar.component.html
+./src/app/pages/data-generation-engine/data-generation-engine.html
+./src/app/pages/data-generation-engine/data-generation-engine.scss
+./src/app/pages/data-generation-engine/data-generation-engine.ts
+./src/app/pages/wallet-login/wallet-login.ts
+./src/app/pages/wallet-query/wallet-query.ts
+./src/app/services/wallet-session.service.ts
+./tsconfig.app.json
+./updated-files-today.txt

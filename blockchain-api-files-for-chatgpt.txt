@@ -1,0 +1,2323 @@
+============================================================
+BLOCKCHAIN API FILES EXPORT
+Generated At: Mon May 11 03:21:26 PM EEST 2026
+============================================================
+
+===== blockchain-api/src/services/wallet.service.js =====
+'use strict';
+
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const db = require('../config/database');
+const { generateWalletAddress } = require('../utils/walletAddressGenerator');
+const DEFAULT_JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '8h';
+const JWT_SECRET =
+  process.env.JWT_SECRET ||
+  process.env.APP_JWT_SECRET ||
+  'CHANGE_ME_DEV_SECRET';
+
+exports.getNextCustomerId = async () => {
+  const result = await db.query(`
+    SELECT
+      COALESCE(MAX(customer_id::bigint), 0) + 1 AS next_customer_id
+    FROM blockchain.wallets
+    WHERE customer_id ~ '^[0-9]+$'
+  `);
+
+  return {
+    customerId: String(result.rows[0]?.next_customer_id || Date.now())
+  };
+};
+async function walletAddressExists(walletAddress) {
+  const result = await db.query(
+    `
+    SELECT 1
+    FROM blockchain.wallets
+    WHERE wallet_address = $1
+    LIMIT 1
+    `,
+    [walletAddress]
+  );
+
+  return result.rowCount > 0;
+}
+
+async function generateUniqueWalletAddress() {
+  let walletAddress;
+  let exists = true;
+
+  while (exists) {
+    walletAddress = generateWalletAddress();
+    exists = await walletAddressExists(walletAddress);
+  }
+
+  return walletAddress;
+}
+async function tableColumnExists(tableName, columnName) {
+  const result = await db.query(
+    `
+    SELECT EXISTS (
+      SELECT 1
+      FROM information_schema.columns
+      WHERE table_schema = 'blockchain'
+        AND table_name = $1
+        AND column_name = $2
+    ) AS exists
+    `,
+    [tableName, columnName]
+  );
+
+  return result.rows[0]?.exists === true;
+}
+
+async function getWalletColumns() {
+  const result = await db.query(
+    `
+    SELECT column_name
+    FROM information_schema.columns
+    WHERE table_schema = 'blockchain'
+      AND table_name = 'wallets'
+    ORDER BY ordinal_position
+    `
+  );
+
+  return result.rows.map((row) => row.column_name);
+}
+
+function normalizeNumber(value, defaultValue = 0) {
+  const numberValue = Number(value);
+  return Number.isFinite(numberValue) ? numberValue : defaultValue;
+}
+
+function normalizeWalletType(value) {
+  const normalized = String(value || 'CUSTOMER').trim().toUpperCase();
+
+  if (normalized === 'ORGANIZATION' || normalized === 'ORG') {
+    return 'ORGANIZATION';
+  }
+
+  return 'CUSTOMER';
+}
+
+function buildOrganizationEmail(organizationName) {
+  const slug = String(organizationName || 'organization')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '.')
+    .replace(/^\.+|\.+$/g, '');
+
+  return `${slug || 'organization'}@gmail.com`;
+}
+
+function mapWalletProfile(profile) {
+  if (!profile) {
+    return null;
+  }
+
+  const walletType = normalizeWalletType(profile.walletType);
+
+  return {
+    walletAddress: profile.walletAddress,
+    customerId: profile.customerId,
+    organizationId: profile.organizationId,
+    organizationName: profile.organizationName,
+    organizationCode: profile.organizationCode || null,
+    walletType,
+    fullName: profile.fullName,
+    customerName: profile.fullName,
+    customerType: walletType,
+    nationality: profile.nationalIdHash,
+    countryName: profile.countryName,
+    idType: 'wallet',
+    idNumber: profile.walletAddress,
+    nationalIdHash: profile.nationalIdHash,
+    mobileHash: profile.mobileHash,
+    emailHash: profile.emailHash,
+    currentBalance: profile.currentBalance,
+    currencyCode: profile.currencyCode,
+    status: profile.status,
+    createdAt: profile.createdAt
+  };
+}
+
+async function getOrganizationById(organizationId) {
+  const result = await db.query(
+    `
+    SELECT
+      organization_id::text AS organization_id,
+      organization_name,
+      organization_type,
+      registration_number,
+      country_code,
+      status
+    FROM blockchain.blockchain_organization
+    WHERE organization_id::text = $1
+    LIMIT 1
+    `,
+    [String(organizationId)]
+  );
+
+  return result.rows[0] || null;
+}
+
+exports.listWallets = async ({ limit = 13, offset = 0, search = '' }) => {
+  const values = [];
+  let whereClause = '';
+
+  if (search && search.trim()) {
+    values.push(`%${search.trim()}%`);
+
+    whereClause = `
+      WHERE
+        COALESCE(full_name, '') ILIKE $1
+        OR COALESCE(wallet_type, '') ILIKE $1
+        OR COALESCE(national_id_hash, '') ILIKE $1
+        OR COALESCE(ledger_doc_type, '') ILIKE $1
+        OR COALESCE(ledger_key, '') ILIKE $1
+        OR COALESCE(customer_id, '') ILIKE $1
+        OR COALESCE(wallet_address, '') ILIKE $1
+        OR COALESCE(organization_code, '') ILIKE $1
+    `;
+  }
+
+  const hasCurrentBalance = await tableColumnExists('wallets', 'current_balance');
+  const hasCurrencyCode = await tableColumnExists('wallets', 'currency_code');
+
+  const countSql = `
+    SELECT COUNT(*)::int AS total
+    FROM blockchain.wallets
+    ${whereClause}
+  `;
+
+  const dataSql = `
+    SELECT
+      wallet_id,
+      wallet_address,
+      customer_id,
+      organization_id,
+      organization_code,
+      wallet_type,
+      full_name,
+      national_id_hash,
+      ledger_doc_type,
+      ledger_key,
+      mobile_hash,
+      email_hash,
+      status,
+      ${hasCurrentBalance ? 'current_balance' : '0 AS current_balance'},
+      ${hasCurrencyCode ? 'currency_code' : `'USD' AS currency_code`},
+      created_at,
+      updated_at
+    FROM blockchain.wallets
+    ${whereClause}
+    ORDER BY created_at DESC NULLS LAST
+    LIMIT $${values.length + 1}
+    OFFSET $${values.length + 2}
+  `;
+
+  const countResult = await db.query(countSql, values);
+  const dataResult = await db.query(dataSql, [...values, limit, offset]);
+
+  return {
+    totalRecords: countResult.rows[0]?.total || 0,
+    data: dataResult.rows.map((row) => ({
+      id: row.wallet_id,
+      walletId: row.wallet_id,
+      walletAddress: row.wallet_address,
+      customerId: row.customer_id,
+      organizationId: row.organization_id,
+      organizationCode: row.organization_code,
+      customerName: row.full_name,
+      customerType: normalizeWalletType(row.wallet_type),
+      nationality: row.national_id_hash,
+      idType: row.ledger_doc_type,
+      idNumber: row.ledger_key,
+      fullName: row.full_name,
+      walletType: normalizeWalletType(row.wallet_type),
+      nationalIdHash: row.national_id_hash,
+      ledgerDocType: row.ledger_doc_type,
+      ledgerKey: row.ledger_key,
+      mobileHash: row.mobile_hash,
+      emailHash: row.email_hash,
+      status: row.status,
+      currentBalance: row.current_balance,
+      currencyCode: row.currency_code,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at
+    }))
+  };
+};
+
+const getProfessionalWalletProfileByCustomerId = async (customerId) => {
+  const result = await db.query(
+    `
+    SELECT
+        w.customer_id                                  AS "customerId",
+        w.wallet_address                              AS "walletAddress",
+        w.organization_id                             AS "organizationId",
+        w.organization_code                           AS "organizationCode",
+        bo.organization_name                          AS "organizationName",
+        w.wallet_type                                 AS "walletType",
+        w.full_name                                   AS "fullName",
+        w.national_id_hash                            AS "nationalIdHash",
+        c.cou_name                                    AS "countryName",
+        w.email_hash                                  AS "emailHash",
+        w.mobile_hash                                 AS "mobileHash",
+        COALESCE(w.current_balance, 0)                AS "currentBalance",
+        COALESCE(w.currency_code, 'USD')              AS "currencyCode",
+        w.created_at                                  AS "createdAt",
+        w.status                                      AS "status"
+    FROM blockchain.wallets w
+    LEFT JOIN blockchain.blockchain_organization bo
+        ON bo.organization_id = w.organization_id
+    LEFT JOIN blockchain.countries c
+        ON c.cou_id::text = w.national_id_hash::text
+    WHERE w.customer_id = $1
+    LIMIT 1
+    `,
+    [customerId]
+  );
+
+  return result.rows[0] || null;
+};
+
+const getProfessionalWalletProfileByAddress = async (walletAddress) => {
+  const result = await db.query(
+    `
+    SELECT
+        w.customer_id                                  AS "customerId",
+        w.wallet_address                              AS "walletAddress",
+        w.organization_id                             AS "organizationId",
+        w.organization_code                           AS "organizationCode",
+        bo.organization_name                          AS "organizationName",
+        w.wallet_type                                 AS "walletType",
+        w.full_name                                   AS "fullName",
+        w.national_id_hash                            AS "nationalIdHash",
+        c.cou_name                                    AS "countryName",
+        w.email_hash                                  AS "emailHash",
+        w.mobile_hash                                 AS "mobileHash",
+        COALESCE(w.current_balance, 0)                AS "currentBalance",
+        COALESCE(w.currency_code, 'USD')              AS "currencyCode",
+        w.created_at                                  AS "createdAt",
+        w.status                                      AS "status"
+    FROM blockchain.wallets w
+    LEFT JOIN blockchain.blockchain_organization bo
+        ON bo.organization_id = w.organization_id
+    LEFT JOIN blockchain.countries c
+        ON c.cou_id::text = w.national_id_hash::text
+    WHERE w.wallet_address = $1
+    LIMIT 1
+    `,
+    [walletAddress]
+  );
+
+  return result.rows[0] || null;
+};
+
+exports.getWalletByCustomerId = async (customerId) => {
+  const profile = await getProfessionalWalletProfileByCustomerId(customerId);
+  return mapWalletProfile(profile);
+};
+
+exports.getWalletByAddress = async (walletAddress) => {
+  const profile = await getProfessionalWalletProfileByAddress(walletAddress);
+  return mapWalletProfile(profile);
+};
+
+async function insertWallet(valuesByColumn) {
+  const columns = await getWalletColumns();
+
+  const insertColumns = [];
+  const insertValues = [];
+  const placeholders = [];
+
+  Object.entries(valuesByColumn).forEach(([column, value]) => {
+    if (columns.includes(column)) {
+      insertColumns.push(column);
+      insertValues.push(value);
+      placeholders.push(`$${insertValues.length}`);
+    }
+  });
+
+  const sql = `
+    INSERT INTO blockchain.wallets (${insertColumns.join(', ')})
+    VALUES (${placeholders.join(', ')})
+    RETURNING *
+  `;
+
+  const result = await db.query(sql, insertValues);
+  return result.rows[0];
+}
+
+exports.createWallet = async (payload) => {
+  const {
+    customerId,
+    organizationId,
+    organizationCode = null,
+    fullName,
+    nationalIdHash = null,
+    mobileHash = null,
+    emailHash = null,
+    passwordHash = null,
+    ledgerDocType = 'wallet',
+    ledgerKey = null,
+    requestSource = 'ANGULAR_TEST_UI',
+    sourceSystem = 'BLOCKCHAIN_API',
+    createdBy = 'angular-test-ui'
+  } = payload;
+
+  const initialBalance = normalizeNumber(
+    payload.initialBalance ?? payload.currentBalance ?? payload.current_balance,
+    0
+  );
+
+  const currencyCode =
+    payload.currencyCode ||
+    payload.currency_code ||
+    payload.currency ||
+    'USD';
+
+  if (!customerId) {
+    throw new Error('customerId is required');
+  }
+
+  if (!organizationId) {
+    throw new Error('organizationId is required');
+  }
+
+  if (!fullName) {
+    throw new Error('fullName is required');
+  }
+
+  if (initialBalance < 0) {
+    throw new Error('initialBalance must be zero or greater');
+  }
+
+  const existingWallet = await db.query(
+    `
+    SELECT customer_id, wallet_address
+    FROM blockchain.wallets
+    WHERE customer_id = $1
+    LIMIT 1
+    `,
+    [customerId]
+  );
+
+  if (existingWallet.rowCount > 0) {
+    throw new Error(`Wallet already exists for customerId: ${customerId}`);
+  }
+
+const walletAddress = await generateUniqueWalletAddress();
+
+  const normalizedPasswordHash =
+    passwordHash && passwordHash.startsWith('$2')
+      ? passwordHash
+      : passwordHash
+        ? await bcrypt.hash(passwordHash, 10)
+        : null;
+
+  const row = await insertWallet({
+    wallet_address: walletAddress,
+    customer_id: customerId,
+    organization_id: organizationId,
+    organization_code: organizationCode,
+    wallet_type: 'CUSTOMER',
+    full_name: fullName,
+    national_id_hash: nationalIdHash,
+    ledger_doc_type: ledgerDocType,
+    ledger_key: ledgerKey,
+    mobile_hash: mobileHash,
+    email_hash: emailHash,
+    password_hash: normalizedPasswordHash,
+    current_balance: initialBalance,
+    currency_code: currencyCode,
+    status: 'ACTIVE',
+    created_at: new Date(),
+    updated_at: new Date()
+  });
+
+  const profile =
+    (await getProfessionalWalletProfileByAddress(row.wallet_address)) ||
+    (await getProfessionalWalletProfileByCustomerId(row.customer_id));
+
+  return {
+    wallet: profile || row,
+    oneTimePassword: passwordHash || null
+  };
+};
+
+exports.createOrganizationWallet = async (payload) => {
+  const organizationId = payload.organizationId || payload.organization_id;
+
+  if (!organizationId) {
+    throw new Error('organizationId is required');
+  }
+
+  const organization = await getOrganizationById(organizationId);
+
+  if (!organization) {
+    throw new Error(`Organization not found: ${organizationId}`);
+  }
+
+  const existingOrgWallet = await db.query(
+    `
+    SELECT wallet_address
+    FROM blockchain.wallets
+    WHERE organization_id::text = $1
+      AND UPPER(wallet_type) = 'ORGANIZATION'
+    LIMIT 1
+    `,
+    [String(organizationId)]
+  );
+
+  if (existingOrgWallet.rowCount > 0) {
+    throw new Error(
+      `Organization wallet already exists for organizationId: ${organizationId}`
+    );
+  }
+
+  const initialBalance = normalizeNumber(
+    payload.initialBalance ?? payload.currentBalance ?? payload.current_balance,
+    0
+  );
+
+  if (initialBalance < 0) {
+    throw new Error('initialBalance must be zero or greater');
+  }
+
+  const currencyCode =
+    payload.currencyCode ||
+    payload.currency_code ||
+    payload.currency ||
+    'USD';
+
+  const plainPassword =
+    payload.passwordHash ||
+    payload.password ||
+    `Org@${Math.random().toString(36).slice(2, 10)}${Date.now()
+      .toString()
+      .slice(-4)}`;
+
+  const normalizedPasswordHash = plainPassword.startsWith('$2')
+    ? plainPassword
+    : await bcrypt.hash(plainPassword, 10);
+
+const walletAddress = await generateUniqueWalletAddress();
+
+  const customerId = `ORG_${String(organization.organization_id).replace(/-/g, '').slice(0, 24)}`;
+  const organizationName = organization.organization_name;
+  const organizationCode =
+    organization.registration_number ||
+    organization.organization_code ||
+    String(organization.organization_id);
+  const emailHash = buildOrganizationEmail(organizationName);
+
+  const row = await insertWallet({
+    wallet_address: walletAddress,
+    customer_id: customerId,
+    organization_id: organization.organization_id,
+    organization_code: organizationCode,
+    wallet_type: 'ORGANIZATION',
+    full_name: organizationName,
+    national_id_hash: String(organization.organization_id),
+    ledger_doc_type: 'organization_wallet',
+    ledger_key: String(organization.organization_id),
+    mobile_hash: null,
+    email_hash: emailHash,
+    password_hash: normalizedPasswordHash,
+    current_balance: initialBalance,
+    currency_code: currencyCode,
+    status: 'ACTIVE',
+    created_at: new Date(),
+    updated_at: new Date()
+  });
+
+  const profile = await getProfessionalWalletProfileByAddress(row.wallet_address);
+
+  return {
+    wallet: profile || row,
+    oneTimePassword: plainPassword.startsWith('$2') ? null : plainPassword
+  };
+};
+
+exports.loginWallet = async ({ walletAddress, customerId, password }) => {
+  const loginIdentifier = walletAddress || customerId;
+
+  if (!loginIdentifier) {
+    throw new Error('walletAddress is required');
+  }
+
+  if (!password) {
+    throw new Error('password is required');
+  }
+
+  const result = await db.query(
+    `
+    SELECT
+      wallet_id,
+      wallet_address,
+      customer_id,
+      organization_id,
+      organization_code,
+      wallet_type,
+      full_name,
+      password_hash,
+      status
+    FROM blockchain.wallets
+    WHERE wallet_address = $1
+    LIMIT 1
+    `,
+    [loginIdentifier]
+  );
+
+  if (result.rows.length === 0) {
+    return null;
+  }
+
+  const wallet = result.rows[0];
+
+  if (!wallet.password_hash) {
+    throw new Error('Wallet has no password hash configured');
+  }
+
+  const isPasswordValid = await bcrypt.compare(password, wallet.password_hash);
+
+  if (!isPasswordValid) {
+    return null;
+  }
+
+  const profile =
+    (await getProfessionalWalletProfileByAddress(wallet.wallet_address)) ||
+    (await getProfessionalWalletProfileByCustomerId(wallet.customer_id)) ||
+    {};
+
+  const walletType = normalizeWalletType(profile.walletType || wallet.wallet_type);
+
+  const token = jwt.sign(
+    {
+      walletId: wallet.wallet_id,
+      walletAddress: wallet.wallet_address,
+      customerId: wallet.customer_id,
+      organizationId: wallet.organization_id,
+      walletType
+    },
+    JWT_SECRET,
+    {
+      expiresIn: DEFAULT_JWT_EXPIRES_IN
+    }
+  );
+
+  return {
+    token,
+    wallet: {
+      walletId: wallet.wallet_id,
+      walletAddress: profile.walletAddress || wallet.wallet_address,
+      customerId: profile.customerId || wallet.customer_id,
+      organizationId: profile.organizationId || wallet.organization_id,
+      organizationName: profile.organizationName || null,
+      organizationCode: profile.organizationCode || wallet.organization_code,
+      walletType,
+      fullName: profile.fullName || wallet.full_name,
+      customerName: profile.fullName || wallet.full_name,
+      nationalIdHash: profile.nationalIdHash || null,
+      countryName: profile.countryName || null,
+      emailHash: profile.emailHash || null,
+      mobileHash: profile.mobileHash || null,
+      currentBalance: profile.currentBalance ?? 0,
+      currencyCode: profile.currencyCode || 'USD',
+      createdAt: profile.createdAt || null,
+      status: profile.status || wallet.status
+    }
+  };
+};
+
+exports.login = exports.loginWallet;
+exports.getByCustomerId = exports.getWalletByCustomerId;
+exports.getByWalletAddress = exports.getWalletByAddress;
+exports.getWalletProfileByCustomerId = getProfessionalWalletProfileByCustomerId;
+exports.getWalletProfileByAddress = getProfessionalWalletProfileByAddress;
+
+===== blockchain-api/src/services/fabric.service.js =====
+'use strict';
+
+const path = require('path');
+const fs = require('fs');
+const crypto = require('crypto');
+
+const grpc = require('@grpc/grpc-js');
+const { connect, signers } = require('@hyperledger/fabric-gateway');
+
+const auditService = require('./audit.service');
+
+const {
+  AUDIT_EVENT_TYPES,
+  AUDIT_EVENT_STATUS,
+  AUDIT_EVENT_CATEGORY
+} = require('../constants/audit.constants');
+
+class FabricService {
+  constructor() {
+    this.gateway = null;
+    this.client = null;
+    this.network = null;
+    this.contract = null;
+  }
+
+  getConfig() {
+    return {
+      channelName:
+        process.env.FABRIC_CHANNEL_NAME ||
+        process.env.CHANNEL_NAME ||
+        'kycchannelnix1',
+
+      chaincodeName:
+        process.env.FABRIC_CHAINCODE_NAME ||
+        process.env.CHAINCODE_NAME ||
+        'kyc-wallet-chaincode-js',
+
+      mspId:
+        process.env.FABRIC_MSP_ID ||
+        process.env.MSP_ID ||
+        'Org1MSP',
+
+      peerEndpoint:
+        process.env.FABRIC_PEER_ENDPOINT ||
+        process.env.PEER_ENDPOINT ||
+        process.env.GRPC_PEER_ENDPOINT ||
+        'peer0.org1.blockchain.local:7051',
+
+      peerHostAlias:
+        process.env.FABRIC_PEER_HOST_ALIAS ||
+        process.env.PEER_HOST_ALIAS ||
+        process.env.GRPC_PEER_HOST_ALIAS ||
+        'peer0.org1.blockchain.local',
+
+      tlsCertPath:
+        process.env.FABRIC_TLS_CERT_PATH ||
+        process.env.TLS_CERT_PATH ||
+        process.env.PEER_TLS_CERT_PATH ||
+        process.env.CORE_PEER_TLS_ROOTCERT_FILE ||
+        null,
+
+      certPath:
+        process.env.FABRIC_CERT_PATH ||
+        process.env.CERT_PATH ||
+        process.env.IDENTITY_CERT_PATH ||
+        null,
+
+      keyDirectoryPath:
+        process.env.FABRIC_KEY_DIRECTORY_PATH ||
+        process.env.KEY_DIRECTORY_PATH ||
+        process.env.PRIVATE_KEY_DIRECTORY_PATH ||
+        null
+    };
+  }
+
+  assertFileExists(filePath, label) {
+    if (!filePath) {
+      throw new Error(`${label} is not configured`);
+    }
+
+    if (!fs.existsSync(filePath)) {
+      throw new Error(`${label} does not exist: ${filePath}`);
+    }
+  }
+
+  assertDirectoryExists(directoryPath, label) {
+    if (!directoryPath) {
+      throw new Error(`${label} is not configured`);
+    }
+
+    if (!fs.existsSync(directoryPath)) {
+      throw new Error(`${label} does not exist: ${directoryPath}`);
+    }
+
+    const stat = fs.statSync(directoryPath);
+
+    if (!stat.isDirectory()) {
+      throw new Error(`${label} is not a directory: ${directoryPath}`);
+    }
+  }
+
+  async newGrpcConnection() {
+    const config = this.getConfig();
+
+    this.assertFileExists(config.tlsCertPath, 'FABRIC_TLS_CERT_PATH');
+
+    const tlsRootCert = fs.readFileSync(config.tlsCertPath);
+    const tlsCredentials = grpc.credentials.createSsl(tlsRootCert);
+
+    return new grpc.Client(config.peerEndpoint, tlsCredentials, {
+      'grpc.ssl_target_name_override': config.peerHostAlias
+    });
+  }
+
+  async newIdentity() {
+    const config = this.getConfig();
+
+    this.assertFileExists(config.certPath, 'FABRIC_CERT_PATH');
+
+    const credentials = fs.readFileSync(config.certPath);
+
+    return {
+      mspId: config.mspId,
+      credentials
+    };
+  }
+
+  async newSigner() {
+    const config = this.getConfig();
+
+    this.assertDirectoryExists(
+      config.keyDirectoryPath,
+      'FABRIC_KEY_DIRECTORY_PATH'
+    );
+
+    const files = fs
+      .readdirSync(config.keyDirectoryPath)
+      .filter((file) => !file.startsWith('.'));
+
+    if (!files || files.length === 0) {
+      throw new Error(
+        `No private key found inside FABRIC_KEY_DIRECTORY_PATH: ${config.keyDirectoryPath}`
+      );
+    }
+
+    const keyPath = path.join(config.keyDirectoryPath, files[0]);
+    const privateKeyPem = fs.readFileSync(keyPath);
+    const privateKey = crypto.createPrivateKey(privateKeyPem);
+
+    return signers.newPrivateKeySigner(privateKey);
+  }
+
+  async connect() {
+    if (this.gateway && this.contract) {
+      return {
+        gateway: this.gateway,
+        client: this.client,
+        network: this.network,
+        contract: this.contract
+      };
+    }
+
+    const config = this.getConfig();
+
+    this.client = await this.newGrpcConnection();
+
+    this.gateway = connect({
+      client: this.client,
+      identity: await this.newIdentity(),
+      signer: await this.newSigner(),
+      evaluateOptions: () => {
+        return { deadline: Date.now() + 10000 };
+      },
+      endorseOptions: () => {
+        return { deadline: Date.now() + 30000 };
+      },
+      submitOptions: () => {
+        return { deadline: Date.now() + 30000 };
+      },
+      commitStatusOptions: () => {
+        return { deadline: Date.now() + 60000 };
+      }
+    });
+
+    this.network = this.gateway.getNetwork(config.channelName);
+    this.contract = this.network.getContract(config.chaincodeName);
+
+    return {
+      gateway: this.gateway,
+      client: this.client,
+      network: this.network,
+      contract: this.contract
+    };
+  }
+
+  parseBufferResult(buffer) {
+    if (!buffer) return null;
+
+    const text = Buffer.from(buffer).toString('utf8');
+
+    if (!text) return null;
+
+    try {
+      return JSON.parse(text);
+    } catch {
+      return text;
+    }
+  }
+
+  normalizeContext(context = {}) {
+    return {
+      requestId: context.requestId || context.request_id || null,
+      correlationId: context.correlationId || context.correlation_id || null,
+      sourceSystem:
+        context.sourceSystem ||
+        context.source_system ||
+        'BLOCKCHAIN_API',
+      requestSource:
+        context.requestSource ||
+        context.request_source ||
+        'API',
+      createdBy:
+        context.createdBy ||
+        context.created_by ||
+        'system'
+    };
+  }
+
+  async submitTransaction(functionName, args = [], context = {}) {
+    const startedAt = Date.now();
+    const config = this.getConfig();
+    const auditContext = this.normalizeContext(context);
+
+    try {
+      await auditService.log({
+        ...auditContext,
+        eventType: AUDIT_EVENT_TYPES.BLOCKCHAIN_SUBMIT_REQUEST,
+        eventCategory: AUDIT_EVENT_CATEGORY.BLOCKCHAIN,
+        eventStatus: AUDIT_EVENT_STATUS.PENDING,
+        blockchainFunction: functionName,
+        chaincodeName: config.chaincodeName,
+        channelName: config.channelName,
+        requestPayload: {
+          functionName,
+          args
+        },
+        serviceName: 'fabric.service'
+      });
+
+      const connection = await this.connect();
+
+      const resultBuffer = await connection.contract.submitTransaction(
+        functionName,
+        ...args.map((arg) => String(arg))
+      );
+
+      const parsedResult = this.parseBufferResult(resultBuffer);
+
+      const result = {
+        success: true,
+        type: 'submit',
+        channelName: config.channelName,
+        chaincodeName: config.chaincodeName,
+        functionName,
+        args,
+        data: parsedResult,
+        durationMs: Date.now() - startedAt
+      };
+
+      await auditService.log({
+        ...auditContext,
+        eventType: AUDIT_EVENT_TYPES.BLOCKCHAIN_SUBMIT_SUCCESS,
+        eventCategory: AUDIT_EVENT_CATEGORY.BLOCKCHAIN,
+        eventStatus: AUDIT_EVENT_STATUS.SUCCESS,
+        blockchainFunction: functionName,
+        chaincodeName: config.chaincodeName,
+        channelName: config.channelName,
+        responsePayload: result,
+        durationMs: Date.now() - startedAt,
+        serviceName: 'fabric.service'
+      });
+
+      return result;
+    } catch (error) {
+      await auditService.log({
+        ...auditContext,
+        eventType: AUDIT_EVENT_TYPES.BLOCKCHAIN_SUBMIT_FAILED,
+        eventCategory: AUDIT_EVENT_CATEGORY.BLOCKCHAIN,
+        eventStatus: AUDIT_EVENT_STATUS.FAILED,
+        blockchainFunction: functionName,
+        chaincodeName: config.chaincodeName,
+        channelName: config.channelName,
+        errorCode: error.code || 'FABRIC_SUBMIT_ERROR',
+        errorMessage: error.message,
+        errorStack: error.stack,
+        requestPayload: {
+          functionName,
+          args
+        },
+        durationMs: Date.now() - startedAt,
+        serviceName: 'fabric.service'
+      });
+
+      throw error;
+    }
+  }
+
+  async evaluateTransaction(functionName, args = [], context = {}) {
+    const startedAt = Date.now();
+    const config = this.getConfig();
+    const auditContext = this.normalizeContext(context);
+
+    try {
+      await auditService.log({
+        ...auditContext,
+        eventType: AUDIT_EVENT_TYPES.BLOCKCHAIN_EVALUATE_REQUEST,
+        eventCategory: AUDIT_EVENT_CATEGORY.BLOCKCHAIN,
+        eventStatus: AUDIT_EVENT_STATUS.PENDING,
+        blockchainFunction: functionName,
+        chaincodeName: config.chaincodeName,
+        channelName: config.channelName,
+        requestPayload: {
+          functionName,
+          args
+        },
+        serviceName: 'fabric.service'
+      });
+
+      const connection = await this.connect();
+
+      const resultBuffer = await connection.contract.evaluateTransaction(
+        functionName,
+        ...args.map((arg) => String(arg))
+      );
+
+      const parsedResult = this.parseBufferResult(resultBuffer);
+
+      const result = {
+        success: true,
+        type: 'evaluate',
+        channelName: config.channelName,
+        chaincodeName: config.chaincodeName,
+        functionName,
+        args,
+        data: parsedResult,
+        durationMs: Date.now() - startedAt
+      };
+
+      await auditService.log({
+        ...auditContext,
+        eventType: AUDIT_EVENT_TYPES.BLOCKCHAIN_EVALUATE_SUCCESS,
+        eventCategory: AUDIT_EVENT_CATEGORY.BLOCKCHAIN,
+        eventStatus: AUDIT_EVENT_STATUS.SUCCESS,
+        blockchainFunction: functionName,
+        chaincodeName: config.chaincodeName,
+        channelName: config.channelName,
+        responsePayload: result,
+        durationMs: Date.now() - startedAt,
+        serviceName: 'fabric.service'
+      });
+
+      return result;
+    } catch (error) {
+      await auditService.log({
+        ...auditContext,
+        eventType: AUDIT_EVENT_TYPES.BLOCKCHAIN_EVALUATE_FAILED,
+        eventCategory: AUDIT_EVENT_CATEGORY.BLOCKCHAIN,
+        eventStatus: AUDIT_EVENT_STATUS.FAILED,
+        blockchainFunction: functionName,
+        chaincodeName: config.chaincodeName,
+        channelName: config.channelName,
+        errorCode: error.code || 'FABRIC_EVALUATE_ERROR',
+        errorMessage: error.message,
+        errorStack: error.stack,
+        requestPayload: {
+          functionName,
+          args
+        },
+        durationMs: Date.now() - startedAt,
+        serviceName: 'fabric.service'
+      });
+
+      throw error;
+    }
+  }
+
+  async disconnect() {
+    try {
+      if (this.gateway) {
+        this.gateway.close();
+      }
+
+      if (this.client) {
+        this.client.close();
+      }
+
+      this.gateway = null;
+      this.client = null;
+      this.network = null;
+      this.contract = null;
+
+      return {
+        success: true,
+        message: 'Fabric gateway disconnected successfully'
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message
+      };
+    }
+  }
+}
+
+module.exports = new FabricService();
+===== blockchain-api/src/controllers/wallet.controller.js =====
+'use strict';
+
+const walletService = require('../services/wallet.service');
+
+function getRequestId(req) {
+  return req.requestId || req.headers['x-request-id'] || null;
+}
+exports.getNextCustomerId = async (req, res, next) => {
+  try {
+    const result = await walletService.getNextCustomerId();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Next customer ID generated successfully',
+      data: {
+        customerId: result.customerId,
+        customer_id: result.customerId
+      },
+      requestId: req.requestId
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+/**
+ * GET /api/v1/wallets?page=1&limit=13&search=
+ * Reads wallets from PostgreSQL table blockchain.wallets
+ */
+exports.listWallets = async (req, res) => {
+  try {
+    const page = Math.max(parseInt(req.query.page || '1', 10), 1);
+    const limit = Math.min(Math.max(parseInt(req.query.limit || '13', 10), 1), 100);
+    const offset = (page - 1) * limit;
+    const search = (req.query.search || '').trim();
+
+    const result = await walletService.listWallets({
+      page,
+      limit,
+      offset,
+      search
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Wallet list retrieved successfully',
+      data: result.data,
+      pagination: {
+        page,
+        limit,
+        totalRecords: result.totalRecords,
+        totalPages: Math.ceil(result.totalRecords / limit),
+        hasNextPage: page < Math.ceil(result.totalRecords / limit),
+        hasPreviousPage: page > 1
+      },
+      filters: {
+        search: search || null
+      },
+      source: 'postgres',
+      requestId: getRequestId(req)
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve wallet list',
+      error: {
+        message: error.message,
+        stack: process.env.NODE_ENV === 'production' ? undefined : error.stack
+      },
+      requestId: getRequestId(req)
+    });
+  }
+};
+
+/**
+ * POST /api/v1/wallets
+ */
+exports.createWallet = async (req, res) => {
+  try {
+    const result = await walletService.createWallet(req.body);
+
+    return res.status(201).json({
+      success: true,
+      message: 'Wallet created successfully',
+      data: result,
+      requestId: getRequestId(req)
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: 'Failed to create wallet',
+      error: {
+        message: error.message,
+        stack: process.env.NODE_ENV === 'production' ? undefined : error.stack
+      },
+      requestId: getRequestId(req)
+    });
+  }
+};
+
+
+/**
+ * POST /api/v1/wallets/organization-wallets
+ */
+exports.createOrganizationWallet = async (req, res) => {
+  try {
+    const result = await walletService.createOrganizationWallet(req.body);
+
+    return res.status(201).json({
+      success: true,
+      message: 'Organization wallet created successfully',
+      data: result,
+      requestId: getRequestId(req)
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: 'Failed to create organization wallet',
+      error: {
+        message: error.message,
+        stack: process.env.NODE_ENV === 'production' ? undefined : error.stack
+      },
+      requestId: getRequestId(req)
+    });
+  }
+};
+
+/**
+ * POST /api/v1/wallets/login
+ */
+exports.loginWallet = async (req, res, next) => {
+  try {
+    const walletAddress =
+      req.body.walletAddress ||
+      req.body.wallet_address ||
+      req.body.loginId ||
+      req.body.customerId;
+
+    const password = req.body.password;
+
+    if (!walletAddress) {
+      return res.status(400).json({
+        success: false,
+        message: 'walletAddress is required',
+        error: {
+          message: 'walletAddress is required'
+        },
+        requestId: req.requestId
+      });
+    }
+
+    if (!password) {
+      return res.status(400).json({
+        success: false,
+        message: 'password is required',
+        error: {
+          message: 'password is required'
+        },
+        requestId: req.requestId
+      });
+    }
+
+    const result = await walletService.loginWallet({
+      walletAddress,
+      password
+    });
+
+    if (!result) {
+      return res.status(401).json({
+        success: false,
+        message: 'Wallet login failed',
+        error: {
+          message: 'Invalid wallet address or password'
+        },
+        requestId: req.requestId
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Wallet login successful',
+      data: result,
+      requestId: req.requestId
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+/**
+ * GET /api/v1/wallets/customer/:customerId
+ */
+exports.getWalletByCustomerId = async (req, res) => {
+  try {
+    const { customerId } = req.params;
+
+    const wallet = await walletService.getWalletByCustomerId(customerId);
+
+    if (!wallet) {
+      return res.status(404).json({
+        success: false,
+        message: `Wallet not found for customerId: ${customerId}`,
+        data: null,
+        requestId: getRequestId(req)
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Wallet retrieved successfully',
+      data: {
+        wallet
+      },
+      source: 'postgres',
+      requestId: getRequestId(req)
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve wallet by customer ID',
+      error: {
+        message: error.message,
+        stack: process.env.NODE_ENV === 'production' ? undefined : error.stack
+      },
+      requestId: getRequestId(req)
+    });
+  }
+};
+
+/**
+ * GET /api/v1/wallets/:walletAddress
+ */
+exports.getWalletByAddress = async (req, res) => {
+  try {
+    const { walletAddress } = req.params;
+
+    const wallet = await walletService.getWalletByAddress(walletAddress);
+
+    if (!wallet) {
+      return res.status(404).json({
+        success: false,
+        message: `Wallet not found for walletAddress: ${walletAddress}`,
+        data: null,
+        requestId: getRequestId(req)
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Wallet retrieved successfully',
+      data: {
+        wallet
+      },
+      source: 'postgres',
+      requestId: getRequestId(req)
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve wallet by wallet address',
+      error: {
+        message: error.message,
+        stack: process.env.NODE_ENV === 'production' ? undefined : error.stack
+      },
+      requestId: getRequestId(req)
+    });
+  }
+};
+
+===== blockchain-api/src/routes/wallet.routes.js =====
+'use strict';
+
+const express = require('express');
+const router = express.Router();
+
+const walletController = require('../controllers/wallet.controller');
+router.get('/next-customer-id', walletController.getNextCustomerId);
+/**
+ * STEP 30 / 31 — Wallet Routes
+ *
+ * IMPORTANT:
+ * The list route "/" must come before dynamic routes like "/:walletAddress".
+ */
+
+/**
+ * List wallets for Angular dashboard.
+ *
+ * GET /api/v1/wallets?page=1&limit=13&search=
+ */
+router.get('/', walletController.listWallets);
+
+/**
+ * Create wallet.
+ *
+ * POST /api/v1/wallets
+ */
+router.post('/', walletController.createWallet);
+
+router.post('/organization-wallets', walletController.createOrganizationWallet);
+
+/**
+ * Wallet login.
+ *
+ * POST /api/v1/wallets/login
+ */
+router.post('/login', walletController.loginWallet);
+
+/**
+ * Get wallet by customer ID.
+ *
+ * GET /api/v1/wallets/customer/:customerId
+ */
+router.get('/customer/:customerId', walletController.getWalletByCustomerId);
+
+/**
+ * Get wallet by wallet address.
+ *
+ * GET /api/v1/wallets/:walletAddress
+ */
+router.get('/:walletAddress', walletController.getWalletByAddress);
+
+module.exports = router;
+
+===== blockchain-api/src/utils/walletAddressGenerator.js =====
+'use strict';
+
+const crypto = require('crypto');
+
+/**
+ * Generate blockchain-style wallet address.
+ *
+ * Example:
+ * fe43dce35bdf18108fa5b0b9788858df518c36ff
+ *
+ * Rules:
+ * - 40 characters
+ * - lowercase hexadecimal
+ * - no 0x prefix
+ */
+function generateWalletAddress() {
+  return crypto.randomBytes(20).toString('hex');
+}
+
+function isValidWalletAddress(walletAddress) {
+  return /^[a-f0-9]{40}$/.test(String(walletAddress || ''));
+}
+
+module.exports = {
+  generateWalletAddress,
+  isValidWalletAddress
+};
+
+===== blockchain-api/src/config/database.js =====
+const { Pool } = require("pg");
+
+const pool = new Pool({
+  host: process.env.POSTGRES_HOST || process.env.DB_HOST || "172.31.13.133",
+  port: Number(process.env.POSTGRES_PORT || process.env.DB_PORT || 5444),
+  database: process.env.POSTGRES_DB || process.env.DB_NAME || "vfds_dev",
+  user: process.env.POSTGRES_USER || process.env.DB_USER || "postgres",
+  password: process.env.POSTGRES_PASSWORD || process.env.DB_PASSWORD,
+  max: Number(process.env.POSTGRES_POOL_MAX || 20),
+  idleTimeoutMillis: Number(process.env.POSTGRES_IDLE_TIMEOUT || 30000),
+  connectionTimeoutMillis: Number(process.env.POSTGRES_CONNECTION_TIMEOUT || 10000)
+});
+
+module.exports = {
+  query: (text, params) => pool.query(text, params),
+  getClient: () => pool.connect(),
+  pool
+};
+
+===== blockchain-api/package.json =====
+{
+  "name": "blockchain-api",
+  "version": "1.0.0",
+  "description": "Blockchain API Middleware for Hyperledger Fabric integration",
+  "main": "src/server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "fabric:import-admin": "node scripts/import-admin-identity.js",
+    "fabric:test": "node scripts/test-fabric-connection.js",
+    "audit": "npm audit",
+    "audit:fix": "npm audit fix",
+    "lint": "eslint src",
+    "format": "prettier --write src"
+  },
+  "keywords": [
+    "blockchain",
+    "hyperledger-fabric",
+    "express",
+    "nodejs",
+    "api-middleware"
+  ],
+  "author": "Nix",
+  "license": "MIT",
+  "dependencies": {
+    "@dotenvx/dotenvx": "^1.64.0",
+    "@grpc/grpc-js": "^1.14.3",
+    "@hyperledger/fabric-gateway": "^1.10.1",
+    "bcryptjs": "^3.0.3",
+    "compression": "^1.8.1",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.5.0",
+    "express-validator": "^7.3.2",
+    "grpc": "^1.24.11",
+    "helmet": "^8.1.0",
+    "hpp": "^0.2.3",
+    "joi": "^18.1.2",
+    "js-yaml": "^4.1.1",
+    "jsonwebtoken": "^9.0.3",
+    "morgan": "^1.10.1",
+    "pg": "^8.20.0",
+    "uuid": "^13.0.2",
+    "winston": "^3.19.0"
+  },
+  "devDependencies": {
+    "eslint": "^9.39.1",
+    "nodemon": "^3.1.11",
+    "prettier": "^3.7.3"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
+
+===== chaincode/kyc-wallet-chaincode-js/lib/kycWalletContract.js =====
+'use strict';
+
+const { Contract } = require('fabric-contract-api');
+const crypto = require('crypto');
+
+class KycWalletContract extends Contract {
+    constructor() {
+        super('KycWalletContract');
+    }
+
+    async InitLedger(ctx) {
+        const metadata = {
+            docType: 'metadata',
+            project: 'Blockchain Integration Project',
+            chaincodeName: 'kyc-wallet-chaincode-js',
+            version: '2.0.0',
+            initializedAt: this._getTxTimestamp(ctx),
+            initializedByTxId: ctx.stub.getTxID()
+        };
+
+        await ctx.stub.putState('CHAINCODE_METADATA', Buffer.from(JSON.stringify(metadata)));
+
+        return this._successResponse('Ledger initialized successfully', metadata);
+    }
+
+    async CreateWallet(ctx, customerId, organizationId, fullName, nationalIdHash, mobileHash, emailHash, passwordHash, initialBalance) {
+        this._required(customerId, 'customerId');
+        this._required(organizationId, 'organizationId');
+        this._required(fullName, 'fullName');
+        this._required(passwordHash, 'passwordHash');
+
+        const parsedInitialBalance = this._parseAmount(initialBalance || '0', 'initialBalance');
+
+        if (parsedInitialBalance < 0) {
+            throw new Error('Initial balance cannot be negative');
+        }
+
+        const existingWalletByCustomer = await this._getWalletByCustomerId(ctx, customerId);
+
+        if (existingWalletByCustomer) {
+            throw new Error(`Wallet already exists for customerId: ${customerId}`);
+        }
+
+        const txId = ctx.stub.getTxID();
+        const createdAt = this._getTxTimestamp(ctx);
+        const walletAddress = this._generateWalletAddress(customerId, organizationId, txId);
+
+        const wallet = {
+            docType: 'wallet',
+            walletAddress,
+            customerId,
+            organizationId,
+            fullName,
+            nationalIdHash: nationalIdHash || null,
+            mobileHash: mobileHash || null,
+            emailHash: emailHash || null,
+            passwordHash,
+            balance: parsedInitialBalance,
+            currency: 'TOKEN',
+            status: 'ACTIVE',
+            createdAt,
+            updatedAt: createdAt,
+            createdTxId: txId,
+            updatedTxId: txId
+        };
+
+        await ctx.stub.putState(this._walletKey(walletAddress), Buffer.from(JSON.stringify(wallet)));
+
+        const transaction = {
+            docType: 'transaction',
+            transactionId: txId,
+            transactionType: 'WALLET_CREATED',
+            fromWalletAddress: null,
+            toWalletAddress: walletAddress,
+            organizationId,
+            amount: parsedInitialBalance,
+            currency: 'TOKEN',
+            status: 'SUCCESS',
+            riskStatus: 'LOW',
+            description: 'Wallet created',
+            createdAt,
+            createdTxId: txId
+        };
+
+        await ctx.stub.putState(this._transactionKey(txId), Buffer.from(JSON.stringify(transaction)));
+
+        return this._successResponse('Wallet created successfully', {
+            wallet: this._removeSensitiveWalletFields(wallet),
+            transaction
+        });
+    }
+
+    async LoginWallet(ctx, walletAddress, passwordHash) {
+        this._required(walletAddress, 'walletAddress');
+        this._required(passwordHash, 'passwordHash');
+
+        const wallet = await this._getWalletByAddress(ctx, walletAddress);
+
+        if (!wallet) {
+            throw new Error(`Wallet not found: ${walletAddress}`);
+        }
+
+        if (wallet.status !== 'ACTIVE') {
+            throw new Error(`Wallet is not active. Current status: ${wallet.status}`);
+        }
+
+        if (wallet.passwordHash !== passwordHash) {
+            throw new Error('Invalid wallet credentials');
+        }
+
+        const authId = ctx.stub.getTxID();
+        const createdAt = this._getTxTimestamp(ctx);
+
+        const loginAudit = {
+            docType: 'authAudit',
+            authId,
+            walletAddress,
+            customerId: wallet.customerId,
+            organizationId: wallet.organizationId,
+            loginStatus: 'SUCCESS',
+            createdAt,
+            createdTxId: authId
+        };
+
+        await ctx.stub.putState(this._authAuditKey(authId), Buffer.from(JSON.stringify(loginAudit)));
+
+        return this._successResponse('Wallet login successful', {
+            wallet: this._removeSensitiveWalletFields(wallet),
+            authAudit: loginAudit
+        });
+    }
+
+    async TransferBetweenWallets(ctx, fromWalletAddress, toWalletAddress, amount, description) {
+        this._required(fromWalletAddress, 'fromWalletAddress');
+        this._required(toWalletAddress, 'toWalletAddress');
+
+        if (fromWalletAddress === toWalletAddress) {
+            throw new Error('Sender wallet and receiver wallet cannot be the same');
+        }
+
+        const parsedAmount = this._parseAmount(amount, 'amount');
+
+        if (parsedAmount <= 0) {
+            throw new Error('Transfer amount must be greater than zero');
+        }
+
+        const fromWallet = await this._getWalletByAddress(ctx, fromWalletAddress);
+        const toWallet = await this._getWalletByAddress(ctx, toWalletAddress);
+
+        if (!fromWallet) {
+            throw new Error(`Sender wallet not found: ${fromWalletAddress}`);
+        }
+
+        if (!toWallet) {
+            throw new Error(`Receiver wallet not found: ${toWalletAddress}`);
+        }
+
+        this._validateWalletActive(fromWallet, 'Sender wallet');
+        this._validateWalletActive(toWallet, 'Receiver wallet');
+
+        if (fromWallet.balance < parsedAmount) {
+            throw new Error('Insufficient wallet balance');
+        }
+
+        const txId = ctx.stub.getTxID();
+        const createdAt = this._getTxTimestamp(ctx);
+
+        fromWallet.balance = this._roundAmount(fromWallet.balance - parsedAmount);
+        toWallet.balance = this._roundAmount(toWallet.balance + parsedAmount);
+
+        fromWallet.updatedAt = createdAt;
+        fromWallet.updatedTxId = txId;
+        toWallet.updatedAt = createdAt;
+        toWallet.updatedTxId = txId;
+
+        const transaction = {
+            docType: 'transaction',
+            transactionId: txId,
+            transactionType: 'WALLET_TO_WALLET',
+            fromWalletAddress,
+            toWalletAddress,
+            organizationId: null,
+            amount: parsedAmount,
+            currency: 'TOKEN',
+            status: 'SUCCESS',
+            riskStatus: this._calculateRiskStatus(parsedAmount),
+            description: description || 'Wallet-to-wallet transfer',
+            fromWalletBalanceAfter: fromWallet.balance,
+            toWalletBalanceAfter: toWallet.balance,
+            createdAt,
+            createdTxId: txId
+        };
+
+        await ctx.stub.putState(this._walletKey(fromWalletAddress), Buffer.from(JSON.stringify(fromWallet)));
+        await ctx.stub.putState(this._walletKey(toWalletAddress), Buffer.from(JSON.stringify(toWallet)));
+        await ctx.stub.putState(this._transactionKey(txId), Buffer.from(JSON.stringify(transaction)));
+
+        return this._successResponse('Wallet-to-wallet transfer completed successfully', {
+            transaction,
+            fromWalletBalance: fromWallet.balance,
+            toWalletBalance: toWallet.balance
+        });
+    }
+
+    async TransferToOrganization(ctx, fromWalletAddress, organizationId, amount, description) {
+        this._required(fromWalletAddress, 'fromWalletAddress');
+        this._required(organizationId, 'organizationId');
+
+        const parsedAmount = this._parseAmount(amount, 'amount');
+
+        if (parsedAmount <= 0) {
+            throw new Error('Transfer amount must be greater than zero');
+        }
+
+        const fromWallet = await this._getWalletByAddress(ctx, fromWalletAddress);
+
+        if (!fromWallet) {
+            throw new Error(`Wallet not found: ${fromWalletAddress}`);
+        }
+
+        this._validateWalletActive(fromWallet, 'Wallet');
+
+        if (fromWallet.balance < parsedAmount) {
+            throw new Error('Insufficient wallet balance');
+        }
+
+        const txId = ctx.stub.getTxID();
+        const createdAt = this._getTxTimestamp(ctx);
+
+        fromWallet.balance = this._roundAmount(fromWallet.balance - parsedAmount);
+        fromWallet.updatedAt = createdAt;
+        fromWallet.updatedTxId = txId;
+
+        const organizationLedgerKey = this._organizationBalanceKey(organizationId);
+        const organizationBalanceBytes = await ctx.stub.getState(organizationLedgerKey);
+
+        let organizationBalance;
+
+        if (!organizationBalanceBytes || organizationBalanceBytes.length === 0) {
+            organizationBalance = {
+                docType: 'organization',
+                organizationId,
+                balance: 0,
+                currency: 'TOKEN',
+                status: 'ACTIVE',
+                createdAt,
+                updatedAt: createdAt,
+                createdTxId: txId,
+                updatedTxId: txId
+            };
+        } else {
+            organizationBalance = JSON.parse(organizationBalanceBytes.toString());
+        }
+
+        organizationBalance.balance = this._roundAmount(organizationBalance.balance + parsedAmount);
+        organizationBalance.updatedAt = createdAt;
+        organizationBalance.updatedTxId = txId;
+
+        const transaction = {
+            docType: 'transaction',
+            transactionId: txId,
+            transactionType: 'WALLET_TO_ORGANIZATION',
+            fromWalletAddress,
+            toWalletAddress: null,
+            organizationId,
+            amount: parsedAmount,
+            currency: 'TOKEN',
+            status: 'SUCCESS',
+            riskStatus: this._calculateRiskStatus(parsedAmount),
+            description: description || 'Wallet-to-organization transfer',
+            fromWalletBalanceAfter: fromWallet.balance,
+            organizationBalanceAfter: organizationBalance.balance,
+            createdAt,
+            createdTxId: txId
+        };
+
+        await ctx.stub.putState(this._walletKey(fromWalletAddress), Buffer.from(JSON.stringify(fromWallet)));
+        await ctx.stub.putState(organizationLedgerKey, Buffer.from(JSON.stringify(organizationBalance)));
+        await ctx.stub.putState(this._transactionKey(txId), Buffer.from(JSON.stringify(transaction)));
+
+        return this._successResponse('Wallet-to-organization transfer completed successfully', {
+            transaction,
+            walletBalance: fromWallet.balance,
+            organizationBalance: organizationBalance.balance
+        });
+    }
+
+    async GetWalletBalance(ctx, walletAddress) {
+        this._required(walletAddress, 'walletAddress');
+
+        const wallet = await this._getWalletByAddress(ctx, walletAddress);
+
+        if (!wallet) {
+            throw new Error(`Wallet not found: ${walletAddress}`);
+        }
+
+        return this._successResponse('Wallet balance retrieved successfully', {
+            walletAddress: wallet.walletAddress,
+            customerId: wallet.customerId,
+            organizationId: wallet.organizationId,
+            balance: wallet.balance,
+            currency: wallet.currency,
+            status: wallet.status,
+            updatedAt: wallet.updatedAt
+        });
+    }
+
+    async GetTransactionHistory(ctx, walletAddress) {
+        this._required(walletAddress, 'walletAddress');
+
+        const wallet = await this._getWalletByAddress(ctx, walletAddress);
+
+        if (!wallet) {
+            throw new Error(`Wallet not found: ${walletAddress}`);
+        }
+
+        const outgoingQuery = {
+            selector: {
+                docType: 'transaction',
+                fromWalletAddress
+            },
+            use_index: [
+                'indexTransactionByFromWalletDoc',
+                'indexTransactionByFromWallet'
+            ]
+        };
+
+        const incomingQuery = {
+            selector: {
+                docType: 'transaction',
+                toWalletAddress: walletAddress
+            },
+            use_index: [
+                'indexTransactionByToWalletDoc',
+                'indexTransactionByToWallet'
+            ]
+        };
+
+        const outgoingTransactions = await this._queryLedger(ctx, outgoingQuery);
+        const incomingTransactions = await this._queryLedger(ctx, incomingQuery);
+
+        const mergedMap = new Map();
+
+        for (const tx of outgoingTransactions.concat(incomingTransactions)) {
+            mergedMap.set(tx.transactionId, tx);
+        }
+
+        const transactions = Array.from(mergedMap.values()).sort((a, b) => {
+            return String(b.createdAt).localeCompare(String(a.createdAt));
+        });
+
+        return this._successResponse('Transaction history retrieved successfully', {
+            walletAddress,
+            totalTransactions: transactions.length,
+            transactions
+        });
+    }
+
+    async GetWalletByCustomerId(ctx, customerId) {
+        this._required(customerId, 'customerId');
+
+        const wallet = await this._getWalletByCustomerId(ctx, customerId);
+
+        if (!wallet) {
+            throw new Error(`Wallet not found for customerId: ${customerId}`);
+        }
+
+        return this._successResponse('Wallet retrieved successfully', {
+            wallet: this._removeSensitiveWalletFields(wallet)
+        });
+    }
+
+    async GetOrganizationBalance(ctx, organizationId) {
+        this._required(organizationId, 'organizationId');
+
+        const organizationBalanceBytes = await ctx.stub.getState(this._organizationBalanceKey(organizationId));
+
+        if (!organizationBalanceBytes || organizationBalanceBytes.length === 0) {
+            return this._successResponse('Organization balance retrieved successfully', {
+                organizationId,
+                balance: 0,
+                currency: 'TOKEN'
+            });
+        }
+
+        return this._successResponse(
+            'Organization balance retrieved successfully',
+            JSON.parse(organizationBalanceBytes.toString())
+        );
+    }
+
+    async GetTransactionById(ctx, transactionId) {
+        this._required(transactionId, 'transactionId');
+
+        const transactionBytes = await ctx.stub.getState(this._transactionKey(transactionId));
+
+        if (!transactionBytes || transactionBytes.length === 0) {
+            throw new Error(`Transaction not found: ${transactionId}`);
+        }
+
+        return this._successResponse(
+            'Transaction retrieved successfully',
+            JSON.parse(transactionBytes.toString())
+        );
+    }
+
+    async WalletExists(ctx, walletAddress) {
+        this._required(walletAddress, 'walletAddress');
+
+        const walletBytes = await ctx.stub.getState(this._walletKey(walletAddress));
+
+        return walletBytes && walletBytes.length > 0;
+    }
+
+    async QueryWalletByAddress(ctx, walletAddress) {
+        this._required(walletAddress, 'walletAddress');
+
+        const query = {
+            selector: {
+                docType: 'wallet',
+                walletAddress
+            },
+            use_index: [
+                'indexWalletByAddressDoc',
+                'indexWalletByAddress'
+            ]
+        };
+
+        const results = await this._queryLedgerWithKeys(ctx, query);
+
+        return JSON.stringify(results);
+    }
+
+    async QueryWalletByCustomerId(ctx, customerId) {
+        this._required(customerId, 'customerId');
+
+        const query = {
+            selector: {
+                docType: 'wallet',
+                customerId
+            },
+            use_index: [
+                'indexWalletByCustomerIdDoc',
+                'indexWalletByCustomerId'
+            ]
+        };
+
+        const results = await this._queryLedgerWithKeys(ctx, query);
+
+        return JSON.stringify(results);
+    }
+
+    async QueryOrganizationById(ctx, organizationId) {
+        this._required(organizationId, 'organizationId');
+
+        const query = {
+            selector: {
+                docType: 'organization',
+                organizationId
+            },
+            use_index: [
+                'indexOrganizationByIdDoc',
+                'indexOrganizationById'
+            ]
+        };
+
+        const results = await this._queryLedgerWithKeys(ctx, query);
+
+        return JSON.stringify(results);
+    }
+
+    async QueryTransactionById(ctx, transactionId) {
+        this._required(transactionId, 'transactionId');
+
+        const query = {
+            selector: {
+                docType: 'transaction',
+                transactionId
+            },
+            use_index: [
+                'indexTransactionByIdDoc',
+                'indexTransactionById'
+            ]
+        };
+
+        const results = await this._queryLedgerWithKeys(ctx, query);
+
+        return JSON.stringify(results);
+    }
+
+    async QueryTransactionsByStatus(ctx, status) {
+        this._required(status, 'status');
+
+        const query = {
+            selector: {
+                docType: 'transaction',
+                status
+            },
+            use_index: [
+                'indexTransactionByStatusDoc',
+                'indexTransactionByStatus'
+            ]
+        };
+
+        const results = await this._queryLedgerWithKeys(ctx, query);
+
+        return JSON.stringify(results);
+    }
+
+    async QueryTransactionsByType(ctx, transactionType) {
+        this._required(transactionType, 'transactionType');
+
+        const query = {
+            selector: {
+                docType: 'transaction',
+                transactionType
+            },
+            use_index: [
+                'indexTransactionByTypeDoc',
+                'indexTransactionByType'
+            ]
+        };
+
+        const results = await this._queryLedgerWithKeys(ctx, query);
+
+        return JSON.stringify(results);
+    }
+
+    async QueryTransactionsByRiskStatus(ctx, riskStatus) {
+        this._required(riskStatus, 'riskStatus');
+
+        const query = {
+            selector: {
+                docType: 'transaction',
+                riskStatus
+            },
+            use_index: [
+                'indexTransactionByRiskStatusDoc',
+                'indexTransactionByRiskStatus'
+            ]
+        };
+
+        const results = await this._queryLedgerWithKeys(ctx, query);
+
+        return JSON.stringify(results);
+    }
+
+    async QueryTransactionsByDateRange(ctx, startDate, endDate) {
+        this._required(startDate, 'startDate');
+        this._required(endDate, 'endDate');
+
+        const query = {
+            selector: {
+                docType: 'transaction',
+                createdAt: {
+                    '$gte': startDate,
+                    '$lte': endDate
+                }
+            },
+            use_index: [
+                'indexTransactionByCreatedDateDoc',
+                'indexTransactionByCreatedDate'
+            ]
+        };
+
+        const results = await this._queryLedgerWithKeys(ctx, query);
+
+        return JSON.stringify(results);
+    }
+
+    async QueryTransactionHistoryByWallet(ctx, walletAddress) {
+        this._required(walletAddress, 'walletAddress');
+
+        const outgoingQuery = {
+            selector: {
+                docType: 'transaction',
+                fromWalletAddress: walletAddress
+            },
+            use_index: [
+                'indexTransactionByFromWalletDoc',
+                'indexTransactionByFromWallet'
+            ]
+        };
+
+        const incomingQuery = {
+            selector: {
+                docType: 'transaction',
+                toWalletAddress: walletAddress
+            },
+            use_index: [
+                'indexTransactionByToWalletDoc',
+                'indexTransactionByToWallet'
+            ]
+        };
+
+        const outgoingResults = await this._queryLedgerWithKeys(ctx, outgoingQuery);
+        const incomingResults = await this._queryLedgerWithKeys(ctx, incomingQuery);
+
+        const mergedMap = new Map();
+
+        for (const item of outgoingResults.concat(incomingResults)) {
+            mergedMap.set(item.record.transactionId, item);
+        }
+
+        const results = Array.from(mergedMap.values()).sort((a, b) => {
+            return String(b.record.createdAt).localeCompare(String(a.record.createdAt));
+        });
+
+        return JSON.stringify(results);
+    }
+
+    _walletKey(walletAddress) {
+        return `WALLET_${walletAddress}`;
+    }
+
+    _transactionKey(transactionId) {
+        return `TRANSACTION_${transactionId}`;
+    }
+
+    _authAuditKey(authId) {
+        return `AUTH_AUDIT_${authId}`;
+    }
+
+    _organizationBalanceKey(organizationId) {
+        return `ORGANIZATION_BALANCE_${organizationId}`;
+    }
+
+    _required(value, fieldName) {
+        if (value === undefined || value === null || String(value).trim() === '') {
+            throw new Error(`${fieldName} is required`);
+        }
+    }
+
+    _parseAmount(value, fieldName) {
+        this._required(value, fieldName);
+
+        const parsed = Number(value);
+
+        if (Number.isNaN(parsed)) {
+            throw new Error(`${fieldName} must be a valid number`);
+        }
+
+        return this._roundAmount(parsed);
+    }
+
+    _roundAmount(value) {
+        return Math.round(Number(value) * 100) / 100;
+    }
+
+    _validateWalletActive(wallet, label) {
+        if (!wallet) {
+            throw new Error(`${label} does not exist`);
+        }
+
+        if (wallet.status !== 'ACTIVE') {
+            throw new Error(`${label} is not active. Current status: ${wallet.status}`);
+        }
+    }
+
+    _generateWalletAddress(customerId, organizationId, txId) {
+        const rawValue = `${customerId}|${organizationId}|${txId}`;
+        const hash = crypto.createHash('sha256').update(rawValue).digest('hex');
+
+        return `WALLET_${hash.substring(0, 40).toUpperCase()}`;
+    }
+
+    _calculateRiskStatus(amount) {
+        const numericAmount = Number(amount);
+
+        if (numericAmount >= 100000) {
+            return 'HIGH';
+        }
+
+        if (numericAmount >= 10000) {
+            return 'MEDIUM';
+        }
+
+        return 'LOW';
+    }
+
+    _getTxTimestamp(ctx) {
+        const timestamp = ctx.stub.getTxTimestamp();
+
+        let seconds;
+
+        if (timestamp.seconds && typeof timestamp.seconds.toNumber === 'function') {
+            seconds = timestamp.seconds.toNumber();
+        } else if (timestamp.seconds && timestamp.seconds.low !== undefined) {
+            seconds = timestamp.seconds.low;
+        } else {
+            seconds = Number(timestamp.seconds || 0);
+        }
+
+        const milliseconds = seconds * 1000 + Math.floor(timestamp.nanos / 1000000);
+
+        return new Date(milliseconds).toISOString();
+    }
+
+    async _getWalletByAddress(ctx, walletAddress) {
+        const walletBytes = await ctx.stub.getState(this._walletKey(walletAddress));
+
+        if (!walletBytes || walletBytes.length === 0) {
+            return null;
+        }
+
+        return JSON.parse(walletBytes.toString());
+    }
+
+    async _getWalletByCustomerId(ctx, customerId) {
+        const query = {
+            selector: {
+                docType: 'wallet',
+                customerId
+            },
+            use_index: [
+                'indexWalletByCustomerIdDoc',
+                'indexWalletByCustomerId'
+            ],
+            limit: 1
+        };
+
+        const results = await this._queryLedger(ctx, query);
+
+        if (!results || results.length === 0) {
+            return null;
+        }
+
+        return results[0];
+    }
+
+    async _queryLedger(ctx, query) {
+        const iterator = await ctx.stub.getQueryResult(JSON.stringify(query));
+        const results = [];
+
+        try {
+            while (true) {
+                const result = await iterator.next();
+
+                if (result.value && result.value.value.toString()) {
+                    const record = JSON.parse(result.value.value.toString('utf8'));
+                    results.push(record);
+                }
+
+                if (result.done) {
+                    break;
+                }
+            }
+        } finally {
+            await iterator.close();
+        }
+
+        return results;
+    }
+
+    async _queryLedgerWithKeys(ctx, query) {
+        const iterator = await ctx.stub.getQueryResult(JSON.stringify(query));
+        const results = [];
+
+        try {
+            while (true) {
+                const result = await iterator.next();
+
+                if (result.value && result.value.value.toString()) {
+                    const record = JSON.parse(result.value.value.toString('utf8'));
+
+                    results.push({
+                        key: result.value.key,
+                        record
+                    });
+                }
+
+                if (result.done) {
+                    break;
+                }
+            }
+        } finally {
+            await iterator.close();
+        }
+
+        return results;
+    }
+
+    _removeSensitiveWalletFields(wallet) {
+        const safeWallet = Object.assign({}, wallet);
+
+        delete safeWallet.passwordHash;
+        delete safeWallet.nationalIdHash;
+        delete safeWallet.mobileHash;
+        delete safeWallet.emailHash;
+
+        return safeWallet;
+    }
+
+    _successResponse(message, data) {
+        return {
+            success: true,
+            message,
+            data
+        };
+    }
+}
+
+module.exports = KycWalletContract;
+===== blockchain-api/.env Fabric Config Only =====
+API_KEY=20bd6a16f56de09bba960ebf3994fc2354c0a3f91fb2bd5743ad82cdeece29b5ff69cea9b3c85f56c187abc46de4491a
+JWT_AUDIENCE=blockchain-wallet-users
+INTERNAL_SERVICE_API_KEY=2c422bde1cb4b1a7a1b7450c7da253233040f3913eea95cd05cebf11bb1500bd
+# Hyperledger Fabric SDK Configuration
+FABRIC_CONNECTION_PROFILE=/home/nix/u01/blockchain-integration/blockchain-api/config/connection-org1.json
+FABRIC_WALLET_PATH=/home/nix/u01/blockchain-integration/blockchain-api/wallet
+FABRIC_IDENTITY_LABEL=admin
+FABRIC_CHANNEL_NAME=kycchannelnix1
+FABRIC_CHAINCODE_NAME=kyc-wallet-chaincode-js
+FABRIC_MSP_ID=Org1MSP
+FABRIC_IDENTITY=admin
+FABRIC_ORG_MSP_ID=Org1MSP
+FABRIC_PEER_NAME=peer0.org1.blockchain.local
+FABRIC_PEER_ENDPOINT=peer0.org1.blockchain.local:7051
+# FABRIC_PEER_ENDPOINT=localhost:7051
+FABRIC_PEER_HOST_ALIAS=peer0.org1.blockchain.local
+FABRIC_PEER_TLS_HOST_ALIAS=peer0.org1.blockchain.local
+FABRIC_TLS_CERT_PATH=/home/nix/u01/blockchain-integration/fabric-network/organizations/peerOrganizations/org1.blockchain.local/peers/peer0.org1.blockchain.local/tls/ca.crt
+FABRIC_CERT_PATH=/home/nix/u01/blockchain-integration/fabric-network/organizations/peerOrganizations/org1.blockchain.local/users/Admin@org1.blockchain.local/msp/signcerts/Admin@org1.blockchain.local-cert.pem
+FABRIC_KEY_DIRECTORY_PATH=/home/nix/u01/blockchain-integration/fabric-network/organizations/peerOrganizations/org1.blockchain.local/users/Admin@org1.blockchain.local/msp/keystore
+FABRIC_DEFAULT_TIMEOUT_MS=30000
+POSTGRES_CONNECTION_TIMEOUT_MS=10000
+# Fabric remains the source of truth for ledger state.
+COUCHDB_CHAINCODE_DB=kycchannelnix1_kyc-wallet-chaincode-js
+HEALTH_CHECK_FABRIC=true
+# WALLET LOGIN SECURITY
+# Internal service API key
+INTERNAL_API_KEY=774101c2e4e6e8d46a8bb6c02571f0239ac7c8bd548c22db1162671e502278f7
+# Enable or disable API key check for service routes
+ENABLE_API_KEY_PROTECTION=true
+
+============================================================
+END OF EXPORT
+============================================================
