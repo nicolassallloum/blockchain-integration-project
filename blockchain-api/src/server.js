@@ -5,13 +5,16 @@
  * Blockchain Integration Project
  *
  * Updated for:
- * - Angular UI proxy / direct CORS support
+ * - Angular UI direct CORS support
+ * - Browser OPTIONS / preflight handling
+ * - /api/v1/data-generator route
  * - /api/v1/organizations route
  * - /api/v1/wallets route
  * - /api/v1/transactions route
  * - /api/v1/fabric route
  * - /api/v1/reference route
- * - Professional 404 and error handling
+ * - Professional request logging
+ * - Professional 404 and global error handling
  */
 
 require('dotenv').config();
@@ -19,6 +22,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const crypto = require('crypto');
+const os = require('os');
 
 const app = express();
 
@@ -30,6 +34,7 @@ function optionalRequire(packageName) {
   try {
     return require(packageName);
   } catch (error) {
+    console.warn(`[OPTIONAL_PACKAGE_WARNING] Package not available: ${packageName}`);
     return null;
   }
 }
@@ -42,27 +47,14 @@ const helmet = optionalRequire('helmet');
  */
 function safeRoute(routePath, routeName) {
   try {
-    return require(routePath);
+    const route = require(routePath);
+    console.log(`[ROUTES] ${routeName} loaded`);
+    return route;
   } catch (error) {
     console.error(`[SERVER_ROUTE_LOAD_WARNING] Failed to load ${routeName}:`, error.message);
     return null;
   }
 }
-
-/**
- * Route imports.
- */
-const walletRoutes = safeRoute('./routes/wallet.routes', 'wallet.routes');
-const transactionRoutes = safeRoute('./routes/transaction.routes', 'transaction.routes');
-const fabricRoutes = safeRoute('./routes/fabric.routes', 'fabric.routes');
-const referenceRoutes = safeRoute('./routes/reference.routes', 'reference.routes');
-const organizationRoutes = safeRoute('./routes/organization.routes', 'organization.routes');
-
-/**
- * Optional root API routes aggregator.
- * Keep it optional because some versions of the project may not have src/routes/index.js.
- */
-const apiRoutes = safeRoute('./routes', 'routes/index');
 
 /**
  * Server configuration.
@@ -76,15 +68,21 @@ const NODE_ENV = process.env.NODE_ENV || 'production';
 
 /**
  * CORS configuration.
+ *
+ * Important:
+ * - Browser UI is running on port 4200.
+ * - Backend API is running on port 3001.
+ * - Browser preflight OPTIONS must be answered before routes/security.
  */
 const defaultAllowedOrigins = [
   'http://172.31.13.90:4200',
-  'http://localhost:4200',
+  'http://172.31.13.90:8080',
   'http://127.0.0.1:4200',
-  'http://localhost:8080',
+  'http://localhost:4200',
   'http://127.0.0.1:8080',
-  'http://localhost:5173',
-  'http://127.0.0.1:5173'
+  'http://localhost:8080',
+  'http://127.0.0.1:5173',
+  'http://localhost:5173'
 ];
 
 const envAllowedOrigins = String(process.env.CORS_ALLOWED_ORIGINS || process.env.CORS_ORIGIN || '')
@@ -94,12 +92,28 @@ const envAllowedOrigins = String(process.env.CORS_ALLOWED_ORIGINS || process.env
 
 const allowedOrigins = Array.from(new Set([...defaultAllowedOrigins, ...envAllowedOrigins]));
 
+const allowedHeaders = [
+  'Accept',
+  'Content-Type',
+  'Authorization',
+  'x-api-key',
+  'x-request-id',
+  'x-correlation-id',
+  'x-source-system',
+  'x-request-source'
+];
+
+const exposedHeaders = [
+  'x-request-id',
+  'x-correlation-id'
+];
+
 const corsOptions = {
   origin(origin, callback) {
     /**
      * Allow:
-     * - Browser requests from allowed origins
      * - Server-to-server requests with no Origin header
+     * - Browser requests from allowed origins
      */
     if (!origin) {
       return callback(null, true);
@@ -116,39 +130,45 @@ const corsOptions = {
 
     return callback(new Error(`CORS blocked origin: ${origin}`));
   },
-  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: [
-    'Content-Type',
-    'Authorization',
-    'x-request-id',
-    'x-api-key',
-    'x-correlation-id'
-  ],
-  exposedHeaders: [
-    'x-request-id',
-    'x-correlation-id'
-  ],
-  optionsSuccessStatus: 204
+  allowedHeaders,
+  exposedHeaders,
+  credentials: false,
+  optionsSuccessStatus: 204,
+  preflightContinue: false
 };
 
 /**
- * Manual CORS preflight handler.
- * Important for Angular/browser OPTIONS requests.
+ * Manual CORS preflight middleware.
+ *
+ * This is intentionally placed before:
+ * - helmet
+ * - body parser
+ * - route handlers
+ * - API key middleware if added later
+ *
+ * This ensures Angular OPTIONS requests do not stay pending.
  */
 app.use((req, res, next) => {
   const origin = req.headers.origin;
 
-  if (origin && allowedOrigins.includes(origin)) {
+  if (!origin) {
+    return next();
+  }
+
+  if (allowedOrigins.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Vary', 'Origin');
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
-    res.setHeader(
-      'Access-Control-Allow-Headers',
-      'Content-Type,Authorization,x-request-id,x-api-key,x-correlation-id'
-    );
-    res.setHeader('Access-Control-Expose-Headers', 'x-request-id,x-correlation-id');
+    res.setHeader('Access-Control-Allow-Headers', allowedHeaders.join(','));
+    res.setHeader('Access-Control-Expose-Headers', exposedHeaders.join(','));
+    res.setHeader('Access-Control-Max-Age', '86400');
+  } else {
+    console.warn('[CORS_BLOCKED_PREFLIGHT]', {
+      origin,
+      method: req.method,
+      url: req.originalUrl
+    });
   }
 
   if (req.method === 'OPTIONS') {
@@ -218,12 +238,31 @@ app.use((req, res, next) => {
       statusCode: res.statusCode,
       durationMs,
       requestId: req.requestId,
-      correlationId: req.correlationId
+      correlationId: req.correlationId,
+      origin: req.headers.origin || null
     });
   });
 
   return next();
 });
+
+/**
+ * Route imports.
+ *
+ * Routes are loaded after middleware definitions but before route registration.
+ */
+const walletRoutes = safeRoute('./routes/wallet.routes', 'wallet.routes');
+const dataGeneratorRoutes = safeRoute('./routes/data-generator.routes', 'data-generator.routes');
+const transactionRoutes = safeRoute('./routes/transaction.routes', 'transaction.routes');
+const fabricRoutes = safeRoute('./routes/fabric.routes', 'fabric.routes');
+const referenceRoutes = safeRoute('./routes/reference.routes', 'reference.routes');
+const organizationRoutes = safeRoute('./routes/organization.routes', 'organization.routes');
+
+/**
+ * Optional root API routes aggregator.
+ * Keep it optional because some versions of the project may not have src/routes/index.js.
+ */
+const apiRoutes = safeRoute('./routes', 'routes/index');
 
 /**
  * Health endpoint.
@@ -239,10 +278,10 @@ app.get('/api/v1/health', (req, res) => {
       uptimeSeconds: process.uptime(),
       timestamp: new Date().toISOString(),
       system: {
-        hostname: require('os').hostname(),
+        hostname: os.hostname(),
         platform: process.platform,
-        memoryFree: require('os').freemem(),
-        memoryTotal: require('os').totalmem()
+        memoryFree: os.freemem(),
+        memoryTotal: os.totalmem()
       },
       blockchain: {
         channelName: process.env.FABRIC_CHANNEL_NAME || process.env.CHANNEL_NAME || 'kycchannelnix1',
@@ -270,6 +309,10 @@ if (walletRoutes) {
   app.use('/api/v1/wallets', walletRoutes);
 }
 
+if (dataGeneratorRoutes) {
+  app.use('/api/v1/data-generator', dataGeneratorRoutes);
+}
+
 if (transactionRoutes) {
   app.use('/api/v1/transactions', transactionRoutes);
 }
@@ -282,10 +325,6 @@ if (referenceRoutes) {
   app.use('/api/v1/reference', referenceRoutes);
 }
 
-/**
- * STEP 32 / UI Support:
- * Required by Angular Create Wallet page.
- */
 if (organizationRoutes) {
   app.use('/api/v1/organizations', organizationRoutes);
 }
@@ -310,6 +349,7 @@ app.get('/', (req, res) => {
       environment: NODE_ENV,
       health: '/api/v1/health',
       wallets: '/api/v1/wallets',
+      dataGenerator: '/api/v1/data-generator/run',
       transactions: '/api/v1/transactions',
       fabric: '/api/v1/fabric',
       reference: '/api/v1/reference',
@@ -353,7 +393,8 @@ app.use((error, req, res, next) => {
     requestId: req.requestId,
     correlationId: req.correlationId,
     method: req.method,
-    url: req.originalUrl
+    url: req.originalUrl,
+    origin: req.headers.origin || null
   });
 
   const statusCode =
@@ -378,11 +419,6 @@ app.use((error, req, res, next) => {
     timestamp: new Date().toISOString(),
     requestId: req.requestId,
     correlationId: req.correlationId || req.requestId,
-
-    /**
-     * Helpful while testing.
-     * You can remove debug before production hardening.
-     */
     debug: isProduction
       ? undefined
       : {
@@ -406,6 +442,7 @@ const server = app.listen(PORT, HOST, () => {
   console.log(`Environment: ${NODE_ENV}`);
   console.log(`Listening: http://${HOST}:${PORT}`);
   console.log(`Health: http://${HOST}:${PORT}/api/v1/health`);
+  console.log(`Data Generator: http://${HOST}:${PORT}/api/v1/data-generator/run`);
   console.log(`Allowed CORS Origins: ${allowedOrigins.join(', ')}`);
   console.log('======================================================');
 });

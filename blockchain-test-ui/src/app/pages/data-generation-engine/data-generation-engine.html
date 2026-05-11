@@ -1,0 +1,146 @@
+<div class="engine-page">
+  <div class="page-header">
+    <div>
+      <h1>Data Generation Engine</h1>
+      <p>
+        Generate blockchain wallets and transactions directly from the UI for testing,
+        dashboard validation, and performance tuning.
+      </p>
+    </div>
+
+    <div class="status-badge" [class.running]="isRunning" [class.success]="successMessage">
+      {{ isRunning ? 'RUNNING' : successMessage ? 'COMPLETED' : 'READY' }}
+    </div>
+  </div>
+
+  <div class="cards-grid">
+    <section class="card config-card">
+      <h2>Engine Configuration</h2>
+
+      <div class="quick-actions">
+        <button type="button" (click)="setSmallTest()" [disabled]="isRunning">
+          Small Test
+        </button>
+
+        <button type="button" (click)="setPerformanceTest()" [disabled]="isRunning">
+          Performance Test
+        </button>
+
+        <button type="button" (click)="setLargeTest()" [disabled]="isRunning">
+          Large Test
+        </button>
+      </div>
+
+      <div class="form-grid">
+        <label>
+          Wallets
+          <input type="number" [(ngModel)]="form.wallets" min="0" [disabled]="isRunning" />
+        </label>
+
+        <label>
+          Transactions
+          <input type="number" [(ngModel)]="form.transactions" min="0" [disabled]="isRunning" />
+        </label>
+
+        <label>
+          Batch Size
+          <input type="number" [(ngModel)]="form.batchSize" min="1" max="5000" [disabled]="isRunning" />
+        </label>
+
+        <label>
+          Log Every
+          <input type="number" [(ngModel)]="form.logEvery" min="1" [disabled]="isRunning" />
+        </label>
+
+        <label>
+          Min Balance
+          <input type="number" [(ngModel)]="form.minBalance" min="0" [disabled]="isRunning" />
+        </label>
+
+        <label>
+          Max Balance
+          <input type="number" [(ngModel)]="form.maxBalance" min="0" [disabled]="isRunning" />
+        </label>
+
+        <label>
+          Min Amount
+          <input type="number" [(ngModel)]="form.minAmount" min="0" [disabled]="isRunning" />
+        </label>
+
+        <label>
+          Max Amount
+          <input type="number" [(ngModel)]="form.maxAmount" min="0" [disabled]="isRunning" />
+        </label>
+
+        <label>
+          Fee Percent
+          <input type="number" step="0.001" [(ngModel)]="form.feePercent" min="0" [disabled]="isRunning" />
+        </label>
+      </div>
+
+      <button class="run-button" type="button" (click)="runEngine()" [disabled]="isRunning">
+        {{ isRunning ? 'Running Engine...' : 'Run Data Generation Engine' }}
+      </button>
+    </section>
+
+    <section class="card summary-card">
+      <h2>Execution Summary</h2>
+
+      <div class="metric-row">
+        <span>Requested Wallets</span>
+        <strong>{{ form.wallets | number }}</strong>
+      </div>
+
+      <div class="metric-row">
+        <span>Requested Transactions</span>
+        <strong>{{ form.transactions | number }}</strong>
+      </div>
+
+      <div class="metric-row">
+        <span>Batch Size</span>
+        <strong>{{ form.batchSize | number }}</strong>
+      </div>
+
+      <div class="metric-row">
+        <span>Status</span>
+        <strong>{{ isRunning ? 'Running' : result?.success ? 'Success' : result ? 'Failed' : 'Ready' }}</strong>
+      </div>
+
+      <div class="metric-row">
+        <span>Processing Time</span>
+        <strong>{{ result?.durationSeconds || '-' }} sec</strong>
+      </div>
+
+      <div class="metric-row">
+        <span>UI Throughput</span>
+        <strong>{{ throughputSummary }}</strong>
+      </div>
+
+      <div class="metric-row">
+        <span>Correlation ID</span>
+        <strong>{{ result?.correlationId || '-' }}</strong>
+      </div>
+    </section>
+  </div>
+
+  <div *ngIf="successMessage" class="alert success-alert">
+    {{ successMessage }}
+  </div>
+
+  <div *ngIf="errorMessage" class="alert error-alert">
+    {{ errorMessage }}
+  </div>
+
+  <section class="card output-card">
+    <div class="output-header">
+      <h2>Engine Output</h2>
+      <span>{{ outputLines.length }} lines</span>
+    </div>
+
+    <pre *ngIf="outputLines.length > 0">{{ outputLines.join('\n') }}</pre>
+
+    <div *ngIf="outputLines.length === 0" class="empty-output">
+      No output yet. Configure the engine and click Run.
+    </div>
+  </section>
+</div>

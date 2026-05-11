@@ -7,7 +7,7 @@ import { OrganizationWalletCreate } from './pages/organization-wallet-create/org
 import { WalletLogin } from './pages/wallet-login/wallet-login';
 import { WalletQuery } from './pages/wallet-query/wallet-query';
 import { WalletInformationComponent } from './pages/wallet-information/wallet-information.component';
-
+import { DataGenerationEngine } from './pages/data-generation-engine/data-generation-engine';
 import { WalletTransferComponent } from './features/transactions/wallet-transfer/wallet-transfer.component';
 import { OrganizationTransferComponent } from './features/transactions/organization-transfer/organization-transfer.component';
 import { TransactionHistoryComponent } from './features/transactions/transaction-history/transaction-history.component';
@@ -45,6 +45,10 @@ export const routes: Routes = [
   {
     path: 'digital-kyc/wallet-information',
     component: WalletInformationComponent
+  },
+  {
+    path: 'data-generation-engine',
+    component: DataGenerationEngine
   },
   {
     path: 'digital-kyc/balance-query',
