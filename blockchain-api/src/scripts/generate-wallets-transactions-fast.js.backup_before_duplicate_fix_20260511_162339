@@ -323,7 +323,7 @@ async function getNextCustomerId(client) {
   return Number(result.rows[0]?.next_customer_id || 1);
 }
 
-async function batchInsertDynamic(client, tableName, rows, options = {}) {
+async function batchInsertDynamic(client, tableName, rows) {
   if (!rows.length) return [];
 
   const tableColumns = await getColumns(client, tableName);
@@ -342,7 +342,6 @@ async function batchInsertDynamic(client, tableName, rows, options = {}) {
   );
 
   const insertedRows = [];
-  const onConflictSql = options.onConflictDoNothing ? 'ON CONFLICT DO NOTHING' : '';
 
   for (let offset = 0; offset < rows.length; offset += maxRowsPerInsert) {
     const chunk = rows.slice(offset, offset + maxRowsPerInsert);
@@ -364,7 +363,6 @@ async function batchInsertDynamic(client, tableName, rows, options = {}) {
     const sql = `
       INSERT INTO blockchain.${tableName} (${insertColumns.join(', ')})
       VALUES ${rowPlaceholders.join(', ')}
-      ${onConflictSql}
       RETURNING *
     `;
 
@@ -448,20 +446,8 @@ async function generateWalletsFast(client, count) {
       });
     }
 
-    const inserted = await batchInsertDynamic(client, 'wallets', batch, {
-      onConflictDoNothing: true
-    });
-
-    const duplicateOrConflictCount = batch.length - inserted.length;
-
+    const inserted = await batchInsertDynamic(client, 'wallets', batch);
     created += inserted.length;
-    skipped += duplicateOrConflictCount;
-
-    if (duplicateOrConflictCount > 0) {
-      console.log(
-        `[WALLET_FAST_CONFLICT_SKIP] skipped=${formatNumber(duplicateOrConflictCount)} duplicate/conflicting wallet rows`
-      );
-    }
 
     if (created % LOG_EVERY === 0 || created === count) {
       logProgress('WALLET_FAST_PROGRESS', created, count, skipped, startedAt);
@@ -782,7 +768,6 @@ async function validateResults(client) {
     SELECT COUNT(*)::int AS invalid_wallets
     FROM blockchain.wallets
     WHERE wallet_address !~ '^[a-f0-9]{40}$'
-      AND wallet_address !~ '^WALLET_[A-F0-9]{40}$'
     `
   );
 
@@ -819,14 +804,6 @@ async function main() {
 
   try {
     await client.query('BEGIN');
-
-    /**
-     * Prevent parallel data-generator runs from calculating the same
-     * MAX(customer_id) + 1 range at the same time.
-     */
-    await client.query(`
-      SELECT pg_advisory_xact_lock(hashtext('blockchain.wallets.customer_id.generator'))
-    `);
 
     const walletsResult = await generateWalletsFast(client, WALLET_COUNT);
     const transactionsResult = await generateTransactionsFast(client, TRANSACTION_COUNT);

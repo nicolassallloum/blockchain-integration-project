@@ -12,4 +12,5 @@
 ./src/app/pages/wallet-query/wallet-query.ts
 ./src/app/services/wallet-session.service.ts
 ./tsconfig.app.json
+./updated-angular-files-20260511.zip
 ./updated-files-today.txt

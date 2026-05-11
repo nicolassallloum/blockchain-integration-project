@@ -1,3 +1,4 @@
+===== src/scripts/generate-wallets-transactions-fast.js =====
 'use strict';
 
 const path = require('path');
@@ -323,7 +324,7 @@ async function getNextCustomerId(client) {
   return Number(result.rows[0]?.next_customer_id || 1);
 }
 
-async function batchInsertDynamic(client, tableName, rows, options = {}) {
+async function batchInsertDynamic(client, tableName, rows) {
   if (!rows.length) return [];
 
   const tableColumns = await getColumns(client, tableName);
@@ -342,7 +343,6 @@ async function batchInsertDynamic(client, tableName, rows, options = {}) {
   );
 
   const insertedRows = [];
-  const onConflictSql = options.onConflictDoNothing ? 'ON CONFLICT DO NOTHING' : '';
 
   for (let offset = 0; offset < rows.length; offset += maxRowsPerInsert) {
     const chunk = rows.slice(offset, offset + maxRowsPerInsert);
@@ -364,7 +364,6 @@ async function batchInsertDynamic(client, tableName, rows, options = {}) {
     const sql = `
       INSERT INTO blockchain.${tableName} (${insertColumns.join(', ')})
       VALUES ${rowPlaceholders.join(', ')}
-      ${onConflictSql}
       RETURNING *
     `;
 
@@ -448,20 +447,8 @@ async function generateWalletsFast(client, count) {
       });
     }
 
-    const inserted = await batchInsertDynamic(client, 'wallets', batch, {
-      onConflictDoNothing: true
-    });
-
-    const duplicateOrConflictCount = batch.length - inserted.length;
-
+    const inserted = await batchInsertDynamic(client, 'wallets', batch);
     created += inserted.length;
-    skipped += duplicateOrConflictCount;
-
-    if (duplicateOrConflictCount > 0) {
-      console.log(
-        `[WALLET_FAST_CONFLICT_SKIP] skipped=${formatNumber(duplicateOrConflictCount)} duplicate/conflicting wallet rows`
-      );
-    }
 
     if (created % LOG_EVERY === 0 || created === count) {
       logProgress('WALLET_FAST_PROGRESS', created, count, skipped, startedAt);
@@ -782,7 +769,6 @@ async function validateResults(client) {
     SELECT COUNT(*)::int AS invalid_wallets
     FROM blockchain.wallets
     WHERE wallet_address !~ '^[a-f0-9]{40}$'
-      AND wallet_address !~ '^WALLET_[A-F0-9]{40}$'
     `
   );
 
@@ -819,14 +805,6 @@ async function main() {
 
   try {
     await client.query('BEGIN');
-
-    /**
-     * Prevent parallel data-generator runs from calculating the same
-     * MAX(customer_id) + 1 range at the same time.
-     */
-    await client.query(`
-      SELECT pg_advisory_xact_lock(hashtext('blockchain.wallets.customer_id.generator'))
-    `);
 
     const walletsResult = await generateWalletsFast(client, WALLET_COUNT);
     const transactionsResult = await generateTransactionsFast(client, TRANSACTION_COUNT);
@@ -882,3 +860,147 @@ async function main() {
 
 main();
 
+
+===== Check script location =====
+-rw-rw-r-- 1 nix nix 28K May 11 12:10 src/scripts/generate-wallets-transactions-fast.js
+
+===== Check customer_id logic =====
+12:const db = require('../config/database');
+14:const DEFAULT_PASSWORD = process.env.GENERATED_WALLET_PASSWORD || 'Test@12345';
+15:const DEFAULT_CURRENCY = process.env.GENERATED_CURRENCY || 'USD';
+22:const WALLET_COUNT = Number(getArg('wallets', 1000));
+70:function generateWalletAddress() {
+74:function generateRequestId() {
+78:function generateTransactionReference() {
+127:function getRealFullName(customerId) {
+128:  const baseName = randomItem(REAL_FULL_NAMES);
+129:  return `${baseName} `;
+132:function buildRealEmail(fullName, customerId) {
+133:  const slug = String(fullName || 'customer')
+139:  return `${slug}.${customerId}@gmail.com`;
+161:function logProgress(label, created, target, skipped, startedAt) {
+162:  const elapsedMs = nowMs() - startedAt;
+177:  throw new Error('Database client connection method not found');
+207:      AND COALESCE(is_generated, 'NEVER') = 'NEVER'
+281:        organization_name: 'Generated Organization',
+298:      ${nameColumn ? nameColumn : `'Generated Organization'`} AS organization_name,
+314:async function getNextCustomerId(client) {
+317:    SELECT COALESCE(MAX(customer_id::bigint), 0) + 1 AS next_customer_id
+318:    FROM blockchain.wallets
+319:    WHERE customer_id ~ '^[0-9]+$'
+323:  return Number(result.rows[0]?.next_customer_id || 1);
+326:async function batchInsertDynamic(client, tableName, rows) {
+330:  const insertColumns = Object.keys(rows[0]).filter((column) => tableColumns.includes(column));
+332:  if (!insertColumns.length) {
+333:    throw new Error(`No matching insert columns for blockchain.${tableName}`);
+339:  const maxRowsPerInsert = Math.max(
+341:    Math.floor(MAX_PG_PARAMS / insertColumns.length)
+344:  const insertedRows = [];
+346:  for (let offset = 0; offset < rows.length; offset += maxRowsPerInsert) {
+347:    const chunk = rows.slice(offset, offset + maxRowsPerInsert);
+355:      insertColumns.forEach((column) => {
+364:      INSERT INTO blockchain.${tableName} (${insertColumns.join(', ')})
+370:    insertedRows.push(...result.rows);
+373:  return insertedRows;
+376:async function generateWalletsFast(client, count) {
+377:  const startedAt = nowMs();
+379:  console.log(`[WALLET_FAST_START] target=${formatNumber(count)}, batchSize=${formatNumber(BATCH_SIZE)}`);
+387:      walletsPerSecond: 0
+394:  let nextCustomerId = await getNextCustomerId(client);
+398:  const generatedAddresses = new Set();
+405:      const customerId = String(nextCustomerId++);
+406:      const realFullName = getRealFullName(customerId);
+407:      const realEmail = buildRealEmail(realFullName, customerId);
+411:      let walletAddress = generateWalletAddress();
+413:      while (generatedAddresses.has(walletAddress)) {
+414:        walletAddress = generateWalletAddress();
+417:      generatedAddresses.add(walletAddress);
+422:        wallet_id: crypto.randomUUID(),
+423:        wallet_address: walletAddress,
+424:        customer_id: customerId,
+427:        wallet_type: 'CUSTOMER',
+430:        ledger_doc_type: 'wallet',
+431:        ledger_key: walletAddress,
+449:    const inserted = await batchInsertDynamic(client, 'wallets', batch);
+450:    created += inserted.length;
+453:      logProgress('WALLET_FAST_PROGRESS', created, count, skipped, startedAt);
+457:  const durationMs = nowMs() - startedAt;
+459:  logSummary('WALLET FAST GENERATION SUMMARY', {
+460:    'Wallets Created': formatNumber(created),
+461:    'Wallets Skipped': formatNumber(skipped),
+463:    'Average Per Wallet': `${roundMs(durationMs / Math.max(created, 1))} ms`,
+464:    'Throughput': `${ratePerSecond(created, durationMs)} wallets/sec`
+472:    averageMsPerWallet: roundMs(durationMs / Math.max(created, 1)),
+473:    walletsPerSecond: ratePerSecond(created, durationMs)
+477:async function getActiveWallets(client) {
+478:  const columns = await getColumns(client, 'wallets');
+487:    throw new Error('No balance column found in blockchain.wallets');
+495:      wallet_address,
+496:      customer_id,
+498:      wallet_type,
+500:    FROM blockchain.wallets
+502:      AND wallet_address IS NOT NULL
+503:      AND wallet_address ~ '^[a-f0-9]{40}$'
+513:    wallets: result.rows.map((row) => ({
+520:async function batchUpdateWalletBalances(client, balanceColumn, updatedAtColumn, balanceDeltas) {
+529:  entries.forEach(([walletAddress, delta]) => {
+530:    values.push(walletAddress, roundMoney(delta));
+538:    UPDATE blockchain.wallets w
+544:    ) AS v(wallet_address, delta)
+545:    WHERE w.wallet_address = v.wallet_address
+551:async function generateTransactionsFast(client, count) {
+552:  const startedAt = nowMs();
+554:  console.log(`[TRANSACTION_FAST_START] target=${formatNumber(count)}, batchSize=${formatNumber(BATCH_SIZE)}`);
+595:        ['TRANSFER', 'WALLET_TO_WALLET', 'CUSTOMER_TO_CUSTOMER', 'CUSTOMER_TRANSFER', 'WALLET_TRANSFER'],
+605:        ['TRANSFER', 'WALLET_TO_WALLET', 'CUSTOMER_TO_CUSTOMER', 'CUSTOMER_TRANSFER', 'WALLET_TRANSFER'],
+617:  const { balanceColumn, updatedAtColumn, wallets } = await getActiveWallets(client);
+619:  if (wallets.length < 2) {
+620:    throw new Error('At least 2 active wallets with positive balance are required');
+633:      let sender = randomItem(wallets);
+634:      let receiver = randomItem(wallets);
+638:      while (receiver.wallet_address === sender.wallet_address && guard < 20) {
+639:        receiver = randomItem(wallets);
+643:      if (receiver.wallet_address === sender.wallet_address) {
+661:        sender.wallet_address,
+662:        roundMoney((balanceDeltas.get(sender.wallet_address) || 0) - totalAmount)
+666:        receiver.wallet_address,
+667:        roundMoney((balanceDeltas.get(receiver.wallet_address) || 0) + amount)
+670:      const transactionReference = generateTransactionReference();
+671:      const requestId = generateRequestId();
+682:        sender_wallet_address: sender.wallet_address,
+683:        receiver_wallet_address: receiver.wallet_address,
+684:        from_wallet_address: sender.wallet_address,
+685:        to_wallet_address: receiver.wallet_address,
+687:        sender_customer_id: sender.customer_id,
+688:        receiver_customer_id: receiver.customer_id,
+689:        from_customer_id: sender.customer_id,
+690:        to_customer_id: receiver.customer_id,
+707:        transaction_purpose: 'Generated wallet-to-wallet transaction',
+708:        transaction_description: 'Synthetic transaction generated for dashboard, history, and performance testing',
+709:        description: 'Synthetic transaction generated for testing',
+725:      await batchInsertDynamic(client, transactionTable, batch);
+726:      await batchUpdateWalletBalances(client, balanceColumn, updatedAtColumn, balanceDeltas);
+732:      logProgress('TRANSACTION_FAST_PROGRESS', created, count, skipped, startedAt);
+736:  const durationMs = nowMs() - startedAt;
+759:  const walletCount = await client.query(
+761:    SELECT COUNT(*)::int AS total_wallets
+762:    FROM blockchain.wallets
+766:  const invalidWallets = await client.query(
+768:    SELECT COUNT(*)::int AS invalid_wallets
+769:    FROM blockchain.wallets
+770:    WHERE wallet_address !~ '^[a-f0-9]{40}$'
+784:    totalWallets: walletCount.rows[0]?.total_wallets || 0,
+785:    invalidWallets: invalidWallets.rows[0]?.invalid_wallets || 0,
+792:  const totalStartedAt = nowMs();
+797:  console.log(`Run Started At                : ${new Date().toISOString()}`);
+798:  console.log(`Target Wallets                : ${formatNumber(WALLET_COUNT)}`);
+803:  console.log(`Default Wallet Password       : ${DEFAULT_PASSWORD}`);
+808:    const walletsResult = await generateWalletsFast(client, WALLET_COUNT);
+809:    const transactionsResult = await generateTransactionsFast(client, TRANSACTION_COUNT);
+814:    const totalDurationMs = nowMs() - totalStartedAt;
+815:    const totalRowsCreated = Number(walletsResult.created || 0) + Number(transactionsResult.created || 0);
+821:      'Wallets Created': formatNumber(walletsResult.created),
+824:      'Wallet Throughput': `${walletsResult.walletsPerSecond} wallets/sec`,
+827:      'Total Wallets In DB': formatNumber(validation.totalWallets),
+828:      'Invalid Wallet Addresses': formatNumber(validation.invalidWallets),
+838:    console.log('- Old WALLET_/ORG_WALLET_ rows are excluded from transaction generation.');

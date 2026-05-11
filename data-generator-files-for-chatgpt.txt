@@ -1,0 +1,178 @@
+===== src/routes/data-generator.routes.js =====
+'use strict';
+
+const express = require('express');
+const router = express.Router();
+
+const dataGeneratorController = require('../controllers/data-generator.controller');
+
+router.post('/run', dataGeneratorController.runDataGenerator);
+
+module.exports = router;
+
+===== src/controllers/data-generator.controller.js =====
+'use strict';
+
+const path = require('path');
+const { spawn } = require('child_process');
+
+function toPositiveNumber(value, defaultValue, maxValue) {
+  const numberValue = Number(value);
+
+  if (!Number.isFinite(numberValue) || numberValue < 0) {
+    return defaultValue;
+  }
+
+  if (maxValue && numberValue > maxValue) {
+    return maxValue;
+  }
+
+  return Math.floor(numberValue);
+}
+
+function toDecimalNumber(value, defaultValue, maxValue) {
+  const numberValue = Number(value);
+
+  if (!Number.isFinite(numberValue) || numberValue < 0) {
+    return defaultValue;
+  }
+
+  if (maxValue && numberValue > maxValue) {
+    return maxValue;
+  }
+
+  return numberValue;
+}
+
+exports.runDataGenerator = async (req, res) => {
+  const startedAt = Date.now();
+
+  const wallets = toPositiveNumber(req.body.wallets, 1000, 1000000);
+  const transactions = toPositiveNumber(req.body.transactions, 20000, 5000000);
+  const batchSize = toPositiveNumber(req.body.batchSize, 1000, 5000);
+  const logEvery = toPositiveNumber(req.body.logEvery, 5000, 100000);
+  const minBalance = toDecimalNumber(req.body.minBalance, 1000, 100000000);
+  const maxBalance = toDecimalNumber(req.body.maxBalance, 10000, 100000000);
+  const minAmount = toDecimalNumber(req.body.minAmount, 1, 100000000);
+  const maxAmount = toDecimalNumber(req.body.maxAmount, 250, 100000000);
+  const feePercent = toDecimalNumber(req.body.feePercent, 0.005, 1);
+
+  const scriptPath = path.resolve(
+    process.cwd(),
+    'src/scripts/generate-wallets-transactions-fast.js'
+  );
+
+  const args = [
+    scriptPath,
+    '--wallets',
+    String(wallets),
+    '--transactions',
+    String(transactions),
+    '--batchSize',
+    String(batchSize),
+    '--logEvery',
+    String(logEvery),
+    '--minBalance',
+    String(minBalance),
+    '--maxBalance',
+    String(maxBalance),
+    '--minAmount',
+    String(minAmount),
+    '--maxAmount',
+    String(maxAmount),
+    '--feePercent',
+    String(feePercent)
+  ];
+
+  const correlationId =
+    req.headers['x-correlation-id'] ||
+    req.headers['x-request-id'] ||
+    `DATA_GEN_${Date.now()}`;
+
+  console.log('[DATA_GENERATOR_UI_START]', {
+    correlationId,
+    wallets,
+    transactions,
+    batchSize,
+    logEvery
+  });
+
+  const child = spawn('node', args, {
+    cwd: process.cwd(),
+    env: process.env,
+    shell: false
+  });
+
+  let stdout = '';
+  let stderr = '';
+
+  child.stdout.on('data', (data) => {
+    const text = data.toString();
+    stdout += text;
+    process.stdout.write(text);
+  });
+
+  child.stderr.on('data', (data) => {
+    const text = data.toString();
+    stderr += text;
+    process.stderr.write(text);
+  });
+
+  child.on('error', (error) => {
+    console.error('[DATA_GENERATOR_UI_ERROR]', {
+      correlationId,
+      message: error.message
+    });
+
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to start data generation engine.',
+      correlationId,
+      error: error.message
+    });
+  });
+
+  child.on('close', (exitCode) => {
+    const finishedAt = Date.now();
+    const durationMs = finishedAt - startedAt;
+
+    const responsePayload = {
+      success: exitCode === 0,
+      message:
+        exitCode === 0
+          ? 'Data generation engine completed successfully.'
+          : 'Data generation engine failed.',
+      correlationId,
+      exitCode,
+      durationMs,
+      durationSeconds: Number((durationMs / 1000).toFixed(3)),
+      parameters: {
+        wallets,
+        transactions,
+        batchSize,
+        logEvery,
+        minBalance,
+        maxBalance,
+        minAmount,
+        maxAmount,
+        feePercent
+      },
+      output: stdout,
+      errorOutput: stderr
+    };
+
+    console.log('[DATA_GENERATOR_UI_DONE]', {
+      correlationId,
+      exitCode,
+      durationSeconds: responsePayload.durationSeconds
+    });
+
+    return res.status(exitCode === 0 ? 200 : 500).json(responsePayload);
+  });
+};
+
+===== src/services/data-generator.service.js =====
+
+===== scripts data generator files =====
+./src/controllers/data-generator.controller.js
+./src/routes/data-generator.routes.js
