@@ -6,7 +6,7 @@ const crypto = require('crypto');
 
 const db = require('../config/database');
 const fabricService = require('./fabric.service');
-
+const enterprisePersistenceRepository = require('../repositories/enterprise-persistence.repository');
 const DEFAULT_JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '8h';
 const JWT_SECRET =
   process.env.JWT_SECRET ||
@@ -24,16 +24,18 @@ const DEFAULT_CHAINCODE_NAME =
   'kyc-wallet-chaincode-js';
 
 exports.getNextCustomerId = async () => {
-  const result = await db.query(`
-    SELECT
-      COALESCE(MAX(customer_id::bigint), 0) + 1 AS next_customer_id
-    FROM blockchain.wallets
-    WHERE customer_id ~ '^[0-9]+$'
-  `);
+  const client = await db.getClient();
 
-  return {
-    customerId: String(result.rows[0]?.next_customer_id || Date.now())
-  };
+  try {
+    const customerId = await enterprisePersistenceRepository.getNextCustomerId(client);
+
+    return {
+      customerId: String(customerId),
+      customer_id: String(customerId)
+    };
+  } finally {
+    client.release();
+  }
 };
 
 async function tableColumnExists(tableName, columnName) {
@@ -482,36 +484,67 @@ exports.createWallet = async (payload) => {
     blockchainTransaction
   );
 
-  const row = await insertWallet({
-    wallet_address: walletAddress,
-    customer_id: customerId,
-    organization_id: organizationId,
-    organization_code: organizationCode,
-    wallet_type: 'CUSTOMER',
-    full_name: fullName,
-    national_id_hash: nationalIdHash,
-    ledger_doc_type: ledgerDocType,
-    ledger_key: walletAddress,
-    mobile_hash: mobileHash,
-    email_hash: emailHash,
-    password_hash: normalizedPasswordHash,
-    current_balance: blockchainWallet.balance ?? initialBalance,
-    currency_code: blockchainWallet.currency || 'TOKEN',
-    status: blockchainWallet.status || 'ACTIVE',
-    fabric_tx_id: fabricTransactionId,
-    fabric_transaction_id: fabricTransactionId,
-    fabric_channel_name: fabricResult.channelName || DEFAULT_CHANNEL_NAME,
-    chaincode_name: fabricResult.chaincodeName || DEFAULT_CHAINCODE_NAME,
-    blockchain_payload: blockchainWallet,
-    fabric_response: fabricResult,
-    request_id: payload.requestId || payload.request_id || null,
-    request_source: requestSource,
-    source_system: sourceSystem,
-    created_by: createdBy,
-    updated_by: createdBy,
-    created_at: new Date(),
-    updated_at: new Date()
-  });
+  const client = await db.getClient();
+
+    let enterpriseSaveResult;
+
+    try {
+      await client.query('BEGIN');
+
+      enterpriseSaveResult = await enterprisePersistenceRepository.saveWalletEnterprise(
+        client,
+        {
+          walletAddress,
+          customerId,
+          organizationId,
+          organizationCode,
+          walletType: 'CUSTOMER',
+          fullName,
+          nationalIdHash,
+          mobileHash,
+          emailHash,
+          passwordHash: normalizedPasswordHash,
+          ledgerDocType,
+          currentBalance: blockchainWallet.balance ?? initialBalance,
+          currencyCode: payload.currencyCode || payload.currency || 'USD',          status: blockchainWallet.status || 'ACTIVE',
+          fabricTxId: fabricTransactionId,
+          fabricChannelName: fabricResult.channelName || DEFAULT_CHANNEL_NAME,
+          chaincodeName: fabricResult.chaincodeName || DEFAULT_CHAINCODE_NAME,
+          walletMetadata: {
+            source: 'BLOCKCHAIN_API',
+            walletType: 'CUSTOMER',
+            fabricTxId: fabricTransactionId,
+            createdFrom: requestSource
+          },
+          kycPayload: {
+            fullName,
+            nationalIdHash,
+            mobileHash,
+            emailHash
+          },
+          blockchainPayload: blockchainWallet,
+          fabricResponse: fabricResult,
+          requestId: payload.requestId || payload.request_id || null,
+          requestSource,
+          sourceSystem,
+          createdBy,
+          updatedBy: createdBy,
+          originalPayload: payload
+        }
+      );
+
+      await client.query('COMMIT');
+    } catch (error) {
+      await client.query('ROLLBACK');
+
+      throw new Error(
+        `Wallet created on Fabric but enterprise PostgreSQL save failed. Manual reconciliation required. FabricTxId=${fabricTransactionId || 'N/A'} WalletAddress=${walletAddress}. Error: ${error.message}`
+      );
+    } finally {
+      client.release();
+    }
+
+    const row = enterpriseSaveResult.wallet;
 
   const profile =
     (await getProfessionalWalletProfileByAddress(row.wallet_address)) ||
@@ -636,36 +669,67 @@ exports.createOrganizationWallet = async (payload) => {
     blockchainTransaction
   );
 
-  const row = await insertWallet({
-    wallet_address: walletAddress,
-    customer_id: customerId,
-    organization_id: organization.organization_id,
-    organization_code: organizationCode,
-    wallet_type: 'ORGANIZATION',
-    full_name: organizationName,
-    national_id_hash: String(organization.organization_id),
-    ledger_doc_type: 'organization_wallet',
-    ledger_key: walletAddress,
-    mobile_hash: null,
-    email_hash: emailHash,
-    password_hash: normalizedPasswordHash,
-    current_balance: blockchainWallet.balance ?? initialBalance,
-    currency_code: blockchainWallet.currency || 'TOKEN',
-    status: blockchainWallet.status || 'ACTIVE',
-    fabric_tx_id: fabricTransactionId,
-    fabric_transaction_id: fabricTransactionId,
-    fabric_channel_name: fabricResult.channelName || DEFAULT_CHANNEL_NAME,
-    chaincode_name: fabricResult.chaincodeName || DEFAULT_CHAINCODE_NAME,
-    blockchain_payload: blockchainWallet,
-    fabric_response: fabricResult,
-    request_id: payload.requestId || payload.request_id || null,
-    request_source: payload.requestSource || payload.request_source || 'ANGULAR_TEST_UI',
-    source_system: payload.sourceSystem || payload.source_system || 'BLOCKCHAIN_API',
-    created_by: payload.createdBy || payload.created_by || 'angular-test-ui',
-    updated_by: payload.createdBy || payload.created_by || 'angular-test-ui',
-    created_at: new Date(),
-    updated_at: new Date()
-  });
+  const client = await db.getClient();
+
+    let enterpriseSaveResult;
+
+    try {
+      await client.query('BEGIN');
+
+      enterpriseSaveResult = await enterprisePersistenceRepository.saveWalletEnterprise(
+        client,
+        {
+          walletAddress,
+          customerId,
+          organizationId: organization.organization_id,
+          organizationCode,
+          walletType: 'ORGANIZATION',
+          fullName: organizationName,
+          nationalIdHash: String(organization.organization_id),
+          mobileHash: null,
+          emailHash,
+          passwordHash: normalizedPasswordHash,
+          ledgerDocType: 'organization_wallet',
+          currentBalance: blockchainWallet.balance ?? initialBalance,
+          currencyCode: payload.currencyCode || payload.currency || 'USD',          status: blockchainWallet.status || 'ACTIVE',
+          fabricTxId: fabricTransactionId,
+          fabricChannelName: fabricResult.channelName || DEFAULT_CHANNEL_NAME,
+          chaincodeName: fabricResult.chaincodeName || DEFAULT_CHAINCODE_NAME,
+          walletMetadata: {
+            source: 'BLOCKCHAIN_API',
+            walletType: 'ORGANIZATION',
+            fabricTxId: fabricTransactionId,
+            organizationId: organization.organization_id,
+            organizationCode
+          },
+          kycPayload: {
+            organizationId: organization.organization_id,
+            organizationName,
+            organizationCode
+          },
+          blockchainPayload: blockchainWallet,
+          fabricResponse: fabricResult,
+          requestId: payload.requestId || payload.request_id || null,
+          requestSource: payload.requestSource || payload.request_source || 'ANGULAR_TEST_UI',
+          sourceSystem: payload.sourceSystem || payload.source_system || 'BLOCKCHAIN_API',
+          createdBy: payload.createdBy || payload.created_by || 'angular-test-ui',
+          updatedBy: payload.createdBy || payload.created_by || 'angular-test-ui',
+          originalPayload: payload
+        }
+      );
+
+      await client.query('COMMIT');
+    } catch (error) {
+      await client.query('ROLLBACK');
+
+      throw new Error(
+        `Organization wallet created on Fabric but enterprise PostgreSQL save failed. Manual reconciliation required. FabricTxId=${fabricTransactionId || 'N/A'} WalletAddress=${walletAddress}. Error: ${error.message}`
+      );
+    } finally {
+      client.release();
+    }
+
+    const row = enterpriseSaveResult.wallet;
 
   const profile = await getProfessionalWalletProfileByAddress(row.wallet_address);
 

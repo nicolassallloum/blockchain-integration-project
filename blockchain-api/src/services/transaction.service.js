@@ -12,7 +12,7 @@
 
 const crypto = require('crypto');
 const db = require('../config/database');
-
+const enterprisePersistenceRepository = require('../repositories/enterprise-persistence.repository');
 function getPool() {
   if (db.pool) return db.pool;
 
@@ -409,7 +409,7 @@ async function walletTransfer(payload, context = {}) {
       `REQ_${Date.now()}_${crypto.randomBytes(6).toString('hex').toUpperCase()}`;
 
     const transactionId = crypto.randomUUID();
-
+    const fabricTxId = payload.fabricTxId || payload.fabric_tx_id || null;
     const normalizedCurrency =
       currency ||
       senderWallet.currencyCode ||
@@ -422,27 +422,48 @@ async function walletTransfer(payload, context = {}) {
     const updatedSenderWallet = await getWalletByAddressInternal(client, senderWalletAddress);
     const updatedReceiverWallet = await getWalletByAddressInternal(client, receiverWalletAddress);
 
-    const transaction = await insertTransaction(client, {
-      transactionId,
-      requestId,
-      transactionType: 'TRANSFER',
-      senderWalletAddress,
-      receiverWalletAddress,
-      organizationId: null,
-      organizationName: null,
-      amount: transferAmount,
-      currency: normalizedCurrency,
-      transactionPurpose: payload.transactionPurpose || 'Wallet transfer test',
-      transactionDescription:
-        payload.transactionDescription || 'Wallet-to-wallet transfer from Blockchain API',
-      status: 'CONFIRMED',
-      dbStatus: 'PENDING',
-      transactionStatus: 'CONFIRMED',
-      fabricStatus: 'PENDING',
-      requestSource: payload.requestSource || 'BLOCKCHAIN_API',
-      sourceSystem: payload.sourceSystem || 'BLOCKCHAIN_API',
-      createdBy: payload.createdBy || 'system'
-    });
+    const enterpriseTransaction = await enterprisePersistenceRepository.saveTransactionEnterprise(
+      client,
+      {
+        transactionId,
+        businessTransactionId: transactionId,
+        requestId,
+        transactionType: 'TRANSFER',
+        transactionDirection: 'OUTGOING',
+        senderWalletId: senderWallet.walletId,
+        senderWalletAddress,
+        senderCustomerId: senderWallet.customerId,
+        receiverWalletId: receiverWallet.walletId,
+        receiverWalletAddress,
+        receiverCustomerId: receiverWallet.customerId,
+        fromWalletId: senderWallet.walletId,
+        toWalletId: receiverWallet.walletId,
+        fromWalletAddress: senderWalletAddress,
+        toWalletAddress: receiverWalletAddress,
+        amount: transferAmount,
+        currency: normalizedCurrency,
+        currencyCode: normalizedCurrency,
+        status: 'CONFIRMED',
+        transactionStatus: 'CONFIRMED',
+        fabricStatus: fabricTxId ? 'CONFIRMED' : 'PENDING',
+        fabricTxId,
+        fabricChannelName: process.env.FABRIC_CHANNEL_NAME || 'kycchannelnix1',
+        chaincodeName: process.env.FABRIC_CHAINCODE_NAME || 'kyc-wallet-chaincode-js',
+        transactionPurpose: payload.transactionPurpose || 'Wallet transfer test',
+        transactionDescription:
+          payload.transactionDescription || 'Wallet-to-wallet transfer from Blockchain API',
+        requestSource: payload.requestSource || 'BLOCKCHAIN_API',
+        sourceSystem: payload.sourceSystem || 'BLOCKCHAIN_API',
+        createdBy: payload.createdBy || 'system',
+        metadata: {
+          source: 'WALLET_TO_WALLET_TRANSFER',
+          senderBalanceBefore: senderBalance
+        },
+        originalPayload: payload
+      }
+    );
+
+    const transaction = enterpriseTransaction.blockchainTransaction;
 
     await client.query('COMMIT');
 
@@ -621,7 +642,7 @@ async function organizationTransfer(payload, context = {}) {
       `REQ_${Date.now()}_${crypto.randomBytes(6).toString('hex').toUpperCase()}`;
 
     const transactionId = crypto.randomUUID();
-
+    const fabricTxId = payload.fabricTxId || payload.fabric_tx_id || null;
     const normalizedCurrency =
       currency ||
       senderWallet.currencyCode ||
@@ -634,30 +655,53 @@ async function organizationTransfer(payload, context = {}) {
     const updatedSenderWallet = await getWalletByAddressInternal(client, senderWalletAddress);
     const updatedReceiverWallet = await getWalletByAddressInternal(client, receiverWalletAddress);
 
-    const transaction = await insertTransaction(client, {
-      transactionId,
-      requestId,
-      transactionType: 'ORGANIZATION_TRANSFER',
-      senderWalletAddress,
-      receiverWalletAddress,
-      organizationId: null,
-      organizationName: null,
-      amount: transferAmount,
-      currency: normalizedCurrency,
-      transactionPurpose:
-        payload.transactionPurpose ||
-        'Organization-to-organization transfer',
-      transactionDescription:
-        payload.transactionDescription ||
-        'Organization wallet transfers to another organization wallet',
-      status: 'CONFIRMED',
-      dbStatus: 'PENDING',
-      transactionStatus: 'CONFIRMED',
-      fabricStatus: 'PENDING',
-      requestSource: payload.requestSource || 'BLOCKCHAIN_API',
-      sourceSystem: payload.sourceSystem || 'BLOCKCHAIN_API',
-      createdBy: payload.createdBy || 'system'
-    });
+    const enterpriseTransaction = await enterprisePersistenceRepository.saveTransactionEnterprise(
+      client,
+      {
+        transactionId,
+        businessTransactionId: transactionId,
+        requestId,
+        transactionType: 'ORGANIZATION_TO_ORGANIZATION',
+        transactionDirection: 'OUTGOING',
+        senderWalletId: senderWallet.walletId,
+        senderWalletAddress,
+        senderCustomerId: senderWallet.customerId,
+        receiverWalletId: receiverWallet.walletId,
+        receiverWalletAddress,
+        receiverCustomerId: receiverWallet.customerId,
+        fromWalletId: senderWallet.walletId,
+        toWalletId: receiverWallet.walletId,
+        fromWalletAddress: senderWalletAddress,
+        toWalletAddress: receiverWalletAddress,
+        organizationId: senderWallet.organizationId,
+        organizationCode: senderWallet.organizationCode,
+        amount: transferAmount,
+        currency: normalizedCurrency,
+        currencyCode: normalizedCurrency,
+        status: 'CONFIRMED',
+        transactionStatus: 'CONFIRMED',
+        fabricStatus: fabricTxId ? 'CONFIRMED' : 'PENDING',
+        fabricTxId,
+        fabricChannelName: process.env.FABRIC_CHANNEL_NAME || 'kycchannelnix1',
+        chaincodeName: process.env.FABRIC_CHAINCODE_NAME || 'kyc-wallet-chaincode-js',
+        transactionPurpose:
+          payload.transactionPurpose ||
+          'Organization-to-organization transfer',
+        transactionDescription:
+          payload.transactionDescription ||
+          'Organization wallet transfers to another organization wallet',
+        requestSource: payload.requestSource || 'BLOCKCHAIN_API',
+        sourceSystem: payload.sourceSystem || 'BLOCKCHAIN_API',
+        createdBy: payload.createdBy || 'system',
+        metadata: {
+          source: 'ORGANIZATION_TO_ORGANIZATION_TRANSFER',
+          senderBalanceBefore: senderBalance
+        },
+        originalPayload: payload
+      }
+    );
+
+    const transaction = enterpriseTransaction.blockchainTransaction;
 
     await client.query('COMMIT');
 

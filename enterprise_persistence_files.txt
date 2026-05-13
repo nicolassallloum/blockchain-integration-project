@@ -1,0 +1,6073 @@
+==================================================
+BLOCKCHAIN ENTERPRISE PERSISTENCE FILE EXPORT
+Generated at: Wed May 13 10:16:30 AM EEST 2026
+==================================================
+
+==================================================
+FILE: blockchain-api/package.json
+==================================================
+{
+  "name": "blockchain-api",
+  "version": "1.0.0",
+  "description": "Blockchain API Middleware for Hyperledger Fabric integration",
+  "main": "src/server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "fabric:import-admin": "node scripts/import-admin-identity.js",
+    "fabric:test": "node scripts/test-fabric-connection.js",
+    "audit": "npm audit",
+    "audit:fix": "npm audit fix",
+    "lint": "eslint src",
+    "format": "prettier --write src"
+  },
+  "keywords": [
+    "blockchain",
+    "hyperledger-fabric",
+    "express",
+    "nodejs",
+    "api-middleware"
+  ],
+  "author": "Nix",
+  "license": "MIT",
+  "dependencies": {
+    "@dotenvx/dotenvx": "^1.64.0",
+    "@grpc/grpc-js": "^1.14.3",
+    "@hyperledger/fabric-gateway": "^1.10.1",
+    "bcryptjs": "^3.0.3",
+    "compression": "^1.8.1",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.5.0",
+    "express-validator": "^7.3.2",
+    "grpc": "^1.24.11",
+    "helmet": "^8.1.0",
+    "hpp": "^0.2.3",
+    "joi": "^18.1.2",
+    "js-yaml": "^4.1.1",
+    "jsonwebtoken": "^9.0.3",
+    "morgan": "^1.10.1",
+    "pg": "^8.20.0",
+    "uuid": "^13.0.2",
+    "winston": "^3.19.0"
+  },
+  "devDependencies": {
+    "eslint": "^9.39.1",
+    "nodemon": "^3.1.11",
+    "prettier": "^3.7.3"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
+
+==================================================
+FILE: blockchain-api/.env.example
+==================================================
+# ==========================================================
+# STEP 19 — Blockchain API Configuration Management
+# Project: Blockchain API Middleware
+# ==========================================================
+
+
+# ==========================================================
+# APPLICATION CONFIGURATION
+# ==========================================================
+
+NODE_ENV=development
+APP_NAME=Blockchain API Middleware
+APP_VERSION=1.0.0
+APP_HOST=0.0.0.0
+APP_PORT=3001
+API_PREFIX=/api/v1
+
+
+# ==========================================================
+# HYPERLEDGER FABRIC CONFIGURATION
+# ==========================================================
+
+FABRIC_CONNECTION_PROFILE=/home/nix/u01/blockchain-integration/fabric-network/organizations/peerOrganizations/org1.blockchain.local/connection-org1.json
+FABRIC_CHANNEL_NAME=kycchannelnix1
+FABRIC_CHAINCODE_NAME=kyc-wallet-chaincode-js
+FABRIC_WALLET_PATH=/home/nix/u01/blockchain-integration/blockchain-api/wallet
+FABRIC_MSP_ID=Org1MSP
+FABRIC_IDENTITY=appUser
+
+FABRIC_DISCOVERY_ENABLED=true
+FABRIC_DISCOVERY_AS_LOCALHOST=false
+
+FABRIC_COMMIT_TIMEOUT_SECONDS=120
+FABRIC_ENDORSE_TIMEOUT_SECONDS=30
+FABRIC_SUBMIT_TIMEOUT_SECONDS=30
+FABRIC_EVALUATE_TIMEOUT_SECONDS=30
+
+
+# ==========================================================
+# POSTGRESQL CONFIGURATION
+# ==========================================================
+
+POSTGRES_HOST=172.31.13.133
+POSTGRES_PORT=5444
+POSTGRES_DATABASE=vfds_dev
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=CHANGE_ME
+POSTGRES_SCHEMA=blockchain
+
+POSTGRES_SSL=false
+POSTGRES_POOL_MIN=2
+POSTGRES_POOL_MAX=20
+POSTGRES_IDLE_TIMEOUT_MS=30000
+POSTGRES_CONNECTION_TIMEOUT_MS=10000
+
+
+# ==========================================================
+# JWT CONFIGURATION
+# ==========================================================
+
+JWT_SECRET=CHANGE_ME_WITH_STRONG_64_CHARACTER_SECRET
+JWT_EXPIRES_IN=1h
+JWT_ISSUER=blockchain-api
+JWT_AUDIENCE=enterprise-applications
+
+
+# ==========================================================
+# API KEY CONFIGURATION
+# ==========================================================
+
+API_KEY=CHANGE_ME_WITH_STRONG_INTERNAL_API_KEY
+API_KEY_HEADER=x-api-key
+
+
+# ==========================================================
+# COUCHDB AWARENESS CONFIGURATION
+# Used for monitoring, health checks, and Fabric state DB awareness.
+# Do not treat CouchDB as the application source of truth.
+# ==========================================================
+
+COUCHDB_ENABLED=true
+COUCHDB_PROTOCOL=http
+COUCHDB_HOST=127.0.0.1
+COUCHDB_PORT=5984
+COUCHDB_USERNAME=admin
+COUCHDB_PASSWORD=CHANGE_ME
+COUCHDB_CHAINCODE_DB=kycchannelnix1_kyc-wallet-chaincode-js
+COUCHDB_TIMEOUT_MS=10000
+
+
+# ==========================================================
+# LOGGING CONFIGURATION
+# ==========================================================
+
+LOG_LEVEL=info
+LOG_FORMAT=json
+LOG_TO_FILE=true
+LOG_FILE_PATH=/home/nix/u01/blockchain-integration/blockchain-api/logs/app.log
+ERROR_LOG_FILE_PATH=/home/nix/u01/blockchain-integration/blockchain-api/logs/error.log
+
+
+# ==========================================================
+# SECURITY CONFIGURATION
+# ==========================================================
+
+BCRYPT_SALT_ROUNDS=12
+
+CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173,http://127.0.0.1:5173
+
+HELMET_ENABLED=true
+COMPRESSION_ENABLED=true
+
+
+# ==========================================================
+# RATE LIMITING CONFIGURATION
+# ==========================================================
+
+RATE_LIMIT_ENABLED=true
+RATE_LIMIT_WINDOW_MS=60000
+RATE_LIMIT_MAX_REQUESTS=100
+
+
+# ==========================================================
+# AUDIT CONFIGURATION
+# ==========================================================
+
+AUDIT_LOG_ENABLED=true
+AUDIT_LOG_TO_DATABASE=true
+AUDIT_LOG_TO_FILE=true
+
+
+# ==========================================================
+# HEALTH CHECK CONFIGURATION
+# ==========================================================
+
+HEALTH_CHECK_FABRIC=true
+HEALTH_CHECK_POSTGRES=true
+HEALTH_CHECK_COUCHDB=true
+==================================================
+FILE: blockchain-api/src/app.js
+==================================================
+'use strict';
+
+/**
+ * Blockchain API - Express Application
+ */
+
+require('@dotenvx/dotenvx').config();
+
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const compression = require('compression');
+const rateLimit = require('express-rate-limit');
+const crypto = require('crypto');
+const organizationRoutes = require('./routes/organization.routes');
+const routes = require('./routes');
+
+const app = express();
+
+/**
+ * ---------------------------------------------------------
+ * 1. CORS CONFIGURATION
+ * ---------------------------------------------------------
+ */
+const allowedOrigins = [
+  'http://localhost:4200',
+  'http://127.0.0.1:4200',
+  'http://172.31.13.90:4200'
+];
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error(`CORS blocked for origin: ${origin}`));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'x-request-id',
+    'x-api-key',
+    'x-correlation-id'
+  ],
+  exposedHeaders: [
+    'x-request-id',
+    'x-correlation-id'
+  ],
+  optionsSuccessStatus: 204
+};
+
+/**
+ * ---------------------------------------------------------
+ * 2. MANUAL CORS PREFLIGHT HANDLER
+ * ---------------------------------------------------------
+ * Must be FIRST middleware after app creation.
+ */
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+
+  res.setHeader('Vary', 'Origin');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader(
+    'Access-Control-Allow-Methods',
+    'GET,POST,PUT,PATCH,DELETE,OPTIONS'
+  );
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'Content-Type,Authorization,x-request-id,x-api-key,x-correlation-id'
+  );
+  res.setHeader(
+    'Access-Control-Expose-Headers',
+    'x-request-id,x-correlation-id'
+  );
+
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
+
+  return next();
+});
+
+/**
+ * Normal CORS middleware for non-OPTIONS requests.
+ */
+app.use(cors(corsOptions));
+/**
+ * ---------------------------------------------------------
+ * 3. SECURITY HEADERS
+ * ---------------------------------------------------------
+ */
+app.use(helmet({
+  crossOriginResourcePolicy: {
+    policy: 'same-origin'
+  }
+}));
+
+/**
+ * ---------------------------------------------------------
+ * 4. BODY PARSERS
+ * ---------------------------------------------------------
+ */
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+/**
+ * ---------------------------------------------------------
+ * 5. COMPRESSION
+ * ---------------------------------------------------------
+ */
+app.use(compression());
+
+/**
+ * ---------------------------------------------------------
+ * 6. REQUEST ID / CORRELATION ID
+ * ---------------------------------------------------------
+ */
+app.use((req, res, next) => {
+  const incomingRequestId = req.headers['x-request-id'];
+  const generatedRequestId = `REQ_${crypto.randomBytes(12).toString('hex').toUpperCase()}`;
+
+  req.requestId = incomingRequestId || generatedRequestId;
+  req.correlationId = req.headers['x-correlation-id'] || req.requestId;
+
+  res.setHeader('x-request-id', req.requestId);
+  res.setHeader('x-correlation-id', req.correlationId);
+
+  return next();
+});
+
+/**
+ * ---------------------------------------------------------
+ * 7. RATE LIMITING
+ * ---------------------------------------------------------
+ */
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: 'Too many requests. Please try again later.',
+    errorCode: 'RATE_LIMIT_EXCEEDED',
+    data: null
+  }
+});
+
+app.use(apiLimiter);
+
+/**
+ * ---------------------------------------------------------
+ * 8. HEALTH CHECK
+ * ---------------------------------------------------------
+ */
+app.get('/health', (req, res) => {
+  return res.status(200).json({
+    success: true,
+    message: 'Blockchain API is running',
+    data: {
+      service: 'blockchain-api',
+      status: 'UP',
+      timestamp: new Date().toISOString()
+    },
+    requestId: req.requestId,
+    correlationId: req.correlationId
+  });
+});
+
+/**
+ * ---------------------------------------------------------
+ * 9. API ROUTES
+ * ---------------------------------------------------------
+ */
+app.use('/api/v1', routes);
+
+/**
+ * ---------------------------------------------------------
+ * 10. ROUTE NOT FOUND HANDLER
+ * ---------------------------------------------------------
+ */
+app.use('/api/v1/organizations', organizationRoutes);
+
+app.use((req, res) => {
+  return res.status(404).json({
+    success: false,
+    message: `Route not found: ${req.method} ${req.originalUrl}`,
+    errorCode: 'ROUTE_NOT_FOUND',
+    data: null,
+    meta: null,
+    timestamp: new Date().toISOString(),
+    requestId: req.requestId || null,
+    correlationId: req.correlationId || null
+  });
+});
+// app.use('/api/v1/wallets', walletRoutes);
+// app.use('/api/v1/transactions', transactionRoutes);
+/**
+ * ---------------------------------------------------------
+ * 11. GLOBAL ERROR HANDLER
+ * ---------------------------------------------------------
+ */
+app.use((err, req, res, next) => {
+  console.error('Global error handler:', {
+    message: err.message,
+    stack: err.stack,
+    requestId: req.requestId,
+    correlationId: req.correlationId,
+    method: req.method,
+    url: req.originalUrl
+  });
+
+  return res.status(err.status || 500).json({
+    success: false,
+    message: err.message || 'Internal server error',
+    errorCode: err.errorCode || 'SYSTEM_ERROR',
+    data: null,
+    requestId: req.requestId || null,
+    correlationId: req.correlationId || null
+  });
+});
+
+module.exports = app;
+
+==================================================
+FILE: blockchain-api/src/server.js
+==================================================
+'use strict';
+
+/**
+ * Blockchain API Middleware Server
+ * Blockchain Integration Project
+ *
+ * Updated for:
+ * - Angular UI direct CORS support
+ * - Browser OPTIONS / preflight handling
+ * - /api/v1/data-generator route
+ * - /api/v1/organizations route
+ * - /api/v1/wallets route
+ * - /api/v1/transactions route
+ * - /api/v1/fabric route
+ * - /api/v1/reference route
+ * - Professional request logging
+ * - Professional 404 and global error handling
+ */
+
+require('dotenv').config();
+
+const express = require('express');
+const cors = require('cors');
+const crypto = require('crypto');
+const os = require('os');
+
+const app = express();
+
+/**
+ * Optional packages.
+ * Loaded safely so the API does not crash if a package is unavailable.
+ */
+function optionalRequire(packageName) {
+  try {
+    return require(packageName);
+  } catch (error) {
+    console.warn(`[OPTIONAL_PACKAGE_WARNING] Package not available: ${packageName}`);
+    return null;
+  }
+}
+
+const helmet = optionalRequire('helmet');
+
+/**
+ * Route loader.
+ * This avoids server crash if a route file is temporarily missing.
+ */
+function safeRoute(routePath, routeName) {
+  try {
+    const route = require(routePath);
+    console.log(`[ROUTES] ${routeName} loaded`);
+    return route;
+  } catch (error) {
+    console.error(`[SERVER_ROUTE_LOAD_WARNING] Failed to load ${routeName}:`, error.message);
+    return null;
+  }
+}
+
+/**
+ * Server configuration.
+ */
+const PORT = Number(process.env.PORT || process.env.API_PORT || 3001);
+const HOST = process.env.HOST || '0.0.0.0';
+
+const SERVICE_NAME = process.env.SERVICE_NAME || 'Blockchain API Middleware';
+const SERVICE_VERSION = process.env.SERVICE_VERSION || '1.0.0';
+const NODE_ENV = process.env.NODE_ENV || 'production';
+
+/**
+ * CORS configuration.
+ *
+ * Important:
+ * - Browser UI is running on port 4200.
+ * - Backend API is running on port 3001.
+ * - Browser preflight OPTIONS must be answered before routes/security.
+ */
+const defaultAllowedOrigins = [
+  'http://172.31.13.90:4200',
+  'http://172.31.13.90:8080',
+  'http://127.0.0.1:4200',
+  'http://localhost:4200',
+  'http://127.0.0.1:8080',
+  'http://localhost:8080',
+  'http://127.0.0.1:5173',
+  'http://localhost:5173'
+];
+
+const envAllowedOrigins = String(process.env.CORS_ALLOWED_ORIGINS || process.env.CORS_ORIGIN || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+const allowedOrigins = Array.from(new Set([...defaultAllowedOrigins, ...envAllowedOrigins]));
+
+const allowedHeaders = [
+  'Accept',
+  'Content-Type',
+  'Authorization',
+  'x-api-key',
+  'x-request-id',
+  'x-correlation-id',
+  'x-source-system',
+  'x-request-source'
+];
+
+const exposedHeaders = [
+  'x-request-id',
+  'x-correlation-id'
+];
+
+const corsOptions = {
+  origin(origin, callback) {
+    /**
+     * Allow:
+     * - Server-to-server requests with no Origin header
+     * - Browser requests from allowed origins
+     */
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    console.warn('[CORS_BLOCKED]', {
+      origin,
+      allowedOrigins
+    });
+
+    return callback(new Error(`CORS blocked origin: ${origin}`));
+  },
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders,
+  exposedHeaders,
+  credentials: false,
+  optionsSuccessStatus: 204,
+  preflightContinue: false
+};
+
+/**
+ * Manual CORS preflight middleware.
+ *
+ * This is intentionally placed before:
+ * - helmet
+ * - body parser
+ * - route handlers
+ * - API key middleware if added later
+ *
+ * This ensures Angular OPTIONS requests do not stay pending.
+ */
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+
+  if (!origin) {
+    return next();
+  }
+
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', allowedHeaders.join(','));
+    res.setHeader('Access-Control-Expose-Headers', exposedHeaders.join(','));
+    res.setHeader('Access-Control-Max-Age', '86400');
+  } else {
+    console.warn('[CORS_BLOCKED_PREFLIGHT]', {
+      origin,
+      method: req.method,
+      url: req.originalUrl
+    });
+  }
+
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
+
+  return next();
+});
+
+/**
+ * Normal CORS middleware.
+ */
+app.use(cors(corsOptions));
+
+/**
+ * Security headers.
+ */
+if (helmet) {
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: false,
+      crossOriginEmbedderPolicy: false,
+      contentSecurityPolicy: false
+    })
+  );
+}
+
+/**
+ * Body parsers.
+ */
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+/**
+ * Request ID / Correlation ID middleware.
+ */
+app.use((req, res, next) => {
+  const incomingRequestId =
+    req.headers['x-request-id'] ||
+    req.headers['x-correlation-id'];
+
+  const requestId =
+    incomingRequestId ||
+    `REQ_${crypto.randomBytes(12).toString('hex').toUpperCase()}`;
+
+  req.requestId = String(requestId);
+  req.correlationId = String(req.headers['x-correlation-id'] || requestId);
+
+  res.setHeader('x-request-id', req.requestId);
+  res.setHeader('x-correlation-id', req.correlationId);
+
+  return next();
+});
+
+/**
+ * Lightweight request logger.
+ */
+app.use((req, res, next) => {
+  const startedAt = Date.now();
+
+  res.on('finish', () => {
+    const durationMs = Date.now() - startedAt;
+
+    console.log('[HTTP_REQUEST]', {
+      method: req.method,
+      url: req.originalUrl,
+      statusCode: res.statusCode,
+      durationMs,
+      requestId: req.requestId,
+      correlationId: req.correlationId,
+      origin: req.headers.origin || null
+    });
+  });
+
+  return next();
+});
+
+/**
+ * Route imports.
+ *
+ * Routes are loaded after middleware definitions but before route registration.
+ */
+const walletRoutes = safeRoute('./routes/wallet.routes', 'wallet.routes');
+const dataGeneratorRoutes = safeRoute('./routes/data-generator.routes', 'data-generator.routes');
+const transactionRoutes = safeRoute('./routes/transaction.routes', 'transaction.routes');
+const fabricRoutes = safeRoute('./routes/fabric.routes', 'fabric.routes');
+const referenceRoutes = safeRoute('./routes/reference.routes', 'reference.routes');
+const organizationRoutes = safeRoute('./routes/organization.routes', 'organization.routes');
+
+/**
+ * Optional root API routes aggregator.
+ * Keep it optional because some versions of the project may not have src/routes/index.js.
+ */
+const apiRoutes = safeRoute('./routes', 'routes/index');
+
+/**
+ * Health endpoint.
+ */
+app.get('/api/v1/health', (req, res) => {
+  return res.status(200).json({
+    success: true,
+    message: `${SERVICE_NAME} is healthy`,
+    data: {
+      service: SERVICE_NAME,
+      version: SERVICE_VERSION,
+      environment: NODE_ENV,
+      uptimeSeconds: process.uptime(),
+      timestamp: new Date().toISOString(),
+      system: {
+        hostname: os.hostname(),
+        platform: process.platform,
+        memoryFree: os.freemem(),
+        memoryTotal: os.totalmem()
+      },
+      blockchain: {
+        channelName: process.env.FABRIC_CHANNEL_NAME || process.env.CHANNEL_NAME || 'kycchannelnix1',
+        chaincodeName:
+          process.env.FABRIC_CHAINCODE_NAME ||
+          process.env.CHAINCODE_NAME ||
+          'kyc-wallet-chaincode-js',
+        mspId: process.env.FABRIC_MSP_ID || process.env.MSP_ID || 'Org1MSP'
+      }
+    },
+    meta: null,
+    timestamp: new Date().toISOString(),
+    requestId: req.requestId,
+    correlationId: req.correlationId
+  });
+});
+
+/**
+ * API routes.
+ *
+ * IMPORTANT:
+ * All route registrations must be BEFORE the 404 handler.
+ */
+if (walletRoutes) {
+  app.use('/api/v1/wallets', walletRoutes);
+}
+
+if (dataGeneratorRoutes) {
+  app.use('/api/v1/data-generator', dataGeneratorRoutes);
+}
+
+if (transactionRoutes) {
+  app.use('/api/v1/transactions', transactionRoutes);
+}
+
+if (fabricRoutes) {
+  app.use('/api/v1/fabric', fabricRoutes);
+}
+
+if (referenceRoutes) {
+  app.use('/api/v1/reference', referenceRoutes);
+}
+
+if (organizationRoutes) {
+  app.use('/api/v1/organizations', organizationRoutes);
+}
+
+/**
+ * Optional generic API route aggregator.
+ * Registered after specific routes to avoid overriding them.
+ */
+if (apiRoutes) {
+  app.use('/api/v1', apiRoutes);
+}
+
+/**
+ * Root endpoint.
+ */
+app.get('/', (req, res) => {
+  return res.status(200).json({
+    success: true,
+    message: SERVICE_NAME,
+    data: {
+      version: SERVICE_VERSION,
+      environment: NODE_ENV,
+      health: '/api/v1/health',
+      wallets: '/api/v1/wallets',
+      dataGenerator: '/api/v1/data-generator/run',
+      transactions: '/api/v1/transactions',
+      fabric: '/api/v1/fabric',
+      reference: '/api/v1/reference',
+      organizations: '/api/v1/organizations'
+    },
+    requestId: req.requestId,
+    correlationId: req.correlationId
+  });
+});
+
+/**
+ * 404 handler.
+ * Must stay after all routes.
+ */
+app.use((req, res) => {
+  return res.status(404).json({
+    success: false,
+    message: `Route not found: ${req.method} ${req.originalUrl}`,
+    errorCode: 'ROUTE_NOT_FOUND',
+    data: null,
+    meta: null,
+    timestamp: new Date().toISOString(),
+    requestId: req.requestId,
+    correlationId: req.correlationId || req.requestId
+  });
+});
+
+/**
+ * Global error handler.
+ */
+app.use((error, req, res, next) => {
+  console.error('[GLOBAL_ERROR_HANDLER]', {
+    message: error.message,
+    code: error.code,
+    detail: error.detail,
+    constraint: error.constraint,
+    table: error.table,
+    column: error.column,
+    schema: error.schema,
+    stack: error.stack,
+    requestId: req.requestId,
+    correlationId: req.correlationId,
+    method: req.method,
+    url: req.originalUrl,
+    origin: req.headers.origin || null
+  });
+
+  const statusCode =
+    error.statusCode ||
+    error.status ||
+    (error.code === '23505' ? 409 : null) ||
+    (error.code === '23503' ? 400 : null) ||
+    (error.code === '23514' ? 400 : null) ||
+    500;
+
+  const isProduction = NODE_ENV === 'production';
+
+  return res.status(statusCode).json({
+    success: false,
+    message:
+      statusCode >= 500
+        ? 'Internal server error'
+        : error.message || 'Request failed',
+    errorCode: error.code || error.errorCode || 'SYSTEM_ERROR',
+    data: null,
+    meta: null,
+    timestamp: new Date().toISOString(),
+    requestId: req.requestId,
+    correlationId: req.correlationId || req.requestId,
+    debug: isProduction
+      ? undefined
+      : {
+          message: error.message,
+          code: error.code,
+          detail: error.detail,
+          constraint: error.constraint,
+          table: error.table,
+          column: error.column,
+          schema: error.schema
+        }
+  });
+});
+
+/**
+ * Start server.
+ */
+const server = app.listen(PORT, HOST, () => {
+  console.log('======================================================');
+  console.log(`${SERVICE_NAME} started successfully`);
+  console.log(`Environment: ${NODE_ENV}`);
+  console.log(`Listening: http://${HOST}:${PORT}`);
+  console.log(`Health: http://${HOST}:${PORT}/api/v1/health`);
+  console.log(`Data Generator: http://${HOST}:${PORT}/api/v1/data-generator/run`);
+  console.log(`Allowed CORS Origins: ${allowedOrigins.join(', ')}`);
+  console.log('======================================================');
+});
+
+/**
+ * Graceful shutdown.
+ */
+function shutdown(signal) {
+  console.log(`[SERVER_SHUTDOWN] Received ${signal}. Closing server...`);
+
+  server.close(() => {
+    console.log('[SERVER_SHUTDOWN] HTTP server closed.');
+    process.exit(0);
+  });
+
+  setTimeout(() => {
+    console.error('[SERVER_SHUTDOWN] Forced shutdown after timeout.');
+    process.exit(1);
+  }, 10000).unref();
+}
+
+process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+
+module.exports = app;
+==================================================
+FILE: blockchain-api/src/index.js
+==================================================
+const express = require("express");
+
+const healthRoutes = require("./health.routes");
+const blockchainRoutes = require("./blockchain.routes");
+const fabricRoutes = require("./fabric.routes");
+const walletRoutes = require("./wallet.routes");
+const transactionRoutes = require("./transaction.routes");
+
+const router = express.Router();
+
+router.use("/health", healthRoutes);
+router.use("/blockchain", blockchainRoutes);
+router.use("/fabric", fabricRoutes);
+router.use("/wallets", walletRoutes);
+router.use("/transactions", transactionRoutes);
+
+module.exports = router;
+
+==================================================
+FILE: blockchain-api/src/config/config.js
+==================================================
+logging: {
+  level: process.env.LOG_LEVEL || "info",
+  appLogPath: process.env.APP_LOG_PATH || "logs/app.log",
+  errorLogPath: process.env.ERROR_LOG_PATH || "logs/error.log",
+},
+
+==================================================
+FILE: blockchain-api/src/config/app.config.js
+==================================================
+require("dotenv").config();
+
+const appConfig = {
+  env: process.env.NODE_ENV || "development",
+  name: process.env.APP_NAME || "Blockchain API Middleware",
+  version: process.env.APP_VERSION || "1.0.0",
+
+  host: process.env.HOST || "0.0.0.0",
+  port: Number(process.env.PORT || 3001),
+
+  apiPrefix: process.env.API_PREFIX || "/api/v1",
+
+  corsOrigin: process.env.CORS_ORIGIN || "*",
+
+  rateLimit: {
+    windowMinutes: Number(process.env.RATE_LIMIT_WINDOW_MINUTES || 15),
+    maxRequests: Number(process.env.RATE_LIMIT_MAX_REQUESTS || 200)
+  }
+};
+
+module.exports = appConfig;
+
+==================================================
+FILE: blockchain-api/src/config/blockchain.config.js
+==================================================
+require("dotenv").config();
+
+const blockchainConfig = {
+  fabric: {
+    channelName: process.env.FABRIC_CHANNEL_NAME || "kycchannelnix1",
+    chaincodeName: process.env.FABRIC_CHAINCODE_NAME || "kyc-wallet-chaincode-js",
+    mspId: process.env.FABRIC_MSP_ID || "Org1MSP",
+    walletPath: process.env.FABRIC_WALLET_PATH,
+    connectionProfile: process.env.FABRIC_CONNECTION_PROFILE
+  }
+};
+
+module.exports = blockchainConfig;
+
+==================================================
+FILE: blockchain-api/src/config/database.js
+==================================================
+const { Pool } = require("pg");
+
+const pool = new Pool({
+  host: process.env.POSTGRES_HOST || process.env.DB_HOST || "172.31.13.133",
+  port: Number(process.env.POSTGRES_PORT || process.env.DB_PORT || 5444),
+  database: process.env.POSTGRES_DB || process.env.DB_NAME || "vfds_dev",
+  user: process.env.POSTGRES_USER || process.env.DB_USER || "postgres",
+  password: process.env.POSTGRES_PASSWORD || process.env.DB_PASSWORD,
+  max: Number(process.env.POSTGRES_POOL_MAX || 20),
+  idleTimeoutMillis: Number(process.env.POSTGRES_IDLE_TIMEOUT || 30000),
+  connectionTimeoutMillis: Number(process.env.POSTGRES_CONNECTION_TIMEOUT || 10000)
+});
+
+module.exports = {
+  query: (text, params) => pool.query(text, params),
+  getClient: () => pool.connect(),
+  pool
+};
+
+==================================================
+FILE: blockchain-api/src/config/env.validator.js
+==================================================
+'use strict';
+
+/**
+ * STEP 28 — Environment Secret Protection
+ *
+ * This file validates required secrets at startup.
+ * It prevents the API from starting with unsafe or missing secrets.
+ */
+
+const REQUIRED_ENV_VARS = [
+  'JWT_SECRET',
+  'INTERNAL_API_KEY'
+];
+
+const weakSecretValues = [
+  'secret',
+  'password',
+  'admin',
+  'changeme',
+  'change_me',
+  'default',
+  'test',
+  '123456',
+  'CHANGE_THIS_TO_A_LONG_RANDOM_SECRET_VALUE'
+];
+
+function validateEnvironmentSecrets() {
+  const errors = [];
+
+  REQUIRED_ENV_VARS.forEach((key) => {
+    const value = process.env[key];
+
+    if (!value) {
+      errors.push(`${key} is missing`);
+      return;
+    }
+
+    if (value.length < 32) {
+      errors.push(`${key} must be at least 32 characters`);
+    }
+
+    if (weakSecretValues.includes(value.trim())) {
+      errors.push(`${key} contains a weak/default value`);
+    }
+  });
+
+  if (errors.length > 0) {
+    console.error('Security environment validation failed:');
+    errors.forEach((error) => console.error(`- ${error}`));
+
+    if (process.env.NODE_ENV === 'production') {
+      process.exit(1);
+    }
+
+    console.warn(
+      'WARNING: Running with insecure environment values because NODE_ENV is not production.'
+    );
+  }
+}
+
+module.exports = {
+  validateEnvironmentSecrets
+};
+==================================================
+FILE: blockchain-api/src/config/index.js
+==================================================
+require("dotenv").config();
+
+const config = {
+  app: {
+    name: process.env.APP_NAME || "Blockchain API Middleware",
+    version: process.env.APP_VERSION || "1.0.0",
+    environment: process.env.NODE_ENV || "development",
+    port: Number(process.env.PORT || 3001),
+    host: process.env.HOST || "0.0.0.0",
+    apiPrefix: process.env.API_PREFIX || "/api/v1"
+  },
+
+  postgres: {
+    host: process.env.POSTGRES_HOST || process.env.DB_HOST || "172.31.13.133",
+    port: Number(process.env.POSTGRES_PORT || process.env.DB_PORT || 5444),
+    database: process.env.POSTGRES_DB || process.env.DB_NAME || "vfds_dev",
+    user: process.env.POSTGRES_USER || process.env.DB_USER || "postgres",
+    password: process.env.POSTGRES_PASSWORD || process.env.DB_PASSWORD,
+    poolMax: Number(process.env.POSTGRES_POOL_MAX || 20),
+    idleTimeout: Number(process.env.POSTGRES_IDLE_TIMEOUT || 30000),
+    connectionTimeout: Number(process.env.POSTGRES_CONNECTION_TIMEOUT || 10000)
+  },
+
+  fabric: {
+    channelName: process.env.FABRIC_CHANNEL_NAME || "kycchannelnix1",
+    chaincodeName: process.env.FABRIC_CHAINCODE_NAME || "kyc-wallet-chaincode-js",
+    mspId: process.env.FABRIC_MSP_ID || "Org1MSP",
+    walletPath: process.env.FABRIC_WALLET_PATH || "./wallet",
+    connectionProfilePath:
+      process.env.FABRIC_CONNECTION_PROFILE_PATH ||
+      "./connection-profile/connection-org1.json",
+    identity: process.env.FABRIC_IDENTITY || "appUser"
+  },
+
+  security: {
+    jwtSecret: process.env.JWT_SECRET || "change-this-secret",
+    jwtExpiresIn: process.env.JWT_EXPIRES_IN || "1h"
+  }
+};
+
+module.exports = config;
+==================================================
+FILE: blockchain-api/src/config/logger.config.js
+==================================================
+const path = require("path");
+const winston = require("winston");
+
+const logLevel = process.env.LOG_LEVEL || "info";
+const logToFile = process.env.LOG_TO_FILE === "true";
+
+const logFormat = winston.format.combine(
+  winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
+  winston.format.errors({ stack: true }),
+  winston.format.printf(({ timestamp, level, message, stack }) => {
+    return `${timestamp} [${level.toUpperCase()}]: ${stack || message}`;
+  })
+);
+
+const transports = [
+  new winston.transports.Console({
+    format: winston.format.combine(
+      winston.format.colorize(),
+      logFormat
+    )
+  })
+];
+
+if (logToFile) {
+  transports.push(
+    new winston.transports.File({
+      filename: path.join(__dirname, "../logs/error.log"),
+      level: "error"
+    }),
+    new winston.transports.File({
+      filename: path.join(__dirname, "../logs/app.log")
+    })
+  );
+}
+
+const logger = winston.createLogger({
+  level: logLevel,
+  format: logFormat,
+  transports,
+  exitOnError: false
+});
+
+module.exports = logger;
+
+==================================================
+FILE: blockchain-api/src/database/postgres.js
+==================================================
+"use strict";
+
+const { Pool } = require("pg");
+const config = require("../../config/config");
+
+const pool = new Pool({
+  host: config.postgres.host,
+  port: config.postgres.port,
+  database: config.postgres.database,
+  user: config.postgres.user,
+  password: config.postgres.password,
+  ssl: config.postgres.ssl ? { rejectUnauthorized: false } : false,
+  min: config.postgres.pool.min,
+  max: config.postgres.pool.max,
+  idleTimeoutMillis: config.postgres.pool.idleTimeoutMillis,
+  connectionTimeoutMillis: config.postgres.pool.connectionTimeoutMillis,
+});
+
+async function testPostgresConnection() {
+  const client = await pool.connect();
+
+  try {
+    const result = await client.query("SELECT NOW() AS current_time");
+    return {
+      success: true,
+      currentTime: result.rows[0].current_time,
+      database: config.postgres.database,
+      schema: config.postgres.schema,
+    };
+  } finally {
+    client.release();
+  }
+}
+
+module.exports = {
+  pool,
+  testPostgresConnection,
+};
+==================================================
+FILE: blockchain-api/src/repositories/blockchain.repository.js
+==================================================
+const blockchainConfig = require("../config/blockchain.config");
+
+/**
+ * This repository will later connect to Hyperledger Fabric Gateway SDK.
+ * For STEP 18, it provides a clean placeholder foundation.
+ */
+class BlockchainRepository {
+  async getNetworkInfo() {
+    return {
+      channelName: blockchainConfig.fabric.channelName,
+      chaincodeName: blockchainConfig.fabric.chaincodeName,
+      mspId: blockchainConfig.fabric.mspId,
+      walletPath: blockchainConfig.fabric.walletPath,
+      connectionProfile: blockchainConfig.fabric.connectionProfile,
+      status: "CONFIGURED_PLACEHOLDER"
+    };
+  }
+
+  async pingLedger() {
+    return {
+      ledgerReachable: false,
+      status: "FABRIC_SDK_NOT_CONNECTED_YET",
+      message: "Fabric SDK integration will be implemented in the next steps."
+    };
+  }
+}
+
+module.exports = new BlockchainRepository();
+
+==================================================
+FILE: blockchain-api/src/services/wallet.service.js
+==================================================
+'use strict';
+
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+
+const db = require('../config/database');
+const fabricService = require('./fabric.service');
+
+const DEFAULT_JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '8h';
+const JWT_SECRET =
+  process.env.JWT_SECRET ||
+  process.env.APP_JWT_SECRET ||
+  'CHANGE_ME_DEV_SECRET';
+
+const DEFAULT_CHANNEL_NAME =
+  process.env.FABRIC_CHANNEL_NAME ||
+  process.env.CHANNEL_NAME ||
+  'kycchannelnix1';
+
+const DEFAULT_CHAINCODE_NAME =
+  process.env.FABRIC_CHAINCODE_NAME ||
+  process.env.CHAINCODE_NAME ||
+  'kyc-wallet-chaincode-js';
+
+exports.getNextCustomerId = async () => {
+  const result = await db.query(`
+    SELECT
+      COALESCE(MAX(customer_id::bigint), 0) + 1 AS next_customer_id
+    FROM blockchain.wallets
+    WHERE customer_id ~ '^[0-9]+$'
+  `);
+
+  return {
+    customerId: String(result.rows[0]?.next_customer_id || Date.now())
+  };
+};
+
+async function tableColumnExists(tableName, columnName) {
+  const result = await db.query(
+    `
+    SELECT EXISTS (
+      SELECT 1
+      FROM information_schema.columns
+      WHERE table_schema = 'blockchain'
+        AND table_name = $1
+        AND column_name = $2
+    ) AS exists
+    `,
+    [tableName, columnName]
+  );
+
+  return result.rows[0]?.exists === true;
+}
+
+async function getWalletColumns() {
+  const result = await db.query(
+    `
+    SELECT column_name
+    FROM information_schema.columns
+    WHERE table_schema = 'blockchain'
+      AND table_name = 'wallets'
+    ORDER BY ordinal_position
+    `
+  );
+
+  return result.rows.map((row) => row.column_name);
+}
+
+function normalizeNumber(value, defaultValue = 0) {
+  const numberValue = Number(value);
+  return Number.isFinite(numberValue) ? numberValue : defaultValue;
+}
+
+function normalizeWalletType(value) {
+  const normalized = String(value || 'CUSTOMER').trim().toUpperCase();
+
+  if (normalized === 'ORGANIZATION' || normalized === 'ORG') {
+    return 'ORGANIZATION';
+  }
+
+  return 'CUSTOMER';
+}
+
+function buildOrganizationEmail(organizationName) {
+  const slug = String(organizationName || 'organization')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '.')
+    .replace(/^\.+|\.+$/g, '');
+
+  return `${slug || 'organization'}@gmail.com`;
+}
+
+function generateOneTimePassword(prefix = 'Wallet') {
+  return `${prefix}@${crypto.randomBytes(4).toString('hex')}${Date.now()
+    .toString()
+    .slice(-4)}`;
+}
+
+function mapWalletProfile(profile) {
+  if (!profile) {
+    return null;
+  }
+
+  const walletType = normalizeWalletType(profile.walletType);
+
+  return {
+    walletAddress: profile.walletAddress,
+    customerId: profile.customerId,
+    organizationId: profile.organizationId,
+    organizationName: profile.organizationName,
+    organizationCode: profile.organizationCode || null,
+    walletType,
+    fullName: profile.fullName,
+    customerName: profile.fullName,
+    customerType: walletType,
+    nationality: profile.nationalIdHash,
+    countryName: profile.countryName,
+    idType: 'wallet',
+    idNumber: profile.walletAddress,
+    nationalIdHash: profile.nationalIdHash,
+    mobileHash: profile.mobileHash,
+    emailHash: profile.emailHash,
+    currentBalance: profile.currentBalance,
+    currencyCode: profile.currencyCode,
+    status: profile.status,
+    createdAt: profile.createdAt
+  };
+}
+
+async function getOrganizationById(organizationId) {
+  const result = await db.query(
+    `
+    SELECT
+      organization_id::text AS organization_id,
+      organization_name,
+      organization_type,
+      registration_number,
+      country_code,
+      status
+    FROM blockchain.blockchain_organization
+    WHERE organization_id::text = $1
+    LIMIT 1
+    `,
+    [String(organizationId)]
+  );
+
+  return result.rows[0] || null;
+}
+
+function extractBlockchainWallet(fabricResult) {
+  const fabricData = fabricResult?.data || fabricResult || {};
+  const nestedData = fabricData?.data || {};
+
+  const wallet =
+    fabricData.wallet ||
+    nestedData.wallet ||
+    null;
+
+  const transaction =
+    fabricData.transaction ||
+    nestedData.transaction ||
+    null;
+
+  if (!wallet || !wallet.walletAddress) {
+    throw new Error('Blockchain CreateWallet did not return wallet.walletAddress');
+  }
+
+  return {
+    wallet,
+    transaction,
+    fabricData
+  };
+}
+
+function getFabricTransactionId(blockchainWallet, blockchainTransaction) {
+  return (
+    blockchainTransaction?.transactionId ||
+    blockchainTransaction?.createdTxId ||
+    blockchainWallet?.createdTxId ||
+    blockchainWallet?.updatedTxId ||
+    null
+  );
+}
+
+async function assertCustomerDoesNotExistInPostgres(customerId) {
+  const existingWallet = await db.query(
+    `
+    SELECT customer_id, wallet_address
+    FROM blockchain.wallets
+    WHERE customer_id = $1
+    LIMIT 1
+    `,
+    [customerId]
+  );
+
+  if (existingWallet.rowCount > 0) {
+    throw new Error(`Wallet already exists for customerId: ${customerId}`);
+  }
+}
+
+exports.listWallets = async ({ limit = 13, offset = 0, search = '' }) => {
+  const values = [];
+  let whereClause = '';
+
+  if (search && search.trim()) {
+    values.push(`%${search.trim()}%`);
+
+    whereClause = `
+      WHERE
+        COALESCE(full_name, '') ILIKE $1
+        OR COALESCE(wallet_type, '') ILIKE $1
+        OR COALESCE(national_id_hash, '') ILIKE $1
+        OR COALESCE(ledger_doc_type, '') ILIKE $1
+        OR COALESCE(ledger_key, '') ILIKE $1
+        OR COALESCE(customer_id, '') ILIKE $1
+        OR COALESCE(wallet_address, '') ILIKE $1
+        OR COALESCE(organization_code, '') ILIKE $1
+    `;
+  }
+
+  const hasCurrentBalance = await tableColumnExists('wallets', 'current_balance');
+  const hasCurrencyCode = await tableColumnExists('wallets', 'currency_code');
+
+  const countSql = `
+    SELECT COUNT(*)::int AS total
+    FROM blockchain.wallets
+    ${whereClause}
+  `;
+
+  const dataSql = `
+    SELECT
+      wallet_id,
+      wallet_address,
+      customer_id,
+      organization_id,
+      organization_code,
+      wallet_type,
+      full_name,
+      national_id_hash,
+      ledger_doc_type,
+      ledger_key,
+      mobile_hash,
+      email_hash,
+      status,
+      ${hasCurrentBalance ? 'current_balance' : '0 AS current_balance'},
+      ${hasCurrencyCode ? 'currency_code' : `'USD' AS currency_code`},
+      created_at,
+      updated_at
+    FROM blockchain.wallets
+    ${whereClause}
+    ORDER BY created_at DESC NULLS LAST
+    LIMIT $${values.length + 1}
+    OFFSET $${values.length + 2}
+  `;
+
+  const countResult = await db.query(countSql, values);
+  const dataResult = await db.query(dataSql, [...values, limit, offset]);
+
+  return {
+    totalRecords: countResult.rows[0]?.total || 0,
+    data: dataResult.rows.map((row) => ({
+      id: row.wallet_id,
+      walletId: row.wallet_id,
+      walletAddress: row.wallet_address,
+      customerId: row.customer_id,
+      organizationId: row.organization_id,
+      organizationCode: row.organization_code,
+      customerName: row.full_name,
+      customerType: normalizeWalletType(row.wallet_type),
+      nationality: row.national_id_hash,
+      idType: row.ledger_doc_type,
+      idNumber: row.ledger_key,
+      fullName: row.full_name,
+      walletType: normalizeWalletType(row.wallet_type),
+      nationalIdHash: row.national_id_hash,
+      ledgerDocType: row.ledger_doc_type,
+      ledgerKey: row.ledger_key,
+      mobileHash: row.mobile_hash,
+      emailHash: row.email_hash,
+      status: row.status,
+      currentBalance: row.current_balance,
+      currencyCode: row.currency_code,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at
+    }))
+  };
+};
+
+const getProfessionalWalletProfileByCustomerId = async (customerId) => {
+  const result = await db.query(
+    `
+    SELECT
+        w.customer_id                                  AS "customerId",
+        w.wallet_address                              AS "walletAddress",
+        w.organization_id                             AS "organizationId",
+        w.organization_code                           AS "organizationCode",
+        bo.organization_name                          AS "organizationName",
+        w.wallet_type                                 AS "walletType",
+        w.full_name                                   AS "fullName",
+        w.national_id_hash                            AS "nationalIdHash",
+        c.cou_name                                    AS "countryName",
+        w.email_hash                                  AS "emailHash",
+        w.mobile_hash                                 AS "mobileHash",
+        COALESCE(w.current_balance, 0)                AS "currentBalance",
+        COALESCE(w.currency_code, 'USD')              AS "currencyCode",
+        w.created_at                                  AS "createdAt",
+        w.status                                      AS "status"
+    FROM blockchain.wallets w
+    LEFT JOIN blockchain.blockchain_organization bo
+        ON bo.organization_id = w.organization_id
+    LEFT JOIN blockchain.countries c
+        ON c.cou_id::text = w.national_id_hash::text
+    WHERE w.customer_id = $1
+    LIMIT 1
+    `,
+    [customerId]
+  );
+
+  return result.rows[0] || null;
+};
+
+const getProfessionalWalletProfileByAddress = async (walletAddress) => {
+  const result = await db.query(
+    `
+    SELECT
+        w.customer_id                                  AS "customerId",
+        w.wallet_address                              AS "walletAddress",
+        w.organization_id                             AS "organizationId",
+        w.organization_code                           AS "organizationCode",
+        bo.organization_name                          AS "organizationName",
+        w.wallet_type                                 AS "walletType",
+        w.full_name                                   AS "fullName",
+        w.national_id_hash                            AS "nationalIdHash",
+        c.cou_name                                    AS "countryName",
+        w.email_hash                                  AS "emailHash",
+        w.mobile_hash                                 AS "mobileHash",
+        COALESCE(w.current_balance, 0)                AS "currentBalance",
+        COALESCE(w.currency_code, 'USD')              AS "currencyCode",
+        w.created_at                                  AS "createdAt",
+        w.status                                      AS "status"
+    FROM blockchain.wallets w
+    LEFT JOIN blockchain.blockchain_organization bo
+        ON bo.organization_id = w.organization_id
+    LEFT JOIN blockchain.countries c
+        ON c.cou_id::text = w.national_id_hash::text
+    WHERE w.wallet_address = $1
+    LIMIT 1
+    `,
+    [walletAddress]
+  );
+
+  return result.rows[0] || null;
+};
+
+exports.getWalletByCustomerId = async (customerId) => {
+  const profile = await getProfessionalWalletProfileByCustomerId(customerId);
+  return mapWalletProfile(profile);
+};
+
+exports.getWalletByAddress = async (walletAddress) => {
+  const profile = await getProfessionalWalletProfileByAddress(walletAddress);
+  return mapWalletProfile(profile);
+};
+
+async function insertWallet(valuesByColumn) {
+  const columns = await getWalletColumns();
+
+  const insertColumns = [];
+  const insertValues = [];
+  const placeholders = [];
+
+  Object.entries(valuesByColumn).forEach(([column, value]) => {
+    if (columns.includes(column)) {
+      insertColumns.push(column);
+      insertValues.push(value);
+      placeholders.push(`$${insertValues.length}`);
+    }
+  });
+
+  const sql = `
+    INSERT INTO blockchain.wallets (${insertColumns.join(', ')})
+    VALUES (${placeholders.join(', ')})
+    RETURNING *
+  `;
+
+  const result = await db.query(sql, insertValues);
+  return result.rows[0];
+}
+
+exports.createWallet = async (payload) => {
+  const {
+    customerId,
+    organizationId,
+    organizationCode = null,
+    fullName,
+    nationalIdHash = null,
+    mobileHash = null,
+    emailHash = null,
+    passwordHash = null,
+    ledgerDocType = 'wallet',
+    requestSource = 'ANGULAR_TEST_UI',
+    sourceSystem = 'BLOCKCHAIN_API',
+    createdBy = 'angular-test-ui'
+  } = payload;
+
+  const initialBalance = normalizeNumber(
+    payload.initialBalance ?? payload.currentBalance ?? payload.current_balance,
+    0
+  );
+
+  if (!customerId) {
+    throw new Error('customerId is required');
+  }
+
+  if (!organizationId) {
+    throw new Error('organizationId is required');
+  }
+
+  if (!fullName) {
+    throw new Error('fullName is required');
+  }
+
+  if (initialBalance < 0) {
+    throw new Error('initialBalance must be zero or greater');
+  }
+
+  await assertCustomerDoesNotExistInPostgres(customerId);
+
+  const plainPassword =
+    payload.password ||
+    payload.oneTimePassword ||
+    payload.plainPassword ||
+    null;
+
+  const generatedPassword =
+    !passwordHash && !plainPassword ? generateOneTimePassword('Wallet') : null;
+
+  const passwordForHash = passwordHash || plainPassword || generatedPassword;
+
+  const normalizedPasswordHash =
+    passwordForHash && String(passwordForHash).startsWith('$2')
+      ? String(passwordForHash)
+      : await bcrypt.hash(String(passwordForHash), 10);
+
+  let fabricResult;
+  let blockchainWallet;
+  let blockchainTransaction;
+
+  try {
+    fabricResult = await fabricService.submitTransaction(
+      'CreateWallet',
+      [
+        customerId,
+        organizationId,
+        fullName,
+        nationalIdHash || '',
+        mobileHash || '',
+        emailHash || '',
+        normalizedPasswordHash,
+        String(initialBalance)
+      ],
+      {
+        requestId: payload.requestId || payload.request_id || null,
+        correlationId: payload.correlationId || payload.correlation_id || null,
+        sourceSystem,
+        requestSource,
+        createdBy
+      }
+    );
+
+    const extracted = extractBlockchainWallet(fabricResult);
+    blockchainWallet = extracted.wallet;
+    blockchainTransaction = extracted.transaction;
+  } catch (error) {
+    throw new Error(`Blockchain wallet creation failed: ${error.message}`);
+  }
+
+  const walletAddress = blockchainWallet.walletAddress;
+  const fabricTransactionId = getFabricTransactionId(
+    blockchainWallet,
+    blockchainTransaction
+  );
+
+  const row = await insertWallet({
+    wallet_address: walletAddress,
+    customer_id: customerId,
+    organization_id: organizationId,
+    organization_code: organizationCode,
+    wallet_type: 'CUSTOMER',
+    full_name: fullName,
+    national_id_hash: nationalIdHash,
+    ledger_doc_type: ledgerDocType,
+    ledger_key: walletAddress,
+    mobile_hash: mobileHash,
+    email_hash: emailHash,
+    password_hash: normalizedPasswordHash,
+    current_balance: blockchainWallet.balance ?? initialBalance,
+    currency_code: blockchainWallet.currency || 'TOKEN',
+    status: blockchainWallet.status || 'ACTIVE',
+    fabric_tx_id: fabricTransactionId,
+    fabric_transaction_id: fabricTransactionId,
+    fabric_channel_name: fabricResult.channelName || DEFAULT_CHANNEL_NAME,
+    chaincode_name: fabricResult.chaincodeName || DEFAULT_CHAINCODE_NAME,
+    blockchain_payload: blockchainWallet,
+    fabric_response: fabricResult,
+    request_id: payload.requestId || payload.request_id || null,
+    request_source: requestSource,
+    source_system: sourceSystem,
+    created_by: createdBy,
+    updated_by: createdBy,
+    created_at: new Date(),
+    updated_at: new Date()
+  });
+
+  const profile =
+    (await getProfessionalWalletProfileByAddress(row.wallet_address)) ||
+    (await getProfessionalWalletProfileByCustomerId(row.customer_id));
+
+  return {
+    wallet: profile || row,
+    blockchain: {
+      saved: true,
+      walletAddress,
+      fabricTransactionId,
+      channelName: fabricResult.channelName || DEFAULT_CHANNEL_NAME,
+      chaincodeName: fabricResult.chaincodeName || DEFAULT_CHAINCODE_NAME,
+      transaction: blockchainTransaction || null
+    },
+    postgres: {
+      saved: true,
+      walletId: row.wallet_id || null
+    },
+    oneTimePassword:
+      generatedPassword ||
+      (!String(passwordForHash).startsWith('$2') ? passwordForHash : null)
+  };
+};
+
+exports.createOrganizationWallet = async (payload) => {
+  const organizationId = payload.organizationId || payload.organization_id;
+
+  if (!organizationId) {
+    throw new Error('organizationId is required');
+  }
+
+  const organization = await getOrganizationById(organizationId);
+
+  if (!organization) {
+    throw new Error(`Organization not found: ${organizationId}`);
+  }
+
+  const existingOrgWallet = await db.query(
+    `
+    SELECT wallet_address
+    FROM blockchain.wallets
+    WHERE organization_id::text = $1
+      AND UPPER(wallet_type) = 'ORGANIZATION'
+    LIMIT 1
+    `,
+    [String(organizationId)]
+  );
+
+  if (existingOrgWallet.rowCount > 0) {
+    throw new Error(
+      `Organization wallet already exists for organizationId: ${organizationId}`
+    );
+  }
+
+  const initialBalance = normalizeNumber(
+    payload.initialBalance ?? payload.currentBalance ?? payload.current_balance,
+    0
+  );
+
+  if (initialBalance < 0) {
+    throw new Error('initialBalance must be zero or greater');
+  }
+
+  const plainPassword =
+    payload.passwordHash ||
+    payload.password ||
+    generateOneTimePassword('Org');
+
+  const normalizedPasswordHash = String(plainPassword).startsWith('$2')
+    ? String(plainPassword)
+    : await bcrypt.hash(String(plainPassword), 10);
+
+  const customerId = `ORG_${String(organization.organization_id)
+    .replace(/-/g, '')
+    .slice(0, 24)}`;
+
+  const organizationName = organization.organization_name;
+  const organizationCode =
+    organization.registration_number ||
+    organization.organization_code ||
+    String(organization.organization_id);
+
+  const emailHash = buildOrganizationEmail(organizationName);
+
+  let fabricResult;
+  let blockchainWallet;
+  let blockchainTransaction;
+
+  try {
+    fabricResult = await fabricService.submitTransaction(
+      'CreateWallet',
+      [
+        customerId,
+        String(organization.organization_id),
+        organizationName,
+        String(organization.organization_id),
+        '',
+        emailHash,
+        normalizedPasswordHash,
+        String(initialBalance)
+      ],
+      {
+        requestId: payload.requestId || payload.request_id || null,
+        correlationId: payload.correlationId || payload.correlation_id || null,
+        sourceSystem: payload.sourceSystem || payload.source_system || 'BLOCKCHAIN_API',
+        requestSource: payload.requestSource || payload.request_source || 'ANGULAR_TEST_UI',
+        createdBy: payload.createdBy || payload.created_by || 'angular-test-ui'
+      }
+    );
+
+    const extracted = extractBlockchainWallet(fabricResult);
+    blockchainWallet = extracted.wallet;
+    blockchainTransaction = extracted.transaction;
+  } catch (error) {
+    throw new Error(`Blockchain organization wallet creation failed: ${error.message}`);
+  }
+
+  const walletAddress = blockchainWallet.walletAddress;
+  const fabricTransactionId = getFabricTransactionId(
+    blockchainWallet,
+    blockchainTransaction
+  );
+
+  const row = await insertWallet({
+    wallet_address: walletAddress,
+    customer_id: customerId,
+    organization_id: organization.organization_id,
+    organization_code: organizationCode,
+    wallet_type: 'ORGANIZATION',
+    full_name: organizationName,
+    national_id_hash: String(organization.organization_id),
+    ledger_doc_type: 'organization_wallet',
+    ledger_key: walletAddress,
+    mobile_hash: null,
+    email_hash: emailHash,
+    password_hash: normalizedPasswordHash,
+    current_balance: blockchainWallet.balance ?? initialBalance,
+    currency_code: blockchainWallet.currency || 'TOKEN',
+    status: blockchainWallet.status || 'ACTIVE',
+    fabric_tx_id: fabricTransactionId,
+    fabric_transaction_id: fabricTransactionId,
+    fabric_channel_name: fabricResult.channelName || DEFAULT_CHANNEL_NAME,
+    chaincode_name: fabricResult.chaincodeName || DEFAULT_CHAINCODE_NAME,
+    blockchain_payload: blockchainWallet,
+    fabric_response: fabricResult,
+    request_id: payload.requestId || payload.request_id || null,
+    request_source: payload.requestSource || payload.request_source || 'ANGULAR_TEST_UI',
+    source_system: payload.sourceSystem || payload.source_system || 'BLOCKCHAIN_API',
+    created_by: payload.createdBy || payload.created_by || 'angular-test-ui',
+    updated_by: payload.createdBy || payload.created_by || 'angular-test-ui',
+    created_at: new Date(),
+    updated_at: new Date()
+  });
+
+  const profile = await getProfessionalWalletProfileByAddress(row.wallet_address);
+
+  return {
+    wallet: profile || row,
+    blockchain: {
+      saved: true,
+      walletAddress,
+      fabricTransactionId,
+      channelName: fabricResult.channelName || DEFAULT_CHANNEL_NAME,
+      chaincodeName: fabricResult.chaincodeName || DEFAULT_CHAINCODE_NAME,
+      transaction: blockchainTransaction || null
+    },
+    postgres: {
+      saved: true,
+      walletId: row.wallet_id || null
+    },
+    oneTimePassword: String(plainPassword).startsWith('$2') ? null : plainPassword
+  };
+};
+
+exports.loginWallet = async ({ walletAddress, customerId, password }) => {
+  const loginIdentifier = walletAddress || customerId;
+
+  if (!loginIdentifier) {
+    throw new Error('walletAddress is required');
+  }
+
+  if (!password) {
+    throw new Error('password is required');
+  }
+
+
+==================================================
+FILE: blockchain-api/src/services/wallet-query.service.js
+==================================================
+const fabricService = require("./fabric.service");
+const databaseService = require("./database.service");
+const logger = require("../utils/logger");
+
+class WalletQueryService {
+  safeParseFabricResult(result) {
+    if (!result) return null;
+
+    if (Buffer.isBuffer(result)) {
+      const text = result.toString("utf8");
+      if (!text || text.trim() === "") return null;
+
+      try {
+        return JSON.parse(text);
+      } catch {
+        return text;
+      }
+    }
+
+    if (typeof result === "string") {
+      if (result.trim() === "") return null;
+
+      try {
+        return JSON.parse(result);
+      } catch {
+        return result;
+      }
+    }
+
+    return result;
+  }
+
+  extractWalletFromFabricResponse(fabricResult) {
+    const parsed = this.safeParseFabricResult(fabricResult);
+
+    return (
+      parsed?.data?.wallet ||
+      parsed?.data?.data?.wallet ||
+      parsed?.wallet ||
+      parsed ||
+      null
+    );
+  }
+
+  async getWalletByAddress(walletAddress, requestId) {
+    const cleanWalletAddress = walletAddress.trim();
+
+    const dbWallet = await this.getWalletByAddressFromDatabase(cleanWalletAddress);
+
+    if (dbWallet?.customer_id) {
+      try {
+        const fabricResult = await fabricService.evaluateTransaction(
+          "GetWalletByCustomerId",
+          [dbWallet.customer_id]
+        );
+
+        const fabricWallet = this.extractWalletFromFabricResponse(fabricResult);
+
+        if (fabricWallet?.walletAddress) {
+          return {
+            success: true,
+            httpStatus: 200,
+            message: "Wallet details retrieved successfully from blockchain using customerId mapping",
+            source: "FABRIC",
+            data: this.normalizeWallet({
+              ...dbWallet,
+              ...fabricWallet,
+              walletAddress: fabricWallet.walletAddress,
+            }),
+          };
+        }
+      } catch (error) {
+        logger.warn("Fabric wallet query by customerId failed. Returning PostgreSQL wallet.", {
+          requestId,
+          walletAddress: cleanWalletAddress,
+          error: error.message,
+        });
+      }
+    }
+
+    if (!dbWallet) {
+      return {
+        success: false,
+        httpStatus: 404,
+        message: `Wallet not found for walletAddress: ${cleanWalletAddress}`,
+        source: "POSTGRESQL",
+        data: null,
+      };
+    }
+
+    return {
+      success: true,
+      httpStatus: 200,
+      message: "Wallet details retrieved successfully from PostgreSQL fallback",
+      source: "POSTGRESQL",
+      data: this.normalizeWallet(dbWallet),
+    };
+  }
+
+  async getWalletBalance(walletAddress, requestId) {
+    const cleanWalletAddress = walletAddress.trim();
+
+    const dbWallet = await this.getWalletByAddressFromDatabase(cleanWalletAddress);
+
+    if (dbWallet?.customer_id) {
+      try {
+        const fabricResult = await fabricService.evaluateTransaction(
+          "GetWalletByCustomerId",
+          [dbWallet.customer_id]
+        );
+
+        const fabricWallet = this.extractWalletFromFabricResponse(fabricResult);
+
+        if (fabricWallet?.walletAddress) {
+          return {
+            success: true,
+            httpStatus: 200,
+            message: "Wallet balance retrieved successfully from blockchain using customerId mapping",
+            source: "FABRIC",
+            data: this.normalizeBalance(fabricWallet.walletAddress, fabricWallet),
+          };
+        }
+      } catch (error) {
+        logger.warn("Fabric balance query by customerId failed. Returning PostgreSQL balance.", {
+          requestId,
+          walletAddress: cleanWalletAddress,
+          error: error.message,
+        });
+      }
+    }
+
+    const dbBalance = await this.getWalletBalanceFromDatabase(cleanWalletAddress);
+
+    if (!dbBalance) {
+      return {
+        success: false,
+        httpStatus: 404,
+        message: `Wallet balance not found for walletAddress: ${cleanWalletAddress}`,
+        source: "POSTGRESQL",
+        data: null,
+      };
+    }
+
+    return {
+      success: true,
+      httpStatus: 200,
+      message: "Wallet balance retrieved successfully from PostgreSQL fallback",
+      source: "POSTGRESQL",
+      data: this.normalizeBalance(cleanWalletAddress, dbBalance),
+    };
+  }
+
+  async getWalletHistory(walletAddress, options = {}, requestId) {
+    const cleanWalletAddress = walletAddress.trim();
+
+    const limit = Number(options.limit || 50);
+    const offset = Number(options.offset || 0);
+
+    const dbHistory = await this.getWalletHistoryFromDatabase(
+      cleanWalletAddress,
+      limit,
+      offset
+    );
+
+    return {
+      success: true,
+      httpStatus: 200,
+      message: "Wallet transaction history retrieved successfully from PostgreSQL fallback",
+      source: "POSTGRESQL",
+      data: {
+        walletAddress: cleanWalletAddress,
+        limit,
+        offset,
+        total: dbHistory.total,
+        transactions: dbHistory.transactions.map((transaction) =>
+          this.normalizeTransaction(transaction)
+        ),
+      },
+    };
+  }
+
+  normalizeWallet(wallet) {
+    return {
+      walletAddress:
+        wallet.walletAddress ||
+        wallet.wallet_address ||
+        wallet.address ||
+        null,
+
+      customerId:
+        wallet.customerId ||
+        wallet.customer_id ||
+        null,
+
+      organizationId:
+        wallet.organizationId ||
+        wallet.organization_id ||
+        null,
+
+      organizationCode:
+        wallet.organizationCode ||
+        wallet.organization_code ||
+        wallet.organizationId ||
+        null,
+
+      fullName:
+        wallet.fullName ||
+        wallet.full_name ||
+        null,
+
+      status:
+        wallet.status ||
+        wallet.wallet_status ||
+        "UNKNOWN",
+
+      currency:
+        wallet.currency ||
+        "TOKEN",
+
+      balance:
+        wallet.balance !== undefined
+          ? String(wallet.balance)
+          : wallet.current_balance !== undefined
+          ? String(wallet.current_balance)
+          : "0",
+
+      createdAt:
+        wallet.createdAt ||
+        wallet.created_at ||
+        null,
+
+      updatedAt:
+        wallet.updatedAt ||
+        wallet.updated_at ||
+        null,
+    };
+  }
+
+  normalizeBalance(walletAddress, balancePayload) {
+    if (
+      typeof balancePayload === "string" ||
+      typeof balancePayload === "number"
+    ) {
+      return {
+        walletAddress,
+        balance: String(balancePayload),
+        currency: "TOKEN",
+      };
+    }
+
+    return {
+      walletAddress:
+        balancePayload.walletAddress ||
+        balancePayload.wallet_address ||
+        walletAddress,
+
+      balance:
+        balancePayload.balance !== undefined
+          ? String(balancePayload.balance)
+          : balancePayload.current_balance !== undefined
+          ? String(balancePayload.current_balance)
+          : "0",
+
+      currency:
+        balancePayload.currency ||
+        "TOKEN",
+
+      status:
+        balancePayload.status ||
+        balancePayload.wallet_status ||
+        "ACTIVE",
+
+      lastUpdatedAt:
+        balancePayload.updatedAt ||
+        balancePayload.updated_at ||
+        balancePayload.lastUpdatedAt ||
+        null,
+    };
+  }
+
+  normalizeTransaction(transaction) {
+    return {
+      transactionId:
+        transaction.transactionId ||
+        transaction.transaction_id ||
+        transaction.id ||
+        null,
+
+      requestId:
+        transaction.requestId ||
+        transaction.request_id ||
+        null,
+
+      fabricTransactionId:
+        transaction.fabricTransactionId ||
+        transaction.fabric_transaction_id ||
+        null,
+
+      fromWalletAddress:
+        transaction.fromWalletAddress ||
+        transaction.from_wallet_address ||
+        transaction.senderWalletAddress ||
+        transaction.sender_wallet_address ||
+        null,
+
+      toWalletAddress:
+        transaction.toWalletAddress ||
+        transaction.to_wallet_address ||
+        transaction.receiverWalletAddress ||
+        transaction.receiver_wallet_address ||
+        null,
+
+      amount:
+        transaction.amount !== undefined
+          ? String(transaction.amount)
+          : "0",
+
+      currency:
+        transaction.currency ||
+        "TOKEN",
+
+      transactionType:
+        transaction.transactionType ||
+        transaction.transaction_type ||
+        "WALLET_TO_WALLET",
+
+      transactionPurpose:
+        transaction.transactionPurpose ||
+        transaction.transaction_purpose ||
+        null,
+
+      transactionDescription:
+        transaction.transactionDescription ||
+        transaction.transaction_description ||
+        null,
+
+      status:
+        transaction.status ||
+        transaction.transaction_status ||
+        "UNKNOWN",
+
+      riskLevel:
+        transaction.riskLevel ||
+        transaction.risk_level ||
+        "LOW",
+
+      createdAt:
+        transaction.createdAt ||
+        transaction.created_at ||
+        null,
+    };
+  }
+
+  async getWalletByAddressFromDatabase(walletAddress) {
+    const pool = databaseService.getPool();
+
+    const query = `
+      SELECT
+        wallet_id,
+        wallet_address,
+        customer_id,
+        organization_id,
+        organization_code,
+        full_name,
+        wallet_status,
+        current_balance,
+        currency,
+        created_at,
+        updated_at
+      FROM blockchain.wallets
+      WHERE wallet_address = $1
+      LIMIT 1;
+    `;
+
+    const result = await pool.query(query, [walletAddress]);
+
+    return result.rows[0] || null;
+  }
+
+  async getWalletBalanceFromDatabase(walletAddress) {
+    const pool = databaseService.getPool();
+
+    const query = `
+      SELECT
+        wallet_address,
+        customer_id,
+        current_balance,
+        currency,
+        wallet_status,
+        updated_at
+      FROM blockchain.wallets
+      WHERE wallet_address = $1
+      LIMIT 1;
+    `;
+
+    const result = await pool.query(query, [walletAddress]);
+
+    return result.rows[0] || null;
+  }
+
+  async getWalletHistoryFromDatabase(walletAddress, limit, offset) {
+    const pool = databaseService.getPool();
+
+    const tableCheckQuery = `
+      SELECT table_name
+      FROM information_schema.tables
+      WHERE table_schema = 'blockchain'
+        AND table_name IN (
+          'transactions',
+          'blockchain_transaction',
+          'fabric_transactions'
+        )
+      ORDER BY
+        CASE table_name
+          WHEN 'transactions' THEN 1
+          WHEN 'blockchain_transaction' THEN 2
+          WHEN 'fabric_transactions' THEN 3
+          ELSE 99
+        END
+      LIMIT 1;
+    `;
+
+    const tableCheckResult = await pool.query(tableCheckQuery);
+
+    if (!tableCheckResult.rows.length) {
+      logger.warn("No transaction table found in schema blockchain", {
+        walletAddress,
+      });
+
+      return {
+        total: 0,
+        transactions: [],
+      };
+    }
+
+    const tableName = tableCheckResult.rows[0].table_name;
+    const fullTableName = `blockchain.${tableName}`;
+
+    const columnsResult = await pool.query(
+      `
+      SELECT column_name
+      FROM information_schema.columns
+      WHERE table_schema = 'blockchain'
+        AND table_name = $1;
+      `,
+      [tableName]
+    );
+
+    const columns = columnsResult.rows.map((row) => row.column_name);
+
+    const hasFromWalletAddress = columns.includes("from_wallet_address");
+    const hasToWalletAddress = columns.includes("to_wallet_address");
+    const hasSenderWalletAddress = columns.includes("sender_wallet_address");
+    const hasReceiverWalletAddress = columns.includes("receiver_wallet_address");
+
+    let whereClause = null;
+
+    if (hasFromWalletAddress && hasToWalletAddress) {
+      whereClause = `
+        WHERE from_wallet_address = $1
+           OR to_wallet_address = $1
+      `;
+    } else if (hasSenderWalletAddress && hasReceiverWalletAddress) {
+      whereClause = `
+        WHERE sender_wallet_address = $1
+           OR receiver_wallet_address = $1
+      `;
+    } else {
+      logger.warn("Transaction table does not have wallet address columns", {
+        fullTableName,
+        walletAddress,
+      });
+
+      return {
+        total: 0,
+        transactions: [],
+      };
+    }
+
+    const selectTransactionId = columns.includes("transaction_id")
+      ? "transaction_id"
+      : columns.includes("id")
+      ? "id AS transaction_id"
+      : "NULL AS transaction_id";
+
+    const selectRequestId = columns.includes("request_id")
+      ? "request_id"
+      : "NULL AS request_id";
+
+    const selectFabricTransactionId = columns.includes("fabric_transaction_id")
+      ? "fabric_transaction_id"
+      : columns.includes("fabric_tx_id")
+      ? "fabric_tx_id AS fabric_transaction_id"
+      : "NULL AS fabric_transaction_id";
+
+    const selectFromWalletAddress = hasFromWalletAddress
+      ? "from_wallet_address"
+      : hasSenderWalletAddress
+      ? "sender_wallet_address AS from_wallet_address"
+      : "NULL AS from_wallet_address";
+
+    const selectToWalletAddress = hasToWalletAddress
+      ? "to_wallet_address"
+      : hasReceiverWalletAddress
+      ? "receiver_wallet_address AS to_wallet_address"
+      : "NULL AS to_wallet_address";
+
+    const selectAmount = columns.includes("amount")
+      ? "amount"
+      : "0 AS amount";
+
+    const selectCurrency = columns.includes("currency")
+      ? "currency"
+      : "'TOKEN' AS currency";
+
+    const selectTransactionType = columns.includes("transaction_type")
+      ? "transaction_type"
+      : "'WALLET_TO_WALLET' AS transaction_type";
+
+    const selectTransactionPurpose = columns.includes("transaction_purpose")
+      ? "transaction_purpose"
+      : "NULL AS transaction_purpose";
+
+    const selectTransactionDescription = columns.includes("transaction_description")
+      ? "transaction_description"
+      : "NULL AS transaction_description";
+
+    const selectTransactionStatus = columns.includes("transaction_status")
+      ? "transaction_status"
+      : columns.includes("status")
+      ? "status AS transaction_status"
+      : "'UNKNOWN' AS transaction_status";
+
+    const selectRiskLevel = columns.includes("risk_level")
+      ? "risk_level"
+      : "'LOW' AS risk_level";
+
+    const selectCreatedAt = columns.includes("created_at")
+      ? "created_at"
+      : "NULL AS created_at";
+
+    const orderBy = columns.includes("created_at")
+      ? "ORDER BY created_at DESC"
+      : "ORDER BY transaction_id DESC";
+
+    const countQuery = `
+      SELECT COUNT(*)::INT AS total
+      FROM ${fullTableName}
+      ${whereClause};
+    `;
+
+    const dataQuery = `
+      SELECT
+        ${selectTransactionId},
+        ${selectRequestId},
+        ${selectFabricTransactionId},
+        ${selectFromWalletAddress},
+        ${selectToWalletAddress},
+        ${selectAmount},
+        ${selectCurrency},
+        ${selectTransactionType},
+        ${selectTransactionPurpose},
+        ${selectTransactionDescription},
+        ${selectTransactionStatus},
+        ${selectRiskLevel},
+        ${selectCreatedAt}
+      FROM ${fullTableName}
+      ${whereClause}
+      ${orderBy}
+      LIMIT $2 OFFSET $3;
+    `;
+
+    const countResult = await pool.query(countQuery, [walletAddress]);
+    const dataResult = await pool.query(dataQuery, [
+      walletAddress,
+      limit,
+      offset,
+    ]);
+
+    return {
+      total: countResult.rows[0]?.total || 0,
+      transactions: dataResult.rows,
+    };
+  }
+}
+
+module.exports = new WalletQueryService();
+==================================================
+FILE: blockchain-api/src/services/transaction.service.js
+==================================================
+'use strict';
+
+/**
+ * STEP 32.2 — Transaction Service
+ * Blockchain Integration Project
+ *
+ * Rules:
+ * - Wallet-to-wallet transfer is allowed only from CUSTOMER wallet.
+ * - Organization transfer is allowed only from ORGANIZATION wallet.
+ * - Organization transfer receiver must be ORGANIZATION wallet.
+ */
+
+const crypto = require('crypto');
+const db = require('../config/database');
+
+function getPool() {
+  if (db.pool) return db.pool;
+
+  if (typeof db.getPool === 'function') return db.getPool();
+
+  if (typeof db.connect === 'function' && typeof db.query === 'function') return db;
+
+  throw new Error('PostgreSQL pool not found in src/config/database.js');
+}
+
+async function tableExists(client, schemaName, tableName) {
+  const result = await client.query(
+    `
+    SELECT EXISTS (
+      SELECT 1
+      FROM information_schema.tables
+      WHERE table_schema = $1
+        AND table_name = $2
+    ) AS exists
+    `,
+    [schemaName, tableName]
+  );
+
+  return result.rows[0]?.exists === true;
+}
+
+async function resolveWalletTable(client) {
+  if (await tableExists(client, 'blockchain', 'wallets')) {
+    return 'wallets';
+  }
+
+  if (await tableExists(client, 'blockchain', 'blockchain_wallet')) {
+    return 'blockchain_wallet';
+  }
+
+  throw new Error('No wallet table found. Expected blockchain.wallets or blockchain.blockchain_wallet');
+}
+
+async function resolveTransactionTable(client) {
+  if (await tableExists(client, 'blockchain', 'transactions')) {
+    return 'transactions';
+  }
+
+  if (await tableExists(client, 'blockchain', 'blockchain_transaction')) {
+    return 'blockchain_transaction';
+  }
+
+  throw new Error('No transaction table found. Expected blockchain.transactions or blockchain.blockchain_transaction');
+}
+
+async function getTableColumns(client, schemaName, tableName) {
+  const result = await client.query(
+    `
+    SELECT column_name
+    FROM information_schema.columns
+    WHERE table_schema = $1
+      AND table_name = $2
+    ORDER BY ordinal_position
+    `,
+    [schemaName, tableName]
+  );
+
+  return result.rows.map((row) => row.column_name);
+}
+
+function pickColumn(columns, candidates) {
+  return candidates.find((column) => columns.includes(column)) || null;
+}
+
+function getAny(obj, keys, defaultValue = null) {
+  for (const key of keys) {
+    if (obj && obj[key] !== undefined && obj[key] !== null) {
+      return obj[key];
+    }
+  }
+
+  return defaultValue;
+}
+
+function normalizeWalletType(value) {
+  const walletType = String(value || 'CUSTOMER').trim().toUpperCase();
+
+  if (walletType === 'ORGANIZATION' || walletType === 'ORG') {
+    return 'ORGANIZATION';
+  }
+
+  return 'CUSTOMER';
+}
+
+function normalizeWallet(row) {
+  if (!row) return null;
+
+  return {
+    walletId: getAny(row, ['wallet_id', 'walletId']),
+    walletAddress: getAny(row, ['wallet_address', 'walletAddress']),
+    customerId: getAny(row, ['customer_id', 'customerId']),
+    organizationId: getAny(row, ['organization_id', 'organizationId']),
+    organizationName: getAny(row, ['organization_name', 'organizationName']),
+    organizationCode: getAny(row, ['organization_code', 'organizationCode']),
+    fullName: getAny(row, ['full_name', 'fullName']),
+    walletType: normalizeWalletType(getAny(row, ['wallet_type', 'walletType'], 'CUSTOMER')),
+    currentBalance: Number(getAny(row, ['current_balance', 'currentBalance'], 0)),
+    currencyCode: getAny(row, ['currency_code', 'currencyCode', 'currency'], 'USD'),
+    status: getAny(row, ['status', 'wallet_status', 'walletStatus'], 'ACTIVE'),
+    createdAt: getAny(row, ['created_at', 'createdAt']),
+    updatedAt: getAny(row, ['updated_at', 'updatedAt'])
+  };
+}
+
+function normalizeTransaction(row) {
+  if (!row) return null;
+
+  return {
+    transactionId: getAny(row, ['transaction_id', 'transactionId', 'id']),
+    requestId: getAny(row, ['request_id', 'requestId']),
+    transactionType: getAny(row, ['transaction_type', 'transactionType', 'type']),
+    senderWalletAddress: getAny(row, ['sender_wallet_address', 'senderWalletAddress', 'from_wallet_address']),
+    receiverWalletAddress: getAny(row, ['receiver_wallet_address', 'receiverWalletAddress', 'to_wallet_address']),
+    organizationId: getAny(row, ['organization_id', 'organizationId']),
+    organizationName: getAny(row, ['organization_name', 'organizationName']),
+    amount: getAny(row, ['amount', 'transaction_amount', 'transactionAmount'], 0),
+    currency: getAny(row, ['currency', 'currency_code', 'currencyCode'], 'USD'),
+    status: getAny(row, ['status', 'transaction_status', 'transactionStatus']),
+    transactionPurpose: getAny(row, ['transaction_purpose', 'transactionPurpose', 'purpose']),
+    transactionDescription: getAny(row, ['transaction_description', 'transactionDescription', 'description']),
+    requestSource: getAny(row, ['request_source', 'requestSource', 'source']),
+    sourceSystem: getAny(row, ['source_system', 'sourceSystem']),
+    createdBy: getAny(row, ['created_by', 'createdBy']),
+    createdAt: getAny(row, ['created_at', 'createdAt']),
+    updatedAt: getAny(row, ['updated_at', 'updatedAt']),
+    raw: row
+  };
+}
+
+function buildInsertQuery(schemaName, tableName, valuesByColumn, existingColumns) {
+  const columns = [];
+  const values = [];
+  const placeholders = [];
+
+  Object.entries(valuesByColumn).forEach(([column, value]) => {
+    if (existingColumns.includes(column)) {
+      columns.push(column);
+      values.push(value);
+      placeholders.push(`$${values.length}`);
+    }
+  });
+
+  if (columns.length === 0) {
+    throw new Error(`No matching columns found for insert into ${schemaName}.${tableName}`);
+  }
+
+  return {
+    query: `
+      INSERT INTO ${schemaName}.${tableName} (${columns.join(', ')})
+      VALUES (${placeholders.join(', ')})
+      RETURNING *
+    `,
+    values
+  };
+}
+
+async function getWalletByAddressInternal(client, walletAddress) {
+  const walletTable = await resolveWalletTable(client);
+
+  const result = await client.query(
+    `
+    SELECT *
+    FROM blockchain.${walletTable}
+    WHERE wallet_address = $1
+    LIMIT 1
+    `,
+    [walletAddress]
+  );
+
+  return normalizeWallet(result.rows[0]);
+}
+
+async function updateWalletBalance(client, walletAddress, amountDelta) {
+  const walletTable = await resolveWalletTable(client);
+  const walletColumns = await getTableColumns(client, 'blockchain', walletTable);
+
+  const balanceColumn = pickColumn(walletColumns, ['current_balance', 'current_Balance']);
+  const updatedAtColumn = pickColumn(walletColumns, ['updated_at', 'updatedAt']);
+
+  if (!balanceColumn) {
+    throw new Error(`Wallet balance column not found in blockchain.${walletTable}`);
+  }
+
+  const setClauses = [
+    `${balanceColumn} = COALESCE(${balanceColumn}, 0) + $1`
+  ];
+
+  if (updatedAtColumn) {
+    setClauses.push(`${updatedAtColumn} = NOW()`);
+  }
+
+  await client.query(
+    `
+    UPDATE blockchain.${walletTable}
+    SET ${setClauses.join(', ')}
+    WHERE wallet_address = $2
+    `,
+    [amountDelta, walletAddress]
+  );
+}
+
+async function insertTransaction(client, transactionData) {
+  const transactionTable = await resolveTransactionTable(client);
+  const transactionColumns = await getTableColumns(client, 'blockchain', transactionTable);
+
+  const transactionId = transactionData.transactionId || crypto.randomUUID();
+
+  const valuesByColumn = {
+    transaction_id: transactionId,
+    id: transactionId,
+
+    request_id: transactionData.requestId,
+
+    transaction_type: transactionData.transactionType,
+    type: transactionData.transactionType,
+
+    sender_wallet_address: transactionData.senderWalletAddress,
+    from_wallet_address: transactionData.senderWalletAddress,
+
+    receiver_wallet_address: transactionData.receiverWalletAddress,
+    to_wallet_address: transactionData.receiverWalletAddress,
+
+    organization_id: transactionData.organizationId,
+    organization_name: transactionData.organizationName,
+
+    amount: transactionData.amount,
+    transaction_amount: transactionData.amount,
+
+    currency: transactionData.currency,
+    currency_code: transactionData.currency,
+
+    transaction_purpose: transactionData.transactionPurpose,
+    purpose: transactionData.transactionPurpose,
+
+    transaction_description: transactionData.transactionDescription,
+    description: transactionData.transactionDescription,
+
+    status: transactionData.dbStatus || transactionData.status || 'CONFIRMED',
+    transaction_status: transactionData.transactionStatus || transactionData.status || 'COMPLETED',
+    fabric_status: transactionData.fabricStatus || 'PENDING',
+
+    request_source: transactionData.requestSource,
+    source: transactionData.requestSource,
+
+    source_system: transactionData.sourceSystem,
+
+    created_by: transactionData.createdBy,
+    created_at: new Date(),
+    updated_at: new Date()
+  };
+
+  const insert = buildInsertQuery(
+    'blockchain',
+    transactionTable,
+    valuesByColumn,
+    transactionColumns
+  );
+
+  const result = await client.query(insert.query, insert.values);
+
+  return normalizeTransaction(result.rows[0]);
+}
+
+async function walletTransfer(payload, context = {}) {
+  const senderWalletAddress = payload.senderWalletAddress;
+  const receiverWalletAddress = payload.receiverWalletAddress;
+  const amount = payload.amount;
+  const currency = payload.currency || 'USD';
+
+  if (!senderWalletAddress) {
+    return {
+      success: false,
+      message: 'Sender wallet address is required',
+      errorCode: 'SENDER_WALLET_REQUIRED',
+      data: null
+    };
+  }
+
+  if (!receiverWalletAddress) {
+    return {
+      success: false,
+      message: 'Receiver wallet address is required',
+      errorCode: 'RECEIVER_WALLET_REQUIRED',
+      data: null
+    };
+  }
+
+  if (senderWalletAddress === receiverWalletAddress) {
+    return {
+      success: false,
+      message: 'Sender wallet address and receiver wallet address cannot be the same',
+      errorCode: 'SAME_WALLET_TRANSFER_NOT_ALLOWED',
+      data: null
+    };
+  }
+
+  const transferAmount = Number(amount);
+
+  if (!Number.isFinite(transferAmount) || transferAmount <= 0) {
+    return {
+      success: false,
+      message: 'Transfer amount must be greater than zero',
+      errorCode: 'INVALID_AMOUNT',
+      data: null
+    };
+  }
+
+  const pool = getPool();
+  const client = await pool.connect();
+
+  try {
+    await client.query('BEGIN');
+
+    const senderWallet = await getWalletByAddressInternal(client, senderWalletAddress);
+
+    if (!senderWallet) {
+      await client.query('ROLLBACK');
+
+      return {
+        success: false,
+        message: 'Sender wallet not found',
+        errorCode: 'SENDER_WALLET_NOT_FOUND',
+        data: null
+      };
+    }
+
+    if (senderWallet.walletType !== 'CUSTOMER') {
+      await client.query('ROLLBACK');
+
+      return {
+        success: false,
+        message: 'Wallet-to-wallet transfer is allowed only when logged in using a customer wallet',
+        errorCode: 'CUSTOMER_WALLET_REQUIRED',
+        data: {
+          senderWalletAddress,
+          senderWalletType: senderWallet.walletType
+        }
+      };
+    }
+
+    const receiverWallet = await getWalletByAddressInternal(client, receiverWalletAddress);
+
+    if (!receiverWallet) {
+      await client.query('ROLLBACK');
+
+      return {
+        success: false,
+        message: 'Receiver wallet not found',
+        errorCode: 'RECEIVER_WALLET_NOT_FOUND',
+        data: null
+      };
+    }
+
+    if (receiverWallet.walletType !== 'CUSTOMER') {
+      await client.query('ROLLBACK');
+
+      return {
+        success: false,
+        message: 'Wallet-to-wallet receiver must be a customer wallet',
+        errorCode: 'RECEIVER_CUSTOMER_WALLET_REQUIRED',
+        data: {
+          receiverWalletAddress,
+          receiverWalletType: receiverWallet.walletType
+        }
+      };
+    }
+
+    const senderBalance = Number(senderWallet.currentBalance || 0);
+
+    if (senderBalance < transferAmount) {
+      await client.query('ROLLBACK');
+
+      return {
+        success: false,
+        message: `Insufficient wallet balance. Current balance is ${senderBalance}.`,
+        errorCode: 'INSUFFICIENT_BALANCE',
+        data: {
+          senderWalletAddress,
+          currentBalance: senderBalance,
+          requestedAmount: transferAmount,
+          currency: senderWallet.currencyCode || currency
+        }
+      };
+    }
+
+    const requestId =
+      context.requestId ||
+      payload.requestId ||
+      `REQ_${Date.now()}_${crypto.randomBytes(6).toString('hex').toUpperCase()}`;
+
+    const transactionId = crypto.randomUUID();
+
+    const normalizedCurrency =
+      currency ||
+      senderWallet.currencyCode ||
+      receiverWallet.currencyCode ||
+      'USD';
+
+    await updateWalletBalance(client, senderWalletAddress, -transferAmount);
+    await updateWalletBalance(client, receiverWalletAddress, transferAmount);
+
+    const updatedSenderWallet = await getWalletByAddressInternal(client, senderWalletAddress);
+    const updatedReceiverWallet = await getWalletByAddressInternal(client, receiverWalletAddress);
+
+    const transaction = await insertTransaction(client, {
+      transactionId,
+      requestId,
+      transactionType: 'TRANSFER',
+      senderWalletAddress,
+      receiverWalletAddress,
+      organizationId: null,
+      organizationName: null,
+      amount: transferAmount,
+      currency: normalizedCurrency,
+      transactionPurpose: payload.transactionPurpose || 'Wallet transfer test',
+      transactionDescription:
+        payload.transactionDescription || 'Wallet-to-wallet transfer from Blockchain API',
+      status: 'CONFIRMED',
+      dbStatus: 'PENDING',
+      transactionStatus: 'CONFIRMED',
+      fabricStatus: 'PENDING',
+      requestSource: payload.requestSource || 'BLOCKCHAIN_API',
+      sourceSystem: payload.sourceSystem || 'BLOCKCHAIN_API',
+      createdBy: payload.createdBy || 'system'
+    });
+
+    await client.query('COMMIT');
+
+    return {
+      success: true,
+      message: 'Wallet-to-wallet transfer completed successfully',
+      data: {
+        transactionId,
+        requestId,
+        transactionType: 'TRANSFER',
+        senderWalletAddress,
+        receiverWalletAddress,
+        amount: String(transferAmount),
+        currency: normalizedCurrency,
+        status: 'CONFIRMED',
+        senderBalanceBefore: senderBalance,
+        senderBalanceAfter: Number(updatedSenderWallet?.currentBalance || 0),
+        receiverBalanceAfter: Number(updatedReceiverWallet?.currentBalance || 0),
+        transaction
+      }
+    };
+  } catch (error) {
+    await client.query('ROLLBACK');
+
+    console.error('[STEP32_WALLET_TRANSFER_DB_ERROR]', {
+      code: error.code,
+      message: error.message,
+      detail: error.detail,
+      constraint: error.constraint,
+      table: error.table,
+      column: error.column,
+      schema: error.schema
+    });
+
+    error.message = `Wallet transfer failed: ${error.message}`;
+    error.debug = {
+      code: error.code,
+      detail: error.detail,
+      constraint: error.constraint,
+      table: error.table,
+      column: error.column,
+      schema: error.schema
+    };
+
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+async function organizationTransfer(payload, context = {}) {
+  const senderWalletAddress = payload.senderWalletAddress;
+  const receiverWalletAddress = payload.receiverWalletAddress;
+  const amount = payload.amount;
+  const currency = payload.currency || 'USD';
+
+  if (!senderWalletAddress) {
+    return {
+      success: false,
+      message: 'Sender organization wallet address is required',
+      errorCode: 'SENDER_ORGANIZATION_WALLET_REQUIRED',
+      data: null
+    };
+  }
+
+  if (!receiverWalletAddress) {
+    return {
+      success: false,
+      message: 'Receiver organization wallet address is required',
+      errorCode: 'RECEIVER_WALLET_REQUIRED',
+      data: null
+    };
+  }
+
+  if (senderWalletAddress === receiverWalletAddress) {
+    return {
+      success: false,
+      message: 'Sender wallet address and receiver wallet address cannot be the same',
+      errorCode: 'SAME_WALLET_TRANSFER_NOT_ALLOWED',
+      data: null
+    };
+  }
+
+  const transferAmount = Number(amount);
+
+  if (!Number.isFinite(transferAmount) || transferAmount <= 0) {
+    return {
+      success: false,
+      message: 'Transfer amount must be greater than zero',
+      errorCode: 'INVALID_AMOUNT',
+      data: null
+    };
+  }
+
+  const pool = getPool();
+  const client = await pool.connect();
+
+  try {
+    await client.query('BEGIN');
+
+    const senderWallet = await getWalletByAddressInternal(client, senderWalletAddress);
+
+    if (!senderWallet) {
+      await client.query('ROLLBACK');
+
+      return {
+        success: false,
+        message: 'Sender organization wallet not found',
+        errorCode: 'SENDER_WALLET_NOT_FOUND',
+        data: null
+      };
+    }
+
+    if (senderWallet.walletType !== 'ORGANIZATION') {
+      await client.query('ROLLBACK');
+
+      return {
+        success: false,
+        message: 'Organization transfer is allowed only when logged in using an organization wallet',
+        errorCode: 'ORGANIZATION_WALLET_REQUIRED',
+        data: {
+          senderWalletAddress,
+          senderWalletType: senderWallet.walletType
+        }
+      };
+    }
+
+    const receiverWallet = await getWalletByAddressInternal(client, receiverWalletAddress);
+
+    if (!receiverWallet) {
+      await client.query('ROLLBACK');
+
+      return {
+        success: false,
+        message: 'Receiver organization wallet not found',
+        errorCode: 'RECEIVER_WALLET_NOT_FOUND',
+        data: null
+      };
+    }
+
+    if (receiverWallet.walletType !== 'ORGANIZATION') {
+      await client.query('ROLLBACK');
+
+      return {
+        success: false,
+        message: 'Organization transfer receiver must be an organization wallet',
+        errorCode: 'RECEIVER_ORGANIZATION_WALLET_REQUIRED',
+        data: {
+          receiverWalletAddress,
+          receiverWalletType: receiverWallet.walletType
+        }
+      };
+    }
+
+    const senderBalance = Number(senderWallet.currentBalance || 0);
+
+    if (senderBalance < transferAmount) {
+      await client.query('ROLLBACK');
+
+      return {
+        success: false,
+        message: `Insufficient organization wallet balance. Current balance is ${senderBalance}.`,
+        errorCode: 'INSUFFICIENT_BALANCE',
+        data: {
+          senderWalletAddress,
+          currentBalance: senderBalance,
+          requestedAmount: transferAmount,
+          currency: senderWallet.currencyCode || currency
+        }
+      };
+    }
+
+    const requestId =
+      context.requestId ||
+      payload.requestId ||
+      `REQ_${Date.now()}_${crypto.randomBytes(6).toString('hex').toUpperCase()}`;
+
+    const transactionId = crypto.randomUUID();
+
+    const normalizedCurrency =
+      currency ||
+      senderWallet.currencyCode ||
+      receiverWallet.currencyCode ||
+      'USD';
+
+    await updateWalletBalance(client, senderWalletAddress, -transferAmount);
+    await updateWalletBalance(client, receiverWalletAddress, transferAmount);
+
+    const updatedSenderWallet = await getWalletByAddressInternal(client, senderWalletAddress);
+    const updatedReceiverWallet = await getWalletByAddressInternal(client, receiverWalletAddress);
+
+    const transaction = await insertTransaction(client, {
+      transactionId,
+      requestId,
+      transactionType: 'ORGANIZATION_TRANSFER',
+      senderWalletAddress,
+      receiverWalletAddress,
+      organizationId: null,
+      organizationName: null,
+      amount: transferAmount,
+      currency: normalizedCurrency,
+      transactionPurpose:
+        payload.transactionPurpose ||
+        'Organization-to-organization transfer',
+      transactionDescription:
+        payload.transactionDescription ||
+        'Organization wallet transfers to another organization wallet',
+      status: 'CONFIRMED',
+      dbStatus: 'PENDING',
+      transactionStatus: 'CONFIRMED',
+      fabricStatus: 'PENDING',
+      requestSource: payload.requestSource || 'BLOCKCHAIN_API',
+      sourceSystem: payload.sourceSystem || 'BLOCKCHAIN_API',
+      createdBy: payload.createdBy || 'system'
+    });
+
+    await client.query('COMMIT');
+
+    return {
+      success: true,
+      message: 'Organization-to-organization transfer completed successfully',
+      data: {
+        transactionId,
+        requestId,
+        transactionType: 'ORGANIZATION_TRANSFER',
+        senderWalletAddress,
+        receiverWalletAddress,
+        senderOrganizationId: senderWallet.organizationId,
+        receiverOrganizationId: receiverWallet.organizationId,
+        amount: String(transferAmount),
+        currency: normalizedCurrency,
+        status: 'CONFIRMED',
+        senderBalanceBefore: senderBalance,
+        senderBalanceAfter: Number(updatedSenderWallet?.currentBalance || 0),
+        receiverBalanceAfter: Number(updatedReceiverWallet?.currentBalance || 0),
+        transaction
+      }
+    };
+  } catch (error) {
+    await client.query('ROLLBACK');
+
+    console.error('[STEP32_2_ORGANIZATION_TRANSFER_DB_ERROR]', {
+      code: error.code,
+      message: error.message,
+      detail: error.detail,
+      constraint: error.constraint,
+      table: error.table,
+      column: error.column,
+      schema: error.schema
+    });
+
+    error.message = `Organization transfer failed: ${error.message}`;
+    error.debug = {
+      code: error.code,
+      detail: error.detail,
+
+==================================================
+FILE: blockchain-api/src/services/database.service.js
+==================================================
+const path = require("path");
+const dotenv = require("dotenv");
+const { Pool } = require("pg");
+
+/**
+ * Load .env here also.
+ *
+ * This protects every standalone service/script from using undefined env values
+ * when database.service.js is required before server.js loads dotenv.
+ */
+dotenv.config({
+  path: path.resolve(process.cwd(), ".env"),
+});
+
+class DatabaseService {
+  constructor() {
+    const host = process.env.POSTGRES_HOST;
+    const port = Number(process.env.POSTGRES_PORT || 5444);
+    const database =
+      process.env.POSTGRES_DB ||
+      process.env.POSTGRES_DATABASE;
+
+    const user = process.env.POSTGRES_USER;
+    const password = process.env.POSTGRES_PASSWORD;
+
+    if (!host) {
+      throw new Error("POSTGRES_HOST is missing from .env");
+    }
+
+    if (!database) {
+      throw new Error("POSTGRES_DB or POSTGRES_DATABASE is missing from .env");
+    }
+
+    if (!user) {
+      throw new Error("POSTGRES_USER is missing from .env");
+    }
+
+    this.pool = new Pool({
+      host,
+      port,
+      database,
+      user,
+      password,
+      max: Number(process.env.POSTGRES_POOL_MAX || 10),
+      idleTimeoutMillis: Number(process.env.POSTGRES_IDLE_TIMEOUT_MS || 30000),
+      connectionTimeoutMillis: Number(
+        process.env.POSTGRES_CONNECTION_TIMEOUT_MS || 5000
+      ),
+      ssl:
+        String(process.env.POSTGRES_SSL || "false").toLowerCase() === "true"
+          ? { rejectUnauthorized: false }
+          : false,
+    });
+
+    console.log("[DB] PostgreSQL pool initialized", {
+      host,
+      port,
+      database,
+      user,
+      ssl: String(process.env.POSTGRES_SSL || "false"),
+    });
+  }
+
+  getPool() {
+    return this.pool;
+  }
+
+  async testConnection() {
+    const client = await this.pool.connect();
+
+    try {
+      const result = await client.query(`
+        SELECT
+          current_database() AS database_name,
+          current_schema() AS schema_name,
+          NOW() AS current_time;
+      `);
+
+      return {
+        success: true,
+        database: result.rows[0].database_name,
+        schema: result.rows[0].schema_name,
+        currentTime: result.rows[0].current_time,
+      };
+    } finally {
+      client.release();
+    }
+  }
+}
+
+module.exports = new DatabaseService();
+==================================================
+FILE: blockchain-api/src/services/fabric.service.js
+==================================================
+'use strict';
+
+const path = require('path');
+const fs = require('fs');
+const crypto = require('crypto');
+
+const grpc = require('@grpc/grpc-js');
+const { connect, signers } = require('@hyperledger/fabric-gateway');
+
+const auditService = require('./audit.service');
+
+const {
+  AUDIT_EVENT_TYPES,
+  AUDIT_EVENT_STATUS,
+  AUDIT_EVENT_CATEGORY
+} = require('../constants/audit.constants');
+
+class FabricService {
+  constructor() {
+    this.gateway = null;
+    this.client = null;
+    this.network = null;
+    this.contract = null;
+  }
+
+  getConfig() {
+    return {
+      channelName:
+        process.env.FABRIC_CHANNEL_NAME ||
+        process.env.CHANNEL_NAME ||
+        'kycchannelnix1',
+
+      chaincodeName:
+        process.env.FABRIC_CHAINCODE_NAME ||
+        process.env.CHAINCODE_NAME ||
+        'kyc-wallet-chaincode-js',
+
+      mspId:
+        process.env.FABRIC_MSP_ID ||
+        process.env.MSP_ID ||
+        'Org1MSP',
+
+      peerEndpoint:
+        process.env.FABRIC_PEER_ENDPOINT ||
+        process.env.PEER_ENDPOINT ||
+        process.env.GRPC_PEER_ENDPOINT ||
+        'peer0.org1.blockchain.local:7051',
+
+      peerHostAlias:
+        process.env.FABRIC_PEER_HOST_ALIAS ||
+        process.env.PEER_HOST_ALIAS ||
+        process.env.GRPC_PEER_HOST_ALIAS ||
+        'peer0.org1.blockchain.local',
+
+      tlsCertPath:
+        process.env.FABRIC_TLS_CERT_PATH ||
+        process.env.TLS_CERT_PATH ||
+        process.env.PEER_TLS_CERT_PATH ||
+        process.env.CORE_PEER_TLS_ROOTCERT_FILE ||
+        null,
+
+      certPath:
+        process.env.FABRIC_CERT_PATH ||
+        process.env.CERT_PATH ||
+        process.env.IDENTITY_CERT_PATH ||
+        null,
+
+      keyDirectoryPath:
+        process.env.FABRIC_KEY_DIRECTORY_PATH ||
+        process.env.KEY_DIRECTORY_PATH ||
+        process.env.PRIVATE_KEY_DIRECTORY_PATH ||
+        null,
+
+      evaluateTimeoutMs: Number(
+        process.env.FABRIC_EVALUATE_TIMEOUT_MS ||
+        process.env.FABRIC_DEFAULT_TIMEOUT_MS ||
+        10000
+      ),
+
+      endorseTimeoutMs: Number(
+        process.env.FABRIC_ENDORSE_TIMEOUT_MS ||
+        process.env.FABRIC_DEFAULT_TIMEOUT_MS ||
+        30000
+      ),
+
+      submitTimeoutMs: Number(
+        process.env.FABRIC_SUBMIT_TIMEOUT_MS ||
+        process.env.FABRIC_DEFAULT_TIMEOUT_MS ||
+        30000
+      ),
+
+      commitStatusTimeoutMs: Number(
+        process.env.FABRIC_COMMIT_STATUS_TIMEOUT_MS ||
+        process.env.FABRIC_DEFAULT_TIMEOUT_MS ||
+        60000
+      ),
+      endorsingOrganizations: String(
+        process.env.FABRIC_ENDORSING_ORGS ||
+        process.env.FABRIC_ENDORSING_ORGANIZATIONS ||
+        process.env.FABRIC_MSP_ID ||
+        'Org1MSP'
+      )
+        .split(',')
+        .map((item) => item.trim())
+        .filter(Boolean)
+    };
+  }
+
+  assertFileExists(filePath, label) {
+    if (!filePath) {
+      throw new Error(`${label} is not configured`);
+    }
+
+    if (!fs.existsSync(filePath)) {
+      throw new Error(`${label} does not exist: ${filePath}`);
+    }
+  }
+
+  assertDirectoryExists(directoryPath, label) {
+    if (!directoryPath) {
+      throw new Error(`${label} is not configured`);
+    }
+
+    if (!fs.existsSync(directoryPath)) {
+      throw new Error(`${label} does not exist: ${directoryPath}`);
+    }
+
+    const stat = fs.statSync(directoryPath);
+
+    if (!stat.isDirectory()) {
+      throw new Error(`${label} is not a directory: ${directoryPath}`);
+    }
+  }
+
+  async newGrpcConnection() {
+    const config = this.getConfig();
+
+    this.assertFileExists(config.tlsCertPath, 'FABRIC_TLS_CERT_PATH');
+
+    const tlsRootCert = fs.readFileSync(config.tlsCertPath);
+    const tlsCredentials = grpc.credentials.createSsl(tlsRootCert);
+
+    return new grpc.Client(config.peerEndpoint, tlsCredentials, {
+      'grpc.ssl_target_name_override': config.peerHostAlias
+    });
+  }
+
+  async newIdentity() {
+    const config = this.getConfig();
+
+    this.assertFileExists(config.certPath, 'FABRIC_CERT_PATH');
+
+    const credentials = fs.readFileSync(config.certPath);
+
+    return {
+      mspId: config.mspId,
+      credentials
+    };
+  }
+
+  async newSigner() {
+    const config = this.getConfig();
+
+    this.assertDirectoryExists(
+      config.keyDirectoryPath,
+      'FABRIC_KEY_DIRECTORY_PATH'
+    );
+
+    const files = fs
+      .readdirSync(config.keyDirectoryPath)
+      .filter((file) => !file.startsWith('.'));
+
+    if (!files || files.length === 0) {
+      throw new Error(
+        `No private key found inside FABRIC_KEY_DIRECTORY_PATH: ${config.keyDirectoryPath}`
+      );
+    }
+
+    const keyPath = path.join(config.keyDirectoryPath, files[0]);
+    const privateKeyPem = fs.readFileSync(keyPath);
+    const privateKey = crypto.createPrivateKey(privateKeyPem);
+
+    return signers.newPrivateKeySigner(privateKey);
+  }
+
+  async connect() {
+    if (this.gateway && this.contract) {
+      return {
+        gateway: this.gateway,
+        client: this.client,
+        network: this.network,
+        contract: this.contract
+      };
+    }
+
+    const config = this.getConfig();
+
+    this.client = await this.newGrpcConnection();
+
+    this.gateway = connect({
+      client: this.client,
+      identity: await this.newIdentity(),
+      signer: await this.newSigner(),
+      evaluateOptions: () => {
+        return { deadline: Date.now() + config.evaluateTimeoutMs };
+      },
+      endorseOptions: () => {
+        return { deadline: Date.now() + config.endorseTimeoutMs };
+      },
+      submitOptions: () => {
+        return { deadline: Date.now() + config.submitTimeoutMs };
+      },
+      commitStatusOptions: () => {
+        return { deadline: Date.now() + config.commitStatusTimeoutMs };
+      }
+    });
+
+    this.network = this.gateway.getNetwork(config.channelName);
+    this.contract = this.network.getContract(config.chaincodeName);
+
+    return {
+      gateway: this.gateway,
+      client: this.client,
+      network: this.network,
+      contract: this.contract
+    };
+  }
+
+  parseBufferResult(buffer) {
+    if (!buffer) return null;
+
+    const text = Buffer.from(buffer).toString('utf8');
+
+    if (!text) return null;
+
+    try {
+      return JSON.parse(text);
+    } catch {
+      return text;
+    }
+  }
+
+  normalizeContext(context = {}) {
+    return {
+      requestId: context.requestId || context.request_id || null,
+      correlationId: context.correlationId || context.correlation_id || null,
+      sourceSystem:
+        context.sourceSystem ||
+        context.source_system ||
+        'BLOCKCHAIN_API',
+      requestSource:
+        context.requestSource ||
+        context.request_source ||
+        'API',
+      createdBy:
+        context.createdBy ||
+        context.created_by ||
+        'system'
+    };
+  }
+
+  async submitTransaction(functionName, args = [], context = {}) {
+    const startedAt = Date.now();
+    const config = this.getConfig();
+    const auditContext = this.normalizeContext(context);
+
+    try {
+      await auditService.log({
+        ...auditContext,
+        eventType: AUDIT_EVENT_TYPES.BLOCKCHAIN_SUBMIT_REQUEST,
+        eventCategory: AUDIT_EVENT_CATEGORY.BLOCKCHAIN,
+        eventStatus: AUDIT_EVENT_STATUS.PENDING,
+        blockchainFunction: functionName,
+        chaincodeName: config.chaincodeName,
+        channelName: config.channelName,
+        requestPayload: {
+          functionName,
+          args
+        },
+        serviceName: 'fabric.service'
+      });
+
+      const connection = await this.connect();
+
+      let resultBuffer;
+
+      if (
+        connection.contract &&
+        typeof connection.contract.newProposal === 'function' &&
+        config.endorsingOrganizations &&
+        config.endorsingOrganizations.length > 0
+      ) {
+        const proposal = connection.contract.newProposal(functionName, {
+          arguments: args.map((arg) => String(arg)),
+          endorsingOrganizations: config.endorsingOrganizations
+        });
+
+        const endorsedProposal = await proposal.endorse();
+        const submittedTransaction = await endorsedProposal.submit();
+
+        resultBuffer = endorsedProposal.getResult();
+
+        const commitStatus = await submittedTransaction.getStatus();
+
+        if (!commitStatus.successful) {
+          throw new Error(
+            `Transaction commit failed with code ${commitStatus.code} for transaction ${commitStatus.transactionId}`
+          );
+        }
+      } else {
+        resultBuffer = await connection.contract.submitTransaction(
+          functionName,
+          ...args.map((arg) => String(arg))
+        );
+      }
+
+      const parsedResult = this.parseBufferResult(resultBuffer);
+
+      const result = {
+        success: true,
+        type: 'submit',
+        channelName: config.channelName,
+        chaincodeName: config.chaincodeName,
+        functionName,
+        args,
+        data: parsedResult,
+        durationMs: Date.now() - startedAt
+      };
+
+      await auditService.log({
+        ...auditContext,
+        eventType: AUDIT_EVENT_TYPES.BLOCKCHAIN_SUBMIT_SUCCESS,
+        eventCategory: AUDIT_EVENT_CATEGORY.BLOCKCHAIN,
+        eventStatus: AUDIT_EVENT_STATUS.SUCCESS,
+        blockchainFunction: functionName,
+        chaincodeName: config.chaincodeName,
+        channelName: config.channelName,
+        responsePayload: result,
+        durationMs: Date.now() - startedAt,
+        serviceName: 'fabric.service'
+      });
+
+      return result;
+    } catch (error) {
+      await auditService.log({
+        ...auditContext,
+        eventType: AUDIT_EVENT_TYPES.BLOCKCHAIN_SUBMIT_FAILED,
+        eventCategory: AUDIT_EVENT_CATEGORY.BLOCKCHAIN,
+        eventStatus: AUDIT_EVENT_STATUS.FAILED,
+        blockchainFunction: functionName,
+        chaincodeName: config.chaincodeName,
+        channelName: config.channelName,
+        errorCode: error.code || 'FABRIC_SUBMIT_ERROR',
+        errorMessage: error.message,
+        errorStack: error.stack,
+        requestPayload: {
+          functionName,
+          args
+        },
+        durationMs: Date.now() - startedAt,
+        serviceName: 'fabric.service'
+      });
+
+      throw error;
+    }
+  }
+
+  async evaluateTransaction(functionName, args = [], context = {}) {
+    const startedAt = Date.now();
+    const config = this.getConfig();
+    const auditContext = this.normalizeContext(context);
+
+    try {
+      await auditService.log({
+        ...auditContext,
+        eventType: AUDIT_EVENT_TYPES.BLOCKCHAIN_EVALUATE_REQUEST,
+        eventCategory: AUDIT_EVENT_CATEGORY.BLOCKCHAIN,
+        eventStatus: AUDIT_EVENT_STATUS.PENDING,
+        blockchainFunction: functionName,
+        chaincodeName: config.chaincodeName,
+        channelName: config.channelName,
+        requestPayload: {
+          functionName,
+          args
+        },
+        serviceName: 'fabric.service'
+      });
+
+      const connection = await this.connect();
+
+      const resultBuffer = await connection.contract.evaluateTransaction(
+        functionName,
+        ...args.map((arg) => String(arg))
+      );
+
+      const parsedResult = this.parseBufferResult(resultBuffer);
+
+      const result = {
+        success: true,
+        type: 'evaluate',
+        channelName: config.channelName,
+        chaincodeName: config.chaincodeName,
+        functionName,
+        args,
+        data: parsedResult,
+        durationMs: Date.now() - startedAt
+      };
+
+      await auditService.log({
+        ...auditContext,
+        eventType: AUDIT_EVENT_TYPES.BLOCKCHAIN_EVALUATE_SUCCESS,
+        eventCategory: AUDIT_EVENT_CATEGORY.BLOCKCHAIN,
+        eventStatus: AUDIT_EVENT_STATUS.SUCCESS,
+        blockchainFunction: functionName,
+        chaincodeName: config.chaincodeName,
+        channelName: config.channelName,
+        responsePayload: result,
+        durationMs: Date.now() - startedAt,
+        serviceName: 'fabric.service'
+      });
+
+      return result;
+    } catch (error) {
+      await auditService.log({
+        ...auditContext,
+        eventType: AUDIT_EVENT_TYPES.BLOCKCHAIN_EVALUATE_FAILED,
+        eventCategory: AUDIT_EVENT_CATEGORY.BLOCKCHAIN,
+        eventStatus: AUDIT_EVENT_STATUS.FAILED,
+        blockchainFunction: functionName,
+        chaincodeName: config.chaincodeName,
+        channelName: config.channelName,
+        errorCode: error.code || 'FABRIC_EVALUATE_ERROR',
+        errorMessage: error.message,
+        errorStack: error.stack,
+        requestPayload: {
+          functionName,
+          args
+        },
+        durationMs: Date.now() - startedAt,
+        serviceName: 'fabric.service'
+      });
+
+      throw error;
+    }
+  }
+
+  async disconnect() {
+    try {
+      if (this.gateway) {
+        this.gateway.close();
+      }
+
+      if (this.client) {
+        this.client.close();
+      }
+
+      this.gateway = null;
+      this.client = null;
+      this.network = null;
+      this.contract = null;
+
+      return {
+        success: true,
+        message: 'Fabric gateway disconnected successfully'
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message
+      };
+    }
+  }
+}
+
+module.exports = new FabricService();
+==================================================
+FILE: blockchain-api/src/services/fabricGateway.service.js
+==================================================
+"use strict";
+
+const fs = require("fs");
+const path = require("path");
+const yaml = require("js-yaml");
+const { Gateway, Wallets } = require("fabric-network");
+const config = require("../../config/config");
+
+async function loadConnectionProfile() {
+  const profilePath = config.fabric.connectionProfile;
+
+  if (!fs.existsSync(profilePath)) {
+    throw new Error(`Fabric connection profile not found: ${profilePath}`);
+  }
+
+  const fileContent = fs.readFileSync(profilePath, "utf8");
+
+  if (profilePath.endsWith(".yaml") || profilePath.endsWith(".yml")) {
+    return yaml.load(fileContent);
+  }
+
+  return JSON.parse(fileContent);
+}
+
+async function getFabricContract() {
+  const connectionProfile = await loadConnectionProfile();
+
+  const wallet = await Wallets.newFileSystemWallet(config.fabric.walletPath);
+
+  const identity = await wallet.get(config.fabric.identity);
+
+  if (!identity) {
+    throw new Error(
+      `Fabric identity '${config.fabric.identity}' not found in wallet path: ${config.fabric.walletPath}`
+    );
+  }
+
+  const gateway = new Gateway();
+
+  await gateway.connect(connectionProfile, {
+    wallet,
+    identity: config.fabric.identity,
+    discovery: {
+      enabled: config.fabric.discovery.enabled,
+      asLocalhost: config.fabric.discovery.asLocalhost,
+    },
+  });
+
+  const network = await gateway.getNetwork(config.fabric.channelName);
+  const contract = network.getContract(config.fabric.chaincodeName);
+
+  return {
+    gateway,
+    network,
+    contract,
+  };
+}
+
+module.exports = {
+  getFabricContract,
+};
+==================================================
+FILE: blockchain-api/src/services/blockchain.service.js
+==================================================
+"use strict";
+
+const config = require("../config");
+
+/**
+ * Blockchain Status Service
+ *
+ * Current purpose:
+ * - Expose middleware blockchain configuration status
+ * - Confirm Fabric-related environment variables are loaded
+ * - Confirm PostgreSQL and CouchDB awareness configuration
+ *
+ * Note:
+ * This is still a placeholder status service.
+ * Real Fabric Gateway connection will be added in the next blockchain integration step.
+ */
+function getMiddlewareStatus() {
+  return {
+    middleware: {
+      status: "running",
+      service: config.app.name,
+      version: config.app.version,
+      environment: config.app.env,
+      apiPrefix: config.app.apiPrefix,
+      timestamp: new Date().toISOString(),
+    },
+
+    fabric: {
+      status: "configured",
+      connectionMode: "placeholder",
+      connectionProfile: config.fabric.connectionProfile,
+      channelName: config.fabric.channelName,
+      chaincodeName: config.fabric.chaincodeName,
+      walletPath: config.fabric.walletPath,
+      mspId: config.fabric.mspId,
+      identity: config.fabric.identity,
+      discovery: {
+        enabled: config.fabric.discovery.enabled,
+        asLocalhost: config.fabric.discovery.asLocalhost,
+      },
+      timeouts: config.fabric.timeouts,
+    },
+
+    postgres: {
+      status: "configured",
+      host: config.postgres.host,
+      port: config.postgres.port,
+      database: config.postgres.database,
+      schema: config.postgres.schema,
+      ssl: config.postgres.ssl,
+      pool: config.postgres.pool,
+    },
+
+    couchdb: {
+      enabled: config.couchdb.enabled,
+      status: config.couchdb.enabled ? "configured" : "disabled",
+      baseUrl: config.couchdb.baseUrl,
+      chaincodeDatabase: config.couchdb.chaincodeDatabase,
+      purpose: "Fabric state database awareness, monitoring, and troubleshooting only",
+    },
+
+    security: {
+      jwtConfigured: Boolean(config.jwt.secret),
+      apiKeyConfigured: Boolean(config.apiKey.key),
+      apiKeyHeader: config.apiKey.header,
+      corsConfigured: config.security.corsAllowedOrigins.length > 0,
+      helmetEnabled: config.security.helmetEnabled,
+      compressionEnabled: config.security.compressionEnabled,
+      rateLimitEnabled: config.rateLimit.enabled,
+    },
+
+    logging: {
+      level: config.logging.level,
+      format: config.logging.format,
+      toFile: config.logging.toFile,
+      appLogPath: config.logging.appLogPath,
+      errorLogPath: config.logging.errorLogPath,
+    },
+
+    message:
+      "Blockchain API Middleware configuration is loaded successfully. Real Fabric Gateway connection will be activated in the next integration step.",
+  };
+}
+
+/**
+ * Alias kept for compatibility.
+ * Some controllers may call getBlockchainStatus().
+ */
+function getBlockchainStatus() {
+  return getMiddlewareStatus();
+}
+
+module.exports = {
+  getMiddlewareStatus,
+  getBlockchainStatus,
+};
+==================================================
+FILE: blockchain-api/src/services/audit.service.js
+==================================================
+'use strict';
+
+const db = require('../config/database');
+
+function safeJson(value) {
+  if (value === undefined || value === null) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(JSON.stringify(value));
+  } catch (error) {
+    return {
+      warning: 'Unable to serialize payload',
+      message: error.message
+    };
+  }
+}
+
+function maskSensitiveData(payload) {
+  if (!payload || typeof payload !== 'object') {
+    return payload || null;
+  }
+
+  const cloned = safeJson(payload);
+
+  const sensitiveFields = [
+    'password',
+    'passwordHash',
+    'token',
+    'accessToken',
+    'refreshToken',
+    'authorization',
+    'apiKey',
+    'x-api-key',
+    'secret',
+    'privateKey',
+    'mnemonic',
+    'recoveryWords',
+    'otp'
+  ];
+
+  function maskObject(obj) {
+    if (!obj || typeof obj !== 'object') return;
+
+    Object.keys(obj).forEach((key) => {
+      const lowerKey = key.toLowerCase();
+
+      if (
+        sensitiveFields.some((field) =>
+          lowerKey.includes(field.toLowerCase())
+        )
+      ) {
+        obj[key] = '***MASKED***';
+      } else if (typeof obj[key] === 'object') {
+        maskObject(obj[key]);
+      }
+    });
+  }
+
+  maskObject(cloned);
+  return cloned;
+}
+
+async function executeQuery(query, values) {
+  if (!db) {
+    throw new Error('Database module is not loaded');
+  }
+
+  if (typeof db.query === 'function') {
+    return db.query(query, values);
+  }
+
+  if (db.pool && typeof db.pool.query === 'function') {
+    return db.pool.query(query, values);
+  }
+
+  if (db.client && typeof db.client.query === 'function') {
+    return db.client.query(query, values);
+  }
+
+  throw new Error(
+    'Database config does not expose query(), pool.query(), or client.query()'
+  );
+}
+
+class AuditService {
+  async log(event = {}) {
+    try {
+      const query = `
+        INSERT INTO blockchain.blockchain_audit_log (
+          request_id,
+          correlation_id,
+          event_type,
+          event_category,
+          event_status,
+          source_system,
+          request_source,
+          http_method,
+          endpoint,
+          controller_name,
+          service_name,
+          customer_id,
+          organization_id,
+          organization_code,
+          wallet_address,
+          transaction_id,
+          fabric_tx_id,
+          blockchain_function,
+          chaincode_name,
+          channel_name,
+          ip_address,
+          user_agent,
+          request_payload,
+          response_payload,
+          metadata,
+          error_code,
+          error_message,
+          error_stack,
+          duration_ms,
+          created_by
+        )
+        VALUES (
+          $1, $2, $3, $4, $5,
+          $6, $7, $8, $9, $10,
+          $11, $12, $13, $14, $15,
+          $16, $17, $18, $19, $20,
+          $21, $22, $23, $24, $25,
+          $26, $27, $28, $29, $30
+        )
+        RETURNING audit_id, created_at
+      `;
+
+      const values = [
+        event.requestId || event.request_id || null,
+        event.correlationId || event.correlation_id || null,
+
+        event.eventType || event.event_type || 'UNKNOWN_EVENT',
+        event.eventCategory || event.event_category || 'SYSTEM',
+        event.eventStatus || event.event_status || 'SUCCESS',
+
+        event.sourceSystem || event.source_system || null,
+        event.requestSource || event.request_source || null,
+
+        event.httpMethod || event.http_method || null,
+        event.endpoint || null,
+        event.controllerName || event.controller_name || null,
+        event.serviceName || event.service_name || null,
+
+        event.customerId || event.customer_id || null,
+        event.organizationId || event.organization_id || null,
+        event.organizationCode || event.organization_code || null,
+        event.walletAddress || event.wallet_address || null,
+
+        event.transactionId || event.transaction_id || null,
+        event.fabricTxId || event.fabric_tx_id || null,
+        event.blockchainFunction || event.blockchain_function || null,
+        event.chaincodeName ||
+          event.chaincode_name ||
+          process.env.FABRIC_CHAINCODE_NAME ||
+          null,
+        event.channelName ||
+          event.channel_name ||
+          process.env.FABRIC_CHANNEL_NAME ||
+          null,
+
+        event.ipAddress || event.ip_address || null,
+        event.userAgent || event.user_agent || null,
+
+        maskSensitiveData(event.requestPayload || event.request_payload || null),
+        maskSensitiveData(event.responsePayload || event.response_payload || null),
+        safeJson(event.metadata || null),
+
+        event.errorCode || event.error_code || null,
+        event.errorMessage || event.error_message || null,
+        event.errorStack || event.error_stack || null,
+
+        event.durationMs || event.duration_ms || null,
+        event.createdBy || event.created_by || 'system'
+      ];
+
+      const result = await executeQuery(query, values);
+
+      return {
+        success: true,
+        auditId: result.rows?.[0]?.audit_id || null,
+        createdAt: result.rows?.[0]?.created_at || null
+      };
+    } catch (error) {
+      console.error('Audit log insert failed:', {
+        message: error.message,
+        stack: error.stack,
+        requestId: event.requestId || event.request_id || null,
+        correlationId: event.correlationId || event.correlation_id || null,
+        eventType: event.eventType || event.event_type || null
+      });
+
+      return {
+        success: false,
+        message: error.message
+      };
+    }
+  }
+
+  buildRequestContext(req) {
+    return {
+      requestId: req.requestId || req.headers?.['x-request-id'] || null,
+      correlationId:
+        req.correlationId ||
+        req.headers?.['x-correlation-id'] ||
+        req.requestId ||
+        null,
+      sourceSystem:
+        req.sourceSystem ||
+        req.headers?.['x-source-system'] ||
+        req.body?.sourceSystem ||
+        'BLOCKCHAIN_API',
+      requestSource:
+        req.requestSource ||
+        req.headers?.['x-request-source'] ||
+        req.body?.requestSource ||
+        'API',
+      httpMethod: req.method || null,
+      endpoint: req.originalUrl || req.url || null,
+      ipAddress:
+        req.headers?.['x-forwarded-for'] ||
+        req.socket?.remoteAddress ||
+        req.ip ||
+        null,
+      userAgent: req.headers?.['user-agent'] || null,
+      createdBy: req.user?.username || req.body?.createdBy || 'system'
+    };
+  }
+}
+
+module.exports = new AuditService();
+==================================================
+FILE: blockchain-api/src/controllers/wallet.controller.js
+==================================================
+'use strict';
+
+const walletService = require('../services/wallet.service');
+
+function getRequestId(req) {
+  return req.requestId || req.headers['x-request-id'] || null;
+}
+
+function getCorrelationId(req) {
+  return req.headers['x-correlation-id'] || getRequestId(req);
+}
+
+function buildRequestContext(req) {
+  return {
+    requestId: getRequestId(req),
+    request_id: getRequestId(req),
+    correlationId: getCorrelationId(req),
+    correlation_id: getCorrelationId(req),
+    sourceSystem:
+      req.headers['x-source-system'] ||
+      req.body?.sourceSystem ||
+      req.body?.source_system ||
+      'BLOCKCHAIN_API',
+    source_system:
+      req.headers['x-source-system'] ||
+      req.body?.sourceSystem ||
+      req.body?.source_system ||
+      'BLOCKCHAIN_API',
+    requestSource:
+      req.headers['x-request-source'] ||
+      req.body?.requestSource ||
+      req.body?.request_source ||
+      'API',
+    request_source:
+      req.headers['x-request-source'] ||
+      req.body?.requestSource ||
+      req.body?.request_source ||
+      'API',
+    createdBy:
+      req.body?.createdBy ||
+      req.body?.created_by ||
+      req.headers['x-created-by'] ||
+      'api-user',
+    created_by:
+      req.body?.createdBy ||
+      req.body?.created_by ||
+      req.headers['x-created-by'] ||
+      'api-user'
+  };
+}
+
+function getErrorStatusCode(error, defaultStatus = 400) {
+  const message = String(error.message || '').toLowerCase();
+
+  if (
+    message.includes('blockchain wallet creation failed') ||
+    message.includes('fabric') ||
+    message.includes('endorsement') ||
+    message.includes('deadline') ||
+    message.includes('gateway') ||
+    message.includes('grpc')
+  ) {
+    return 502;
+  }
+
+  if (message.includes('already exists')) {
+    return 409;
+  }
+
+  if (message.includes('not found')) {
+    return 404;
+  }
+
+  return defaultStatus;
+}
+
+exports.getNextCustomerId = async (req, res, next) => {
+  try {
+    const result = await walletService.getNextCustomerId();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Next customer ID generated successfully',
+      data: {
+        customerId: result.customerId,
+        customer_id: result.customerId
+      },
+      requestId: getRequestId(req)
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+/**
+ * GET /api/v1/wallets?page=1&limit=13&search=
+ */
+exports.listWallets = async (req, res) => {
+  try {
+    const page = Math.max(parseInt(req.query.page || '1', 10), 1);
+    const limit = Math.min(Math.max(parseInt(req.query.limit || '13', 10), 1), 100);
+    const offset = (page - 1) * limit;
+    const search = (req.query.search || '').trim();
+
+    const result = await walletService.listWallets({
+      page,
+      limit,
+      offset,
+      search
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Wallet list retrieved successfully',
+      data: result.data,
+      pagination: {
+        page,
+        limit,
+        totalRecords: result.totalRecords,
+        totalPages: Math.ceil(result.totalRecords / limit),
+        hasNextPage: page < Math.ceil(result.totalRecords / limit),
+        hasPreviousPage: page > 1
+      },
+      filters: {
+        search: search || null
+      },
+      source: 'postgres',
+      requestId: getRequestId(req)
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve wallet list',
+      error: {
+        message: error.message,
+        stack: process.env.NODE_ENV === 'production' ? undefined : error.stack
+      },
+      requestId: getRequestId(req)
+    });
+  }
+};
+
+/**
+ * POST /api/v1/wallets
+ */
+exports.createWallet = async (req, res) => {
+  try {
+    const result = await walletService.createWallet({
+      ...req.body,
+      ...buildRequestContext(req)
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: 'Wallet created successfully in Blockchain and PostgreSQL',
+      data: result,
+      source: 'fabric_postgres',
+      requestId: getRequestId(req)
+    });
+  } catch (error) {
+    const statusCode = getErrorStatusCode(error, 400);
+
+    return res.status(statusCode).json({
+      success: false,
+      message: 'Failed to create wallet',
+      error: {
+        message: error.message,
+        stack: process.env.NODE_ENV === 'production' ? undefined : error.stack
+      },
+      source: statusCode === 502 ? 'fabric' : 'api',
+      requestId: getRequestId(req)
+    });
+  }
+};
+
+/**
+ * POST /api/v1/wallets/organization-wallets
+ */
+exports.createOrganizationWallet = async (req, res) => {
+  try {
+    const result = await walletService.createOrganizationWallet({
+      ...req.body,
+      ...buildRequestContext(req)
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: 'Organization wallet created successfully in Blockchain and PostgreSQL',
+      data: result,
+      source: 'fabric_postgres',
+      requestId: getRequestId(req)
+    });
+  } catch (error) {
+    const statusCode = getErrorStatusCode(error, 400);
+
+    return res.status(statusCode).json({
+      success: false,
+      message: 'Failed to create organization wallet',
+      error: {
+        message: error.message,
+        stack: process.env.NODE_ENV === 'production' ? undefined : error.stack
+      },
+      source: statusCode === 502 ? 'fabric' : 'api',
+      requestId: getRequestId(req)
+    });
+  }
+};
+
+/**
+ * POST /api/v1/wallets/login
+ */
+exports.loginWallet = async (req, res, next) => {
+  try {
+    const walletAddress =
+      req.body.walletAddress ||
+      req.body.wallet_address ||
+      req.body.loginId ||
+      req.body.customerId;
+
+    const password = req.body.password;
+
+    if (!walletAddress) {
+      return res.status(400).json({
+        success: false,
+        message: 'walletAddress is required',
+        error: {
+          message: 'walletAddress is required'
+        },
+        requestId: getRequestId(req)
+      });
+    }
+
+    if (!password) {
+      return res.status(400).json({
+        success: false,
+        message: 'password is required',
+        error: {
+          message: 'password is required'
+        },
+        requestId: getRequestId(req)
+      });
+    }
+
+    const result = await walletService.loginWallet({
+      walletAddress,
+      password
+    });
+
+    if (!result) {
+      return res.status(401).json({
+        success: false,
+        message: 'Wallet login failed',
+        error: {
+          message: 'Invalid wallet address or password'
+        },
+        requestId: getRequestId(req)
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Wallet login successful',
+      data: result,
+      requestId: getRequestId(req)
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+/**
+ * GET /api/v1/wallets/customer/:customerId
+ */
+exports.getWalletByCustomerId = async (req, res) => {
+  try {
+    const { customerId } = req.params;
+
+    const wallet = await walletService.getWalletByCustomerId(customerId);
+
+    if (!wallet) {
+      return res.status(404).json({
+        success: false,
+        message: `Wallet not found for customerId: ${customerId}`,
+        data: null,
+        requestId: getRequestId(req)
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Wallet retrieved successfully',
+      data: {
+        wallet
+      },
+      source: 'postgres',
+      requestId: getRequestId(req)
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve wallet by customer ID',
+      error: {
+        message: error.message,
+        stack: process.env.NODE_ENV === 'production' ? undefined : error.stack
+      },
+      requestId: getRequestId(req)
+    });
+  }
+};
+
+/**
+ * GET /api/v1/wallets/:walletAddress
+ */
+exports.getWalletByAddress = async (req, res) => {
+  try {
+    const { walletAddress } = req.params;
+
+    const wallet = await walletService.getWalletByAddress(walletAddress);
+
+    if (!wallet) {
+      return res.status(404).json({
+        success: false,
+        message: `Wallet not found for walletAddress: ${walletAddress}`,
+        data: null,
+        requestId: getRequestId(req)
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Wallet retrieved successfully',
+      data: {
+        wallet
+      },
+      source: 'postgres',
+      requestId: getRequestId(req)
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve wallet by wallet address',
+      error: {
+        message: error.message,
+        stack: process.env.NODE_ENV === 'production' ? undefined : error.stack
+      },
+      requestId: getRequestId(req)
+    });
+  }
+};
+==================================================
+FILE: blockchain-api/src/controllers/wallet-query.controller.js
+==================================================
+const walletQueryService = require("../services/wallet-query.service");
+
+class WalletQueryController {
+  async getWalletByAddress(req, res) {
+    const requestId =
+      req.headers["x-request-id"] ||
+      `REQ_${Date.now()}_${Math.random().toString(16).slice(2).toUpperCase()}`;
+
+    try {
+      const { walletAddress } = req.params;
+
+      if (!walletAddress || walletAddress.trim() === "") {
+        return res.status(400).json({
+          success: false,
+          message: "walletAddress is required",
+          errorCode: "VALIDATION_ERROR",
+          data: null,
+          requestId,
+        });
+      }
+
+      const result = await walletQueryService.getWalletByAddress(
+        walletAddress,
+        requestId
+      );
+
+      return res.status(result.httpStatus || 200).json({
+        success: result.success,
+        message: result.message,
+        source: result.source,
+        data: result.data,
+        requestId,
+      });
+    } catch (error) {
+      console.error("Get wallet by address error:", error);
+
+      return res.status(500).json({
+        success: false,
+        message: "Failed to retrieve wallet details",
+        errorCode: "WALLET_QUERY_FAILED",
+        data: null,
+        requestId,
+      });
+    }
+  }
+
+  async getWalletBalance(req, res) {
+    const requestId =
+      req.headers["x-request-id"] ||
+      `REQ_${Date.now()}_${Math.random().toString(16).slice(2).toUpperCase()}`;
+
+    try {
+      const { walletAddress } = req.params;
+
+      if (!walletAddress || walletAddress.trim() === "") {
+        return res.status(400).json({
+          success: false,
+          message: "walletAddress is required",
+          errorCode: "VALIDATION_ERROR",
+          data: null,
+          requestId,
+        });
+      }
+
+      const result = await walletQueryService.getWalletBalance(
+        walletAddress,
+        requestId
+      );
+
+      return res.status(result.httpStatus || 200).json({
+        success: result.success,
+        message: result.message,
+        source: result.source,
+        data: result.data,
+        requestId,
+      });
+    } catch (error) {
+      console.error("Get wallet balance error:", error);
+
+      return res.status(500).json({
+        success: false,
+        message: "Failed to retrieve wallet balance",
+        errorCode: "WALLET_BALANCE_QUERY_FAILED",
+        data: null,
+        requestId,
+      });
+    }
+  }
+
+  async getWalletHistory(req, res) {
+    const requestId =
+      req.headers["x-request-id"] ||
+      `REQ_${Date.now()}_${Math.random().toString(16).slice(2).toUpperCase()}`;
+
+    try {
+      const { walletAddress } = req.params;
+
+      const limit = Number(req.query.limit || 50);
+      const offset = Number(req.query.offset || 0);
+
+      if (!walletAddress || walletAddress.trim() === "") {
+        return res.status(400).json({
+          success: false,
+          message: "walletAddress is required",
+          errorCode: "VALIDATION_ERROR",
+          data: null,
+          requestId,
+        });
+      }
+
+      const result = await walletQueryService.getWalletHistory(
+        walletAddress,
+        {
+          limit,
+          offset,
+        },
+        requestId
+      );
+
+      return res.status(result.httpStatus || 200).json({
+        success: result.success,
+        message: result.message,
+        source: result.source,
+        data: result.data,
+        requestId,
+      });
+    } catch (error) {
+      console.error("Get wallet history error:", error);
+
+        return res.status(500).json({
+        success: false,
+        message: "Failed to retrieve wallet transaction history",
+        errorCode: "WALLET_HISTORY_QUERY_FAILED",
+        error: process.env.NODE_ENV === "development" ? error.message : undefined,
+        data: null,
+        requestId,
+        });
+    }
+  }
+}
+
+module.exports = new WalletQueryController();
+==================================================
+FILE: blockchain-api/src/controllers/transaction.controller.js
+==================================================
+'use strict';
+
+const transactionService = require('../services/transaction.service');
+const auditService = require('../services/audit.service');
+
+const {
+  AUDIT_EVENT_TYPES,
+  AUDIT_EVENT_STATUS,
+  AUDIT_EVENT_CATEGORY
+} = require('../constants/audit.constants');
+
+function getRequestContext(req) {
+  return auditService.buildRequestContext(req);
+}
+
+function resolveServiceMethod(service, methodNames = []) {
+  for (const methodName of methodNames) {
+    if (typeof service[methodName] === 'function') {
+      return service[methodName].bind(service);
+    }
+  }
+
+  return null;
+}
+
+class TransactionController {
+  async walletTransfer(req, res, next) {
+    const context = getRequestContext(req);
+
+    try {
+      await auditService.log({
+        ...context,
+        eventType: AUDIT_EVENT_TYPES.TRANSACTION_REQUEST,
+        eventCategory: AUDIT_EVENT_CATEGORY.TRANSACTION,
+        eventStatus: AUDIT_EVENT_STATUS.PENDING,
+        walletAddress:
+          req.body.senderWalletAddress ||
+          req.body.fromWalletAddress ||
+          null,
+        requestPayload: req.body,
+        controllerName: 'transaction.controller',
+        serviceName: 'transaction.service',
+        metadata: {
+          transactionType: 'WALLET_TO_WALLET'
+        }
+      });
+
+      const walletTransferMethod = resolveServiceMethod(transactionService, [
+        'walletTransfer',
+        'createWalletTransfer',
+        'walletToWalletTransfer',
+        'transferBetweenWallets',
+        'executeWalletTransfer',
+        'processWalletTransfer'
+      ]);
+
+      if (!walletTransferMethod) {
+        throw new Error(
+          'No wallet transfer method found in transaction.service.js. Expected one of: walletTransfer, createWalletTransfer, walletToWalletTransfer, transferBetweenWallets, executeWalletTransfer, processWalletTransfer'
+        );
+      }
+
+      const result = await walletTransferMethod(req.body, {
+        requestId: req.requestId,
+        correlationId: req.correlationId,
+        sourceSystem: req.sourceSystem,
+        requestSource: req.requestSource,
+        createdBy: req.body.createdBy || 'system'
+      });
+
+      await auditService.log({
+        ...context,
+        eventType: AUDIT_EVENT_TYPES.TRANSACTION_SUCCESS,
+        eventCategory: AUDIT_EVENT_CATEGORY.TRANSACTION,
+        eventStatus: AUDIT_EVENT_STATUS.SUCCESS,
+        transactionId:
+          result?.data?.transactionId ||
+          result?.transactionId ||
+          null,
+        fabricTxId:
+          result?.data?.fabricTxId ||
+          result?.fabricTxId ||
+          result?.txId ||
+          null,
+        walletAddress:
+          req.body.senderWalletAddress ||
+          req.body.fromWalletAddress ||
+          null,
+        responsePayload: result,
+        controllerName: 'transaction.controller',
+        serviceName: 'transaction.service',
+        metadata: {
+          transactionType: 'WALLET_TO_WALLET'
+        }
+      });
+
+      return res.status(200).json({
+        ...result,
+        requestId: req.requestId,
+        correlationId: req.correlationId
+      });
+    } catch (error) {
+      await auditService.log({
+        ...context,
+        eventType: AUDIT_EVENT_TYPES.TRANSACTION_FAILED,
+        eventCategory: AUDIT_EVENT_CATEGORY.TRANSACTION,
+        eventStatus: AUDIT_EVENT_STATUS.FAILED,
+        walletAddress:
+          req.body.senderWalletAddress ||
+          req.body.fromWalletAddress ||
+          null,
+        errorCode: error.code || 'WALLET_TRANSFER_ERROR',
+        errorMessage: error.message,
+        errorStack: error.stack,
+        requestPayload: req.body,
+        controllerName: 'transaction.controller',
+        serviceName: 'transaction.service',
+        metadata: {
+          transactionType: 'WALLET_TO_WALLET'
+        }
+      });
+
+      return next(error);
+    }
+  }
+
+  async organizationTransfer(req, res, next) {
+    const context = getRequestContext(req);
+
+    try {
+      await auditService.log({
+        ...context,
+        eventType: AUDIT_EVENT_TYPES.TRANSACTION_REQUEST,
+        eventCategory: AUDIT_EVENT_CATEGORY.TRANSACTION,
+        eventStatus: AUDIT_EVENT_STATUS.PENDING,
+        walletAddress:
+          req.body.senderWalletAddress ||
+          req.body.fromWalletAddress ||
+          null,
+        organizationId: req.body.organizationId || null,
+        organizationCode: req.body.organizationCode || null,
+        requestPayload: req.body,
+        controllerName: 'transaction.controller',
+        serviceName: 'transaction.service',
+        metadata: {
+          transactionType: 'WALLET_TO_ORGANIZATION'
+        }
+      });
+
+      const organizationTransferMethod = resolveServiceMethod(transactionService, [
+        'organizationTransfer',
+        'createOrganizationTransfer',
+        'walletToOrganizationTransfer',
+        'transferToOrganization',
+        'executeOrganizationTransfer',
+        'processOrganizationTransfer'
+      ]);
+
+      if (!organizationTransferMethod) {
+        throw new Error(
+          'No organization transfer method found in transaction.service.js. Expected one of: organizationTransfer, createOrganizationTransfer, walletToOrganizationTransfer, transferToOrganization, executeOrganizationTransfer, processOrganizationTransfer'
+        );
+      }
+
+      const result = await organizationTransferMethod(req.body, {
+        requestId: req.requestId,
+        correlationId: req.correlationId,
+        sourceSystem: req.sourceSystem,
+        requestSource: req.requestSource,
+        createdBy: req.body.createdBy || 'system'
+      });
+
+      await auditService.log({
+        ...context,
+        eventType: AUDIT_EVENT_TYPES.TRANSACTION_SUCCESS,
+        eventCategory: AUDIT_EVENT_CATEGORY.TRANSACTION,
+        eventStatus: AUDIT_EVENT_STATUS.SUCCESS,
+        transactionId:
+          result?.data?.transactionId ||
+          result?.transactionId ||
+          null,
+        fabricTxId:
+          result?.data?.fabricTxId ||
+          result?.fabricTxId ||
+          result?.txId ||
+          null,
+        walletAddress:
+          req.body.senderWalletAddress ||
+          req.body.fromWalletAddress ||
+          null,
+        organizationId: req.body.organizationId || null,
+        organizationCode: req.body.organizationCode || null,
+        responsePayload: result,
+        controllerName: 'transaction.controller',
+        serviceName: 'transaction.service',
+        metadata: {
+          transactionType: 'WALLET_TO_ORGANIZATION'
+        }
+      });
+
+      return res.status(200).json({
+        ...result,
+        requestId: req.requestId,
+        correlationId: req.correlationId
+      });
+    } catch (error) {
+      await auditService.log({
+        ...context,
+        eventType: AUDIT_EVENT_TYPES.TRANSACTION_FAILED,
+        eventCategory: AUDIT_EVENT_CATEGORY.TRANSACTION,
+        eventStatus: AUDIT_EVENT_STATUS.FAILED,
+        walletAddress:
+          req.body.senderWalletAddress ||
+          req.body.fromWalletAddress ||
+          null,
+        organizationId: req.body.organizationId || null,
+        organizationCode: req.body.organizationCode || null,
+        errorCode: error.code || 'ORGANIZATION_TRANSFER_ERROR',
+        errorMessage: error.message,
+        errorStack: error.stack,
+        requestPayload: req.body,
+        controllerName: 'transaction.controller',
+        serviceName: 'transaction.service',
+        metadata: {
+          transactionType: 'WALLET_TO_ORGANIZATION'
+        }
+      });
+
+      return next(error);
+    }
+  }
+
+  async getTransactionHistory(req, res, next) {
+    try {
+      const getHistoryMethod = resolveServiceMethod(transactionService, [
+        'getTransactionHistory',
+        'searchTransactions',
+        'getTransactions'
+      ]);
+
+      if (!getHistoryMethod) {
+        throw new Error(
+          'No transaction history method found in transaction.service.js'
+        );
+      }
+
+      const result = await getHistoryMethod(req.query, {
+        requestId: req.requestId,
+        correlationId: req.correlationId,
+        sourceSystem: req.sourceSystem,
+        requestSource: req.requestSource
+      });
+
+      return res.status(200).json({
+        ...result,
+        requestId: req.requestId,
+        correlationId: req.correlationId
+      });
+    } catch (error) {
+      return next(error);
+    }
+  }
+
+  async getTransactionById(req, res, next) {
+    try {
+      const getByIdMethod = resolveServiceMethod(transactionService, [
+        'getTransactionById',
+        'findTransactionById',
+        'getTransaction'
+      ]);
+
+      if (!getByIdMethod) {
+        throw new Error(
+          'No get transaction by ID method found in transaction.service.js'
+        );
+      }
+
+      const result = await getByIdMethod(req.params.transactionId, {
+        requestId: req.requestId,
+        correlationId: req.correlationId,
+        sourceSystem: req.sourceSystem,
+        requestSource: req.requestSource
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: 'Transaction retrieved successfully',
+        data: result?.data || result,
+        requestId: req.requestId,
+        correlationId: req.correlationId
+      });
+    } catch (error) {
+      return next(error);
+    }
+  }
+}
+
+module.exports = new TransactionController();
+==================================================
+FILE: blockchain-api/src/controllers/fabric.controller.js
+==================================================
+'use strict';
+
+const fabricService = require('../services/fabric.service');
+
+class FabricController {
+  async evaluate(req, res, next) {
+    try {
+      const { functionName, args = [] } = req.body;
+
+      if (!functionName) {
+        return res.status(400).json({
+          success: false,
+          message: 'functionName is required',
+          errorCode: 'FUNCTION_NAME_REQUIRED',
+          requestId: req.requestId,
+          correlationId: req.correlationId
+        });
+      }
+
+      const result = await fabricService.evaluateTransaction(
+        functionName,
+        Array.isArray(args) ? args : [],
+        {
+          requestId: req.requestId,
+          correlationId: req.correlationId,
+          sourceSystem: req.sourceSystem,
+          requestSource: req.requestSource,
+          createdBy: req.body.createdBy || 'system'
+        }
+      );
+
+      return res.status(200).json({
+        ...result,
+        requestId: req.requestId,
+        correlationId: req.correlationId
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: 'Fabric evaluate transaction failed.',
+        error: {
+          message: error.message
+        },
+        requestId: req.requestId,
+        correlationId: req.correlationId
+      });
+    }
+  }
+
+  async submit(req, res, next) {
+    try {
+      const { functionName, args = [] } = req.body;
+
+      if (!functionName) {
+        return res.status(400).json({
+          success: false,
+          message: 'functionName is required',
+          errorCode: 'FUNCTION_NAME_REQUIRED',
+          requestId: req.requestId,
+          correlationId: req.correlationId
+        });
+      }
+
+      const result = await fabricService.submitTransaction(
+        functionName,
+        Array.isArray(args) ? args : [],
+        {
+          requestId: req.requestId,
+          correlationId: req.correlationId,
+          sourceSystem: req.sourceSystem,
+          requestSource: req.requestSource,
+          createdBy: req.body.createdBy || 'system'
+        }
+      );
+
+      return res.status(200).json({
+        ...result,
+        requestId: req.requestId,
+        correlationId: req.correlationId
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: 'Fabric submit transaction failed.',
+        error: {
+          message: error.message
+        },
+        requestId: req.requestId,
+        correlationId: req.correlationId
+      });
+    }
+  }
+}
+
+module.exports = new FabricController();
+==================================================
+FILE: blockchain-api/src/controllers/blockchain.controller.js
+==================================================
+const blockchainService = require("../services/blockchain.service");
+const { successResponse } = require("../utils/apiResponse");
+
+const getBlockchainStatus = async (req, res) => {
+  const status = await blockchainService.getMiddlewareStatus();
+
+  return successResponse({
+    res,
+    message: "Blockchain middleware status retrieved successfully",
+    data: status
+  });
+};
+
+module.exports = {
+  getBlockchainStatus
+};
+
+==================================================
+FILE: blockchain-api/src/routes/index.js
+==================================================
+'use strict';
+
+const express = require("express");
+
+const router = express.Router();
+
+function safeLoadRoute(routeName, routePath) {
+  try {
+    const route = require(routePath);
+    console.log(`[ROUTES] ${routeName} route loaded`);
+    return route;
+  } catch (error) {
+    console.warn(`[ROUTES] ${routeName} route not loaded: ${error.message}`);
+    return null;
+  }
+}
+
+
+
+const walletRoutes = require('./wallet.routes');
+const transactionRoutes = require('./transaction.routes');
+const fabricRoutes = require('./fabric.routes');
+const referenceRoutes = require('./reference.routes');
+
+
+const healthRoutes = safeLoadRoute("health", "./health.routes");
+const blockchainRoutes = safeLoadRoute("blockchain", "./blockchain.routes");
+// const fabricRoutes = safeLoadRoute("fabric", "./fabric.routes");
+// const walletRoutes = safeLoadRoute("wallet", "./wallet.routes");
+// const transactionRoutes = safeLoadRoute("transaction", "./transaction.routes");
+
+if (healthRoutes) {
+  router.use("/health", healthRoutes);
+}
+
+if (blockchainRoutes) {
+  router.use("/blockchain", blockchainRoutes);
+}
+
+if (fabricRoutes) {
+  router.use("/fabric", fabricRoutes);
+}
+
+if (walletRoutes) {
+  router.use("/wallets", walletRoutes);
+}
+
+if (transactionRoutes) {
+  router.use("/transactions", transactionRoutes);
+}
+
+if (referenceRoutes) {
+  router.use("/reference", referenceRoutes);
+}
+
+
+module.exports = router;
+
+==================================================
+FILE: blockchain-api/src/routes/wallet.routes.js
+==================================================
+'use strict';
+
+const express = require('express');
+const router = express.Router();
+
+const walletController = require('../controllers/wallet.controller');
+router.get('/next-customer-id', walletController.getNextCustomerId);
+/**
+ * STEP 30 / 31 — Wallet Routes
+ *
+ * IMPORTANT:
+ * The list route "/" must come before dynamic routes like "/:walletAddress".
+ */
+
+/**
+ * List wallets for Angular dashboard.
+ *
+ * GET /api/v1/wallets?page=1&limit=13&search=
+ */
+router.get('/', walletController.listWallets);
+
+/**
+ * Create wallet.
+ *
+ * POST /api/v1/wallets
+ */
+router.post('/', walletController.createWallet);
+
+router.post('/organization-wallets', walletController.createOrganizationWallet);
+
+/**
+ * Wallet login.
+ *
+ * POST /api/v1/wallets/login
+ */
+router.post('/login', walletController.loginWallet);
+
+/**
+ * Get wallet by customer ID.
+ *
+ * GET /api/v1/wallets/customer/:customerId
+ */
+router.get('/customer/:customerId', walletController.getWalletByCustomerId);
+
+/**
+ * Get wallet by wallet address.
+ *
+ * GET /api/v1/wallets/:walletAddress
+ */
+router.get('/:walletAddress', walletController.getWalletByAddress);
+
+module.exports = router;
+
+==================================================
+FILE: blockchain-api/src/routes/wallet-query.routes.js
+==================================================
+const express = require("express");
+const router = express.Router();
+
+const walletQueryController = require("../controllers/wallet-query.controller");
+
+/**
+ * STEP 25 — Wallet Query APIs
+ *
+ * GET /api/v1/wallets/:walletAddress
+ * GET /api/v1/wallets/:walletAddress/balance
+ * GET /api/v1/wallets/:walletAddress/history
+ */
+
+router.get("/:walletAddress", walletQueryController.getWalletByAddress);
+
+router.get("/:walletAddress/balance", walletQueryController.getWalletBalance);
+
+router.get("/:walletAddress/history", walletQueryController.getWalletHistory);
+
+module.exports = router;
+==================================================
+FILE: blockchain-api/src/routes/transaction.routes.js
+==================================================
+"use strict";
+
+/**
+ * STEP 28 — Secure Transaction Routes
+ */
+
+const express = require("express");
+const { body, query } = require("express-validator");
+
+const transactionController = require("../controllers/transaction.controller");
+const { validateRequest } = require("../middleware/validation.middleware");
+const apiKeyProtection = require("../middleware/apiKey.middleware");
+
+let routeSecurity = {};
+
+try {
+  routeSecurity = require("../middleware/routeSecurity.middleware");
+} catch (error) {
+  routeSecurity = {};
+}
+
+const router = express.Router();
+
+const passThrough = (req, res, next) => next();
+
+const userOrServiceAccess =
+  typeof routeSecurity.userOrServiceAccess === "function"
+    ? routeSecurity.userOrServiceAccess
+    : passThrough;
+
+const serviceAccess =
+  typeof routeSecurity.serviceAccess === "function"
+    ? routeSecurity.serviceAccess
+    : passThrough;
+
+function unavailableHandler(handlerName) {
+  return (req, res) => {
+    return res.status(501).json({
+      success: false,
+      message: `Transaction handler is not implemented: ${handlerName}`,
+      errorCode: "TRANSACTION_HANDLER_NOT_IMPLEMENTED",
+      availableHandlers: Object.keys(transactionController),
+      requestId: req.requestId || req.headers["x-request-id"] || null
+    });
+  };
+}
+
+const walletTransferHandler =
+  transactionController.walletTransfer ||
+  transactionController.createWalletTransfer ||
+  transactionController.transferWalletToWallet ||
+  unavailableHandler("walletTransfer");
+
+const organizationTransferHandler =
+  transactionController.organizationTransfer ||
+  transactionController.createOrganizationTransfer ||
+  transactionController.transferToOrganization ||
+  unavailableHandler("organizationTransfer");
+
+const getTransactionsHandler =
+  transactionController.getTransactions ||
+  transactionController.getTransactionHistory ||
+  transactionController.searchTransactions ||
+  unavailableHandler("getTransactions");
+
+const walletTransferValidation = [
+  body("senderWalletAddress")
+    .isString()
+    .trim()
+    .isLength({ min: 10, max: 140 })
+    .matches(/^[A-Za-z0-9_-]+$/)
+    .withMessage("senderWalletAddress is invalid"),
+
+  body("receiverWalletAddress")
+    .isString()
+    .trim()
+    .isLength({ min: 10, max: 140 })
+    .matches(/^[A-Za-z0-9_-]+$/)
+    .withMessage("receiverWalletAddress is invalid"),
+
+  body("amount")
+    .isDecimal({ decimal_digits: "0,8" })
+    .withMessage("amount must be decimal"),
+
+  body("currency")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ min: 3, max: 10 }),
+
+  body("transactionPurpose")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 255 }),
+
+  body("transactionDescription")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 500 }),
+
+  body("requestSource")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 50 }),
+
+  body("sourceSystem")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 80 }),
+
+  body("createdBy")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 100 })
+];
+
+const organizationTransferValidation = [
+  body("sourceOrganizationId")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 120 }),
+
+  body("targetOrganizationId")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 120 }),
+
+  body("organizationId")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 120 }),
+
+  body("walletAddress")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 140 }),
+
+  body("amount")
+    .isDecimal({ decimal_digits: "0,8" })
+    .withMessage("amount must be decimal"),
+
+  body("currency")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ min: 3, max: 10 }),
+
+  body("transactionPurpose")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 255 }),
+
+  body("transactionDescription")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 500 }),
+
+  body("requestSource")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 50 }),
+
+  body("sourceSystem")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 80 }),
+
+  body("createdBy")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 100 })
+];
+
+const transactionSearchValidation = [
+  query("page")
+    .optional()
+    .isInt({ min: 1, max: 100000 }),
+
+  query("limit")
+    .optional()
+    .isInt({ min: 1, max: 100 }),
+
+  query("walletAddress")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 140 }),
+
+  query("customerId")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 80 }),
+
+  query("organizationId")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 120 }),
+
+  query("transactionType")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 80 }),
+
+  query("status")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 50 }),
+
+  query("dateFrom")
+    .optional()
+    .isISO8601(),
+
+  query("dateTo")
+    .optional()
+    .isISO8601(),
+
+  query("amountMin")
+    .optional()
+    .isDecimal(),
+
+  query("amountMax")
+    .optional()
+    .isDecimal(),
+
+  query("sortBy")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 50 }),
+
+  query("sortOrder")
+    .optional()
+    .isIn(["asc", "desc", "ASC", "DESC"])
+];
+
+/**
+ * POST /api/v1/transactions/wallet-transfer
+ */
+router.post(
+  "/wallet-transfer",
+  userOrServiceAccess,
+  walletTransferValidation,
+  validateRequest,
+  walletTransferHandler
+);
+
+/**
+ * POST /api/v1/transactions/organization-transfer
+ */
+router.post(
+  "/organization-transfer",
+  apiKeyProtection,
+  serviceAccess,
+  organizationTransferValidation,
+  validateRequest,
+  organizationTransferHandler
+);
+
+/**
+ * GET /api/v1/transactions
+ */
+router.get(
+  "/",
+  userOrServiceAccess,
+  transactionSearchValidation,
+  validateRequest,
+  getTransactionsHandler
+);
+
+module.exports = router;
+==================================================
+FILE: blockchain-api/src/routes/transactions.routes.js
+==================================================
+const express = require("express");
+
+const transactionController = require("../controllers/transaction.controller");
+
+const router = express.Router();
+
+/**
+ * STEP 26 — Transaction History & Search APIs
+ *
+ * Base path from server.js:
+ * /api/v1/transactions
+ *
+ * Final endpoints:
+ * GET /api/v1/transactions
+ * GET /api/v1/transactions/:transactionId
+ */
+
+// Search transaction history
+router.get("/", transactionController.searchTransactions);
+
+// Get transaction by transactionId
+router.get("/:transactionId", transactionController.getTransactionById);
+
+module.exports = router;
+==================================================
+FILE: blockchain-api/src/routes/fabric.routes.js
+==================================================
+"use strict";
+
+/**
+ * STEP 28 — Secure Fabric Routes
+ */
+
+const express = require("express");
+const { body } = require("express-validator");
+
+const fabricController = require("../controllers/fabric.controller");
+const apiKeyProtection = require("../middleware/apiKey.middleware");
+const { validateRequest } = require("../middleware/validation.middleware");
+
+const router = express.Router();
+
+function unavailableHandler(handlerName) {
+  return (req, res) => {
+    return res.status(501).json({
+      success: false,
+      message: `Fabric handler is not implemented: ${handlerName}`,
+      errorCode: "FABRIC_HANDLER_NOT_IMPLEMENTED",
+      availableHandlers: Object.keys(fabricController),
+      requestId: req.requestId || req.headers["x-request-id"] || null
+    });
+  };
+}
+
+const submitHandler =
+  fabricController.submitTransaction ||
+  fabricController.submit ||
+  fabricController.invoke ||
+  unavailableHandler("submitTransaction");
+
+const evaluateHandler =
+  fabricController.evaluateTransaction ||
+  fabricController.evaluate ||
+  fabricController.query ||
+  unavailableHandler("evaluateTransaction");
+
+const fabricValidation = [
+  body("functionName")
+    .isString()
+    .trim()
+    .isLength({ min: 2, max: 100 })
+    .matches(/^[A-Za-z0-9_]+$/)
+    .withMessage("functionName is invalid"),
+
+  body("args")
+    .optional()
+    .isArray()
+    .withMessage("args must be an array")
+];
+
+/**
+ * POST /api/v1/fabric/submit
+ */
+router.post(
+  "/submit",
+  apiKeyProtection,
+  fabricValidation,
+  validateRequest,
+  submitHandler
+);
+
+/**
+ * POST /api/v1/fabric/evaluate
+ */
+router.post(
+  "/evaluate",
+  apiKeyProtection,
+  fabricValidation,
+  validateRequest,
+  evaluateHandler
+);
+
+module.exports = router;
+==================================================
+FILE: blockchain-api/src/routes/blockchain.routes.js
+==================================================
+const express = require("express");
+const asyncHandler = require("../utils/asyncHandler");
+const blockchainController = require("../controllers/blockchain.controller");
+
+const router = express.Router();
+
+router.get("/status", asyncHandler(blockchainController.getBlockchainStatus));
+
+/**
+ * Future route placeholders:
+ *
+ * POST   /wallets/create
+ * POST   /wallets/login
+ * POST   /transactions/wallet-transfer
+ * POST   /transactions/organization-transfer
+ * GET    /wallets/:walletAddress/balance
+ * GET    /wallets/:walletAddress/transactions
+ */
+
+module.exports = router;
+
+==================================================
+FILE: blockchain-api/src/utils/logger.js
+==================================================
+const fs = require("fs");
+const path = require("path");
+const winston = require("winston");
+
+let config = {};
+
+try {
+  config = require("../config/config");
+} catch (error) {
+  config = {};
+}
+
+const loggingConfig = config.logging || {};
+
+const appLogPath =
+  loggingConfig.appLogPath ||
+  process.env.APP_LOG_PATH ||
+  "logs/app.log";
+
+const errorLogPath =
+  loggingConfig.errorLogPath ||
+  process.env.ERROR_LOG_PATH ||
+  "logs/error.log";
+
+const logLevel =
+  loggingConfig.level ||
+  process.env.LOG_LEVEL ||
+  "info";
+
+const appLogDirectory = path.dirname(appLogPath);
+const errorLogDirectory = path.dirname(errorLogPath);
+
+if (!fs.existsSync(appLogDirectory)) {
+  fs.mkdirSync(appLogDirectory, { recursive: true });
+}
+
+if (!fs.existsSync(errorLogDirectory)) {
+  fs.mkdirSync(errorLogDirectory, { recursive: true });
+}
+
+const logger = winston.createLogger({
+  level: logLevel,
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.errors({ stack: true }),
+    winston.format.splat(),
+    winston.format.json()
+  ),
+  defaultMeta: {
+    service: process.env.APP_NAME || "Blockchain API Middleware",
+  },
+  transports: [
+    new winston.transports.File({
+      filename: errorLogPath,
+      level: "error",
+    }),
+    new winston.transports.File({
+      filename: appLogPath,
+    }),
+  ],
+});
+
+if (process.env.NODE_ENV !== "production") {
+  logger.add(
+    new winston.transports.Console({
+      format: winston.format.combine(
+        winston.format.colorize(),
+        winston.format.simple()
+      ),
+    })
+  );
+}
+
+module.exports = logger;
+
+==================================================
+FILE: blockchain-api/src/utils/apiResponse.js
+==================================================
+const successResponse = ({
+  res,
+  statusCode = 200,
+  message = "Success",
+  data = null,
+  meta = null
+}) => {
+  return res.status(statusCode).json({
+    success: true,
+    message,
+    data,
+    meta,
+    timestamp: new Date().toISOString()
+  });
+};
+
+const errorResponse = ({
+  res,
+  statusCode = 500,
+  message = "Internal Server Error",
+  errors = null
+}) => {
+  return res.status(statusCode).json({
+    success: false,
+    message,
+    errors,
+    timestamp: new Date().toISOString()
+  });
+};
+
+module.exports = {
+  successResponse,
+  errorResponse
+};
+
+==================================================
+FILE: blockchain-api/src/utils/asyncHandler.js
+==================================================
+const asyncHandler = (fn) => {
+  return (req, res, next) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+  };
+};
+
+module.exports = asyncHandler;
+
+==================================================
+FILE: blockchain-api/src/utils/response.util.js
+==================================================
+
+==================================================
+FILE: blockchain-api/postgresql/step-21-wallet-alignment-fix.sql
+==================================================
+-- ============================================================
+-- STEP 21 FIX
+-- Wallet Creation API Fabric/PostgreSQL Wallet Address Alignment
+-- ============================================================
+
+BEGIN;
+
+
+-- Fabric transaction IDs are hash strings, not UUIDs.
+ALTER TABLE blockchain.transactions
+ALTER COLUMN fabric_transaction_id TYPE VARCHAR(128)
+USING fabric_transaction_id::text;
+
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'blockchain'
+      AND table_name = 'wallets'
+      AND column_name = 'fabric_transaction_id'
+  ) THEN
+    ALTER TABLE blockchain.wallets
+    ALTER COLUMN fabric_transaction_id TYPE VARCHAR(128)
+    USING fabric_transaction_id::text;
+  END IF;
+END $$;
+
+-- Ensure wallet address columns exist for transaction history.
+ALTER TABLE blockchain.transactions
+ADD COLUMN IF NOT EXISTS from_wallet_address VARCHAR(255),
+ADD COLUMN IF NOT EXISTS to_wallet_address VARCHAR(255),
+ADD COLUMN IF NOT EXISTS sender_wallet_address VARCHAR(255),
+ADD COLUMN IF NOT EXISTS receiver_wallet_address VARCHAR(255);
+
+-- Ensure Fabric response storage exists.
+ALTER TABLE blockchain.transactions
+ADD COLUMN IF NOT EXISTS fabric_response JSONB;
+
+ALTER TABLE blockchain.wallets
+ADD COLUMN IF NOT EXISTS fabric_response JSONB;
+
+-- Backfill old transaction history columns.
+UPDATE blockchain.transactions
+SET
+  from_wallet_address = COALESCE(from_wallet_address, sender_wallet_address),
+  to_wallet_address = COALESCE(to_wallet_address, receiver_wallet_address),
+  updated_at = NOW()
+WHERE transaction_type = 'WALLET_TO_WALLET'
+  AND (
+    from_wallet_address IS NULL
+    OR to_wallet_address IS NULL
+  );
+
+-- Align known tested wallets.
+UPDATE blockchain.wallets
+SET
+  wallet_address = 'WALLET_BD5452FBC71AA73A28A2F16B9741F304EDB9AB24',
+  currency = 'TOKEN',
+  current_balance = 984,
+  updated_at = NOW()
+WHERE customer_id = 'CUST2017';
+
+UPDATE blockchain.wallets
+SET
+  wallet_address = 'WALLET_380901774428773E96E8EBCA4B4D8C9FB920FB6A',
+  currency = 'TOKEN',
+  current_balance = 1016,
+  updated_at = NOW()
+WHERE customer_id = 'CUST2018';
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_wallets_customer_id
+ON blockchain.wallets(customer_id);
+
+CREATE INDEX IF NOT EXISTS idx_blockchain_wallets_wallet_address
+ON blockchain.wallets(wallet_address);
+
+CREATE INDEX IF NOT EXISTS idx_transactions_from_wallet_address
+ON blockchain.transactions(from_wallet_address);
+
+CREATE INDEX IF NOT EXISTS idx_transactions_to_wallet_address
+ON blockchain.transactions(to_wallet_address);
+
+CREATE INDEX IF NOT EXISTS idx_transactions_sender_wallet_address
+ON blockchain.transactions(sender_wallet_address);
+
+CREATE INDEX IF NOT EXISTS idx_transactions_receiver_wallet_address
+ON blockchain.transactions(receiver_wallet_address);
+
+CREATE INDEX IF NOT EXISTS idx_transactions_request_id
+ON blockchain.transactions(request_id);
+
+CREATE INDEX IF NOT EXISTS idx_transactions_fabric_transaction_id
+ON blockchain.transactions(fabric_transaction_id);
+
+COMMIT;
+
+==================================================
+FILE: blockchain-api/postgresql/step-23-wallet-transfer-compatibility-patch.sql
+==================================================
+BEGIN;
+
+ALTER TABLE blockchain.transactions
+ADD COLUMN IF NOT EXISTS transaction_id VARCHAR(100);
+
+ALTER TABLE blockchain.transactions
+ADD COLUMN IF NOT EXISTS transaction_type VARCHAR(50);
+
+ALTER TABLE blockchain.transactions
+ADD COLUMN IF NOT EXISTS sender_wallet_id UUID;
+
+ALTER TABLE blockchain.transactions
+ADD COLUMN IF NOT EXISTS sender_wallet_address VARCHAR(100);
+
+ALTER TABLE blockchain.transactions
+ADD COLUMN IF NOT EXISTS sender_customer_id VARCHAR(100);
+
+ALTER TABLE blockchain.transactions
+ADD COLUMN IF NOT EXISTS receiver_wallet_id UUID;
+
+ALTER TABLE blockchain.transactions
+ADD COLUMN IF NOT EXISTS receiver_wallet_address VARCHAR(100);
+
+ALTER TABLE blockchain.transactions
+ADD COLUMN IF NOT EXISTS receiver_customer_id VARCHAR(100);
+
+ALTER TABLE blockchain.transactions
+ADD COLUMN IF NOT EXISTS amount NUMERIC(20, 6) DEFAULT 0;
+
+ALTER TABLE blockchain.transactions
+ADD COLUMN IF NOT EXISTS currency VARCHAR(10) DEFAULT 'USD';
+
+ALTER TABLE blockchain.transactions
+ADD COLUMN IF NOT EXISTS transaction_purpose TEXT;
+
+ALTER TABLE blockchain.transactions
+ADD COLUMN IF NOT EXISTS transaction_description TEXT;
+
+ALTER TABLE blockchain.transactions
+ADD COLUMN IF NOT EXISTS transaction_status VARCHAR(30) DEFAULT 'PENDING';
+
+ALTER TABLE blockchain.transactions
+ADD COLUMN IF NOT EXISTS risk_level VARCHAR(30) DEFAULT 'LOW';
+
+ALTER TABLE blockchain.transactions
+ADD COLUMN IF NOT EXISTS fabric_tx_id VARCHAR(150);
+
+ALTER TABLE blockchain.transactions
+ADD COLUMN IF NOT EXISTS fabric_status VARCHAR(30) DEFAULT 'PENDING';
+
+ALTER TABLE blockchain.transactions
+ADD COLUMN IF NOT EXISTS request_id VARCHAR(100);
+
+ALTER TABLE blockchain.transactions
+ADD COLUMN IF NOT EXISTS metadata JSONB DEFAULT '{}'::jsonb;
+
+ALTER TABLE blockchain.transactions
+ADD COLUMN IF NOT EXISTS error_code VARCHAR(100);
+
+ALTER TABLE blockchain.transactions
+ADD COLUMN IF NOT EXISTS error_message TEXT;
+
+ALTER TABLE blockchain.transactions
+ADD COLUMN IF NOT EXISTS created_by VARCHAR(100);
+
+ALTER TABLE blockchain.transactions
+ADD COLUMN IF NOT EXISTS updated_by VARCHAR(100);
+
+ALTER TABLE blockchain.transactions
+ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW();
+
+ALTER TABLE blockchain.transactions
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW();
+
+ALTER TABLE blockchain.wallets
+ADD COLUMN IF NOT EXISTS current_balance NUMERIC(20, 6) DEFAULT 0;
+
+ALTER TABLE blockchain.wallets
+ADD COLUMN IF NOT EXISTS wallet_status VARCHAR(30) DEFAULT 'ACTIVE';
+
+ALTER TABLE blockchain.wallets
+ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;
+
+ALTER TABLE blockchain.wallets
+ADD COLUMN IF NOT EXISTS updated_by VARCHAR(100);
+
+ALTER TABLE blockchain.integration_requests
+ADD COLUMN IF NOT EXISTS response_payload JSONB DEFAULT '{}'::jsonb;
+
+ALTER TABLE blockchain.integration_requests
+ADD COLUMN IF NOT EXISTS error_code VARCHAR(100);
+
+ALTER TABLE blockchain.integration_requests
+ADD COLUMN IF NOT EXISTS error_message TEXT;
+
+ALTER TABLE blockchain.integration_requests
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW();
+
+CREATE INDEX IF NOT EXISTS idx_transactions_transaction_id
+ON blockchain.transactions(transaction_id);
+
+CREATE INDEX IF NOT EXISTS idx_transactions_sender_wallet
+ON blockchain.transactions(sender_wallet_address);
+
+CREATE INDEX IF NOT EXISTS idx_transactions_receiver_wallet
+ON blockchain.transactions(receiver_wallet_address);
+
+CREATE INDEX IF NOT EXISTS idx_transactions_status
+ON blockchain.transactions(transaction_status);
+
+CREATE INDEX IF NOT EXISTS idx_transactions_request_id
+ON blockchain.transactions(request_id);
+
+CREATE INDEX IF NOT EXISTS idx_wallets_wallet_address
+ON blockchain.wallets(wallet_address);
+
+COMMIT;
+
+==================================================
+FILE: blockchain-api/postgresql/step-23-transaction-type-constraint-fix.sql
+==================================================
+
+BEGIN;
+
+ALTER TABLE blockchain.transactions
+DROP CONSTRAINT IF EXISTS chk_blockchain_transactions_type;
+
+ALTER TABLE blockchain.transactions
+ADD CONSTRAINT chk_blockchain_transactions_type
+CHECK (
+  transaction_type IN (
+    'WALLET_TO_WALLET',
+    'WALLET_TO_ORGANIZATION',
+    'ORGANIZATION_TO_WALLET',
+    'ORGANIZATION_TO_ORGANIZATION',
+    'TRANSFER',
+    'DEBIT',
+    'CREDIT',
+    'PAYMENT',
+    'REFUND',
+    'ADJUSTMENT'
+  )
+);
+
+COMMIT;
+
+==================================================
+DATABASE MIGRATIONS FILE TREE
+==================================================
+
+==================================================
+DATABASE SCRIPTS FILE TREE
+==================================================
