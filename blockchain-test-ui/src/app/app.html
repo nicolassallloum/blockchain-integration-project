@@ -1,4 +1,4 @@
-<div class="layout">
+<div class="layout" [class.sidebar-collapsed]="isSidebarCollapsed">
   <!-- Sidebar -->
   <aside class="sidebar">
     <div class="logo-row">
@@ -8,7 +8,12 @@
         class="valoores-logo-img"
       />
 
-      <button type="button" class="menu-toggle" aria-label="Toggle menu">
+      <button
+        type="button"
+        class="menu-toggle"
+        aria-label="Toggle menu"
+        (click)="toggleSidebar()"
+      >
         ☰
       </button>
     </div>
@@ -68,49 +73,49 @@
     <nav class="menu">
       <a href="https://vfds.dev.hq.com/kyc" class="back-link">
         <span class="back-icon">↩</span>
-        <span>Back</span>
+        <span class="menu-text">Back</span>
       </a>
 
       <a routerLink="/digital-kyc/dashboard" routerLinkActive="active">
         <span class="nav-dot"></span>
-        <span>Dashboard</span>
+        <span class="menu-text">Dashboard</span>
       </a>
 
       <a routerLink="/digital-kyc/wallet-create" routerLinkActive="active">
         <span class="nav-dot"></span>
-        <span>Wallet Create</span>
+        <span class="menu-text">Wallet Create</span>
       </a>
 
       <a routerLink="/digital-kyc/wallet-login" routerLinkActive="active">
         <span class="nav-dot"></span>
-        <span>Wallet Login</span>
+        <span class="menu-text">Wallet Login</span>
       </a>
 
       <a routerLink="/digital-kyc/wallet-query" routerLinkActive="active">
         <span class="nav-dot"></span>
-        <span>Wallet Query</span>
+        <span class="menu-text">Wallet Query</span>
       </a>
 
       <a routerLink="/digital-kyc/fabric-test" routerLinkActive="active">
         <span class="nav-dot"></span>
-        <span>Fabric Test</span>
+        <span class="menu-text">Fabric Test</span>
       </a>
 
       <div class="menu-divider"></div>
 
       <a routerLink="/digital-kyc/wallet-transfer" routerLinkActive="active">
         <span class="nav-dot"></span>
-        <span>Wallet Transfer</span>
+        <span class="menu-text">Wallet Transfer</span>
       </a>
 
       <a routerLink="/digital-kyc/organization-transfer" routerLinkActive="active">
         <span class="nav-dot"></span>
-        <span>Organization Transfer</span>
+        <span class="menu-text">Organization Transfer</span>
       </a>
 
       <a routerLink="/digital-kyc/transaction-history" routerLinkActive="active">
         <span class="nav-dot"></span>
-        <span>Transaction History</span>
+        <span class="menu-text">Transaction History</span>
       </a>
 
       <a
@@ -119,12 +124,12 @@
         class="sidebar-link"
       >
         <span class="nav-dot"></span>
-        <span>Data Generation Engine</span>
+        <span class="menu-text">Data Generation Engine</span>
       </a>
     </nav>
 
     <div class="sidebar-footer">
-      VFDS-BLOCKCHAIN/1.0.3
+      <span class="sidebar-footer-text">VFDS-BLOCKCHAIN/1.0.3</span>
     </div>
   </aside>
 

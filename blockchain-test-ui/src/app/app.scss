@@ -31,6 +31,8 @@
   position: fixed;
   inset: 0 auto 0 0;
   z-index: 30;
+  overflow: hidden;
+  transition: width 0.25s ease, min-width 0.25s ease;
 }
 
 .logo-row {
@@ -46,6 +48,7 @@
   max-height: 38px;
   object-fit: contain;
   display: block;
+  transition: opacity 0.2s ease, width 0.2s ease;
 }
 
 .menu-toggle {
@@ -66,6 +69,7 @@
 .sidebar-search-wrapper {
   position: relative;
   margin: 18px 15px 14px;
+  transition: opacity 0.2s ease, height 0.2s ease, margin 0.2s ease;
 }
 
 .sidebar-search {
@@ -247,7 +251,7 @@
   font-weight: 700;
   line-height: 1.25;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease, padding 0.25s ease, gap 0.25s ease;
 }
 
 .menu a:hover {
@@ -316,6 +320,7 @@
   min-height: 100vh;
   background: #f3f6fa;
   position: relative;
+  transition: margin-left 0.25s ease, width 0.25s ease;
 }
 
 .topbar {
@@ -417,6 +422,69 @@
   z-index: 50;
 }
 
+/* =========================================================
+   Sidebar Collapsed Mode
+   ========================================================= */
+
+.layout.sidebar-collapsed .sidebar {
+  width: 64px;
+  min-width: 64px;
+}
+
+.layout.sidebar-collapsed .main {
+  margin-left: 64px;
+  width: calc(100% - 64px);
+}
+
+.layout.sidebar-collapsed .logo-row {
+  padding: 0;
+  justify-content: center;
+}
+
+.layout.sidebar-collapsed .valoores-logo-img {
+  display: none;
+}
+
+.layout.sidebar-collapsed .sidebar-search-wrapper {
+  height: 0;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.layout.sidebar-collapsed .menu {
+  border-top: none;
+  padding-top: 12px;
+}
+
+.layout.sidebar-collapsed .menu a {
+  justify-content: center;
+  padding: 12px 0;
+  gap: 0;
+}
+
+.layout.sidebar-collapsed .menu-text,
+.layout.sidebar-collapsed .sidebar-footer-text {
+  display: none;
+}
+
+.layout.sidebar-collapsed .back-link {
+  padding-left: 0 !important;
+}
+
+.layout.sidebar-collapsed .back-icon {
+  font-size: 18px;
+}
+
+.layout.sidebar-collapsed .menu-divider {
+  margin: 8px 14px;
+}
+
+.layout.sidebar-collapsed .sidebar-footer {
+  border-top: none;
+}
+
 /* =========================
    Responsive
    ========================= */
@@ -435,18 +503,38 @@
   .valoores-logo-img {
     width: 135px;
   }
+
+  .layout.sidebar-collapsed .sidebar {
+    width: 64px;
+    min-width: 64px;
+  }
+
+  .layout.sidebar-collapsed .main {
+    margin-left: 64px;
+    width: calc(100% - 64px);
+  }
 }
 
 @media (max-width: 800px) {
   .sidebar {
-    position: relative;
+    position: fixed;
     width: 210px;
     min-width: 210px;
   }
 
   .main {
-    margin-left: 0;
+    margin-left: 210px;
     width: calc(100% - 210px);
+  }
+
+  .layout.sidebar-collapsed .sidebar {
+    width: 64px;
+    min-width: 64px;
+  }
+
+  .layout.sidebar-collapsed .main {
+    margin-left: 64px;
+    width: calc(100% - 64px);
   }
 
   .breadcrumb {

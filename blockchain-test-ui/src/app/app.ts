@@ -28,6 +28,7 @@ interface SidebarMenuItem {
 export class App {
   appName = 'VALORES';
 
+  isSidebarCollapsed = false;
   sidebarSearchText = '';
 
   menuItems: SidebarMenuItem[] = [
@@ -95,10 +96,18 @@ export class App {
 
   constructor(private router: Router) {}
 
+  toggleSidebar(): void {
+    this.isSidebarCollapsed = !this.isSidebarCollapsed;
+
+    if (this.isSidebarCollapsed) {
+      this.sidebarSearchText = '';
+    }
+  }
+
   get filteredSidebarItems(): SidebarMenuItem[] {
     const searchValue = this.sidebarSearchText.trim().toLowerCase();
 
-    if (!searchValue) {
+    if (!searchValue || this.isSidebarCollapsed) {
       return [];
     }
 
