@@ -13,16 +13,63 @@
       </button>
     </div>
 
-    <div class="sidebar-search">
-      <span class="search-icon">⌕</span>
-      <input type="text" placeholder="Search menus..." />
+    <!-- Sidebar Search -->
+    <div class="sidebar-search-wrapper">
+      <div class="sidebar-search">
+        <span class="search-icon">⌕</span>
+
+        <input
+          type="text"
+          placeholder="Search menus..."
+          autocomplete="off"
+          [(ngModel)]="sidebarSearchText"
+        />
+
+        <button
+          *ngIf="sidebarSearchText"
+          type="button"
+          class="clear-search-btn"
+          aria-label="Clear search"
+          (click)="clearSidebarSearch()"
+        >
+          ×
+        </button>
+      </div>
+
+      <div class="sidebar-search-results" *ngIf="filteredSidebarItems.length > 0">
+        <button
+          type="button"
+          class="sidebar-search-result"
+          *ngFor="let item of filteredSidebarItems"
+          (click)="selectSidebarItem(item)"
+        >
+          <span
+            class="result-icon"
+            [class.result-dot]="item.icon === '●'"
+          >
+            {{ item.icon }}
+          </span>
+
+          <span class="result-content">
+            <span class="result-title">{{ item.label }}</span>
+            <span class="result-group">{{ item.group }}</span>
+          </span>
+        </button>
+      </div>
+
+      <div
+        class="sidebar-search-empty"
+        *ngIf="sidebarSearchText && filteredSidebarItems.length === 0"
+      >
+        No menu found
+      </div>
     </div>
 
     <nav class="menu">
-    <a href="https://vfds.dev.hq.com/kyc" class="back-link">
-      <span class="back-icon">↩</span>
-      <span>Back</span>
-    </a>
+      <a href="https://vfds.dev.hq.com/kyc" class="back-link">
+        <span class="back-icon">↩</span>
+        <span>Back</span>
+      </a>
 
       <a routerLink="/digital-kyc/dashboard" routerLinkActive="active">
         <span class="nav-dot"></span>
@@ -65,14 +112,15 @@
         <span class="nav-dot"></span>
         <span>Transaction History</span>
       </a>
+
       <a
-      routerLink="/data-generation-engine"
-      routerLinkActive="active"
-      class="sidebar-link"
-    >
-      <span class="nav-dot"></span>
-      <span>Data Generation Engine</span>
-    </a>
+        routerLink="/data-generation-engine"
+        routerLinkActive="active"
+        class="sidebar-link"
+      >
+        <span class="nav-dot"></span>
+        <span>Data Generation Engine</span>
+      </a>
     </nav>
 
     <div class="sidebar-footer">
@@ -88,14 +136,10 @@
         <span class="breadcrumb-separator">›</span>
         <span>Digital KYC</span>
       </div>
-
-
     </header>
 
     <section class="page-content">
       <router-outlet></router-outlet>
     </section>
-
-
   </main>
 </div>
