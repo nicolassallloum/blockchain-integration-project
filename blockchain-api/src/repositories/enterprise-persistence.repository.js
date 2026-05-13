@@ -1,7 +1,7 @@
 'use strict';
 
 const CREATED_BY = -1995;
-const OBJECT_ID = null;
+const OBJECT_ID = 7777777;
 const TRANSACTION_TYPE_ID = 77777;
 
 function toNumberOrNull(value) {
