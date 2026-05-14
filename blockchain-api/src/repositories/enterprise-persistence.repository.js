@@ -1,7 +1,7 @@
 'use strict';
 
-const CREATED_BY = -1995;
-const OBJECT_ID = 7777777;
+const CREATED_BY = 99;
+const OBJECT_ID = 5467;
 const TRANSACTION_TYPE_ID = 77777;
 
 function toNumberOrNull(value) {
@@ -350,7 +350,7 @@ async function insertCustomerDef(client, walletRow, walletData) {
   const result = await client.query(
     `
     INSERT INTO sdedba.cfg_customer_def (
-      object_id,
+
       object_content,
       object_pk_value,
       creation_date,
@@ -358,12 +358,11 @@ async function insertCustomerDef(client, walletRow, walletData) {
       customer_id
     )
     VALUES (
-      $1, $2, $3, CURRENT_DATE, $4, $5
+     $1, $2, CURRENT_DATE, $3, $4
     )
     RETURNING *
     `,
     [
-      OBJECT_ID,
       objectContent,
       numericCustomerId,
       CREATED_BY,

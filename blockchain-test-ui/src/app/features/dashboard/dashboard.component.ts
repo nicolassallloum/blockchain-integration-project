@@ -28,7 +28,7 @@ import { WalletApiService } from '../../core/services/wallet-api.service';
         </div>
 
         <div class="stat-card">
-          <span>Active Wallets</span>
+          <span>Displayed Wallets</span>
           <strong>{{ activeWallets }}</strong>
           <p>Status = ACTIVE</p>
         </div>
