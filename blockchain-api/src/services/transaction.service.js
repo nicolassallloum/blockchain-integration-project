@@ -577,13 +577,13 @@ async function organizationTransfer(payload, context = {}) {
       };
     }
 
-    if (senderWallet.walletType !== 'ORGANIZATION') {
+    if (senderWallet.walletType !== 'CUSTOMER') {
       await client.query('ROLLBACK');
 
       return {
         success: false,
-        message: 'Organization transfer is allowed only when logged in using an organization wallet',
-        errorCode: 'ORGANIZATION_WALLET_REQUIRED',
+        message: 'Wallet-to-organization transfer is allowed only from a customer wallet',
+        errorCode: 'CUSTOMER_WALLET_REQUIRED',
         data: {
           senderWalletAddress,
           senderWalletType: senderWallet.walletType
@@ -661,7 +661,7 @@ async function organizationTransfer(payload, context = {}) {
         transactionId,
         businessTransactionId: transactionId,
         requestId,
-        transactionType: 'ORGANIZATION_TO_ORGANIZATION',
+        transactionType: 'WALLET_TO_ORGANIZATION',
         transactionDirection: 'OUTGOING',
         senderWalletId: senderWallet.walletId,
         senderWalletAddress,
@@ -686,15 +686,15 @@ async function organizationTransfer(payload, context = {}) {
         chaincodeName: process.env.FABRIC_CHAINCODE_NAME || 'kyc-wallet-chaincode-js',
         transactionPurpose:
           payload.transactionPurpose ||
-          'Organization-to-organization transfer',
+          'Wallet-to-organization transfer',
         transactionDescription:
           payload.transactionDescription ||
-          'Organization wallet transfers to another organization wallet',
+          'Customer wallet transfers to organization wallet',
         requestSource: payload.requestSource || 'BLOCKCHAIN_API',
         sourceSystem: payload.sourceSystem || 'BLOCKCHAIN_API',
         createdBy: payload.createdBy || 'system',
         metadata: {
-          source: 'ORGANIZATION_TO_ORGANIZATION_TRANSFER',
+          source: 'WALLET_TO_ORGANIZATION_TRANSFER',
           senderBalanceBefore: senderBalance
         },
         originalPayload: payload
@@ -707,11 +707,11 @@ async function organizationTransfer(payload, context = {}) {
 
     return {
       success: true,
-      message: 'Organization-to-organization transfer completed successfully',
+      message: 'Wallet-to-organization transfer completed successfully',
       data: {
         transactionId,
         requestId,
-        transactionType: 'ORGANIZATION_TRANSFER',
+        transactionType: 'WALLET_TO_ORGANIZATION',
         senderWalletAddress,
         receiverWalletAddress,
         senderOrganizationId: senderWallet.organizationId,

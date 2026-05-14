@@ -1,0 +1,3911 @@
+==================================================
+BLOCKCHAIN PROJECT VIEWER COUNT FILE EXPORT
+Generated at: Thu May 14 11:17:40 AM EEST 2026
+==================================================
+
+================ BACKEND FILE TREE ================
+blockchain-api/src/app/features/fabric-test/fabric-test.component.ts
+blockchain-api/src/app.js
+blockchain-api/src/app.js.bak.before_cors_fix_20260506_132512
+blockchain-api/src/app.js.bak.fix_cors_options_20260506_133352
+blockchain-api/src/config/app.config.js
+blockchain-api/src/config/auth.config.js
+blockchain-api/src/config/blockchain.config.js
+blockchain-api/src/config/config.js
+blockchain-api/src/config/connection-org1.json
+blockchain-api/src/config/database.js
+blockchain-api/src/config/env.validator.js
+blockchain-api/src/config/index.js
+blockchain-api/src/config/logger.config.js
+blockchain-api/src/config/security.config.js
+blockchain-api/src/constants/audit.constants.js
+blockchain-api/src/controllers/auth.controller.js
+blockchain-api/src/controllers/blockchain.controller.js
+blockchain-api/src/controllers/data-generator.controller.js
+blockchain-api/src/controllers/fabric.controller.js
+blockchain-api/src/controllers/health.controller.js
+blockchain-api/src/controllers/organization.controller.js
+blockchain-api/src/controllers/reference.controller.js
+blockchain-api/src/controllers/reference.controller.js.bak_org_type_filter
+blockchain-api/src/controllers/transaction.controller.js
+blockchain-api/src/controllers/wallet-auth.controller.js
+blockchain-api/src/controllers/wallet.controller.js
+blockchain-api/src/controllers/wallet.controller.js.bak_next_customer_id
+blockchain-api/src/controllers/wallet-query.controller.js
+blockchain-api/src/database/postgres.js
+blockchain-api/src/index.js
+blockchain-api/src/logs/app.log
+blockchain-api/src/logs/error.log
+blockchain-api/src/logs/.gitkeep
+blockchain-api/src/middleware/apiKey.middleware.js
+blockchain-api/src/middleware/auditRequest.middleware.js
+blockchain-api/src/middleware/authorization.middleware.js
+blockchain-api/src/middleware/errorHandler.js
+blockchain-api/src/middleware/errorHandler.middleware.js
+blockchain-api/src/middleware/error.middleware.js
+blockchain-api/src/middleware/jwt.middleware.js
+blockchain-api/src/middleware/notFoundHandler.js
+blockchain-api/src/middleware/rateLimit.middleware.js
+blockchain-api/src/middleware/requestId.middleware.js
+blockchain-api/src/middleware/routeSecurity.middleware.js
+blockchain-api/src/middleware/security.middleware.js
+blockchain-api/src/middlewares/errorHandler.middleware.js
+blockchain-api/src/middlewares/notFound.middleware.js
+blockchain-api/src/middleware/sqlInjectionProtection.middleware.js
+blockchain-api/src/middlewares/requestLogger.middleware.js
+blockchain-api/src/middleware/suspiciousRequest.middleware.js
+blockchain-api/src/middlewares/wallet-login.validator.js
+blockchain-api/src/middleware/validation.middleware.js
+blockchain-api/src/repositories/blockchain.repository.js
+blockchain-api/src/repositories/enterprise-persistence.repository.js
+blockchain-api/src/routes/auth.routes.js
+blockchain-api/src/routes/blockchain.routes.js
+blockchain-api/src/routes/data-generator.routes.js
+blockchain-api/src/routes/fabric.routes.js
+blockchain-api/src/routes/health.routes.js
+blockchain-api/src/routes/index.js
+blockchain-api/src/routes/organization.routes.js
+blockchain-api/src/routes/reference.routes.js
+blockchain-api/src/routes/reference.routes.js.bak_org_type_filter
+blockchain-api/src/routes/transaction.routes.js
+blockchain-api/src/routes/transactions.routes.js
+blockchain-api/src/routes/wallet-query.routes.js
+blockchain-api/src/routes/wallet.routes.js
+blockchain-api/src/routes/wallet.routes.js.bak_next_customer_id
+blockchain-api/src/scripts/generate-wallets-transactions-fast.js
+blockchain-api/src/scripts/generate-wallets-transactions-fast.js.backup_before_duplicate_fix_20260511_162339
+blockchain-api/src/scripts/generate-wallets-transactions.js
+blockchain-api/src/server.js
+blockchain-api/src/server.js.bak.before_options_fix_20260506_133738
+blockchain-api/src/server.js.bak.before_organizations_route_20260506_181742
+blockchain-api/src/server.js.bak.before_organizations_route_20260507_091230
+blockchain-api/src/server.js.bak.clean_cors_20260506_135957
+blockchain-api/src/services/audit.service.js
+blockchain-api/src/services/blockchain.service.js
+blockchain-api/src/services/database.service.js
+blockchain-api/src/services/fabricGateway.service.js
+blockchain-api/src/services/fabric.service.js
+blockchain-api/src/services/health.service.js
+blockchain-api/src/services/organization.service.js
+blockchain-api/src/services/transaction.service.js
+blockchain-api/src/services/transaction.service.js.bak_balance_after_transfer
+blockchain-api/src/services/transaction.service.js.bak_fixed_org_wallet_rules
+blockchain-api/src/services/transaction.service.js.bak_fix_org_receiver_type_only
+blockchain-api/src/services/transaction.service.js.bak_org_to_org_final_fix
+blockchain-api/src/services/transaction.service.js.bak_step_32_1_org_fk_fix
+blockchain-api/src/services/transaction.service.js.bak_step_32_1_status_fix
+blockchain-api/src/services/transaction.service.js.bak.step32_23514_fix
+blockchain-api/src/services/transaction.service.js.bak.step32_constraint_fix
+blockchain-api/src/services/transaction.service.js.bak.step32_type_fix
+blockchain-api/src/services/wallet-auth.service.js
+blockchain-api/src/services/wallet-query.service.js
+blockchain-api/src/services/wallet.service.js
+blockchain-api/src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225
+blockchain-api/src/services/wallet.service.js.bak_fix_wallet_create_profile
+blockchain-api/src/services/wallet.service.js.bak_login_wallet_address
+blockchain-api/src/services/wallet.service.js.bak_next_customer_id
+blockchain-api/src/services/wallet.service.js.bak.restore_working_20260506_152505
+blockchain-api/src/utils/apiResponse.js
+blockchain-api/src/utils/asyncHandler.js
+blockchain-api/src/utils/authErrors.js
+blockchain-api/src/utils/jwt.util.js
+blockchain-api/src/utils/logger.js
+blockchain-api/src/utils/password.util.js
+blockchain-api/src/utils/response.util.js
+blockchain-api/src/utils/token.util.js
+blockchain-api/src/utils/walletAddressGenerator.js
+
+================ FRONTEND DASHBOARD/API FILE TREE ================
+blockchain-test-ui/src/app/app.routes.ts
+blockchain-test-ui/src/app/app.routes.ts.bak_fix_routes_build
+blockchain-test-ui/src/app/core/interceptors/api-auth.interceptor.ts
+blockchain-test-ui/src/app/core/services/api-config.service.ts
+blockchain-test-ui/src/app/core/services/dashboard-api.service.ts
+blockchain-test-ui/src/app/core/services/fabric-api.service.ts
+blockchain-test-ui/src/app/core/services/fabric-api.service.ts.bak_add_api_key_final
+blockchain-test-ui/src/app/core/services/transaction-api.service.ts
+blockchain-test-ui/src/app/core/services/wallet-api.service.ts
+blockchain-test-ui/src/app/features/dashboard/dashboard.component.css
+blockchain-test-ui/src/app/features/dashboard/dashboard.component.css.bak_valoores_reference_design
+blockchain-test-ui/src/app/features/dashboard/dashboard.component.ts
+blockchain-test-ui/src/app/features/fabric-test/fabric-test.component.ts.bak_add_api_key
+blockchain-test-ui/src/app/layout/sidebar/sidebar.component.css
+blockchain-test-ui/src/app/layout/sidebar/sidebar.component.css.bak_logo_image_only
+blockchain-test-ui/src/app/layout/sidebar/sidebar.component.css.bak_logo_update
+blockchain-test-ui/src/app/layout/sidebar/sidebar.component.html
+blockchain-test-ui/src/app/layout/sidebar/sidebar.component.html.bak_logo_image_only
+blockchain-test-ui/src/app/layout/sidebar/sidebar.component.html.bak_logo_update
+blockchain-test-ui/src/app/services/fabric.service.ts
+blockchain-test-ui/src/app/services/fabric.service.ts.bak_add_api_key
+blockchain-test-ui/src/app/services/organization.service.js
+blockchain-test-ui/src/app/services/transaction.service.ts
+blockchain-test-ui/src/app/services/transaction.service.ts.bak_add_api_key_header
+blockchain-test-ui/src/app/services/wallet.service.ts
+blockchain-test-ui/src/app/services/wallet.service.ts.bak_bulk_wallet_fix
+blockchain-test-ui/src/app/services/wallet.service.ts.bak_fix_missing_methods
+blockchain-test-ui/src/app/services/wallet.service.ts.bak_fix_wallet_routes
+blockchain-test-ui/src/app/services/wallet.service.ts.bak_org_type_filter
+blockchain-test-ui/src/app/services/wallet.service.ts.bak_restore_safe_bulk
+blockchain-test-ui/src/app/services/wallet-session.service.ts
+blockchain-test-ui/src/app/services/wallet-session.service.ts.bak_duplicate_wallet_type
+blockchain-test-ui/src/app/services/wallet-session.service.ts.bak_fix_org_wallet_type
+
+==================================================
+FILE: blockchain-api/src/server.js
+==================================================
+'use strict';
+
+/**
+ * Blockchain API Middleware Server
+ * Blockchain Integration Project
+ *
+ * Updated for:
+ * - Angular UI direct CORS support
+ * - Browser OPTIONS / preflight handling
+ * - /api/v1/data-generator route
+ * - /api/v1/organizations route
+ * - /api/v1/wallets route
+ * - /api/v1/transactions route
+ * - /api/v1/fabric route
+ * - /api/v1/reference route
+ * - Professional request logging
+ * - Professional 404 and global error handling
+ */
+
+require('dotenv').config();
+
+const express = require('express');
+const cors = require('cors');
+const crypto = require('crypto');
+const os = require('os');
+
+const app = express();
+
+/**
+ * Optional packages.
+ * Loaded safely so the API does not crash if a package is unavailable.
+ */
+function optionalRequire(packageName) {
+  try {
+    return require(packageName);
+  } catch (error) {
+    console.warn(`[OPTIONAL_PACKAGE_WARNING] Package not available: ${packageName}`);
+    return null;
+  }
+}
+
+const helmet = optionalRequire('helmet');
+
+/**
+ * Route loader.
+ * This avoids server crash if a route file is temporarily missing.
+ */
+function safeRoute(routePath, routeName) {
+  try {
+    const route = require(routePath);
+    console.log(`[ROUTES] ${routeName} loaded`);
+    return route;
+  } catch (error) {
+    console.error(`[SERVER_ROUTE_LOAD_WARNING] Failed to load ${routeName}:`, error.message);
+    return null;
+  }
+}
+
+/**
+ * Server configuration.
+ */
+const PORT = Number(process.env.PORT || process.env.API_PORT || 3001);
+const HOST = process.env.HOST || '0.0.0.0';
+
+const SERVICE_NAME = process.env.SERVICE_NAME || 'Blockchain API Middleware';
+const SERVICE_VERSION = process.env.SERVICE_VERSION || '1.0.0';
+const NODE_ENV = process.env.NODE_ENV || 'production';
+
+/**
+ * CORS configuration.
+ *
+ * Important:
+ * - Browser UI is running on port 4200.
+ * - Backend API is running on port 3001.
+ * - Browser preflight OPTIONS must be answered before routes/security.
+ */
+const defaultAllowedOrigins = [
+  'http://172.31.13.90:4200',
+  'http://172.31.13.90:8080',
+  'http://127.0.0.1:4200',
+  'http://localhost:4200',
+  'http://127.0.0.1:8080',
+  'http://localhost:8080',
+  'http://127.0.0.1:5173',
+  'http://localhost:5173'
+];
+
+const envAllowedOrigins = String(process.env.CORS_ALLOWED_ORIGINS || process.env.CORS_ORIGIN || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+const allowedOrigins = Array.from(new Set([...defaultAllowedOrigins, ...envAllowedOrigins]));
+
+const allowedHeaders = [
+  'Accept',
+  'Content-Type',
+  'Authorization',
+  'x-api-key',
+  'x-request-id',
+  'x-correlation-id',
+  'x-source-system',
+  'x-request-source'
+];
+
+const exposedHeaders = [
+  'x-request-id',
+  'x-correlation-id'
+];
+
+const corsOptions = {
+  origin(origin, callback) {
+    /**
+     * Allow:
+     * - Server-to-server requests with no Origin header
+     * - Browser requests from allowed origins
+     */
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    console.warn('[CORS_BLOCKED]', {
+      origin,
+      allowedOrigins
+    });
+
+    return callback(new Error(`CORS blocked origin: ${origin}`));
+  },
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders,
+  exposedHeaders,
+  credentials: false,
+  optionsSuccessStatus: 204,
+  preflightContinue: false
+};
+
+/**
+ * Manual CORS preflight middleware.
+ *
+ * This is intentionally placed before:
+ * - helmet
+ * - body parser
+ * - route handlers
+ * - API key middleware if added later
+ *
+ * This ensures Angular OPTIONS requests do not stay pending.
+ */
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+
+  if (!origin) {
+    return next();
+  }
+
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', allowedHeaders.join(','));
+    res.setHeader('Access-Control-Expose-Headers', exposedHeaders.join(','));
+    res.setHeader('Access-Control-Max-Age', '86400');
+  } else {
+    console.warn('[CORS_BLOCKED_PREFLIGHT]', {
+      origin,
+      method: req.method,
+      url: req.originalUrl
+    });
+  }
+
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
+
+  return next();
+});
+
+/**
+ * Normal CORS middleware.
+ */
+app.use(cors(corsOptions));
+
+/**
+ * Security headers.
+ */
+if (helmet) {
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: false,
+      crossOriginEmbedderPolicy: false,
+      contentSecurityPolicy: false
+    })
+  );
+}
+
+/**
+ * Body parsers.
+ */
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+/**
+ * Request ID / Correlation ID middleware.
+ */
+app.use((req, res, next) => {
+  const incomingRequestId =
+    req.headers['x-request-id'] ||
+    req.headers['x-correlation-id'];
+
+  const requestId =
+    incomingRequestId ||
+    `REQ_${crypto.randomBytes(12).toString('hex').toUpperCase()}`;
+
+  req.requestId = String(requestId);
+  req.correlationId = String(req.headers['x-correlation-id'] || requestId);
+
+  res.setHeader('x-request-id', req.requestId);
+  res.setHeader('x-correlation-id', req.correlationId);
+
+  return next();
+});
+
+/**
+ * Lightweight request logger.
+ */
+app.use((req, res, next) => {
+  const startedAt = Date.now();
+
+  res.on('finish', () => {
+    const durationMs = Date.now() - startedAt;
+
+    console.log('[HTTP_REQUEST]', {
+      method: req.method,
+      url: req.originalUrl,
+      statusCode: res.statusCode,
+      durationMs,
+      requestId: req.requestId,
+      correlationId: req.correlationId,
+      origin: req.headers.origin || null
+    });
+  });
+
+  return next();
+});
+
+/**
+ * Route imports.
+ *
+ * Routes are loaded after middleware definitions but before route registration.
+ */
+const walletRoutes = safeRoute('./routes/wallet.routes', 'wallet.routes');
+const dataGeneratorRoutes = safeRoute('./routes/data-generator.routes', 'data-generator.routes');
+const transactionRoutes = safeRoute('./routes/transaction.routes', 'transaction.routes');
+const fabricRoutes = safeRoute('./routes/fabric.routes', 'fabric.routes');
+const referenceRoutes = safeRoute('./routes/reference.routes', 'reference.routes');
+const organizationRoutes = safeRoute('./routes/organization.routes', 'organization.routes');
+
+/**
+ * Optional root API routes aggregator.
+ * Keep it optional because some versions of the project may not have src/routes/index.js.
+ */
+const apiRoutes = safeRoute('./routes', 'routes/index');
+
+/**
+ * Health endpoint.
+ */
+app.get('/api/v1/health', (req, res) => {
+  return res.status(200).json({
+    success: true,
+    message: `${SERVICE_NAME} is healthy`,
+    data: {
+      service: SERVICE_NAME,
+      version: SERVICE_VERSION,
+      environment: NODE_ENV,
+      uptimeSeconds: process.uptime(),
+      timestamp: new Date().toISOString(),
+      system: {
+        hostname: os.hostname(),
+        platform: process.platform,
+        memoryFree: os.freemem(),
+        memoryTotal: os.totalmem()
+      },
+      blockchain: {
+        channelName: process.env.FABRIC_CHANNEL_NAME || process.env.CHANNEL_NAME || 'kycchannelnix1',
+        chaincodeName:
+          process.env.FABRIC_CHAINCODE_NAME ||
+          process.env.CHAINCODE_NAME ||
+          'kyc-wallet-chaincode-js',
+        mspId: process.env.FABRIC_MSP_ID || process.env.MSP_ID || 'Org1MSP'
+      }
+    },
+    meta: null,
+    timestamp: new Date().toISOString(),
+    requestId: req.requestId,
+    correlationId: req.correlationId
+  });
+});
+
+/**
+ * API routes.
+ *
+ * IMPORTANT:
+ * All route registrations must be BEFORE the 404 handler.
+ */
+if (walletRoutes) {
+  app.use('/api/v1/wallets', walletRoutes);
+}
+
+if (dataGeneratorRoutes) {
+  app.use('/api/v1/data-generator', dataGeneratorRoutes);
+}
+
+if (transactionRoutes) {
+  app.use('/api/v1/transactions', transactionRoutes);
+}
+
+if (fabricRoutes) {
+  app.use('/api/v1/fabric', fabricRoutes);
+}
+
+if (referenceRoutes) {
+  app.use('/api/v1/reference', referenceRoutes);
+}
+
+if (organizationRoutes) {
+  app.use('/api/v1/organizations', organizationRoutes);
+}
+
+/**
+ * Optional generic API route aggregator.
+ * Registered after specific routes to avoid overriding them.
+ */
+if (apiRoutes) {
+  app.use('/api/v1', apiRoutes);
+}
+
+/**
+ * Root endpoint.
+ */
+app.get('/', (req, res) => {
+  return res.status(200).json({
+    success: true,
+    message: SERVICE_NAME,
+    data: {
+      version: SERVICE_VERSION,
+      environment: NODE_ENV,
+      health: '/api/v1/health',
+      wallets: '/api/v1/wallets',
+      dataGenerator: '/api/v1/data-generator/run',
+      transactions: '/api/v1/transactions',
+      fabric: '/api/v1/fabric',
+      reference: '/api/v1/reference',
+      organizations: '/api/v1/organizations'
+    },
+    requestId: req.requestId,
+    correlationId: req.correlationId
+  });
+});
+
+/**
+ * 404 handler.
+ * Must stay after all routes.
+ */
+app.use((req, res) => {
+  return res.status(404).json({
+    success: false,
+    message: `Route not found: ${req.method} ${req.originalUrl}`,
+    errorCode: 'ROUTE_NOT_FOUND',
+    data: null,
+    meta: null,
+    timestamp: new Date().toISOString(),
+    requestId: req.requestId,
+    correlationId: req.correlationId || req.requestId
+  });
+});
+
+/**
+ * Global error handler.
+ */
+app.use((error, req, res, next) => {
+  console.error('[GLOBAL_ERROR_HANDLER]', {
+    message: error.message,
+    code: error.code,
+    detail: error.detail,
+    constraint: error.constraint,
+    table: error.table,
+    column: error.column,
+    schema: error.schema,
+    stack: error.stack,
+    requestId: req.requestId,
+    correlationId: req.correlationId,
+    method: req.method,
+    url: req.originalUrl,
+    origin: req.headers.origin || null
+  });
+
+  const statusCode =
+    error.statusCode ||
+    error.status ||
+    (error.code === '23505' ? 409 : null) ||
+    (error.code === '23503' ? 400 : null) ||
+    (error.code === '23514' ? 400 : null) ||
+    500;
+
+  const isProduction = NODE_ENV === 'production';
+
+  return res.status(statusCode).json({
+    success: false,
+    message:
+      statusCode >= 500
+        ? 'Internal server error'
+        : error.message || 'Request failed',
+    errorCode: error.code || error.errorCode || 'SYSTEM_ERROR',
+    data: null,
+    meta: null,
+    timestamp: new Date().toISOString(),
+    requestId: req.requestId,
+    correlationId: req.correlationId || req.requestId,
+    debug: isProduction
+      ? undefined
+      : {
+          message: error.message,
+          code: error.code,
+          detail: error.detail,
+          constraint: error.constraint,
+          table: error.table,
+          column: error.column,
+          schema: error.schema
+        }
+  });
+});
+
+/**
+ * Start server.
+ */
+const server = app.listen(PORT, HOST, () => {
+  console.log('======================================================');
+  console.log(`${SERVICE_NAME} started successfully`);
+  console.log(`Environment: ${NODE_ENV}`);
+  console.log(`Listening: http://${HOST}:${PORT}`);
+  console.log(`Health: http://${HOST}:${PORT}/api/v1/health`);
+  console.log(`Data Generator: http://${HOST}:${PORT}/api/v1/data-generator/run`);
+  console.log(`Allowed CORS Origins: ${allowedOrigins.join(', ')}`);
+  console.log('======================================================');
+});
+
+/**
+ * Graceful shutdown.
+ */
+function shutdown(signal) {
+  console.log(`[SERVER_SHUTDOWN] Received ${signal}. Closing server...`);
+
+  server.close(() => {
+    console.log('[SERVER_SHUTDOWN] HTTP server closed.');
+    process.exit(0);
+  });
+
+  setTimeout(() => {
+    console.error('[SERVER_SHUTDOWN] Forced shutdown after timeout.');
+    process.exit(1);
+  }, 10000).unref();
+}
+
+process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+
+module.exports = app;
+==================================================
+FILE: blockchain-api/src/config/database.js
+==================================================
+const { Pool } = require("pg");
+
+const pool = new Pool({
+  host: process.env.POSTGRES_HOST || process.env.DB_HOST || "172.31.13.133",
+  port: Number(process.env.POSTGRES_PORT || process.env.DB_PORT || 5444),
+  database: process.env.POSTGRES_DB || process.env.DB_NAME || "vfds_dev",
+  user: process.env.POSTGRES_USER || process.env.DB_USER || "postgres",
+  password: process.env.POSTGRES_PASSWORD || process.env.DB_PASSWORD,
+  max: Number(process.env.POSTGRES_POOL_MAX || 20),
+  idleTimeoutMillis: Number(process.env.POSTGRES_IDLE_TIMEOUT || 30000),
+  connectionTimeoutMillis: Number(process.env.POSTGRES_CONNECTION_TIMEOUT || 10000)
+});
+
+module.exports = {
+  query: (text, params) => pool.query(text, params),
+  getClient: () => pool.connect(),
+  pool
+};
+
+==================================================
+FILE: blockchain-api/src/routes/index.js
+==================================================
+'use strict';
+
+const express = require("express");
+
+const router = express.Router();
+
+function safeLoadRoute(routeName, routePath) {
+  try {
+    const route = require(routePath);
+    console.log(`[ROUTES] ${routeName} route loaded`);
+    return route;
+  } catch (error) {
+    console.warn(`[ROUTES] ${routeName} route not loaded: ${error.message}`);
+    return null;
+  }
+}
+
+
+
+const walletRoutes = require('./wallet.routes');
+const transactionRoutes = require('./transaction.routes');
+const fabricRoutes = require('./fabric.routes');
+const referenceRoutes = require('./reference.routes');
+
+
+const healthRoutes = safeLoadRoute("health", "./health.routes");
+const blockchainRoutes = safeLoadRoute("blockchain", "./blockchain.routes");
+// const fabricRoutes = safeLoadRoute("fabric", "./fabric.routes");
+// const walletRoutes = safeLoadRoute("wallet", "./wallet.routes");
+// const transactionRoutes = safeLoadRoute("transaction", "./transaction.routes");
+
+if (healthRoutes) {
+  router.use("/health", healthRoutes);
+}
+
+if (blockchainRoutes) {
+  router.use("/blockchain", blockchainRoutes);
+}
+
+if (fabricRoutes) {
+  router.use("/fabric", fabricRoutes);
+}
+
+if (walletRoutes) {
+  router.use("/wallets", walletRoutes);
+}
+
+if (transactionRoutes) {
+  router.use("/transactions", transactionRoutes);
+}
+
+if (referenceRoutes) {
+  router.use("/reference", referenceRoutes);
+}
+
+
+module.exports = router;
+
+================ POSSIBLE BACKEND ROUTES ================
+
+==================================================
+FILE: blockchain-api/src/routes/auth.routes.js
+==================================================
+"use strict";
+
+/**
+ * STEP 28 — Secure Auth Routes
+ */
+
+const express = require("express");
+const { body } = require("express-validator");
+
+const authController = require("../controllers/auth.controller");
+const { validateRequest } = require("../middleware/validation.middleware");
+const { authRateLimiter } = require("../middleware/rateLimit.middleware");
+
+let routeSecurity = {};
+
+try {
+  routeSecurity = require("../middleware/routeSecurity.middleware");
+} catch (error) {
+  routeSecurity = {};
+}
+
+const router = express.Router();
+
+const passThrough = (req, res, next) => next();
+
+const userAccess =
+  typeof routeSecurity.userAccess === "function"
+    ? routeSecurity.userAccess
+    : passThrough;
+
+const serviceAccess =
+  typeof routeSecurity.serviceAccess === "function"
+    ? routeSecurity.serviceAccess
+    : passThrough;
+
+function unavailableHandler(handlerName) {
+  return (req, res) => {
+    return res.status(501).json({
+      success: false,
+      message: `Auth handler is not implemented: ${handlerName}`,
+      errorCode: "AUTH_HANDLER_NOT_IMPLEMENTED",
+      availableHandlers: Object.keys(authController),
+      requestId: req.requestId || req.headers["x-request-id"] || null
+    });
+  };
+}
+
+const loginHandler =
+  authController.login ||
+  authController.loginWallet ||
+  authController.walletLogin ||
+  authController.authenticate ||
+  unavailableHandler("login");
+
+const systemTokenHandler =
+  authController.systemToken ||
+  authController.generateSystemToken ||
+  authController.createSystemToken ||
+  unavailableHandler("systemToken");
+
+const meHandler =
+  authController.me ||
+  authController.getMe ||
+  authController.getCurrentUser ||
+  unavailableHandler("me");
+
+const loginValidation = [
+  body("customerId")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ min: 3, max: 80 }),
+
+  body("walletAddress")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ min: 10, max: 120 }),
+
+  body("username")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ min: 3, max: 120 }),
+
+  body("password")
+    .isString()
+    .isLength({ min: 4, max: 255 })
+    .withMessage("password is required")
+];
+
+const systemTokenValidation = [
+  body("serviceName")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 100 }),
+
+  body("scope")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 100 })
+];
+
+/**
+ * POST /api/v1/auth/login
+ */
+router.post(
+  "/login",
+  authRateLimiter,
+  loginValidation,
+  validateRequest,
+  loginHandler
+);
+
+/**
+ * POST /api/v1/auth/system-token
+ */
+router.post(
+  "/system-token",
+  serviceAccess,
+  systemTokenValidation,
+  validateRequest,
+  systemTokenHandler
+);
+
+/**
+ * GET /api/v1/auth/me
+ */
+router.get(
+  "/me",
+  userAccess,
+  meHandler
+);
+
+module.exports = router;
+==================================================
+FILE: blockchain-api/src/routes/blockchain.routes.js
+==================================================
+const express = require("express");
+const asyncHandler = require("../utils/asyncHandler");
+const blockchainController = require("../controllers/blockchain.controller");
+
+const router = express.Router();
+
+router.get("/status", asyncHandler(blockchainController.getBlockchainStatus));
+
+/**
+ * Future route placeholders:
+ *
+ * POST   /wallets/create
+ * POST   /wallets/login
+ * POST   /transactions/wallet-transfer
+ * POST   /transactions/organization-transfer
+ * GET    /wallets/:walletAddress/balance
+ * GET    /wallets/:walletAddress/transactions
+ */
+
+module.exports = router;
+
+==================================================
+FILE: blockchain-api/src/routes/data-generator.routes.js
+==================================================
+'use strict';
+
+const express = require('express');
+const router = express.Router();
+
+const dataGeneratorController = require('../controllers/data-generator.controller');
+
+router.post('/run', dataGeneratorController.runDataGenerator);
+
+module.exports = router;
+
+==================================================
+FILE: blockchain-api/src/routes/fabric.routes.js
+==================================================
+"use strict";
+
+/**
+ * STEP 28 — Secure Fabric Routes
+ */
+
+const express = require("express");
+const { body } = require("express-validator");
+
+const fabricController = require("../controllers/fabric.controller");
+const apiKeyProtection = require("../middleware/apiKey.middleware");
+const { validateRequest } = require("../middleware/validation.middleware");
+
+const router = express.Router();
+
+function unavailableHandler(handlerName) {
+  return (req, res) => {
+    return res.status(501).json({
+      success: false,
+      message: `Fabric handler is not implemented: ${handlerName}`,
+      errorCode: "FABRIC_HANDLER_NOT_IMPLEMENTED",
+      availableHandlers: Object.keys(fabricController),
+      requestId: req.requestId || req.headers["x-request-id"] || null
+    });
+  };
+}
+
+const submitHandler =
+  fabricController.submitTransaction ||
+  fabricController.submit ||
+  fabricController.invoke ||
+  unavailableHandler("submitTransaction");
+
+const evaluateHandler =
+  fabricController.evaluateTransaction ||
+  fabricController.evaluate ||
+  fabricController.query ||
+  unavailableHandler("evaluateTransaction");
+
+const fabricValidation = [
+  body("functionName")
+    .isString()
+    .trim()
+    .isLength({ min: 2, max: 100 })
+    .matches(/^[A-Za-z0-9_]+$/)
+    .withMessage("functionName is invalid"),
+
+  body("args")
+    .optional()
+    .isArray()
+    .withMessage("args must be an array")
+];
+
+/**
+ * POST /api/v1/fabric/submit
+ */
+router.post(
+  "/submit",
+  apiKeyProtection,
+  fabricValidation,
+  validateRequest,
+  submitHandler
+);
+
+/**
+ * POST /api/v1/fabric/evaluate
+ */
+router.post(
+  "/evaluate",
+  apiKeyProtection,
+  fabricValidation,
+  validateRequest,
+  evaluateHandler
+);
+
+module.exports = router;
+==================================================
+FILE: blockchain-api/src/routes/health.routes.js
+==================================================
+const express = require("express");
+const healthController = require("../controllers/health.controller");
+
+const router = express.Router();
+
+router.get("/", healthController.getHealthStatus);
+
+module.exports = router;
+
+==================================================
+FILE: blockchain-api/src/routes/index.js
+==================================================
+'use strict';
+
+const express = require("express");
+
+const router = express.Router();
+
+function safeLoadRoute(routeName, routePath) {
+  try {
+    const route = require(routePath);
+    console.log(`[ROUTES] ${routeName} route loaded`);
+    return route;
+  } catch (error) {
+    console.warn(`[ROUTES] ${routeName} route not loaded: ${error.message}`);
+    return null;
+  }
+}
+
+
+
+const walletRoutes = require('./wallet.routes');
+const transactionRoutes = require('./transaction.routes');
+const fabricRoutes = require('./fabric.routes');
+const referenceRoutes = require('./reference.routes');
+
+
+const healthRoutes = safeLoadRoute("health", "./health.routes");
+const blockchainRoutes = safeLoadRoute("blockchain", "./blockchain.routes");
+// const fabricRoutes = safeLoadRoute("fabric", "./fabric.routes");
+// const walletRoutes = safeLoadRoute("wallet", "./wallet.routes");
+// const transactionRoutes = safeLoadRoute("transaction", "./transaction.routes");
+
+if (healthRoutes) {
+  router.use("/health", healthRoutes);
+}
+
+if (blockchainRoutes) {
+  router.use("/blockchain", blockchainRoutes);
+}
+
+if (fabricRoutes) {
+  router.use("/fabric", fabricRoutes);
+}
+
+if (walletRoutes) {
+  router.use("/wallets", walletRoutes);
+}
+
+if (transactionRoutes) {
+  router.use("/transactions", transactionRoutes);
+}
+
+if (referenceRoutes) {
+  router.use("/reference", referenceRoutes);
+}
+
+
+module.exports = router;
+
+==================================================
+FILE: blockchain-api/src/routes/organization.routes.js
+==================================================
+'use strict';
+
+const express = require('express');
+const router = express.Router();
+
+const organizationController = require('../controllers/organization.controller');
+
+router.get('/', organizationController.getOrganizations);
+
+module.exports = router;
+
+==================================================
+FILE: blockchain-api/src/routes/reference.routes.js
+==================================================
+'use strict';
+
+const express = require('express');
+const router = express.Router();
+
+const referenceController = require('../controllers/reference.controller');
+
+router.get('/organization-types', referenceController.getOrganizationTypes);
+router.get('/organizations', referenceController.getOrganizations);
+router.get('/countries', referenceController.getCountries);
+
+module.exports = router;
+
+==================================================
+FILE: blockchain-api/src/routes/transaction.routes.js
+==================================================
+"use strict";
+
+/**
+ * STEP 28 — Secure Transaction Routes
+ */
+
+const express = require("express");
+const { body, query } = require("express-validator");
+
+const transactionController = require("../controllers/transaction.controller");
+const { validateRequest } = require("../middleware/validation.middleware");
+const apiKeyProtection = require("../middleware/apiKey.middleware");
+
+let routeSecurity = {};
+
+try {
+  routeSecurity = require("../middleware/routeSecurity.middleware");
+} catch (error) {
+  routeSecurity = {};
+}
+
+const router = express.Router();
+
+const passThrough = (req, res, next) => next();
+
+const userOrServiceAccess =
+  typeof routeSecurity.userOrServiceAccess === "function"
+    ? routeSecurity.userOrServiceAccess
+    : passThrough;
+
+const serviceAccess =
+  typeof routeSecurity.serviceAccess === "function"
+    ? routeSecurity.serviceAccess
+    : passThrough;
+
+function unavailableHandler(handlerName) {
+  return (req, res) => {
+    return res.status(501).json({
+      success: false,
+      message: `Transaction handler is not implemented: ${handlerName}`,
+      errorCode: "TRANSACTION_HANDLER_NOT_IMPLEMENTED",
+      availableHandlers: Object.keys(transactionController),
+      requestId: req.requestId || req.headers["x-request-id"] || null
+    });
+  };
+}
+
+const walletTransferHandler =
+  transactionController.walletTransfer ||
+  transactionController.createWalletTransfer ||
+  transactionController.transferWalletToWallet ||
+  unavailableHandler("walletTransfer");
+
+const organizationTransferHandler =
+  transactionController.organizationTransfer ||
+  transactionController.createOrganizationTransfer ||
+  transactionController.transferToOrganization ||
+  unavailableHandler("organizationTransfer");
+
+const getTransactionsHandler =
+  transactionController.getTransactions ||
+  transactionController.getTransactionHistory ||
+  transactionController.searchTransactions ||
+  unavailableHandler("getTransactions");
+
+const walletTransferValidation = [
+  body("senderWalletAddress")
+    .isString()
+    .trim()
+    .isLength({ min: 10, max: 140 })
+    .matches(/^[A-Za-z0-9_-]+$/)
+    .withMessage("senderWalletAddress is invalid"),
+
+  body("receiverWalletAddress")
+    .isString()
+    .trim()
+    .isLength({ min: 10, max: 140 })
+    .matches(/^[A-Za-z0-9_-]+$/)
+    .withMessage("receiverWalletAddress is invalid"),
+
+  body("amount")
+    .isDecimal({ decimal_digits: "0,8" })
+    .withMessage("amount must be decimal"),
+
+  body("currency")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ min: 3, max: 10 }),
+
+  body("transactionPurpose")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 255 }),
+
+  body("transactionDescription")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 500 }),
+
+  body("requestSource")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 50 }),
+
+  body("sourceSystem")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 80 }),
+
+  body("createdBy")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 100 })
+];
+
+const organizationTransferValidation = [
+  body("sourceOrganizationId")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 120 }),
+
+  body("targetOrganizationId")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 120 }),
+
+  body("organizationId")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 120 }),
+
+  body("walletAddress")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 140 }),
+
+  body("amount")
+    .isDecimal({ decimal_digits: "0,8" })
+    .withMessage("amount must be decimal"),
+
+  body("currency")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ min: 3, max: 10 }),
+
+  body("transactionPurpose")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 255 }),
+
+  body("transactionDescription")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 500 }),
+
+  body("requestSource")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 50 }),
+
+  body("sourceSystem")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 80 }),
+
+  body("createdBy")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 100 })
+];
+
+const transactionSearchValidation = [
+  query("page")
+    .optional()
+    .isInt({ min: 1, max: 100000 }),
+
+  query("limit")
+    .optional()
+    .isInt({ min: 1, max: 100 }),
+
+  query("walletAddress")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 140 }),
+
+  query("customerId")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 80 }),
+
+  query("organizationId")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 120 }),
+
+  query("transactionType")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 80 }),
+
+  query("status")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 50 }),
+
+  query("dateFrom")
+    .optional()
+    .isISO8601(),
+
+  query("dateTo")
+    .optional()
+    .isISO8601(),
+
+  query("amountMin")
+    .optional()
+    .isDecimal(),
+
+  query("amountMax")
+    .optional()
+    .isDecimal(),
+
+  query("sortBy")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 50 }),
+
+  query("sortOrder")
+    .optional()
+    .isIn(["asc", "desc", "ASC", "DESC"])
+];
+
+/**
+ * POST /api/v1/transactions/wallet-transfer
+ */
+router.post(
+  "/wallet-transfer",
+  userOrServiceAccess,
+  walletTransferValidation,
+  validateRequest,
+  walletTransferHandler
+);
+
+/**
+ * POST /api/v1/transactions/organization-transfer
+ */
+router.post(
+  "/organization-transfer",
+  apiKeyProtection,
+  serviceAccess,
+  organizationTransferValidation,
+  validateRequest,
+  organizationTransferHandler
+);
+
+/**
+ * GET /api/v1/transactions
+ */
+router.get(
+  "/",
+  userOrServiceAccess,
+  transactionSearchValidation,
+  validateRequest,
+  getTransactionsHandler
+);
+
+module.exports = router;
+==================================================
+FILE: blockchain-api/src/routes/transactions.routes.js
+==================================================
+const express = require("express");
+
+const transactionController = require("../controllers/transaction.controller");
+
+const router = express.Router();
+
+/**
+ * STEP 26 — Transaction History & Search APIs
+ *
+ * Base path from server.js:
+ * /api/v1/transactions
+ *
+ * Final endpoints:
+ * GET /api/v1/transactions
+ * GET /api/v1/transactions/:transactionId
+ */
+
+// Search transaction history
+router.get("/", transactionController.searchTransactions);
+
+// Get transaction by transactionId
+router.get("/:transactionId", transactionController.getTransactionById);
+
+module.exports = router;
+==================================================
+FILE: blockchain-api/src/routes/wallet-query.routes.js
+==================================================
+const express = require("express");
+const router = express.Router();
+
+const walletQueryController = require("../controllers/wallet-query.controller");
+
+/**
+ * STEP 25 — Wallet Query APIs
+ *
+ * GET /api/v1/wallets/:walletAddress
+ * GET /api/v1/wallets/:walletAddress/balance
+ * GET /api/v1/wallets/:walletAddress/history
+ */
+
+router.get("/:walletAddress", walletQueryController.getWalletByAddress);
+
+router.get("/:walletAddress/balance", walletQueryController.getWalletBalance);
+
+router.get("/:walletAddress/history", walletQueryController.getWalletHistory);
+
+module.exports = router;
+==================================================
+FILE: blockchain-api/src/routes/wallet.routes.js
+==================================================
+'use strict';
+
+const express = require('express');
+const router = express.Router();
+
+const walletController = require('../controllers/wallet.controller');
+router.get('/next-customer-id', walletController.getNextCustomerId);
+/**
+ * STEP 30 / 31 — Wallet Routes
+ *
+ * IMPORTANT:
+ * The list route "/" must come before dynamic routes like "/:walletAddress".
+ */
+
+/**
+ * List wallets for Angular dashboard.
+ *
+ * GET /api/v1/wallets?page=1&limit=13&search=
+ */
+router.get('/', walletController.listWallets);
+
+/**
+ * Create wallet.
+ *
+ * POST /api/v1/wallets
+ */
+router.post('/', walletController.createWallet);
+
+router.post('/organization-wallets', walletController.createOrganizationWallet);
+
+/**
+ * Wallet login.
+ *
+ * POST /api/v1/wallets/login
+ */
+router.post('/login', walletController.loginWallet);
+
+/**
+ * Get wallet by customer ID.
+ *
+ * GET /api/v1/wallets/customer/:customerId
+ */
+router.get('/customer/:customerId', walletController.getWalletByCustomerId);
+
+/**
+ * Get wallet by wallet address.
+ *
+ * GET /api/v1/wallets/:walletAddress
+ */
+router.get('/:walletAddress', walletController.getWalletByAddress);
+
+module.exports = router;
+
+================ POSSIBLE FRONTEND SERVICES ================
+
+==================================================
+FILE: blockchain-test-ui/src/app/core/interceptors/api-auth.interceptor.ts
+==================================================
+import { HttpInterceptorFn } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
+
+export const apiAuthInterceptor: HttpInterceptorFn = (req, next) => {
+  const requestId = `REQ_UI_${Date.now()}`;
+
+  const normalizedUrl = req.url.startsWith('/')
+    ? req.url
+    : `/${req.url}`;
+
+  const isReferenceApi = normalizedUrl.includes('/api/v1/reference/');
+  const isFabricApi = normalizedUrl.includes('/api/v1/fabric/');
+  const isProtectedTransactionApi =
+    normalizedUrl.includes('/api/v1/transactions/organization-transfer');
+
+  /**
+   * Keep reference APIs simple.
+   */
+  if (isReferenceApi) {
+    return next(req);
+  }
+
+  const headers: Record<string, string> = {
+    'x-request-id': requestId
+  };
+
+  /**
+   * Required for Fabric Test and protected service routes.
+   */
+  if (isFabricApi || isProtectedTransactionApi) {
+    headers['x-api-key'] = environment.fabricApiKey;
+  }
+
+  /**
+   * Optional wallet token after login.
+   */
+  const walletToken =
+    localStorage.getItem('digital_kyc_wallet_token') ||
+    '';
+
+  if (walletToken && !req.headers.has('Authorization')) {
+    headers['Authorization'] = `Bearer ${walletToken}`;
+  }
+
+  return next(
+    req.clone({
+      setHeaders: headers
+    })
+  );
+};
+
+==================================================
+FILE: blockchain-test-ui/src/app/core/services/api-config.service.ts
+==================================================
+import { Injectable } from '@angular/core';
+import { environment } from '../../../environments/environment';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class ApiConfigService {
+  /**
+   * Main Blockchain API base URL.
+   *
+   * Example:
+   * http://172.31.13.90:3001/api/v1
+   */
+  public readonly baseUrl = environment.apiBaseUrl;
+
+  /**
+   * Compatibility getter for older services.
+   */
+  getBaseUrl(): string {
+    return this.baseUrl;
+  }
+
+  /**
+   * Compatibility getter for services using getApiBaseUrl().
+   */
+  getApiBaseUrl(): string {
+    return this.baseUrl;
+  }
+
+  /**
+   * Wallet APIs
+   */
+  get walletsUrl(): string {
+    return `${this.baseUrl}/wallets`;
+  }
+
+  /**
+   * Transaction APIs
+   */
+  get transactionsUrl(): string {
+    return `${this.baseUrl}/transactions`;
+  }
+
+  /**
+   * Fabric APIs
+   */
+  get fabricUrl(): string {
+    return `${this.baseUrl}/fabric`;
+  }
+
+  /**
+   * Reference APIs
+   */
+  get referenceUrl(): string {
+    return `${this.baseUrl}/reference`;
+  }
+
+  /**
+   * Organization APIs
+   */
+  get organizationsUrl(): string {
+    return `${this.baseUrl}/organizations`;
+  }
+}
+==================================================
+FILE: blockchain-test-ui/src/app/core/services/dashboard-api.service.ts
+==================================================
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { ApiConfigService } from './api-config.service';
+
+export interface WalletDashboardRow {
+  id: string;
+  walletId: string;
+  walletAddress: string;
+  customerId: string;
+  organizationId: string;
+  organizationCode: string | null;
+  walletType: string;
+  fullName: string;
+  customerName: string;
+  customerType: string;
+  nationality: string;
+  idType: string;
+  idNumber: string | null;
+  nationalIdHash: string | null;
+  mobileHash: string | null;
+  emailHash: string | null;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WalletDashboardResponse {
+  success: boolean;
+  message: string;
+  data: WalletDashboardRow[];
+  pagination: {
+    page: number;
+    limit: number;
+    totalRecords: number;
+    totalPages: number;
+    hasNextPage?: boolean;
+    hasPreviousPage?: boolean;
+  };
+  filters?: {
+    search?: string | null;
+  };
+  source?: string;
+  requestId?: string | null;
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class DashboardApiService {
+  private http = inject(HttpClient);
+  private config = inject(ApiConfigService);
+
+  getWallets(page = 1, limit = 13, search = ''): Observable<WalletDashboardResponse> {
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('limit', limit.toString());
+
+    if (search.trim()) {
+      params = params.set('search', search.trim());
+    }
+
+    return this.http.get<WalletDashboardResponse>(`${this.config.baseUrl}/wallets`, { params });
+  }
+}
+
+==================================================
+FILE: blockchain-test-ui/src/app/core/services/fabric-api.service.ts
+==================================================
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable } from 'rxjs';
+
+import { ApiConfigService } from './api-config.service';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class FabricApiService {
+  private readonly apiKey =
+    '774101c2e4e6e8d46a8bb6c02571f0239ac7c8bd548c22db1162671e502278f7';
+
+  constructor(
+    private http: HttpClient,
+    private config: ApiConfigService
+  ) {}
+
+  private getHeaders(): HttpHeaders {
+    const requestId = `REQ_UI_FABRIC_${Date.now()}_${Math.random()
+      .toString(16)
+      .slice(2)
+      .toUpperCase()}`;
+
+    return new HttpHeaders()
+      .set('Content-Type', 'application/json')
+      .set('Accept', 'application/json')
+      .set('x-api-key', this.apiKey)
+      .set('x-request-id', requestId)
+      .set('x-correlation-id', requestId)
+      .set('x-source-system', 'BLOCKCHAIN_TEST_UI')
+      .set('x-request-source', 'ANGULAR_UI');
+  }
+
+  evaluate(payload: any): Observable<any> {
+    return this.http.post(
+      `${this.config.baseUrl}/fabric/evaluate`,
+      payload,
+      {
+        headers: this.getHeaders()
+      }
+    );
+  }
+
+  submit(payload: any): Observable<any> {
+    return this.http.post(
+      `${this.config.baseUrl}/fabric/submit`,
+      payload,
+      {
+        headers: this.getHeaders()
+      }
+    );
+  }
+}
+
+==================================================
+FILE: blockchain-test-ui/src/app/core/services/transaction-api.service.ts
+==================================================
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { Observable } from 'rxjs';
+
+import { ApiConfigService } from './api-config.service';
+import { environment } from '../../../environments/environment';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class TransactionApiService {
+  private http = inject(HttpClient);
+  private config = inject(ApiConfigService);
+
+  private getHeaders(): HttpHeaders {
+    const requestId = `REQ_UI_${Date.now()}_${Math.random()
+      .toString(16)
+      .slice(2)
+      .toUpperCase()}`;
+
+    return new HttpHeaders()
+      .set('Content-Type', 'application/json')
+      .set('Accept', 'application/json')
+      .set('x-api-key', environment.fabricApiKey)
+      .set('x-request-id', requestId)
+      .set('x-correlation-id', requestId)
+      .set('x-source-system', 'BLOCKCHAIN_TEST_UI')
+      .set('x-request-source', 'ANGULAR_UI');
+  }
+
+  walletTransfer(payload: any): Observable<any> {
+    return this.http.post(
+      `${this.config.baseUrl}/transactions/wallet-transfer`,
+      payload,
+      { headers: this.getHeaders() }
+    );
+  }
+
+  organizationTransfer(payload: any): Observable<any> {
+    return this.http.post(
+      `${this.config.baseUrl}/transactions/organization-transfer`,
+      payload,
+      { headers: this.getHeaders() }
+    );
+  }
+
+  searchTransactions(filters: any): Observable<any> {
+    let params = new HttpParams();
+
+    Object.keys(filters || {}).forEach((key) => {
+      const value = filters[key];
+
+      if (value !== null && value !== undefined && value !== '') {
+        params = params.set(key, value);
+      }
+    });
+
+    return this.http.get(`${this.config.baseUrl}/transactions`, {
+      headers: this.getHeaders(),
+      params
+    });
+  }
+}
+
+==================================================
+FILE: blockchain-test-ui/src/app/core/services/wallet-api.service.ts
+==================================================
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable, map } from 'rxjs';
+import { environment } from '../../../environments/environment';
+
+export interface WalletListFilters {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: string;
+  customerId?: string;
+  walletAddress?: string;
+  organizationId?: string;
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class WalletApiService {
+  private readonly apiBaseUrl = environment.apiBaseUrl;
+  private readonly walletsUrl = `${environment.apiBaseUrl}/wallets`;
+
+  constructor(private http: HttpClient) {}
+
+  /**
+   * Dashboard / wallet list
+   */
+  getWallets(filters: WalletListFilters = {}): Observable<any> {
+    let params = new HttpParams();
+
+    Object.entries(filters || {}).forEach(([key, value]) => {
+      if (value !== null && value !== undefined && value !== '') {
+        params = params.set(key, String(value));
+      }
+    });
+
+    return this.http.get<any>(this.walletsUrl, { params });
+  }
+
+  getAllWallets(filters: WalletListFilters = {}): Observable<any> {
+    return this.getWallets(filters);
+  }
+
+  /**
+   * Wallet creation
+   */
+  createWallet(payload: any): Observable<any> {
+    return this.http.post<any>(this.walletsUrl, payload);
+  }
+
+  /**
+   * Wallet login
+   */
+  loginWallet(payload: any): Observable<any> {
+    return this.http.post<any>(`${this.walletsUrl}/login`, payload);
+  }
+
+  /**
+   * Wallet query
+   */
+  getWalletByCustomerId(customerId: string): Observable<any> {
+    return this.http.get<any>(
+      `${this.walletsUrl}/customer/${encodeURIComponent(customerId)}`
+    );
+  }
+
+  getWalletByAddress(walletAddress: string): Observable<any> {
+    return this.http.get<any>(
+      `${this.walletsUrl}/address/${encodeURIComponent(walletAddress)}`
+    );
+  }
+
+  /**
+   * Reference APIs
+   */
+  getNextCustomerId(): Observable<any> {
+    return this.http.get<any>(`${this.apiBaseUrl}/reference/next-customer-id`);
+  }
+
+  getCountries(): Observable<any> {
+    return this.http.get<any>(`${this.apiBaseUrl}/reference/countries`);
+  }
+
+  getNationalities(): Observable<any> {
+    return this.http.get<any>(`${this.apiBaseUrl}/reference/nationalities`);
+  }
+
+  getOrganizations(): Observable<any> {
+    return this.http.get<any>(`${this.apiBaseUrl}/organizations`);
+  }
+
+  /**
+   * Transaction APIs
+   */
+  getTransactions(filters: any = {}): Observable<any> {
+    let params = new HttpParams();
+
+    Object.entries(filters || {}).forEach(([key, value]) => {
+      if (value !== null && value !== undefined && value !== '') {
+        params = params.set(key, String(value));
+      }
+    });
+
+    return this.http.get<any>(`${this.apiBaseUrl}/transactions`, { params });
+  }
+
+  walletTransfer(payload: any): Observable<any> {
+    return this.http.post<any>(
+      `${this.apiBaseUrl}/transactions/wallet-transfer`,
+      payload
+    );
+  }
+
+  organizationTransfer(payload: any): Observable<any> {
+    return this.http.post<any>(
+      `${this.apiBaseUrl}/transactions/organization-transfer`,
+      payload
+    );
+  }
+
+  /**
+   * Dashboard summary helper.
+   * If backend does not have a dedicated dashboard endpoint,
+   * this method calculates summary from /wallets.
+   */
+  getDashboardSummary(limit: number = 13): Observable<any> {
+    return this.getWallets({ page: 1, limit }).pipe(
+      map((response: any) => {
+        const wallets = this.extractWalletArray(response);
+
+        const totalWallets =
+          response?.pagination?.totalRecords ??
+          response?.pagination?.total ??
+          response?.totalRecords ??
+          wallets.length;
+
+        const activeWallets = wallets.filter((wallet: any) => {
+          const status =
+            wallet?.status ||
+            wallet?.walletStatus ||
+            wallet?.wallet_status ||
+            '';
+
+          return String(status).toUpperCase() === 'ACTIVE';
+        }).length;
+
+        return {
+          success: true,
+          message: 'Dashboard summary calculated successfully',
+          data: {
+            totalWallets,
+            activeWallets,
+            currentPage: response?.pagination?.page || 1,
+            limit: response?.pagination?.limit || limit,
+            dataSource: response?.source || 'PostgreSQL',
+            table: response?.table || 'blockchain.wallets',
+            wallets
+          },
+          pagination: response?.pagination || {
+            page: 1,
+            limit,
+            totalRecords: totalWallets,
+            totalPages: 1,
+            hasNextPage: false,
+            hasPreviousPage: false
+          }
+        };
+      })
+    );
+  }
+
+  /**
+   * Session helpers
+   */
+  saveWalletToken(token: string): void {
+    if (!token) {
+      return;
+    }
+
+    localStorage.setItem('wallet_token', token);
+  }
+
+  getWalletToken(): string | null {
+    return localStorage.getItem('wallet_token');
+  }
+
+  clearWalletToken(): void {
+    localStorage.removeItem('wallet_token');
+  }
+
+  saveWalletProfile(profile: any): void {
+    if (!profile) {
+      return;
+    }
+
+    localStorage.setItem('wallet_profile', JSON.stringify(profile));
+
+    const wallet = profile?.wallet || profile?.data?.wallet || profile;
+
+    const session = {
+      customerId: wallet?.customerId || wallet?.customer_id || '',
+      walletAddress: wallet?.walletAddress || wallet?.wallet_address || '',
+      organizationId: wallet?.organizationId || wallet?.organization_id || '',
+      organizationName: wallet?.organizationName || wallet?.organization_name || '',
+      fullName:
+        wallet?.fullName ||
+        wallet?.full_name ||
+        wallet?.customerName ||
+        wallet?.customer_name ||
+        '',
+      currentBalance: wallet?.currentBalance ?? wallet?.current_balance ?? 0,
+      currencyCode:
+        wallet?.currencyCode ||
+        wallet?.currency_code ||
+        wallet?.currency ||
+        'USD',
+      token: profile?.token || profile?.data?.token || this.getWalletToken() || ''
+    };
+
+    localStorage.setItem('digital_kyc_wallet_session', JSON.stringify(session));
+  }
+
+  getWalletProfile(): any | null {
+    const raw = localStorage.getItem('wallet_profile');
+
+    if (!raw) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(raw);
+    } catch {
+      localStorage.removeItem('wallet_profile');
+      return null;
+    }
+  }
+
+  getWalletSession(): any | null {
+    const raw = localStorage.getItem('digital_kyc_wallet_session');
+
+    if (!raw) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(raw);
+    } catch {
+      localStorage.removeItem('digital_kyc_wallet_session');
+      return null;
+    }
+  }
+
+  clearWalletSession(): void {
+    localStorage.removeItem('wallet_token');
+    localStorage.removeItem('wallet_profile');
+    localStorage.removeItem('digital_kyc_wallet_session');
+  }
+
+  /**
+   * Response normalization helpers
+   */
+  extractWalletArray(response: any): any[] {
+    if (Array.isArray(response)) {
+      return response;
+    }
+
+    if (Array.isArray(response?.data)) {
+      return response.data;
+    }
+
+    if (Array.isArray(response?.data?.wallets)) {
+      return response.data.wallets;
+    }
+
+    if (Array.isArray(response?.wallets)) {
+      return response.wallets;
+    }
+
+    return [];
+  }
+
+  extractWallet(response: any): any | null {
+    return (
+      response?.data?.wallet ||
+      response?.data ||
+      response?.wallet ||
+      null
+    );
+  }
+}
+==================================================
+FILE: blockchain-test-ui/src/app/services/fabric.service.ts
+==================================================
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable } from 'rxjs';
+
+import { environment } from '../../environments/environment';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class FabricService {
+  private readonly baseUrl = environment.apiBaseUrl;
+
+  private readonly apiKey =
+    '774101c2e4e6e8d46a8bb6c02571f0239ac7c8bd548c22db1162671e502278f7';
+
+  constructor(private http: HttpClient) {}
+
+  private getHeaders(): HttpHeaders {
+    const requestId = `REQ_UI_FABRIC_${Date.now()}_${Math.random()
+      .toString(16)
+      .slice(2)
+      .toUpperCase()}`;
+
+    return new HttpHeaders()
+      .set('Content-Type', 'application/json')
+      .set('Accept', 'application/json')
+      .set('x-api-key', this.apiKey)
+      .set('x-request-id', requestId)
+      .set('x-correlation-id', requestId)
+      .set('x-source-system', 'BLOCKCHAIN_TEST_UI')
+      .set('x-request-source', 'ANGULAR_UI');
+  }
+
+  evaluate(functionName: string, args: string[]): Observable<any> {
+    return this.http.post(
+      `${this.baseUrl}/fabric/evaluate`,
+      {
+        functionName,
+        args
+      },
+      {
+        headers: this.getHeaders()
+      }
+    );
+  }
+
+  submit(functionName: string, args: string[]): Observable<any> {
+    return this.http.post(
+      `${this.baseUrl}/fabric/submit`,
+      {
+        functionName,
+        args
+      },
+      {
+        headers: this.getHeaders()
+      }
+    );
+  }
+
+  test(payload: any): Observable<any> {
+    const mode = String(payload?.mode || 'evaluate').toLowerCase();
+
+    const body = {
+      functionName: payload?.functionName,
+      args: payload?.args || []
+    };
+
+    if (mode === 'submit') {
+      return this.http.post(
+        `${this.baseUrl}/fabric/submit`,
+        body,
+        {
+          headers: this.getHeaders()
+        }
+      );
+    }
+
+    return this.http.post(
+      `${this.baseUrl}/fabric/evaluate`,
+      body,
+      {
+        headers: this.getHeaders()
+      }
+    );
+  }
+}
+
+==================================================
+FILE: blockchain-test-ui/src/app/services/transaction.service.ts
+==================================================
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { Observable } from 'rxjs';
+
+import { environment } from '../../environments/environment';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class TransactionService {
+  private readonly baseUrl = environment.apiBaseUrl;
+
+  /**
+   * IMPORTANT:
+   * Backend API security is enabled:
+   * ENABLE_API_KEY_PROTECTION=true
+   *
+   * Therefore all protected transaction calls must include x-api-key.
+   */
+  private readonly apiKey =
+    '774101c2e4e6e8d46a8bb6c02571f0239ac7c8bd548c22db1162671e502278f7';
+
+  constructor(private http: HttpClient) {}
+
+  private getHeaders(): HttpHeaders {
+    const requestId = `REQ_UI_${Date.now()}_${Math.random()
+      .toString(16)
+      .slice(2)
+      .toUpperCase()}`;
+
+    let headers = new HttpHeaders()
+      .set('Content-Type', 'application/json')
+      .set('Accept', 'application/json')
+      .set('x-api-key', this.apiKey)
+      .set('x-request-id', requestId)
+      .set('x-correlation-id', requestId)
+      .set('x-source-system', 'BLOCKCHAIN_TEST_UI')
+      .set('x-request-source', 'ANGULAR_UI');
+
+    const token =
+      localStorage.getItem('digital_kyc_wallet_token') ||
+      sessionStorage.getItem('digital_kyc_wallet_token');
+
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+
+    return headers;
+  }
+
+  walletTransfer(payload: any): Observable<any> {
+    return this.http.post(
+      `${this.baseUrl}/transactions/wallet-transfer`,
+      payload,
+      { headers: this.getHeaders() }
+    );
+  }
+
+  organizationTransfer(payload: any): Observable<any> {
+    return this.http.post(
+      `${this.baseUrl}/transactions/organization-transfer`,
+      payload,
+      { headers: this.getHeaders() }
+    );
+  }
+
+  getTransactions(filters: any = {}): Observable<any> {
+    let params = new HttpParams();
+
+    Object.keys(filters || {}).forEach((key) => {
+      const value = filters[key];
+
+      if (value !== undefined && value !== null && value !== '') {
+        params = params.set(key, value);
+      }
+    });
+
+    return this.http.get(
+      `${this.baseUrl}/transactions`,
+      {
+        headers: this.getHeaders(),
+        params
+      }
+    );
+  }
+
+  getTransactionById(transactionId: string): Observable<any> {
+    return this.http.get(
+      `${this.baseUrl}/transactions/${encodeURIComponent(transactionId)}`,
+      { headers: this.getHeaders() }
+    );
+  }
+}
+
+==================================================
+FILE: blockchain-test-ui/src/app/services/wallet.service.ts
+==================================================
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable, catchError, map, of } from 'rxjs';
+
+import { environment } from '../../environments/environment';
+
+export interface BulkWalletRequest {
+  customerId: string;
+  fullName: string;
+  nationalIdHash: string;
+  emailHash?: string;
+  mobileHash?: string;
+  countryId?: string | number;
+  organizationId: string;
+  organizationType?: string;
+  initialBalance: number;
+  currencyCode: string;
+  passwordHash?: string;
+  requestSource?: string;
+  sourceSystem?: string;
+  createdBy?: string;
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class WalletService {
+  private readonly baseUrl = environment.apiBaseUrl;
+
+  constructor(private http: HttpClient) {}
+
+  getWallets(params?: any): Observable<any> {
+    let httpParams = new HttpParams();
+
+    Object.keys(params || {}).forEach((key) => {
+      if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
+        httpParams = httpParams.set(key, params[key]);
+      }
+    });
+
+    return this.http.get(`${this.baseUrl}/wallets`, { params: httpParams });
+  }
+
+  getNextCustomerId(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/wallets/next-customer-id`);
+  }
+
+  createWallet(payload: any): Observable<any> {
+    const normalizedPayload = {
+      ...payload,
+      customerId: String(payload.customerId || payload.customer_id || '').trim(),
+      organizationId: payload.organizationId || payload.organization_id,
+      fullName: payload.fullName || payload.full_name,
+      nationalIdHash:
+        payload.nationalIdHash ||
+        payload.national_id_hash ||
+        payload.countryId ||
+        payload.country_id ||
+        '',
+      mobileHash: payload.mobileHash || payload.mobile_hash || '',
+      emailHash: payload.emailHash || payload.email_hash || '',
+      passwordHash:
+        payload.passwordHash ||
+        payload.password_hash ||
+        payload.password ||
+        this.generatePassword(),
+      initialBalance: Number(payload.initialBalance ?? payload.currentBalance ?? 0),
+      currentBalance: Number(payload.initialBalance ?? payload.currentBalance ?? 0),
+      currencyCode: payload.currencyCode || payload.currency_code || payload.currency || 'USD',
+      requestSource: payload.requestSource || 'ANGULAR_UI',
+      sourceSystem: payload.sourceSystem || 'BLOCKCHAIN_TEST_UI',
+      createdBy: payload.createdBy || 'nix'
+    };
+
+    return this.http.post(`${this.baseUrl}/wallets`, normalizedPayload);
+  }
+
+  bulkCreateWallets(wallets: BulkWalletRequest[]): Observable<any> {
+    return this.http.post(`${this.baseUrl}/wallets/bulk-create`, { wallets });
+  }
+
+  createOrganizationWallet(payload: any): Observable<any> {
+    const normalizedPayload = {
+      ...payload,
+      organizationId: payload.organizationId || payload.organization_id,
+      passwordHash: payload.passwordHash || payload.password_hash || payload.password,
+      initialBalance: Number(payload.initialBalance ?? payload.currentBalance ?? 0),
+      currentBalance: Number(payload.initialBalance ?? payload.currentBalance ?? 0),
+      currencyCode: payload.currencyCode || payload.currency_code || payload.currency || 'USD',
+      requestSource: payload.requestSource || 'ANGULAR_UI',
+      sourceSystem: payload.sourceSystem || 'BLOCKCHAIN_TEST_UI',
+      createdBy: payload.createdBy || 'nix'
+    };
+
+    return this.http.post(`${this.baseUrl}/wallets/organization-wallets`, normalizedPayload);
+  }
+
+  loginWallet(payload: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/wallets/login`, payload);
+  }
+
+  getWalletByCustomerId(customerId: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/wallets/customer/${encodeURIComponent(customerId)}`);
+  }
+
+  getWalletByAddress(walletAddress: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/wallets/${encodeURIComponent(walletAddress)}`);
+  }
+
+  getOrganizationTypes(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/reference/organization-types`).pipe(
+      catchError(() => of({ success: true, data: [] })),
+      map((response: any) => {
+        const rawTypes =
+          response?.data?.organizationTypes ||
+          response?.data ||
+          response?.organizationTypes ||
+          response ||
+          [];
+
+        const organizationTypes = Array.isArray(rawTypes)
+          ? rawTypes
+              .map((item: any) =>
+                item.organizationType ||
+                item.organization_type ||
+                item.type ||
+                item
+              )
+              .filter((type: any) => !!type)
+          : [];
+
+        return {
+          success: true,
+          data: organizationTypes
+        };
+      })
+    );
+  }
+
+  getOrganizations(organizationType?: string): Observable<any> {
+    let params = new HttpParams();
+
+    if (organizationType) {
+      params = params.set('organizationType', organizationType);
+    }
+
+    return this.http.get(`${this.baseUrl}/reference/organizations`, { params }).pipe(
+      catchError(() => this.http.get(`${this.baseUrl}/organizations`, { params })),
+      map((response: any) => {
+        const rawOrganizations =
+          response?.data?.organizations ||
+          response?.data ||
+          response?.organizations ||
+          response ||
+          [];
+
+        const organizations = Array.isArray(rawOrganizations)
+          ? rawOrganizations.map((org: any) => ({
+              organizationId:
+                org.organizationId ||
+                org.organization_id ||
+                org.id ||
+                '',
+              organizationName:
+                org.organizationName ||
+                org.organization_name ||
+                org.name ||
+                org.organization_code ||
+                '',
+              organizationCode:
+                org.organizationCode ||
+                org.organization_code ||
+                org.registration_number ||
+                '',
+              organizationType:
+                org.organizationType ||
+                org.organization_type ||
+                org.type ||
+                '',
+              status:
+                org.status ||
+                ''
+            }))
+          : [];
+
+        return {
+          success: true,
+          data: organizations
+        };
+      })
+    );
+  }
+
+  getOrganizationsByType(organizationType: string): Observable<any> {
+    return this.getOrganizations(organizationType);
+  }
+
+  getCountries(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/reference/countries`).pipe(
+      catchError(() => of({ success: true, data: [] }))
+    );
+  }
+
+  saveWalletToken(token: string): void {
+    if (token) {
+      localStorage.setItem('digital_kyc_wallet_token', token);
+    }
+  }
+
+  saveWalletProfile(profile: any): void {
+    if (profile) {
+      localStorage.setItem('digital_kyc_wallet_profile', JSON.stringify(profile));
+    }
+  }
+
+  clearWalletAuth(): void {
+    localStorage.removeItem('digital_kyc_wallet_token');
+    localStorage.removeItem('digital_kyc_wallet_profile');
+  }
+
+  private generatePassword(length: number = 16): string {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*';
+    let password = '';
+
+    for (let i = 0; i < length; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+
+    return password;
+  }
+}
+
+==================================================
+FILE: blockchain-test-ui/src/app/services/wallet-session.service.ts
+==================================================
+import { Injectable } from '@angular/core';
+
+export interface LoggedWalletSession {
+  customerId: string;
+  walletAddress: string;
+  organizationId: string;
+  organizationName: string;
+  fullName: string;
+  currentBalance: number;
+  currencyCode: string;
+  walletType: 'CUSTOMER' | 'ORGANIZATION';
+  token?: string;
+  loginTime?: string;
+  sessionSource?: string;
+  raw?: any;
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class WalletSessionService {
+  private readonly mainKey = 'blockchain_logged_wallet';
+
+  private readonly legacyKeys = [
+    'walletProfile',
+    'loggedInWallet',
+    'loggedWallet',
+    'currentWallet',
+    'wallet_session',
+    'digital_kyc_wallet_session',
+    'digital_kyc_wallet_profile',
+    'digitalKycWalletSession',
+    'digitalKycWalletProfile',
+    'walletSession',
+    'wallet_profile',
+    'wallet_token',
+    'digital_kyc_wallet_token'
+  ];
+
+  setSession(walletData: any): void {
+    const normalized = this.normalizeSession(walletData);
+
+    localStorage.setItem(this.mainKey, JSON.stringify(normalized));
+    sessionStorage.setItem(this.mainKey, JSON.stringify(normalized));
+
+    if (normalized.token) {
+      localStorage.setItem('digital_kyc_wallet_token', normalized.token);
+      sessionStorage.setItem('digital_kyc_wallet_token', normalized.token);
+    }
+
+    window.dispatchEvent(new Event('wallet-session-changed'));
+  }
+
+  getSession(): LoggedWalletSession | null {
+    const current =
+      localStorage.getItem(this.mainKey) ||
+      sessionStorage.getItem(this.mainKey);
+
+    if (current) {
+      try {
+        return this.normalizeSession(JSON.parse(current));
+      } catch {
+        this.clearSession();
+        return null;
+      }
+    }
+
+    for (const key of this.legacyKeys) {
+      const raw =
+        localStorage.getItem(key) ||
+        sessionStorage.getItem(key);
+
+      if (!raw) {
+        continue;
+      }
+
+      try {
+        const parsed = JSON.parse(raw);
+        const session = this.normalizeSession(parsed);
+
+        if (session.walletAddress) {
+          this.setSession(session);
+          return session;
+        }
+      } catch {
+        continue;
+      }
+    }
+
+    return null;
+  }
+
+  isLoggedIn(): boolean {
+    return !!this.getSession()?.walletAddress;
+  }
+
+  clearSession(): void {
+    localStorage.removeItem(this.mainKey);
+    sessionStorage.removeItem(this.mainKey);
+
+    this.legacyKeys.forEach((key) => {
+      localStorage.removeItem(key);
+      sessionStorage.removeItem(key);
+    });
+
+    localStorage.removeItem('digital_kyc_wallet_token');
+    sessionStorage.removeItem('digital_kyc_wallet_token');
+
+    window.dispatchEvent(new Event('wallet-session-changed'));
+  }
+
+  updateBalance(newBalance: number): void {
+    const session = this.getSession();
+
+    if (!session) {
+      return;
+    }
+
+    session.currentBalance = Number(newBalance || 0);
+    this.setSession(session);
+  }
+
+  isCustomerWallet(): boolean {
+    return this.getSession()?.walletType === 'CUSTOMER';
+  }
+
+  isOrganizationWallet(): boolean {
+    return this.getSession()?.walletType === 'ORGANIZATION';
+  }
+
+  getToken(): string {
+    return (
+      this.getSession()?.token ||
+      localStorage.getItem('digital_kyc_wallet_token') ||
+      sessionStorage.getItem('digital_kyc_wallet_token') ||
+      ''
+    );
+  }
+
+  private normalizeSession(input: any): LoggedWalletSession {
+    const wallet =
+      input?.data?.wallet ||
+      input?.data?.profile ||
+      input?.data?.walletProfile ||
+      input?.wallet ||
+      input?.profile ||
+      input?.walletProfile ||
+      input?.data ||
+      input ||
+      {};
+
+    const walletAddress = String(
+      wallet?.walletAddress ||
+      wallet?.wallet_address ||
+      input?.walletAddress ||
+      input?.wallet_address ||
+      ''
+    ).trim();
+
+    const customerId = String(
+      wallet?.customerId ||
+      wallet?.customer_id ||
+      input?.customerId ||
+      input?.customer_id ||
+      ''
+    ).trim();
+
+    const organizationId = String(
+      wallet?.organizationId ||
+      wallet?.organization_id ||
+      input?.organizationId ||
+      input?.organization_id ||
+      ''
+    ).trim();
+
+    const organizationName = String(
+      wallet?.organizationName ||
+      wallet?.organization_name ||
+      input?.organizationName ||
+      input?.organization_name ||
+      ''
+    ).trim();
+
+    const rawWalletType = String(
+      wallet?.walletType ||
+      wallet?.wallet_type ||
+      wallet?.customerType ||
+      wallet?.customer_type ||
+      wallet?.type ||
+      input?.walletType ||
+      input?.wallet_type ||
+      input?.customerType ||
+      input?.customer_type ||
+      input?.type ||
+      ''
+    )
+      .trim()
+      .toUpperCase();
+
+    const inferredWalletType = this.normalizeWalletType(
+      rawWalletType,
+      customerId,
+      organizationId
+    );
+
+    return {
+      customerId,
+      walletAddress,
+      organizationId,
+      organizationName,
+
+      fullName:
+        wallet?.fullName ||
+        wallet?.full_name ||
+        wallet?.customerName ||
+        wallet?.customer_name ||
+        input?.fullName ||
+        input?.full_name ||
+        input?.customerName ||
+        input?.customer_name ||
+        '',
+
+      currentBalance: Number(
+        wallet?.currentBalance ??
+          wallet?.current_balance ??
+          wallet?.balance ??
+          input?.currentBalance ??
+          input?.current_balance ??
+          input?.balance ??
+          0
+      ),
+
+      currencyCode:
+        wallet?.currencyCode ||
+        wallet?.currency_code ||
+        wallet?.currency ||
+        input?.currencyCode ||
+        input?.currency_code ||
+        input?.currency ||
+        'USD',
+
+      walletType: inferredWalletType,
+
+      token:
+        input?.token ||
+        input?.data?.token ||
+        wallet?.token ||
+        localStorage.getItem('digital_kyc_wallet_token') ||
+        sessionStorage.getItem('digital_kyc_wallet_token') ||
+        '',
+
+      loginTime: input?.loginTime || new Date().toISOString(),
+      sessionSource: this.mainKey,
+      raw: input
+    };
+  }
+
+  private normalizeWalletType(
+    rawWalletType: string,
+    customerId: string,
+    organizationId: string
+  ): 'CUSTOMER' | 'ORGANIZATION' {
+    /*
+     * New wallet address format:
+     * fe43dce35bdf18108fa5b0b9788858df518c36ff
+     *
+     * Therefore wallet type must NOT be inferred from wallet address prefix.
+     */
+
+    if (
+      rawWalletType === 'ORG' ||
+      rawWalletType === 'ORGANIZATION' ||
+      rawWalletType === 'ORGANIZATION_WALLET'
+    ) {
+      return 'ORGANIZATION';
+    }
+
+    if (
+      rawWalletType === 'CUSTOMER' ||
+      rawWalletType === 'CUSTOMER_WALLET'
+    ) {
+      return 'CUSTOMER';
+    }
+
+    if (
+      customerId.toUpperCase().startsWith('ORG_') ||
+      organizationId.toUpperCase().startsWith('ORG_')
+    ) {
+      return 'ORGANIZATION';
+    }
+
+    return 'CUSTOMER';
+  }
+}
+================ POSSIBLE DASHBOARD FILES ================
+
+==================================================
+FILE: blockchain-test-ui/src/app/core/services/dashboard-api.service.ts
+==================================================
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { ApiConfigService } from './api-config.service';
+
+export interface WalletDashboardRow {
+  id: string;
+  walletId: string;
+  walletAddress: string;
+  customerId: string;
+  organizationId: string;
+  organizationCode: string | null;
+  walletType: string;
+  fullName: string;
+  customerName: string;
+  customerType: string;
+  nationality: string;
+  idType: string;
+  idNumber: string | null;
+  nationalIdHash: string | null;
+  mobileHash: string | null;
+  emailHash: string | null;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WalletDashboardResponse {
+  success: boolean;
+  message: string;
+  data: WalletDashboardRow[];
+  pagination: {
+    page: number;
+    limit: number;
+    totalRecords: number;
+    totalPages: number;
+    hasNextPage?: boolean;
+    hasPreviousPage?: boolean;
+  };
+  filters?: {
+    search?: string | null;
+  };
+  source?: string;
+  requestId?: string | null;
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class DashboardApiService {
+  private http = inject(HttpClient);
+  private config = inject(ApiConfigService);
+
+  getWallets(page = 1, limit = 13, search = ''): Observable<WalletDashboardResponse> {
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('limit', limit.toString());
+
+    if (search.trim()) {
+      params = params.set('search', search.trim());
+    }
+
+    return this.http.get<WalletDashboardResponse>(`${this.config.baseUrl}/wallets`, { params });
+  }
+}
+
+==================================================
+FILE: blockchain-test-ui/src/app/features/dashboard/dashboard.component.css
+==================================================
+:host {
+  display: block;
+}
+
+.dashboard-page {
+  width: 100%;
+}
+
+.dashboard-header,
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+
+.dashboard-header h1,
+.page-header h1,
+.page-header h2 {
+  margin: 0;
+  color: #004b9b;
+  font-size: 32px;
+  font-weight: 900;
+  letter-spacing: 0.3px;
+}
+
+.dashboard-header p,
+.page-header p {
+  margin: 7px 0 0;
+  color: #536174;
+  font-size: 16px;
+}
+
+.refresh-btn {
+  background: #ffffff;
+  color: #004b9b;
+  border: 1px solid #d8e0ea;
+  border-radius: 9px;
+  min-height: 42px;
+  padding: 0 22px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
+}
+
+.stats-grid,
+.kpi-grid,
+.dashboard-cards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 22px;
+  margin-bottom: 28px;
+}
+
+.stat-card,
+.kpi-card,
+.dashboard-card {
+  background: #ffffff;
+  border: 1px solid #dfe5ec;
+  border-radius: 12px;
+  padding: 22px 26px;
+  min-height: 118px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.055);
+}
+
+.stat-title,
+.kpi-title,
+.card-label {
+  color: #334155;
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.stat-value,
+.kpi-value,
+.card-value {
+  color: #004b9b;
+  font-size: 30px;
+  font-weight: 900;
+  letter-spacing: 4px;
+}
+
+.stat-desc,
+.kpi-desc,
+.card-desc {
+  color: #536174;
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.search-card,
+.search-panel {
+  background: #ffffff;
+  border: 1px solid #dfe5ec;
+  border-radius: 12px;
+  padding: 22px 24px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.055);
+  margin-bottom: 24px;
+}
+
+.search-card h3,
+.search-panel h3 {
+  margin: 0 0 16px;
+  color: #004b9b;
+  font-size: 23px;
+  font-weight: 900;
+}
+
+.search-row {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.search-row input,
+.search-input {
+  flex: 1;
+  height: 44px;
+  border: 1px solid #cfd8e3;
+  border-radius: 9px;
+  padding: 0 14px;
+  font-size: 14px;
+}
+
+.primary-btn,
+.search-btn {
+  background: #004b9b;
+  color: #ffffff;
+  border: 1px solid #004b9b;
+  border-radius: 9px;
+  height: 44px;
+  padding: 0 24px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.clear-btn,
+.secondary-btn {
+  background: #ffffff;
+  color: #111827;
+  border: 1px solid #d8e0ea;
+  border-radius: 9px;
+  height: 44px;
+  padding: 0 24px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.success-alert,
+.alert.success {
+  background: #ecfff4;
+  border: 1px solid #9ee7bd;
+  color: #067a3d;
+  border-radius: 10px;
+  padding: 15px 18px;
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+
+.records-card,
+.table-card {
+  background: #ffffff;
+  border: 1px solid #dfe5ec;
+  border-radius: 12px;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.06);
+  padding: 22px 24px;
+}
+
+.records-header,
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.records-header h3,
+.table-title h3 {
+  margin: 0;
+  color: #004b9b;
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.records-header p,
+.table-title p {
+  margin: 8px 0 0;
+  color: #536174;
+  font-size: 15px;
+}
+
+.api-info {
+  text-align: right;
+  color: #334155;
+  font-size: 14px;
+}
+
+.api-info strong,
+.api-info a {
+  color: #004b9b;
+  font-weight: 800;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  border: 1px solid #e5eaf0;
+  border-radius: 9px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
+}
+
+thead {
+  background: #f8fafc;
+}
+
+th {
+  color: #111827;
+  font-size: 13px;
+  font-weight: 900;
+  text-align: left;
+  padding: 14px;
+  border-bottom: 1px solid #dfe5ec;
+  white-space: nowrap;
+}
+
+td {
+  color: #111827;
+  font-size: 13px;
+  padding: 14px;
+  border-bottom: 1px solid #e5eaf0;
+  vertical-align: middle;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+.status-active,
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #dff8e8;
+  color: #04743b;
+  border-radius: 7px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+@media (max-width: 1200px) {
+  .stats-grid,
+  .kpi-grid,
+  .dashboard-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+==================================================
+FILE: blockchain-test-ui/src/app/features/dashboard/dashboard.component.css.bak_valoores_reference_design
+==================================================
+:host {
+  display: block;
+}
+
+.dashboard-page {
+  width: 100%;
+}
+
+.dashboard-header,
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 26px;
+}
+
+.dashboard-header h1,
+.page-header h1,
+.page-header h2 {
+  margin: 0;
+  color: #004b9b;
+  font-size: 34px;
+  font-weight: 900;
+  letter-spacing: 0.2px;
+}
+
+.dashboard-header p,
+.page-header p {
+  margin: 8px 0 0;
+  color: #4b5563;
+  font-size: 16px;
+}
+
+.refresh-btn {
+  background: #ffffff;
+  color: #004b9b;
+  border: 1px solid #e2e8f0;
+  border-radius: 9px;
+  height: 46px;
+  padding: 0 22px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+}
+
+.stats-grid,
+.kpi-grid,
+.dashboard-cards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 22px;
+  margin-bottom: 28px;
+}
+
+.stat-card,
+.kpi-card,
+.dashboard-card {
+  background: #ffffff;
+  border: 1px solid #dfe5ec;
+  border-radius: 12px;
+  padding: 22px 26px;
+  min-height: 118px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.stat-title,
+.kpi-title,
+.card-label {
+  color: #374151;
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.stat-value,
+.kpi-value,
+.card-value {
+  color: #004b9b;
+  font-size: 30px;
+  font-weight: 900;
+  letter-spacing: 4px;
+  line-height: 1.1;
+}
+
+.stat-desc,
+.kpi-desc,
+.card-desc {
+  color: #4b5563;
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.search-card,
+.search-panel {
+  background: #ffffff;
+  border: 1px solid #dfe5ec;
+  border-radius: 12px;
+  padding: 22px 24px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+  margin-bottom: 24px;
+}
+
+.search-card h3,
+.search-panel h3 {
+  margin: 0 0 16px;
+  color: #004b9b;
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.search-row {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.search-row input,
+.search-input {
+  flex: 1;
+  height: 46px;
+  border: 1px solid #cfd8e3;
+  border-radius: 9px;
+  padding: 0 16px;
+  font-size: 14px;
+}
+
+.primary-btn,
+.search-btn {
+  background: #004b9b;
+  color: #ffffff;
+  border: none;
+  border-radius: 9px;
+  height: 46px;
+  padding: 0 24px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.clear-btn,
+.secondary-btn {
+  background: #ffffff;
+  color: #111827;
+  border: 1px solid #d9e0e8;
+  border-radius: 9px;
+  height: 46px;
+  padding: 0 24px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.success-alert,
+.alert.success {
+  background: #ecfff4;
+  border: 1px solid #9ee7bd;
+  color: #067a3d;
+  border-radius: 10px;
+  padding: 15px 20px;
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+
+.records-card,
+.table-card {
+  background: #ffffff;
+  border: 1px solid #dfe5ec;
+  border-radius: 12px;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.06);
+  padding: 22px 24px;
+}
+
+.records-header,
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.records-header h3,
+.table-title h3 {
+  margin: 0;
+  color: #004b9b;
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.records-header p,
+.table-title p {
+  margin: 8px 0 0;
+  color: #4b5563;
+  font-size: 15px;
+}
+
+.api-info {
+  text-align: right;
+  color: #374151;
+  font-size: 14px;
+}
+
+.api-info strong,
+.api-info a {
+  color: #004b9b;
+  font-weight: 800;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  border: 1px solid #e5eaf0;
+  border-radius: 9px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
+}
+
+thead {
+  background: #f8fafc;
+}
+
+th {
+  color: #111827;
+  font-size: 13px;
+  font-weight: 800;
+  text-align: left;
+  padding: 14px 14px;
+  border-bottom: 1px solid #dfe5ec;
+  white-space: nowrap;
+}
+
+td {
+  color: #111827;
+  font-size: 13px;
+  padding: 14px 14px;
+  border-bottom: 1px solid #e5eaf0;
+  vertical-align: middle;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+.status-active,
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #dff8e8;
+  color: #04743b;
+  border-radius: 7px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+@media (max-width: 1200px) {
+  .stats-grid,
+  .kpi-grid,
+  .dashboard-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+==================================================
+FILE: blockchain-test-ui/src/app/features/dashboard/dashboard.component.ts
+==================================================
+import { CommonModule } from '@angular/common';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { environment } from '../../../environments/environment';
+import { WalletApiService } from '../../core/services/wallet-api.service';
+@Component({
+  selector: 'app-dashboard',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  template: `
+    <div class="dashboard-page">
+      <div class="page-header">
+        <div>
+          <h1>Digital KYC Dashboard</h1>
+          <p>Professional overview of created blockchain wallet identities.</p>
+        </div>
+
+        <button class="secondary-btn" type="button" (click)="refresh()" [disabled]="loading">
+          {{ loading ? 'Refreshing...' : 'Refresh' }}
+        </button>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span>Total Wallets</span>
+          <strong>{{ totalWallets }}</strong>
+          <p>Registered blockchain identities</p>
+        </div>
+
+        <div class="stat-card">
+          <span>Displayed Wallets</span>
+          <strong>{{ activeWallets }}</strong>
+          <p>Status = ACTIVE</p>
+        </div>
+
+        <div class="stat-card">
+          <span>Current Page</span>
+          <strong>{{ pagination.page }}</strong>
+          <p>Limit {{ pagination.limit }} records</p>
+        </div>
+
+        <div class="stat-card">
+          <span>Data Source</span>
+          <strong class="source">{{ dataSource }}</strong>
+          <p>{{ tableName }}</p>
+        </div>
+      </div>
+
+      <div class="search-card">
+        <h2>Search Wallets</h2>
+
+        <div class="search-row">
+          <input
+            type="text"
+            [(ngModel)]="filters.search"
+            name="search"
+            placeholder="Search customer, wallet, organization, national ID..."
+            (keyup.enter)="searchWallets()"
+          />
+
+          <button class="primary-btn" type="button" (click)="searchWallets()" [disabled]="loading">
+            Search
+          </button>
+
+          <button class="light-btn" type="button" (click)="clearSearch()" [disabled]="loading">
+            Clear
+          </button>
+        </div>
+      </div>
+
+      <div class="error-box" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+
+      <div class="success-box" *ngIf="successMessage">
+        {{ successMessage }}
+      </div>
+
+      <div class="wallets-card">
+        <div class="section-header">
+          <div>
+            <h2>Wallet Records</h2>
+            <p>Latest wallet identities loaded from the backend API.</p>
+          </div>
+
+          <div class="api-url">
+            API:
+            <span>{{ apiBaseUrl }}/wallets</span>
+          </div>
+        </div>
+
+        <div class="loading" *ngIf="loading">
+          Loading wallet data...
+        </div>
+
+        <div class="empty-state" *ngIf="!loading && wallets.length === 0">
+          <h3>No wallets found</h3>
+          <p>No wallet records were returned from the backend for the selected filters.</p>
+        </div>
+
+        <div class="table-wrapper" *ngIf="!loading && wallets.length > 0">
+          <table>
+            <thead>
+              <tr>
+                <th>Customer ID</th>
+                <th>Wallet Address</th>
+                <th>Full Name</th>
+                <th>Organization</th>
+                <th>Balance</th>
+                <th>Currency</th>
+                <th>Status</th>
+                <th>Created At</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr *ngFor="let wallet of wallets">
+                <td>{{ getField(wallet, 'customerId', 'customer_id') }}</td>
+                <td class="mono">{{ getField(wallet, 'walletAddress', 'wallet_address') }}</td>
+                <td>{{ getField(wallet, 'fullName', 'full_name', 'customerName', 'customer_name') }}</td>
+                <td>
+                  {{
+                    getField(
+                      wallet,
+                      'organizationName',
+                      'organization_name',
+                      'organizationCode',
+                      'organization_code',
+                      'organizationId',
+                      'organization_id'
+                    )
+                  }}
+                </td>
+                <td>{{ getField(wallet, 'currentBalance', 'current_balance') }}</td>
+                <td>{{ getField(wallet, 'currencyCode', 'currency_code', 'currency') }}</td>
+                <td>
+                  <span
+                    class="status-pill"
+                    [class.active]="String(getField(wallet, 'status', 'wallet_status')).toUpperCase() === 'ACTIVE'"
+                  >
+                    {{ getField(wallet, 'status', 'wallet_status') }}
+                  </span>
+                </td>
+                <td>{{ getField(wallet, 'createdAt', 'created_at') }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="pagination" *ngIf="!loading">
+          <button
+            class="light-btn"
+            type="button"
+            (click)="previousPage()"
+            [disabled]="!pagination.hasPreviousPage"
+          >
+            Previous
+          </button>
+
+          <span>
+            Page {{ pagination.page }} of {{ pagination.totalPages || 1 }}
+          </span>
+
+          <button
+            class="light-btn"
+            type="button"
+            (click)="nextPage()"
+            [disabled]="!pagination.hasNextPage"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+
+      <div class="raw-card" *ngIf="apiResponse">
+        <h2>Raw API Response</h2>
+        <pre>{{ apiResponse | json }}</pre>
+      </div>
+    </div>
+  `,
+  styles: [
+    `
+      .dashboard-page {
+        min-height: 100vh;
+        padding: 32px;
+        background: #eef3f8;
+      }
+
+      .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+
+      .page-header h1 {
+        margin: 0;
+        color: #004aad;
+        font-size: 30px;
+        font-weight: 800;
+      }
+
+      .page-header p {
+        margin: 6px 0 0;
+        color: #52647d;
+        font-size: 15px;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+        margin-bottom: 24px;
+      }
+
+      .stat-card,
+      .search-card,
+      .wallets-card,
+      .raw-card {
+        background: #ffffff;
+        border-radius: 16px;
+        border: 1px solid #e1e8f0;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+      }
+
+      .stat-card {
+        padding: 20px;
+      }
+
+      .stat-card span {
+        display: block;
+        color: #52647d;
+        font-size: 13px;
+        font-weight: 700;
+        margin-bottom: 10px;
+      }
+
+      .stat-card strong {
+        display: block;
+        color: #004aad;
+        font-size: 28px;
+        font-weight: 900;
+        margin-bottom: 6px;
+      }
+
+      .stat-card strong.source {
+        font-size: 26px;
+      }
+
+      .stat-card p {
+        margin: 0;
+        color: #52647d;
+        font-size: 13px;
+      }
+
+      .search-card {
+        padding: 20px;
+        margin-bottom: 20px;
+      }
+
+      .search-card h2,
+      .wallets-card h2,
+      .raw-card h2 {
+        margin: 0 0 12px;
+        color: #004aad;
+        font-size: 20px;
+        font-weight: 800;
+      }
+
+      .search-row {
+        display: grid;
+        grid-template-columns: 1fr auto auto;
+        gap: 12px;
+      }
+
+      input {
+        width: 100%;
+        height: 44px;
+        border: 1px solid #cbd8e6;
+        border-radius: 12px;
+        padding: 0 14px;
+        outline: none;
+        font-size: 14px;
+      }
+
+      input:focus {
+        border-color: #004aad;
+        box-shadow: 0 0 0 3px rgba(0, 74, 173, 0.12);
+      }
+
+      .primary-btn,
+      .secondary-btn,
+      .light-btn {
+        border: none;
+        border-radius: 12px;
+        padding: 12px 18px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .primary-btn {
+        background: #004aad;
+        color: #ffffff;
+        box-shadow: 0 8px 18px rgba(0, 74, 173, 0.25);
+      }
+
+      .secondary-btn {
+        background: #eef5ff;
+        color: #004aad;
+      }
+
+      .light-btn {
+        background: #f2f4f7;
+        color: #111827;
+      }
+
+      .primary-btn:disabled,
+      .secondary-btn:disabled,
+      .light-btn:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+
+      .error-box {
+        background: #fff1f1;
+        color: #b91c1c;
+        border: 1px solid #fecaca;
+        border-radius: 14px;
+        padding: 14px 18px;
+        margin-bottom: 20px;
+        font-weight: 700;
+      }
+
+      .success-box {
+        background: #ecfdf5;
+        color: #047857;
+        border: 1px solid #a7f3d0;
+        border-radius: 14px;
+        padding: 14px 18px;
+        margin-bottom: 20px;
+        font-weight: 700;
+      }
+
+      .wallets-card {
+        padding: 20px;
+      }
+
+      .section-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        align-items: flex-start;
+        margin-bottom: 16px;
+      }
+
+      .section-header p {
+        margin: 0;
+        color: #52647d;
+      }
+
+      .api-url {
+        color: #52647d;
+        font-size: 13px;
+        text-align: right;
+      }
+
+      .api-url span {
+        display: block;
+        color: #004aad;
+        font-weight: 700;
+        margin-top: 4px;
+      }
+
+      .loading,
+      .empty-state {
+        padding: 32px;
+        text-align: center;
+        border-radius: 14px;
+        background: #f8fafc;
+        color: #52647d;
+      }
+
+      .empty-state h3 {
+        margin: 0 0 8px;
+        color: #004aad;
+      }
+
+      .empty-state p {
+        margin: 0;
+      }
+
+      .table-wrapper {
+        overflow-x: auto;
+      }
+
+      table {
+        width: 100%;
+        min-width: 1100px;
+        border-collapse: collapse;
+      }
+
+      th {
+        background: #f8fafc;
+        color: #334155;
+        text-align: left;
+        padding: 12px;
+        border-bottom: 1px solid #e2e8f0;
+        font-size: 13px;
+      }
+
+      td {
+        padding: 12px;
+        border-bottom: 1px solid #e2e8f0;
+        font-size: 13px;
+        color: #0f172a;
+        vertical-align: top;
+      }
+
+      .mono {
+        font-family: Consolas, Monaco, monospace;
+        font-size: 12px;
+      }
+
+      .status-pill {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 999px;
+        background: #e5e7eb;
+        color: #374151;
+        font-weight: 800;
+        font-size: 12px;
+      }
+
+      .status-pill.active {
+        background: #dcfce7;
+        color: #047857;
+      }
+
+      .pagination {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 14px;
+        margin-top: 18px;
+      }
+
+      .pagination span {
+        color: #52647d;
+        font-weight: 700;
+      }
+
+      .raw-card {
+        padding: 20px;
+        margin-top: 20px;
+      }
+
+      pre {
+        background: #071124;
+        color: #e5e7eb;
+        border-radius: 14px;
+        padding: 18px;
+        overflow: auto;
+        max-height: 420px;
+        font-size: 12px;
+      }
+
+      @media (max-width: 1100px) {
+        .stats-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        .search-row {
+          grid-template-columns: 1fr;
+        }
+
+        .section-header {
+          flex-direction: column;
+        }
+
+        .api-url {
+          text-align: left;
+        }
+      }
+
+      @media (max-width: 700px) {
+        .dashboard-page {
+          padding: 18px;
+        }
+
+        .stats-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .page-header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+      }

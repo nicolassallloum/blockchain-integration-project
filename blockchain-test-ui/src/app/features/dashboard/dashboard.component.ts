@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { environment } from '../../../environments/environment';
 import { WalletApiService } from '../../core/services/wallet-api.service';
+import { ProjectViewApiService } from '../../core/services/project-view-api.service';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -43,6 +44,33 @@ import { WalletApiService } from '../../core/services/wallet-api.service';
           <span>Data Source</span>
           <strong class="source">{{ dataSource }}</strong>
           <p>{{ tableName }}</p>
+        </div>
+      </div>
+
+
+      <div class="stats-grid viewer-stats-grid">
+        <div class="stat-card viewer-card">
+          <span>Total Project Views</span>
+          <strong>{{ projectViewStats.totalViews }}</strong>
+          <p>All blockchain UI page opens</p>
+        </div>
+
+        <div class="stat-card viewer-card">
+          <span>Unique Visitors</span>
+          <strong>{{ projectViewStats.uniqueVisitors }}</strong>
+          <p>Based on browser session</p>
+        </div>
+
+        <div class="stat-card viewer-card">
+          <span>Today Views</span>
+          <strong>{{ projectViewStats.todayViews }}</strong>
+          <p>Views recorded today</p>
+        </div>
+
+        <div class="stat-card viewer-card">
+          <span>Last Viewed At</span>
+          <strong class="small-value">{{ formatDateTime(projectViewStats.lastViewedAt) }}</strong>
+          <p>Latest project access time</p>
         </div>
       </div>
 
@@ -242,6 +270,20 @@ import { WalletApiService } from '../../core/services/wallet-api.service';
         font-size: 28px;
         font-weight: 900;
         margin-bottom: 6px;
+      }
+
+      .stat-card strong.small-value {
+        font-size: 16px;
+        letter-spacing: 0;
+        word-break: break-word;
+      }
+
+      .viewer-stats-grid {
+        margin-top: -6px;
+      }
+
+      .viewer-card {
+        border-left: 5px solid #004aad;
       }
 
       .stat-card strong.source {
@@ -502,7 +544,17 @@ import { WalletApiService } from '../../core/services/wallet-api.service';
   ]
 })
 export class DashboardComponent implements OnInit {
-  protected readonly String = String;
+  
+  projectViewStats = {
+    totalViews: 0,
+    todayViews: 0,
+    uniqueVisitors: 0,
+    lastViewedAt: null as string | null,
+    mostViewedPages: [] as any[]
+  };
+
+  private projectViewApi = inject(ProjectViewApiService);
+protected readonly String = String;
 
   apiBaseUrl = environment.apiBaseUrl;
 
@@ -539,7 +591,9 @@ export class DashboardComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadDashboard();
+    
+    this.loadProjectViewStats();
+this.loadDashboard();
   }
 
   loadDashboard(): void {
@@ -589,7 +643,9 @@ export class DashboardComponent implements OnInit {
   }
 
   refresh(): void {
-    this.loadDashboard();
+    
+    this.loadProjectViewStats();
+this.loadDashboard();
   }
 
   searchWallets(): void {
@@ -683,4 +739,43 @@ export class DashboardComponent implements OnInit {
           : page > 1
     };
   }
+
+
+  loadProjectViewStats(): void {
+    this.projectViewApi.getStats().subscribe({
+      next: (response: any) => {
+        const data = response?.data || {};
+
+        this.projectViewStats = {
+          totalViews: Number(data.totalViews || 0),
+          todayViews: Number(data.todayViews || 0),
+          uniqueVisitors: Number(data.uniqueVisitors || 0),
+          lastViewedAt: data.lastViewedAt || null,
+          mostViewedPages: Array.isArray(data.mostViewedPages) ? data.mostViewedPages : []
+        };
+      },
+      error: () => {
+        this.projectViewStats = {
+          totalViews: 0,
+          todayViews: 0,
+          uniqueVisitors: 0,
+          lastViewedAt: null,
+          mostViewedPages: []
+        };
+      }
+    });
+  }
+
+  formatDateTime(value: string | null): string {
+    if (!value) {
+      return '-';
+    }
+
+    try {
+      return new Date(value).toLocaleString();
+    } catch {
+      return value;
+    }
+  }
+
 }

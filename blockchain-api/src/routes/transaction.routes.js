@@ -267,8 +267,7 @@ router.post(
  */
 router.post(
   "/organization-transfer",
-  apiKeyProtection,
-  serviceAccess,
+  userOrServiceAccess,
   organizationTransferValidation,
   validateRequest,
   organizationTransferHandler
