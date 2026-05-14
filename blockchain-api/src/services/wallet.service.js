@@ -7,6 +7,7 @@ const crypto = require('crypto');
 const db = require('../config/database');
 const fabricService = require('./fabric.service');
 const enterprisePersistenceRepository = require('../repositories/enterprise-persistence.repository');
+
 const DEFAULT_JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '8h';
 const JWT_SECRET =
   process.env.JWT_SECRET ||
@@ -130,11 +131,20 @@ function mapWalletProfile(profile) {
   };
 }
 
-async function getOrganizationById(organizationId) {
+/**
+ * Accepts either:
+ * - organization_id UUID
+ * - organization_code
+ *
+ * This allows the frontend to still send organizationId,
+ * while the backend resolves and saves organization_code correctly.
+ */
+async function getOrganizationById(organizationIdOrCode) {
   const result = await db.query(
     `
     SELECT
       organization_id::text AS organization_id,
+      organization_code::text AS organization_code,
       organization_name,
       organization_type,
       registration_number,
@@ -142,12 +152,22 @@ async function getOrganizationById(organizationId) {
       status
     FROM blockchain.blockchain_organization
     WHERE organization_id::text = $1
+       OR organization_code::text = $1
     LIMIT 1
     `,
-    [String(organizationId)]
+    [String(organizationIdOrCode)]
   );
 
   return result.rows[0] || null;
+}
+
+function resolveOrganizationCode(organization, fallbackValue = null) {
+  return (
+    organization?.organization_code ||
+    organization?.registration_number ||
+    fallbackValue ||
+    null
+  );
 }
 
 function extractBlockchainWallet(fabricResult) {
@@ -427,6 +447,22 @@ exports.createWallet = async (payload) => {
     throw new Error('initialBalance must be zero or greater');
   }
 
+  const organization = await getOrganizationById(organizationId);
+
+  if (!organization) {
+    throw new Error(`Organization not found: ${organizationId}`);
+  }
+
+  const resolvedOrganizationId = organization.organization_id;
+  const resolvedOrganizationCode = resolveOrganizationCode(
+    organization,
+    organizationCode || organizationId
+  );
+
+  if (!resolvedOrganizationCode) {
+    throw new Error(`organizationCode could not be resolved for organizationId: ${organizationId}`);
+  }
+
   await assertCustomerDoesNotExistInPostgres(customerId);
 
   const plainPassword =
@@ -454,7 +490,14 @@ exports.createWallet = async (payload) => {
       'CreateWallet',
       [
         customerId,
-        organizationId,
+
+        /*
+         * IMPORTANT:
+         * Save/send organization_code to Blockchain ledger,
+         * not organization_id UUID.
+         */
+        resolvedOrganizationCode,
+
         fullName,
         nationalIdHash || '',
         mobileHash || '',
@@ -486,65 +529,80 @@ exports.createWallet = async (payload) => {
 
   const client = await db.getClient();
 
-    let enterpriseSaveResult;
+  let enterpriseSaveResult;
 
-    try {
-      await client.query('BEGIN');
+  try {
+    await client.query('BEGIN');
 
-      enterpriseSaveResult = await enterprisePersistenceRepository.saveWalletEnterprise(
-        client,
-        {
-          walletAddress,
-          customerId,
-          organizationId,
-          organizationCode,
+    enterpriseSaveResult = await enterprisePersistenceRepository.saveWalletEnterprise(
+      client,
+      {
+        walletAddress,
+        customerId,
+
+        /*
+         * Keep UUID internally for FK/join.
+         * Save organization_code separately for display/search/business code.
+         */
+        organizationId: resolvedOrganizationId,
+        organizationCode: resolvedOrganizationCode,
+
+        walletType: 'CUSTOMER',
+        fullName,
+        nationalIdHash,
+        mobileHash,
+        emailHash,
+        passwordHash: normalizedPasswordHash,
+        ledgerDocType,
+        currentBalance: blockchainWallet.balance ?? initialBalance,
+        currencyCode: payload.currencyCode || payload.currency || 'USD',
+        status: blockchainWallet.status || 'ACTIVE',
+        fabricTxId: fabricTransactionId,
+        fabricChannelName: fabricResult.channelName || DEFAULT_CHANNEL_NAME,
+        chaincodeName: fabricResult.chaincodeName || DEFAULT_CHAINCODE_NAME,
+        walletMetadata: {
+          source: 'BLOCKCHAIN_API',
           walletType: 'CUSTOMER',
+          fabricTxId: fabricTransactionId,
+          createdFrom: requestSource,
+          organizationId: resolvedOrganizationId,
+          organizationCode: resolvedOrganizationCode
+        },
+        kycPayload: {
           fullName,
           nationalIdHash,
           mobileHash,
           emailHash,
-          passwordHash: normalizedPasswordHash,
-          ledgerDocType,
-          currentBalance: blockchainWallet.balance ?? initialBalance,
-          currencyCode: payload.currencyCode || payload.currency || 'USD',          status: blockchainWallet.status || 'ACTIVE',
-          fabricTxId: fabricTransactionId,
-          fabricChannelName: fabricResult.channelName || DEFAULT_CHANNEL_NAME,
-          chaincodeName: fabricResult.chaincodeName || DEFAULT_CHAINCODE_NAME,
-          walletMetadata: {
-            source: 'BLOCKCHAIN_API',
-            walletType: 'CUSTOMER',
-            fabricTxId: fabricTransactionId,
-            createdFrom: requestSource
-          },
-          kycPayload: {
-            fullName,
-            nationalIdHash,
-            mobileHash,
-            emailHash
-          },
-          blockchainPayload: blockchainWallet,
-          fabricResponse: fabricResult,
-          requestId: payload.requestId || payload.request_id || null,
-          requestSource,
-          sourceSystem,
-          createdBy,
-          updatedBy: createdBy,
-          originalPayload: payload
+          organizationId: resolvedOrganizationId,
+          organizationCode: resolvedOrganizationCode
+        },
+        blockchainPayload: blockchainWallet,
+        fabricResponse: fabricResult,
+        requestId: payload.requestId || payload.request_id || null,
+        requestSource,
+        sourceSystem,
+        createdBy,
+        updatedBy: createdBy,
+        originalPayload: {
+          ...payload,
+          organizationId: resolvedOrganizationId,
+          organizationCode: resolvedOrganizationCode
         }
-      );
+      }
+    );
 
-      await client.query('COMMIT');
-    } catch (error) {
-      await client.query('ROLLBACK');
+    await client.query('COMMIT');
+  } catch (error) {
+    await client.query('ROLLBACK');
 
-      throw new Error(
-        `Wallet created on Fabric but enterprise PostgreSQL save failed. Manual reconciliation required. FabricTxId=${fabricTransactionId || 'N/A'} WalletAddress=${walletAddress}. Error: ${error.message}`
-      );
-    } finally {
-      client.release();
-    }
+    throw new Error(
+      `Wallet created on Fabric but enterprise PostgreSQL save failed. Manual reconciliation required. FabricTxId=${fabricTransactionId || 'N/A'} WalletAddress=${walletAddress}. Error: ${error.message}`
+    );
+  } finally {
+    client.release();
+  }
 
-    const row = enterpriseSaveResult.wallet;
+  const row = enterpriseSaveResult.wallet;
 
   const profile =
     (await getProfessionalWalletProfileByAddress(row.wallet_address)) ||
@@ -563,6 +621,10 @@ exports.createWallet = async (payload) => {
     postgres: {
       saved: true,
       walletId: row.wallet_id || null
+    },
+    organization: {
+      organizationId: resolvedOrganizationId,
+      organizationCode: resolvedOrganizationCode
     },
     oneTimePassword:
       generatedPassword ||
@@ -583,6 +645,12 @@ exports.createOrganizationWallet = async (payload) => {
     throw new Error(`Organization not found: ${organizationId}`);
   }
 
+  const resolvedOrganizationId = organization.organization_id;
+  const organizationCode = resolveOrganizationCode(
+    organization,
+    payload.organizationCode || payload.organization_code || organizationId
+  );
+
   const existingOrgWallet = await db.query(
     `
     SELECT wallet_address
@@ -591,12 +659,12 @@ exports.createOrganizationWallet = async (payload) => {
       AND UPPER(wallet_type) = 'ORGANIZATION'
     LIMIT 1
     `,
-    [String(organizationId)]
+    [String(resolvedOrganizationId)]
   );
 
   if (existingOrgWallet.rowCount > 0) {
     throw new Error(
-      `Organization wallet already exists for organizationId: ${organizationId}`
+      `Organization wallet already exists for organizationId: ${resolvedOrganizationId}`
     );
   }
 
@@ -618,16 +686,11 @@ exports.createOrganizationWallet = async (payload) => {
     ? String(plainPassword)
     : await bcrypt.hash(String(plainPassword), 10);
 
-  const customerId = `ORG_${String(organization.organization_id)
+  const customerId = `ORG_${String(resolvedOrganizationId)
     .replace(/-/g, '')
     .slice(0, 24)}`;
 
   const organizationName = organization.organization_name;
-  const organizationCode =
-    organization.registration_number ||
-    organization.organization_code ||
-    String(organization.organization_id);
-
   const emailHash = buildOrganizationEmail(organizationName);
 
   let fabricResult;
@@ -639,9 +702,15 @@ exports.createOrganizationWallet = async (payload) => {
       'CreateWallet',
       [
         customerId,
-        String(organization.organization_id),
+
+        /*
+         * IMPORTANT:
+         * Organization wallet also sends organization_code to Fabric.
+         */
+        organizationCode,
+
         organizationName,
-        String(organization.organization_id),
+        organizationCode,
         '',
         emailHash,
         normalizedPasswordHash,
@@ -671,65 +740,70 @@ exports.createOrganizationWallet = async (payload) => {
 
   const client = await db.getClient();
 
-    let enterpriseSaveResult;
+  let enterpriseSaveResult;
 
-    try {
-      await client.query('BEGIN');
+  try {
+    await client.query('BEGIN');
 
-      enterpriseSaveResult = await enterprisePersistenceRepository.saveWalletEnterprise(
-        client,
-        {
-          walletAddress,
-          customerId,
-          organizationId: organization.organization_id,
-          organizationCode,
+    enterpriseSaveResult = await enterprisePersistenceRepository.saveWalletEnterprise(
+      client,
+      {
+        walletAddress,
+        customerId,
+        organizationId: resolvedOrganizationId,
+        organizationCode,
+        walletType: 'ORGANIZATION',
+        fullName: organizationName,
+        nationalIdHash: organizationCode,
+        mobileHash: null,
+        emailHash,
+        passwordHash: normalizedPasswordHash,
+        ledgerDocType: 'organization_wallet',
+        currentBalance: blockchainWallet.balance ?? initialBalance,
+        currencyCode: payload.currencyCode || payload.currency || 'USD',
+        status: blockchainWallet.status || 'ACTIVE',
+        fabricTxId: fabricTransactionId,
+        fabricChannelName: fabricResult.channelName || DEFAULT_CHANNEL_NAME,
+        chaincodeName: fabricResult.chaincodeName || DEFAULT_CHAINCODE_NAME,
+        walletMetadata: {
+          source: 'BLOCKCHAIN_API',
           walletType: 'ORGANIZATION',
-          fullName: organizationName,
-          nationalIdHash: String(organization.organization_id),
-          mobileHash: null,
-          emailHash,
-          passwordHash: normalizedPasswordHash,
-          ledgerDocType: 'organization_wallet',
-          currentBalance: blockchainWallet.balance ?? initialBalance,
-          currencyCode: payload.currencyCode || payload.currency || 'USD',          status: blockchainWallet.status || 'ACTIVE',
           fabricTxId: fabricTransactionId,
-          fabricChannelName: fabricResult.channelName || DEFAULT_CHANNEL_NAME,
-          chaincodeName: fabricResult.chaincodeName || DEFAULT_CHAINCODE_NAME,
-          walletMetadata: {
-            source: 'BLOCKCHAIN_API',
-            walletType: 'ORGANIZATION',
-            fabricTxId: fabricTransactionId,
-            organizationId: organization.organization_id,
-            organizationCode
-          },
-          kycPayload: {
-            organizationId: organization.organization_id,
-            organizationName,
-            organizationCode
-          },
-          blockchainPayload: blockchainWallet,
-          fabricResponse: fabricResult,
-          requestId: payload.requestId || payload.request_id || null,
-          requestSource: payload.requestSource || payload.request_source || 'ANGULAR_TEST_UI',
-          sourceSystem: payload.sourceSystem || payload.source_system || 'BLOCKCHAIN_API',
-          createdBy: payload.createdBy || payload.created_by || 'angular-test-ui',
-          updatedBy: payload.createdBy || payload.created_by || 'angular-test-ui',
-          originalPayload: payload
+          organizationId: resolvedOrganizationId,
+          organizationCode
+        },
+        kycPayload: {
+          organizationId: resolvedOrganizationId,
+          organizationName,
+          organizationCode
+        },
+        blockchainPayload: blockchainWallet,
+        fabricResponse: fabricResult,
+        requestId: payload.requestId || payload.request_id || null,
+        requestSource: payload.requestSource || payload.request_source || 'ANGULAR_TEST_UI',
+        sourceSystem: payload.sourceSystem || payload.source_system || 'BLOCKCHAIN_API',
+        createdBy: payload.createdBy || payload.created_by || 'angular-test-ui',
+        updatedBy: payload.createdBy || payload.created_by || 'angular-test-ui',
+        originalPayload: {
+          ...payload,
+          organizationId: resolvedOrganizationId,
+          organizationCode
         }
-      );
+      }
+    );
 
-      await client.query('COMMIT');
-    } catch (error) {
-      await client.query('ROLLBACK');
+    await client.query('COMMIT');
+  } catch (error) {
+    await client.query('ROLLBACK');
 
-      throw new Error(
-        `Organization wallet created on Fabric but enterprise PostgreSQL save failed. Manual reconciliation required. FabricTxId=${fabricTransactionId || 'N/A'} WalletAddress=${walletAddress}. Error: ${error.message}`
-      );
-    } finally {
-      client.release();
-    }
+    throw new Error(
+      `Organization wallet created on Fabric but enterprise PostgreSQL save failed. Manual reconciliation required. FabricTxId=${fabricTransactionId || 'N/A'} WalletAddress=${walletAddress}. Error: ${error.message}`
+    );
+  } finally {
+    client.release();
+  }
 
-    const row = enterpriseSaveResult.wallet;
+  const row = enterpriseSaveResult.wallet;
 
   const profile = await getProfessionalWalletProfileByAddress(row.wallet_address);
 
@@ -746,6 +820,10 @@ exports.createOrganizationWallet = async (payload) => {
     postgres: {
       saved: true,
       walletId: row.wallet_id || null
+    },
+    organization: {
+      organizationId: resolvedOrganizationId,
+      organizationCode
     },
     oneTimePassword: String(plainPassword).startsWith('$2') ? null : plainPassword
   };
@@ -810,6 +888,7 @@ exports.loginWallet = async ({ walletAddress, customerId, password }) => {
       walletAddress: wallet.wallet_address,
       customerId: wallet.customer_id,
       organizationId: wallet.organization_id,
+      organizationCode: wallet.organization_code || null,
       walletType
     },
     JWT_SECRET,

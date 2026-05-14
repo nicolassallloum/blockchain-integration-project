@@ -1,0 +1,1853 @@
+==================================================
+WALLET CREATION - ORGANIZATION_CODE UPDATE FILES
+Generated at: Thu May 14 09:22:47 AM EEST 2026
+==================================================
+
+================ BACKEND WALLET FILES ================
+
+==================================================
+FILE: blockchain-api/src/controllers/wallet.controller.js
+==================================================
+'use strict';
+
+const walletService = require('../services/wallet.service');
+
+function getRequestId(req) {
+  return req.requestId || req.headers['x-request-id'] || null;
+}
+
+function getCorrelationId(req) {
+  return req.headers['x-correlation-id'] || getRequestId(req);
+}
+
+function buildRequestContext(req) {
+  return {
+    requestId: getRequestId(req),
+    request_id: getRequestId(req),
+    correlationId: getCorrelationId(req),
+    correlation_id: getCorrelationId(req),
+    sourceSystem:
+      req.headers['x-source-system'] ||
+      req.body?.sourceSystem ||
+      req.body?.source_system ||
+      'BLOCKCHAIN_API',
+    source_system:
+      req.headers['x-source-system'] ||
+      req.body?.sourceSystem ||
+      req.body?.source_system ||
+      'BLOCKCHAIN_API',
+    requestSource:
+      req.headers['x-request-source'] ||
+      req.body?.requestSource ||
+      req.body?.request_source ||
+      'API',
+    request_source:
+      req.headers['x-request-source'] ||
+      req.body?.requestSource ||
+      req.body?.request_source ||
+      'API',
+    createdBy:
+      req.body?.createdBy ||
+      req.body?.created_by ||
+      req.headers['x-created-by'] ||
+      'api-user',
+    created_by:
+      req.body?.createdBy ||
+      req.body?.created_by ||
+      req.headers['x-created-by'] ||
+      'api-user'
+  };
+}
+
+function getErrorStatusCode(error, defaultStatus = 400) {
+  const message = String(error.message || '').toLowerCase();
+
+  if (
+    message.includes('blockchain wallet creation failed') ||
+    message.includes('fabric') ||
+    message.includes('endorsement') ||
+    message.includes('deadline') ||
+    message.includes('gateway') ||
+    message.includes('grpc')
+  ) {
+    return 502;
+  }
+
+  if (message.includes('already exists')) {
+    return 409;
+  }
+
+  if (message.includes('not found')) {
+    return 404;
+  }
+
+  return defaultStatus;
+}
+
+exports.getNextCustomerId = async (req, res, next) => {
+  try {
+    const result = await walletService.getNextCustomerId();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Next customer ID generated successfully',
+      data: {
+        customerId: result.customerId,
+        customer_id: result.customerId
+      },
+      requestId: getRequestId(req)
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+/**
+ * GET /api/v1/wallets?page=1&limit=13&search=
+ */
+exports.listWallets = async (req, res) => {
+  try {
+    const page = Math.max(parseInt(req.query.page || '1', 10), 1);
+    const limit = Math.min(Math.max(parseInt(req.query.limit || '13', 10), 1), 100);
+    const offset = (page - 1) * limit;
+    const search = (req.query.search || '').trim();
+
+    const result = await walletService.listWallets({
+      page,
+      limit,
+      offset,
+      search
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Wallet list retrieved successfully',
+      data: result.data,
+      pagination: {
+        page,
+        limit,
+        totalRecords: result.totalRecords,
+        totalPages: Math.ceil(result.totalRecords / limit),
+        hasNextPage: page < Math.ceil(result.totalRecords / limit),
+        hasPreviousPage: page > 1
+      },
+      filters: {
+        search: search || null
+      },
+      source: 'postgres',
+      requestId: getRequestId(req)
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve wallet list',
+      error: {
+        message: error.message,
+        stack: process.env.NODE_ENV === 'production' ? undefined : error.stack
+      },
+      requestId: getRequestId(req)
+    });
+  }
+};
+
+/**
+ * POST /api/v1/wallets
+ */
+exports.createWallet = async (req, res) => {
+  try {
+    const result = await walletService.createWallet({
+      ...req.body,
+      ...buildRequestContext(req)
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: 'Wallet created successfully in Blockchain and PostgreSQL',
+      data: result,
+      source: 'fabric_postgres',
+      requestId: getRequestId(req)
+    });
+  } catch (error) {
+    const statusCode = getErrorStatusCode(error, 400);
+
+    return res.status(statusCode).json({
+      success: false,
+      message: 'Failed to create wallet',
+      error: {
+        message: error.message,
+        stack: process.env.NODE_ENV === 'production' ? undefined : error.stack
+      },
+      source: statusCode === 502 ? 'fabric' : 'api',
+      requestId: getRequestId(req)
+    });
+  }
+};
+
+/**
+ * POST /api/v1/wallets/organization-wallets
+ */
+exports.createOrganizationWallet = async (req, res) => {
+  try {
+    const result = await walletService.createOrganizationWallet({
+      ...req.body,
+      ...buildRequestContext(req)
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: 'Organization wallet created successfully in Blockchain and PostgreSQL',
+      data: result,
+      source: 'fabric_postgres',
+      requestId: getRequestId(req)
+    });
+  } catch (error) {
+    const statusCode = getErrorStatusCode(error, 400);
+
+    return res.status(statusCode).json({
+      success: false,
+      message: 'Failed to create organization wallet',
+      error: {
+        message: error.message,
+        stack: process.env.NODE_ENV === 'production' ? undefined : error.stack
+      },
+      source: statusCode === 502 ? 'fabric' : 'api',
+      requestId: getRequestId(req)
+    });
+  }
+};
+
+/**
+ * POST /api/v1/wallets/login
+ */
+exports.loginWallet = async (req, res, next) => {
+  try {
+    const walletAddress =
+      req.body.walletAddress ||
+      req.body.wallet_address ||
+      req.body.loginId ||
+      req.body.customerId;
+
+    const password = req.body.password;
+
+    if (!walletAddress) {
+      return res.status(400).json({
+        success: false,
+        message: 'walletAddress is required',
+        error: {
+          message: 'walletAddress is required'
+        },
+        requestId: getRequestId(req)
+      });
+    }
+
+    if (!password) {
+      return res.status(400).json({
+        success: false,
+        message: 'password is required',
+        error: {
+          message: 'password is required'
+        },
+        requestId: getRequestId(req)
+      });
+    }
+
+    const result = await walletService.loginWallet({
+      walletAddress,
+      password
+    });
+
+    if (!result) {
+      return res.status(401).json({
+        success: false,
+        message: 'Wallet login failed',
+        error: {
+          message: 'Invalid wallet address or password'
+        },
+        requestId: getRequestId(req)
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Wallet login successful',
+      data: result,
+      requestId: getRequestId(req)
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+/**
+ * GET /api/v1/wallets/customer/:customerId
+ */
+exports.getWalletByCustomerId = async (req, res) => {
+  try {
+    const { customerId } = req.params;
+
+    const wallet = await walletService.getWalletByCustomerId(customerId);
+
+    if (!wallet) {
+      return res.status(404).json({
+        success: false,
+        message: `Wallet not found for customerId: ${customerId}`,
+        data: null,
+        requestId: getRequestId(req)
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Wallet retrieved successfully',
+      data: {
+        wallet
+      },
+      source: 'postgres',
+      requestId: getRequestId(req)
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve wallet by customer ID',
+      error: {
+        message: error.message,
+        stack: process.env.NODE_ENV === 'production' ? undefined : error.stack
+      },
+      requestId: getRequestId(req)
+    });
+  }
+};
+
+/**
+ * GET /api/v1/wallets/:walletAddress
+ */
+exports.getWalletByAddress = async (req, res) => {
+  try {
+    const { walletAddress } = req.params;
+
+    const wallet = await walletService.getWalletByAddress(walletAddress);
+
+    if (!wallet) {
+      return res.status(404).json({
+        success: false,
+        message: `Wallet not found for walletAddress: ${walletAddress}`,
+        data: null,
+        requestId: getRequestId(req)
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Wallet retrieved successfully',
+      data: {
+        wallet
+      },
+      source: 'postgres',
+      requestId: getRequestId(req)
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve wallet by wallet address',
+      error: {
+        message: error.message,
+        stack: process.env.NODE_ENV === 'production' ? undefined : error.stack
+      },
+      requestId: getRequestId(req)
+    });
+  }
+};
+==================================================
+FILE: blockchain-api/src/services/wallet.service.js
+==================================================
+'use strict';
+
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+
+const db = require('../config/database');
+const fabricService = require('./fabric.service');
+const enterprisePersistenceRepository = require('../repositories/enterprise-persistence.repository');
+const DEFAULT_JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '8h';
+const JWT_SECRET =
+  process.env.JWT_SECRET ||
+  process.env.APP_JWT_SECRET ||
+  'CHANGE_ME_DEV_SECRET';
+
+const DEFAULT_CHANNEL_NAME =
+  process.env.FABRIC_CHANNEL_NAME ||
+  process.env.CHANNEL_NAME ||
+  'kycchannelnix1';
+
+const DEFAULT_CHAINCODE_NAME =
+  process.env.FABRIC_CHAINCODE_NAME ||
+  process.env.CHAINCODE_NAME ||
+  'kyc-wallet-chaincode-js';
+
+exports.getNextCustomerId = async () => {
+  const client = await db.getClient();
+
+  try {
+    const customerId = await enterprisePersistenceRepository.getNextCustomerId(client);
+
+    return {
+      customerId: String(customerId),
+      customer_id: String(customerId)
+    };
+  } finally {
+    client.release();
+  }
+};
+
+async function tableColumnExists(tableName, columnName) {
+  const result = await db.query(
+    `
+    SELECT EXISTS (
+      SELECT 1
+      FROM information_schema.columns
+      WHERE table_schema = 'blockchain'
+        AND table_name = $1
+        AND column_name = $2
+    ) AS exists
+    `,
+    [tableName, columnName]
+  );
+
+  return result.rows[0]?.exists === true;
+}
+
+async function getWalletColumns() {
+  const result = await db.query(
+    `
+    SELECT column_name
+    FROM information_schema.columns
+    WHERE table_schema = 'blockchain'
+      AND table_name = 'wallets'
+    ORDER BY ordinal_position
+    `
+  );
+
+  return result.rows.map((row) => row.column_name);
+}
+
+function normalizeNumber(value, defaultValue = 0) {
+  const numberValue = Number(value);
+  return Number.isFinite(numberValue) ? numberValue : defaultValue;
+}
+
+function normalizeWalletType(value) {
+  const normalized = String(value || 'CUSTOMER').trim().toUpperCase();
+
+  if (normalized === 'ORGANIZATION' || normalized === 'ORG') {
+    return 'ORGANIZATION';
+  }
+
+  return 'CUSTOMER';
+}
+
+function buildOrganizationEmail(organizationName) {
+  const slug = String(organizationName || 'organization')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '.')
+    .replace(/^\.+|\.+$/g, '');
+
+  return `${slug || 'organization'}@gmail.com`;
+}
+
+function generateOneTimePassword(prefix = 'Wallet') {
+  return `${prefix}@${crypto.randomBytes(4).toString('hex')}${Date.now()
+    .toString()
+    .slice(-4)}`;
+}
+
+function mapWalletProfile(profile) {
+  if (!profile) {
+    return null;
+  }
+
+  const walletType = normalizeWalletType(profile.walletType);
+
+  return {
+    walletAddress: profile.walletAddress,
+    customerId: profile.customerId,
+    organizationId: profile.organizationId,
+    organizationName: profile.organizationName,
+    organizationCode: profile.organizationCode || null,
+    walletType,
+    fullName: profile.fullName,
+    customerName: profile.fullName,
+    customerType: walletType,
+    nationality: profile.nationalIdHash,
+    countryName: profile.countryName,
+    idType: 'wallet',
+    idNumber: profile.walletAddress,
+    nationalIdHash: profile.nationalIdHash,
+    mobileHash: profile.mobileHash,
+    emailHash: profile.emailHash,
+    currentBalance: profile.currentBalance,
+    currencyCode: profile.currencyCode,
+    status: profile.status,
+    createdAt: profile.createdAt
+  };
+}
+
+async function getOrganizationById(organizationId) {
+  const result = await db.query(
+    `
+    SELECT
+      organization_id::text AS organization_id,
+      organization_name,
+      organization_type,
+      registration_number,
+      country_code,
+      status
+    FROM blockchain.blockchain_organization
+    WHERE organization_id::text = $1
+    LIMIT 1
+    `,
+    [String(organizationId)]
+  );
+
+  return result.rows[0] || null;
+}
+
+function extractBlockchainWallet(fabricResult) {
+  const fabricData = fabricResult?.data || fabricResult || {};
+  const nestedData = fabricData?.data || {};
+
+  const wallet =
+    fabricData.wallet ||
+    nestedData.wallet ||
+    null;
+
+  const transaction =
+    fabricData.transaction ||
+    nestedData.transaction ||
+    null;
+
+  if (!wallet || !wallet.walletAddress) {
+    throw new Error('Blockchain CreateWallet did not return wallet.walletAddress');
+  }
+
+  return {
+    wallet,
+    transaction,
+    fabricData
+  };
+}
+
+function getFabricTransactionId(blockchainWallet, blockchainTransaction) {
+  return (
+    blockchainTransaction?.transactionId ||
+    blockchainTransaction?.createdTxId ||
+    blockchainWallet?.createdTxId ||
+    blockchainWallet?.updatedTxId ||
+    null
+  );
+}
+
+async function assertCustomerDoesNotExistInPostgres(customerId) {
+  const existingWallet = await db.query(
+    `
+    SELECT customer_id, wallet_address
+    FROM blockchain.wallets
+    WHERE customer_id = $1
+    LIMIT 1
+    `,
+    [customerId]
+  );
+
+  if (existingWallet.rowCount > 0) {
+    throw new Error(`Wallet already exists for customerId: ${customerId}`);
+  }
+}
+
+exports.listWallets = async ({ limit = 13, offset = 0, search = '' }) => {
+  const values = [];
+  let whereClause = '';
+
+  if (search && search.trim()) {
+    values.push(`%${search.trim()}%`);
+
+    whereClause = `
+      WHERE
+        COALESCE(full_name, '') ILIKE $1
+        OR COALESCE(wallet_type, '') ILIKE $1
+        OR COALESCE(national_id_hash, '') ILIKE $1
+        OR COALESCE(ledger_doc_type, '') ILIKE $1
+        OR COALESCE(ledger_key, '') ILIKE $1
+        OR COALESCE(customer_id, '') ILIKE $1
+        OR COALESCE(wallet_address, '') ILIKE $1
+        OR COALESCE(organization_code, '') ILIKE $1
+    `;
+  }
+
+  const hasCurrentBalance = await tableColumnExists('wallets', 'current_balance');
+  const hasCurrencyCode = await tableColumnExists('wallets', 'currency_code');
+
+  const countSql = `
+    SELECT COUNT(*)::int AS total
+    FROM blockchain.wallets
+    ${whereClause}
+  `;
+
+  const dataSql = `
+    SELECT
+      wallet_id,
+      wallet_address,
+      customer_id,
+      organization_id,
+      organization_code,
+      wallet_type,
+      full_name,
+      national_id_hash,
+      ledger_doc_type,
+      ledger_key,
+      mobile_hash,
+      email_hash,
+      status,
+      ${hasCurrentBalance ? 'current_balance' : '0 AS current_balance'},
+      ${hasCurrencyCode ? 'currency_code' : `'USD' AS currency_code`},
+      created_at,
+      updated_at
+    FROM blockchain.wallets
+    ${whereClause}
+    ORDER BY created_at DESC NULLS LAST
+    LIMIT $${values.length + 1}
+    OFFSET $${values.length + 2}
+  `;
+
+  const countResult = await db.query(countSql, values);
+  const dataResult = await db.query(dataSql, [...values, limit, offset]);
+
+  return {
+    totalRecords: countResult.rows[0]?.total || 0,
+    data: dataResult.rows.map((row) => ({
+      id: row.wallet_id,
+      walletId: row.wallet_id,
+      walletAddress: row.wallet_address,
+      customerId: row.customer_id,
+      organizationId: row.organization_id,
+      organizationCode: row.organization_code,
+      customerName: row.full_name,
+      customerType: normalizeWalletType(row.wallet_type),
+      nationality: row.national_id_hash,
+      idType: row.ledger_doc_type,
+      idNumber: row.ledger_key,
+      fullName: row.full_name,
+      walletType: normalizeWalletType(row.wallet_type),
+      nationalIdHash: row.national_id_hash,
+      ledgerDocType: row.ledger_doc_type,
+      ledgerKey: row.ledger_key,
+      mobileHash: row.mobile_hash,
+      emailHash: row.email_hash,
+      status: row.status,
+      currentBalance: row.current_balance,
+      currencyCode: row.currency_code,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at
+    }))
+  };
+};
+
+const getProfessionalWalletProfileByCustomerId = async (customerId) => {
+  const result = await db.query(
+    `
+    SELECT
+        w.customer_id                                  AS "customerId",
+        w.wallet_address                              AS "walletAddress",
+        w.organization_id                             AS "organizationId",
+        w.organization_code                           AS "organizationCode",
+        bo.organization_name                          AS "organizationName",
+        w.wallet_type                                 AS "walletType",
+        w.full_name                                   AS "fullName",
+        w.national_id_hash                            AS "nationalIdHash",
+        c.cou_name                                    AS "countryName",
+        w.email_hash                                  AS "emailHash",
+        w.mobile_hash                                 AS "mobileHash",
+        COALESCE(w.current_balance, 0)                AS "currentBalance",
+        COALESCE(w.currency_code, 'USD')              AS "currencyCode",
+        w.created_at                                  AS "createdAt",
+        w.status                                      AS "status"
+    FROM blockchain.wallets w
+    LEFT JOIN blockchain.blockchain_organization bo
+        ON bo.organization_id = w.organization_id
+    LEFT JOIN blockchain.countries c
+        ON c.cou_id::text = w.national_id_hash::text
+    WHERE w.customer_id = $1
+    LIMIT 1
+    `,
+    [customerId]
+  );
+
+  return result.rows[0] || null;
+};
+
+const getProfessionalWalletProfileByAddress = async (walletAddress) => {
+  const result = await db.query(
+    `
+    SELECT
+        w.customer_id                                  AS "customerId",
+        w.wallet_address                              AS "walletAddress",
+        w.organization_id                             AS "organizationId",
+        w.organization_code                           AS "organizationCode",
+        bo.organization_name                          AS "organizationName",
+        w.wallet_type                                 AS "walletType",
+        w.full_name                                   AS "fullName",
+        w.national_id_hash                            AS "nationalIdHash",
+        c.cou_name                                    AS "countryName",
+        w.email_hash                                  AS "emailHash",
+        w.mobile_hash                                 AS "mobileHash",
+        COALESCE(w.current_balance, 0)                AS "currentBalance",
+        COALESCE(w.currency_code, 'USD')              AS "currencyCode",
+        w.created_at                                  AS "createdAt",
+        w.status                                      AS "status"
+    FROM blockchain.wallets w
+    LEFT JOIN blockchain.blockchain_organization bo
+        ON bo.organization_id = w.organization_id
+    LEFT JOIN blockchain.countries c
+        ON c.cou_id::text = w.national_id_hash::text
+    WHERE w.wallet_address = $1
+    LIMIT 1
+    `,
+    [walletAddress]
+  );
+
+  return result.rows[0] || null;
+};
+
+exports.getWalletByCustomerId = async (customerId) => {
+  const profile = await getProfessionalWalletProfileByCustomerId(customerId);
+  return mapWalletProfile(profile);
+};
+
+exports.getWalletByAddress = async (walletAddress) => {
+  const profile = await getProfessionalWalletProfileByAddress(walletAddress);
+  return mapWalletProfile(profile);
+};
+
+async function insertWallet(valuesByColumn) {
+  const columns = await getWalletColumns();
+
+  const insertColumns = [];
+  const insertValues = [];
+  const placeholders = [];
+
+  Object.entries(valuesByColumn).forEach(([column, value]) => {
+    if (columns.includes(column)) {
+      insertColumns.push(column);
+      insertValues.push(value);
+      placeholders.push(`$${insertValues.length}`);
+    }
+  });
+
+  const sql = `
+    INSERT INTO blockchain.wallets (${insertColumns.join(', ')})
+    VALUES (${placeholders.join(', ')})
+    RETURNING *
+  `;
+
+  const result = await db.query(sql, insertValues);
+  return result.rows[0];
+}
+
+exports.createWallet = async (payload) => {
+  const {
+    customerId,
+    organizationId,
+    organizationCode = null,
+    fullName,
+    nationalIdHash = null,
+    mobileHash = null,
+    emailHash = null,
+    passwordHash = null,
+    ledgerDocType = 'wallet',
+    requestSource = 'ANGULAR_TEST_UI',
+    sourceSystem = 'BLOCKCHAIN_API',
+    createdBy = 'angular-test-ui'
+  } = payload;
+
+  const initialBalance = normalizeNumber(
+    payload.initialBalance ?? payload.currentBalance ?? payload.current_balance,
+    0
+  );
+
+  if (!customerId) {
+    throw new Error('customerId is required');
+  }
+
+  if (!organizationId) {
+    throw new Error('organizationId is required');
+  }
+
+  if (!fullName) {
+    throw new Error('fullName is required');
+  }
+
+  if (initialBalance < 0) {
+    throw new Error('initialBalance must be zero or greater');
+  }
+
+  await assertCustomerDoesNotExistInPostgres(customerId);
+
+  const plainPassword =
+    payload.password ||
+    payload.oneTimePassword ||
+    payload.plainPassword ||
+    null;
+
+  const generatedPassword =
+    !passwordHash && !plainPassword ? generateOneTimePassword('Wallet') : null;
+
+  const passwordForHash = passwordHash || plainPassword || generatedPassword;
+
+  const normalizedPasswordHash =
+    passwordForHash && String(passwordForHash).startsWith('$2')
+      ? String(passwordForHash)
+      : await bcrypt.hash(String(passwordForHash), 10);
+
+  let fabricResult;
+  let blockchainWallet;
+  let blockchainTransaction;
+
+  try {
+    fabricResult = await fabricService.submitTransaction(
+      'CreateWallet',
+      [
+        customerId,
+        organizationId,
+        fullName,
+        nationalIdHash || '',
+        mobileHash || '',
+        emailHash || '',
+        normalizedPasswordHash,
+        String(initialBalance)
+      ],
+      {
+        requestId: payload.requestId || payload.request_id || null,
+        correlationId: payload.correlationId || payload.correlation_id || null,
+        sourceSystem,
+        requestSource,
+        createdBy
+      }
+    );
+
+    const extracted = extractBlockchainWallet(fabricResult);
+    blockchainWallet = extracted.wallet;
+    blockchainTransaction = extracted.transaction;
+  } catch (error) {
+    throw new Error(`Blockchain wallet creation failed: ${error.message}`);
+  }
+
+  const walletAddress = blockchainWallet.walletAddress;
+  const fabricTransactionId = getFabricTransactionId(
+    blockchainWallet,
+    blockchainTransaction
+  );
+
+  const client = await db.getClient();
+
+    let enterpriseSaveResult;
+
+    try {
+      await client.query('BEGIN');
+
+      enterpriseSaveResult = await enterprisePersistenceRepository.saveWalletEnterprise(
+        client,
+        {
+          walletAddress,
+          customerId,
+          organizationId,
+          organizationCode,
+          walletType: 'CUSTOMER',
+          fullName,
+          nationalIdHash,
+          mobileHash,
+          emailHash,
+          passwordHash: normalizedPasswordHash,
+          ledgerDocType,
+          currentBalance: blockchainWallet.balance ?? initialBalance,
+          currencyCode: payload.currencyCode || payload.currency || 'USD',          status: blockchainWallet.status || 'ACTIVE',
+          fabricTxId: fabricTransactionId,
+          fabricChannelName: fabricResult.channelName || DEFAULT_CHANNEL_NAME,
+          chaincodeName: fabricResult.chaincodeName || DEFAULT_CHAINCODE_NAME,
+          walletMetadata: {
+            source: 'BLOCKCHAIN_API',
+            walletType: 'CUSTOMER',
+            fabricTxId: fabricTransactionId,
+            createdFrom: requestSource
+          },
+          kycPayload: {
+            fullName,
+            nationalIdHash,
+            mobileHash,
+            emailHash
+          },
+          blockchainPayload: blockchainWallet,
+          fabricResponse: fabricResult,
+          requestId: payload.requestId || payload.request_id || null,
+          requestSource,
+          sourceSystem,
+          createdBy,
+          updatedBy: createdBy,
+          originalPayload: payload
+        }
+      );
+
+      await client.query('COMMIT');
+    } catch (error) {
+      await client.query('ROLLBACK');
+
+      throw new Error(
+        `Wallet created on Fabric but enterprise PostgreSQL save failed. Manual reconciliation required. FabricTxId=${fabricTransactionId || 'N/A'} WalletAddress=${walletAddress}. Error: ${error.message}`
+      );
+    } finally {
+      client.release();
+    }
+
+    const row = enterpriseSaveResult.wallet;
+
+  const profile =
+    (await getProfessionalWalletProfileByAddress(row.wallet_address)) ||
+    (await getProfessionalWalletProfileByCustomerId(row.customer_id));
+
+  return {
+    wallet: profile || row,
+    blockchain: {
+      saved: true,
+      walletAddress,
+      fabricTransactionId,
+      channelName: fabricResult.channelName || DEFAULT_CHANNEL_NAME,
+      chaincodeName: fabricResult.chaincodeName || DEFAULT_CHAINCODE_NAME,
+      transaction: blockchainTransaction || null
+    },
+    postgres: {
+      saved: true,
+      walletId: row.wallet_id || null
+    },
+    oneTimePassword:
+      generatedPassword ||
+      (!String(passwordForHash).startsWith('$2') ? passwordForHash : null)
+  };
+};
+
+exports.createOrganizationWallet = async (payload) => {
+  const organizationId = payload.organizationId || payload.organization_id;
+
+  if (!organizationId) {
+    throw new Error('organizationId is required');
+  }
+
+  const organization = await getOrganizationById(organizationId);
+
+  if (!organization) {
+    throw new Error(`Organization not found: ${organizationId}`);
+  }
+
+  const existingOrgWallet = await db.query(
+    `
+    SELECT wallet_address
+    FROM blockchain.wallets
+    WHERE organization_id::text = $1
+      AND UPPER(wallet_type) = 'ORGANIZATION'
+    LIMIT 1
+    `,
+    [String(organizationId)]
+  );
+
+  if (existingOrgWallet.rowCount > 0) {
+    throw new Error(
+      `Organization wallet already exists for organizationId: ${organizationId}`
+    );
+  }
+
+  const initialBalance = normalizeNumber(
+    payload.initialBalance ?? payload.currentBalance ?? payload.current_balance,
+    0
+  );
+
+  if (initialBalance < 0) {
+    throw new Error('initialBalance must be zero or greater');
+  }
+
+  const plainPassword =
+    payload.passwordHash ||
+    payload.password ||
+    generateOneTimePassword('Org');
+
+  const normalizedPasswordHash = String(plainPassword).startsWith('$2')
+    ? String(plainPassword)
+    : await bcrypt.hash(String(plainPassword), 10);
+
+  const customerId = `ORG_${String(organization.organization_id)
+    .replace(/-/g, '')
+    .slice(0, 24)}`;
+
+  const organizationName = organization.organization_name;
+  const organizationCode =
+    organization.registration_number ||
+    organization.organization_code ||
+    String(organization.organization_id);
+
+  const emailHash = buildOrganizationEmail(organizationName);
+
+  let fabricResult;
+  let blockchainWallet;
+  let blockchainTransaction;
+
+  try {
+    fabricResult = await fabricService.submitTransaction(
+      'CreateWallet',
+      [
+        customerId,
+        String(organization.organization_id),
+        organizationName,
+        String(organization.organization_id),
+        '',
+        emailHash,
+        normalizedPasswordHash,
+        String(initialBalance)
+      ],
+      {
+        requestId: payload.requestId || payload.request_id || null,
+        correlationId: payload.correlationId || payload.correlation_id || null,
+        sourceSystem: payload.sourceSystem || payload.source_system || 'BLOCKCHAIN_API',
+        requestSource: payload.requestSource || payload.request_source || 'ANGULAR_TEST_UI',
+        createdBy: payload.createdBy || payload.created_by || 'angular-test-ui'
+      }
+    );
+
+    const extracted = extractBlockchainWallet(fabricResult);
+    blockchainWallet = extracted.wallet;
+    blockchainTransaction = extracted.transaction;
+  } catch (error) {
+    throw new Error(`Blockchain organization wallet creation failed: ${error.message}`);
+  }
+
+  const walletAddress = blockchainWallet.walletAddress;
+  const fabricTransactionId = getFabricTransactionId(
+    blockchainWallet,
+    blockchainTransaction
+  );
+
+  const client = await db.getClient();
+
+    let enterpriseSaveResult;
+
+    try {
+      await client.query('BEGIN');
+
+      enterpriseSaveResult = await enterprisePersistenceRepository.saveWalletEnterprise(
+        client,
+        {
+          walletAddress,
+          customerId,
+          organizationId: organization.organization_id,
+          organizationCode,
+          walletType: 'ORGANIZATION',
+          fullName: organizationName,
+          nationalIdHash: String(organization.organization_id),
+          mobileHash: null,
+          emailHash,
+          passwordHash: normalizedPasswordHash,
+          ledgerDocType: 'organization_wallet',
+          currentBalance: blockchainWallet.balance ?? initialBalance,
+          currencyCode: payload.currencyCode || payload.currency || 'USD',          status: blockchainWallet.status || 'ACTIVE',
+          fabricTxId: fabricTransactionId,
+          fabricChannelName: fabricResult.channelName || DEFAULT_CHANNEL_NAME,
+          chaincodeName: fabricResult.chaincodeName || DEFAULT_CHAINCODE_NAME,
+          walletMetadata: {
+            source: 'BLOCKCHAIN_API',
+            walletType: 'ORGANIZATION',
+
+==================================================
+FILE: blockchain-api/src/routes/wallet.routes.js
+==================================================
+'use strict';
+
+const express = require('express');
+const router = express.Router();
+
+const walletController = require('../controllers/wallet.controller');
+router.get('/next-customer-id', walletController.getNextCustomerId);
+/**
+ * STEP 30 / 31 — Wallet Routes
+ *
+ * IMPORTANT:
+ * The list route "/" must come before dynamic routes like "/:walletAddress".
+ */
+
+/**
+ * List wallets for Angular dashboard.
+ *
+ * GET /api/v1/wallets?page=1&limit=13&search=
+ */
+router.get('/', walletController.listWallets);
+
+/**
+ * Create wallet.
+ *
+ * POST /api/v1/wallets
+ */
+router.post('/', walletController.createWallet);
+
+router.post('/organization-wallets', walletController.createOrganizationWallet);
+
+/**
+ * Wallet login.
+ *
+ * POST /api/v1/wallets/login
+ */
+router.post('/login', walletController.loginWallet);
+
+/**
+ * Get wallet by customer ID.
+ *
+ * GET /api/v1/wallets/customer/:customerId
+ */
+router.get('/customer/:customerId', walletController.getWalletByCustomerId);
+
+/**
+ * Get wallet by wallet address.
+ *
+ * GET /api/v1/wallets/:walletAddress
+ */
+router.get('/:walletAddress', walletController.getWalletByAddress);
+
+module.exports = router;
+
+==================================================
+FILE: blockchain-api/src/db/pool.js
+==================================================
+NOT FOUND: blockchain-api/src/db/pool.js
+
+==================================================
+FILE: blockchain-api/src/db/queries/wallet.queries.js
+==================================================
+NOT FOUND: blockchain-api/src/db/queries/wallet.queries.js
+
+==================================================
+FILE: blockchain-api/src/repositories/wallet.repository.js
+==================================================
+NOT FOUND: blockchain-api/src/repositories/wallet.repository.js
+
+================ FRONTEND WALLET FILES ================
+
+==================================================
+FILE: blockchain-test-ui/src/app/features/wallet-create/wallet-create.component.ts
+==================================================
+NOT FOUND: blockchain-test-ui/src/app/features/wallet-create/wallet-create.component.ts
+
+==================================================
+FILE: blockchain-test-ui/src/app/features/wallet-create/wallet-create.component.html
+==================================================
+NOT FOUND: blockchain-test-ui/src/app/features/wallet-create/wallet-create.component.html
+
+==================================================
+FILE: blockchain-test-ui/src/app/features/wallet-create/wallet-create.component.scss
+==================================================
+NOT FOUND: blockchain-test-ui/src/app/features/wallet-create/wallet-create.component.scss
+
+==================================================
+FILE: blockchain-test-ui/src/app/pages/dashboard/dashboard.ts
+==================================================
+NOT FOUND: blockchain-test-ui/src/app/pages/dashboard/dashboard.ts
+
+==================================================
+FILE: blockchain-test-ui/src/app/pages/dashboard/dashboard.html
+==================================================
+NOT FOUND: blockchain-test-ui/src/app/pages/dashboard/dashboard.html
+
+==================================================
+FILE: blockchain-test-ui/src/app/services/blockchain-api.service.ts
+==================================================
+NOT FOUND: blockchain-test-ui/src/app/services/blockchain-api.service.ts
+
+================ SEARCH RESULTS ================
+
+---- Backend organization references ----
+blockchain-api/src/services/transaction.service.js.bak_fixed_org_wallet_rules:105:    organizationId: getAny(row, ['organization_id', 'organizationId']),
+blockchain-api/src/services/transaction.service.js.bak_fixed_org_wallet_rules:107:    organizationCode: getAny(row, ['organization_code', 'organizationCode']),
+blockchain-api/src/services/transaction.service.js.bak_fixed_org_wallet_rules:127:    organizationId: getAny(row, ['organization_id', 'organizationId']),
+blockchain-api/src/services/transaction.service.js.bak_fixed_org_wallet_rules:186:async function getOrganizationByIdInternal(client, organizationId) {
+blockchain-api/src/services/transaction.service.js.bak_fixed_org_wallet_rules:202:        WHERE organization_id::text = $1
+blockchain-api/src/services/transaction.service.js.bak_fixed_org_wallet_rules:205:        [String(organizationId)]
+blockchain-api/src/services/transaction.service.js.bak_fixed_org_wallet_rules:269:    organization_id: transactionData.organizationId,
+blockchain-api/src/services/transaction.service.js.bak_fixed_org_wallet_rules:441:      organizationId: null,
+blockchain-api/src/services/transaction.service.js.bak_fixed_org_wallet_rules:634:          senderOrganizationId: senderWallet.organizationId,
+blockchain-api/src/services/transaction.service.js.bak_fixed_org_wallet_rules:635:          receiverOrganizationId: receiverWallet.organizationId
+blockchain-api/src/services/transaction.service.js.bak_fixed_org_wallet_rules:687:       * Do NOT insert organization_id here because blockchain.transactions.organization_id
+blockchain-api/src/services/transaction.service.js.bak_fixed_org_wallet_rules:693:      organizationId: null,
+blockchain-api/src/services/transaction.service.js.bak_fixed_org_wallet_rules:723:        senderOrganizationId: senderWallet.organizationId,
+blockchain-api/src/services/transaction.service.js.bak_fixed_org_wallet_rules:724:        receiverOrganizationId: receiverWallet.organizationId,
+blockchain-api/src/services/transaction.service.js.bak_fixed_org_wallet_rules:802:    addFilter(['organization_id'], filters.organizationId);
+blockchain-api/src/services/transaction.service.js.bak_fixed_org_wallet_rules:878:        organizationId: filters.organizationId || null,
+blockchain-api/src/services/transaction.service.js.bak_fix_org_receiver_type_only:112:    organizationId: getAny(row, ['organization_id', 'organizationId']),
+blockchain-api/src/services/transaction.service.js.bak_fix_org_receiver_type_only:114:    organizationCode: getAny(row, ['organization_code', 'organizationCode']),
+blockchain-api/src/services/transaction.service.js.bak_fix_org_receiver_type_only:134:    organizationId: getAny(row, ['organization_id', 'organizationId']),
+blockchain-api/src/services/transaction.service.js.bak_fix_org_receiver_type_only:243:    organization_id: transactionData.organizationId,
+blockchain-api/src/services/transaction.service.js.bak_fix_org_receiver_type_only:431:      organizationId: null,
+blockchain-api/src/services/transaction.service.js.bak_fix_org_receiver_type_only:643:      organizationId: null,
+blockchain-api/src/services/transaction.service.js.bak_fix_org_receiver_type_only:673:        senderOrganizationId: senderWallet.organizationId,
+blockchain-api/src/services/transaction.service.js.bak_fix_org_receiver_type_only:674:        receiverOrganizationId: receiverWallet.organizationId,
+blockchain-api/src/services/transaction.service.js.bak_fix_org_receiver_type_only:761:    addFilter(['organization_id'], filters.organizationId);
+blockchain-api/src/services/transaction.service.js.bak_fix_org_receiver_type_only:837:        organizationId: filters.organizationId || null,
+blockchain-api/src/services/transaction.service.js.bak.step32_constraint_fix:105:    organizationId: getAny(row, ['organization_id', 'organizationId']),
+blockchain-api/src/services/transaction.service.js.bak.step32_constraint_fix:107:    organizationCode: getAny(row, ['organization_code', 'organizationCode']),
+blockchain-api/src/services/transaction.service.js.bak.step32_constraint_fix:126:    organizationId: getAny(row, ['organization_id', 'organizationId']),
+blockchain-api/src/services/transaction.service.js.bak.step32_constraint_fix:185:async function getOrganizationByIdInternal(client, organizationId) {
+blockchain-api/src/services/transaction.service.js.bak.step32_constraint_fix:201:        WHERE organization_id::text = $1
+blockchain-api/src/services/transaction.service.js.bak.step32_constraint_fix:204:        [String(organizationId)]
+blockchain-api/src/services/transaction.service.js.bak.step32_constraint_fix:268:    organization_id: transactionData.organizationId,
+blockchain-api/src/services/transaction.service.js.bak.step32_constraint_fix:424:      organizationId: null,
+blockchain-api/src/services/transaction.service.js.bak.step32_constraint_fix:465:  const organizationId = payload.organizationId;
+blockchain-api/src/services/transaction.service.js.bak.step32_constraint_fix:478:  if (!organizationId) {
+blockchain-api/src/services/transaction.service.js.bak.step32_constraint_fix:482:      errorCode: 'ORGANIZATION_ID_REQUIRED',
+blockchain-api/src/services/transaction.service.js.bak.step32_constraint_fix:535:    const organization = await getOrganizationByIdInternal(client, organizationId);
+blockchain-api/src/services/transaction.service.js.bak.step32_constraint_fix:557:      organizationId,
+blockchain-api/src/services/transaction.service.js.bak.step32_constraint_fix:583:        organizationId,
+blockchain-api/src/services/transaction.service.js.bak.step32_constraint_fix:651:    addFilter(['organization_id'], filters.organizationId);
+blockchain-api/src/services/transaction.service.js.bak.step32_constraint_fix:727:        organizationId: filters.organizationId || null,
+blockchain-api/src/services/transaction.service.js.bak_balance_after_transfer:105:    organizationId: getAny(row, ['organization_id', 'organizationId']),
+blockchain-api/src/services/transaction.service.js.bak_balance_after_transfer:107:    organizationCode: getAny(row, ['organization_code', 'organizationCode']),
+blockchain-api/src/services/transaction.service.js.bak_balance_after_transfer:126:    organizationId: getAny(row, ['organization_id', 'organizationId']),
+blockchain-api/src/services/transaction.service.js.bak_balance_after_transfer:185:async function getOrganizationByIdInternal(client, organizationId) {
+blockchain-api/src/services/transaction.service.js.bak_balance_after_transfer:201:        WHERE organization_id::text = $1
+blockchain-api/src/services/transaction.service.js.bak_balance_after_transfer:204:        [String(organizationId)]
+blockchain-api/src/services/transaction.service.js.bak_balance_after_transfer:268:    organization_id: transactionData.organizationId,
+blockchain-api/src/services/transaction.service.js.bak_balance_after_transfer:425:      organizationId: null,
+blockchain-api/src/services/transaction.service.js.bak_balance_after_transfer:564:      senderWallet.organizationId &&
+blockchain-api/src/services/transaction.service.js.bak_balance_after_transfer:565:      receiverWallet.organizationId &&
+blockchain-api/src/services/transaction.service.js.bak_balance_after_transfer:566:      String(senderWallet.organizationId) === String(receiverWallet.organizationId)
+blockchain-api/src/services/transaction.service.js.bak_balance_after_transfer:577:          senderOrganizationId: senderWallet.organizationId,
+blockchain-api/src/services/transaction.service.js.bak_balance_after_transfer:578:          receiverOrganizationId: receiverWallet.organizationId
+blockchain-api/src/services/transaction.service.js.bak_balance_after_transfer:627:       * Do NOT insert organization_id here because blockchain.transactions.organization_id
+blockchain-api/src/services/transaction.service.js.bak_balance_after_transfer:633:      organizationId: null,
+blockchain-api/src/services/transaction.service.js.bak_balance_after_transfer:663:        senderOrganizationId: senderWallet.organizationId,
+blockchain-api/src/services/transaction.service.js.bak_balance_after_transfer:664:        receiverOrganizationId: receiverWallet.organizationId,
+blockchain-api/src/services/transaction.service.js.bak_balance_after_transfer:739:    addFilter(['organization_id'], filters.organizationId);
+blockchain-api/src/services/transaction.service.js.bak_balance_after_transfer:815:        organizationId: filters.organizationId || null,
+blockchain-api/src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:115:    organizationId: profile.organizationId,
+blockchain-api/src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:117:    organizationCode: profile.organizationCode || null,
+blockchain-api/src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:136:async function getOrganizationById(organizationId) {
+blockchain-api/src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:140:      organization_id::text AS organization_id,
+blockchain-api/src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:147:    WHERE organization_id::text = $1
+blockchain-api/src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:150:    [String(organizationId)]
+blockchain-api/src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:172:        OR COALESCE(organization_code, '') ILIKE $1
+blockchain-api/src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:190:      organization_id,
+blockchain-api/src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:191:      organization_code,
+blockchain-api/src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:221:      organizationId: row.organization_id,
+blockchain-api/src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:222:      organizationCode: row.organization_code,
+blockchain-api/src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:250:        w.organization_id                             AS "organizationId",
+blockchain-api/src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:251:        w.organization_code                           AS "organizationCode",
+blockchain-api/src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:265:        ON bo.organization_id = w.organization_id
+blockchain-api/src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:283:        w.organization_id                             AS "organizationId",
+blockchain-api/src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:284:        w.organization_code                           AS "organizationCode",
+blockchain-api/src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:298:        ON bo.organization_id = w.organization_id
+blockchain-api/src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:348:    organizationId,
+blockchain-api/src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:349:    organizationCode = null,
+blockchain-api/src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:377:  if (!organizationId) {
+blockchain-api/src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:378:    throw new Error('organizationId is required');
+blockchain-api/src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:415:    organization_id: organizationId,
+blockchain-api/src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:416:    organization_code: organizationCode,
+blockchain-api/src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:443:  const organizationId = payload.organizationId || payload.organization_id;
+blockchain-api/src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:445:  if (!organizationId) {
+blockchain-api/src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:446:    throw new Error('organizationId is required');
+blockchain-api/src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:449:  const organization = await getOrganizationById(organizationId);
+blockchain-api/src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:452:    throw new Error(`Organization not found: ${organizationId}`);
+blockchain-api/src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:459:    WHERE organization_id::text = $1
+blockchain-api/src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:463:    [String(organizationId)]
+blockchain-api/src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:468:      `Organization wallet already exists for organizationId: ${organizationId}`
+blockchain-api/src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:500:  const customerId = `ORG_${String(organization.organization_id).replace(/-/g, '').slice(0, 24)}`;
+blockchain-api/src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:502:  const organizationCode =
+blockchain-api/src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:504:    organization.organization_code ||
+blockchain-api/src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:505:    String(organization.organization_id);
+blockchain-api/src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:511:    organization_id: organization.organization_id,
+blockchain-api/src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:512:    organization_code: organizationCode,
+blockchain-api/src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:515:    national_id_hash: String(organization.organization_id),
+blockchain-api/src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:517:    ledger_key: String(organization.organization_id),
+blockchain-api/src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:553:      organization_id,
+blockchain-api/src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:554:      organization_code,
+blockchain-api/src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:594:      organizationId: wallet.organization_id,
+blockchain-api/src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:609:      organizationId: profile.organizationId || wallet.organization_id,
+blockchain-api/src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:611:      organizationCode: profile.organizationCode || wallet.organization_code,
+blockchain-api/src/services/wallet.service.js.bak_login_wallet_address:70:        OR COALESCE(organization_code, '') ILIKE $1
+blockchain-api/src/services/wallet.service.js.bak_login_wallet_address:88:      organization_id,
+blockchain-api/src/services/wallet.service.js.bak_login_wallet_address:89:      organization_code,
+blockchain-api/src/services/wallet.service.js.bak_login_wallet_address:119:      organizationId: row.organization_id,
+blockchain-api/src/services/wallet.service.js.bak_login_wallet_address:120:      organizationCode: row.organization_code,
+blockchain-api/src/services/wallet.service.js.bak_login_wallet_address:151:          w.organization_id                             AS "organizationId",
+blockchain-api/src/services/wallet.service.js.bak_login_wallet_address:164:          ON bo.organization_id = w.organization_id
+blockchain-api/src/services/wallet.service.js.bak_login_wallet_address:185:          w.organization_id                    AS "organizationId",
+blockchain-api/src/services/wallet.service.js.bak_login_wallet_address:214:          w.organization_id                             AS "organizationId",
+blockchain-api/src/services/wallet.service.js.bak_login_wallet_address:227:          ON bo.organization_id = w.organization_id
+blockchain-api/src/services/wallet.service.js.bak_login_wallet_address:248:          w.organization_id                    AS "organizationId",
+blockchain-api/src/services/wallet.service.js.bak_login_wallet_address:280:    organizationId: profile.organizationId,
+blockchain-api/src/services/wallet.service.js.bak_login_wallet_address:310:    organizationId: profile.organizationId,
+blockchain-api/src/services/wallet.service.js.bak_login_wallet_address:333:    organizationId,
+blockchain-api/src/services/wallet.service.js.bak_login_wallet_address:334:    organizationCode = null,
+blockchain-api/src/services/wallet.service.js.bak_login_wallet_address:362:  if (!organizationId) {
+blockchain-api/src/services/wallet.service.js.bak_login_wallet_address:363:    throw new Error('organizationId is required');
+blockchain-api/src/services/wallet.service.js.bak_login_wallet_address:391:    organization_id: organizationId,
+blockchain-api/src/services/wallet.service.js.bak_login_wallet_address:392:    organization_code: organizationCode,
+blockchain-api/src/services/wallet.service.js.bak_login_wallet_address:436:      organizationId: row.organization_id,
+blockchain-api/src/services/wallet.service.js.bak_login_wallet_address:437:      organizationCode: row.organization_code,
+blockchain-api/src/services/wallet.service.js.bak_login_wallet_address:476:      organization_id,
+blockchain-api/src/services/wallet.service.js.bak_login_wallet_address:477:      organization_code,
+blockchain-api/src/services/wallet.service.js.bak_login_wallet_address:513:      organizationId: wallet.organization_id,
+blockchain-api/src/services/wallet.service.js.bak_login_wallet_address:528:      organizationId: profile.organizationId || wallet.organization_id,
+blockchain-api/src/services/wallet.service.js.bak_login_wallet_address:530:      organizationCode: wallet.organization_code,
+blockchain-api/src/services/wallet.service.js:112:    organizationId: profile.organizationId,
+blockchain-api/src/services/wallet.service.js:114:    organizationCode: profile.organizationCode || null,
+blockchain-api/src/services/wallet.service.js:133:async function getOrganizationById(organizationId) {
+blockchain-api/src/services/wallet.service.js:137:      organization_id::text AS organization_id,
+blockchain-api/src/services/wallet.service.js:144:    WHERE organization_id::text = $1
+blockchain-api/src/services/wallet.service.js:147:    [String(organizationId)]
+blockchain-api/src/services/wallet.service.js:220:        OR COALESCE(organization_code, '') ILIKE $1
+blockchain-api/src/services/wallet.service.js:238:      organization_id,
+blockchain-api/src/services/wallet.service.js:239:      organization_code,
+blockchain-api/src/services/wallet.service.js:269:      organizationId: row.organization_id,
+blockchain-api/src/services/wallet.service.js:270:      organizationCode: row.organization_code,
+blockchain-api/src/services/wallet.service.js:298:        w.organization_id                             AS "organizationId",
+blockchain-api/src/services/wallet.service.js:299:        w.organization_code                           AS "organizationCode",
+blockchain-api/src/services/wallet.service.js:313:        ON bo.organization_id = w.organization_id
+blockchain-api/src/services/wallet.service.js:331:        w.organization_id                             AS "organizationId",
+blockchain-api/src/services/wallet.service.js:332:        w.organization_code                           AS "organizationCode",
+blockchain-api/src/services/wallet.service.js:346:        ON bo.organization_id = w.organization_id
+blockchain-api/src/services/wallet.service.js:396:    organizationId,
+blockchain-api/src/services/wallet.service.js:397:    organizationCode = null,
+blockchain-api/src/services/wallet.service.js:418:  if (!organizationId) {
+blockchain-api/src/services/wallet.service.js:419:    throw new Error('organizationId is required');
+blockchain-api/src/services/wallet.service.js:457:        organizationId,
+blockchain-api/src/services/wallet.service.js:499:          organizationId,
+blockchain-api/src/services/wallet.service.js:500:          organizationCode,
+blockchain-api/src/services/wallet.service.js:574:  const organizationId = payload.organizationId || payload.organization_id;
+blockchain-api/src/services/wallet.service.js:576:  if (!organizationId) {
+blockchain-api/src/services/wallet.service.js:577:    throw new Error('organizationId is required');
+blockchain-api/src/services/wallet.service.js:580:  const organization = await getOrganizationById(organizationId);
+blockchain-api/src/services/wallet.service.js:583:    throw new Error(`Organization not found: ${organizationId}`);
+blockchain-api/src/services/wallet.service.js:590:    WHERE organization_id::text = $1
+blockchain-api/src/services/wallet.service.js:594:    [String(organizationId)]
+blockchain-api/src/services/wallet.service.js:599:      `Organization wallet already exists for organizationId: ${organizationId}`
+blockchain-api/src/services/wallet.service.js:621:  const customerId = `ORG_${String(organization.organization_id)
+blockchain-api/src/services/wallet.service.js:626:  const organizationCode =
+blockchain-api/src/services/wallet.service.js:628:    organization.organization_code ||
+blockchain-api/src/services/wallet.service.js:629:    String(organization.organization_id);
+blockchain-api/src/services/wallet.service.js:642:        String(organization.organization_id),
+blockchain-api/src/services/wallet.service.js:644:        String(organization.organization_id),
+blockchain-api/src/services/wallet.service.js:684:          organizationId: organization.organization_id,
+blockchain-api/src/services/wallet.service.js:685:          organizationCode,
+blockchain-api/src/services/wallet.service.js:688:          nationalIdHash: String(organization.organization_id),
+blockchain-api/src/services/wallet.service.js:702:            organizationId: organization.organization_id,
+blockchain-api/src/services/wallet.service.js:703:            organizationCode
+blockchain-api/src/services/wallet.service.js:706:            organizationId: organization.organization_id,
+blockchain-api/src/services/wallet.service.js:708:            organizationCode
+blockchain-api/src/services/wallet.service.js:771:      organization_id,
+blockchain-api/src/services/wallet.service.js:772:      organization_code,
+blockchain-api/src/services/wallet.service.js:812:      organizationId: wallet.organization_id,
+blockchain-api/src/services/wallet.service.js:827:      organizationId: profile.organizationId || wallet.organization_id,
+blockchain-api/src/services/wallet.service.js:829:      organizationCode: profile.organizationCode || wallet.organization_code,
+blockchain-api/src/services/transaction.service.js:112:    organizationId: getAny(row, ['organization_id', 'organizationId']),
+blockchain-api/src/services/transaction.service.js:114:    organizationCode: getAny(row, ['organization_code', 'organizationCode']),
+blockchain-api/src/services/transaction.service.js:134:    organizationId: getAny(row, ['organization_id', 'organizationId']),
+blockchain-api/src/services/transaction.service.js:243:    organization_id: transactionData.organizationId,
+blockchain-api/src/services/transaction.service.js:676:        organizationId: senderWallet.organizationId,
+blockchain-api/src/services/transaction.service.js:677:        organizationCode: senderWallet.organizationCode,
+blockchain-api/src/services/transaction.service.js:717:        senderOrganizationId: senderWallet.organizationId,
+blockchain-api/src/services/transaction.service.js:718:        receiverOrganizationId: receiverWallet.organizationId,
+blockchain-api/src/services/transaction.service.js:805:    addFilter(['organization_id'], filters.organizationId);
+blockchain-api/src/services/transaction.service.js:881:        organizationId: filters.organizationId || null,
+blockchain-api/src/services/wallet-query.service.js:195:      organizationId:
+blockchain-api/src/services/wallet-query.service.js:196:        wallet.organizationId ||
+blockchain-api/src/services/wallet-query.service.js:197:        wallet.organization_id ||
+blockchain-api/src/services/wallet-query.service.js:200:      organizationCode:
+blockchain-api/src/services/wallet-query.service.js:201:        wallet.organizationCode ||
+blockchain-api/src/services/wallet-query.service.js:202:        wallet.organization_code ||
+blockchain-api/src/services/wallet-query.service.js:203:        wallet.organizationId ||
+blockchain-api/src/services/wallet-query.service.js:362:        organization_id,
+blockchain-api/src/services/wallet-query.service.js:363:        organization_code,
+blockchain-api/src/services/transaction.service.js.bak.step32_23514_fix:105:    organizationId: getAny(row, ['organization_id', 'organizationId']),
+blockchain-api/src/services/transaction.service.js.bak.step32_23514_fix:107:    organizationCode: getAny(row, ['organization_code', 'organizationCode']),
+blockchain-api/src/services/transaction.service.js.bak.step32_23514_fix:126:    organizationId: getAny(row, ['organization_id', 'organizationId']),
+blockchain-api/src/services/transaction.service.js.bak.step32_23514_fix:185:async function getOrganizationByIdInternal(client, organizationId) {
+blockchain-api/src/services/transaction.service.js.bak.step32_23514_fix:201:        WHERE organization_id::text = $1
+blockchain-api/src/services/transaction.service.js.bak.step32_23514_fix:204:        [String(organizationId)]
+blockchain-api/src/services/transaction.service.js.bak.step32_23514_fix:268:    organization_id: transactionData.organizationId,
+blockchain-api/src/services/transaction.service.js.bak.step32_23514_fix:424:      organizationId: null,
+blockchain-api/src/services/transaction.service.js.bak.step32_23514_fix:465:  const organizationId = payload.organizationId;
+blockchain-api/src/services/transaction.service.js.bak.step32_23514_fix:478:  if (!organizationId) {
+blockchain-api/src/services/transaction.service.js.bak.step32_23514_fix:482:      errorCode: 'ORGANIZATION_ID_REQUIRED',
+blockchain-api/src/services/transaction.service.js.bak.step32_23514_fix:535:    const organization = await getOrganizationByIdInternal(client, organizationId);
+blockchain-api/src/services/transaction.service.js.bak.step32_23514_fix:557:      organizationId,
+blockchain-api/src/services/transaction.service.js.bak.step32_23514_fix:583:        organizationId,
+blockchain-api/src/services/transaction.service.js.bak.step32_23514_fix:651:    addFilter(['organization_id'], filters.organizationId);
+blockchain-api/src/services/transaction.service.js.bak.step32_23514_fix:727:        organizationId: filters.organizationId || null,
+blockchain-api/src/services/wallet.service.js.bak_fix_wallet_create_profile:81:        OR COALESCE(organization_code, '') ILIKE $1
+blockchain-api/src/services/wallet.service.js.bak_fix_wallet_create_profile:99:      organization_id,
+blockchain-api/src/services/wallet.service.js.bak_fix_wallet_create_profile:100:      organization_code,
+blockchain-api/src/services/wallet.service.js.bak_fix_wallet_create_profile:130:      organizationId: row.organization_id,
+blockchain-api/src/services/wallet.service.js.bak_fix_wallet_create_profile:131:      organizationCode: row.organization_code,
+blockchain-api/src/services/wallet.service.js.bak_fix_wallet_create_profile:162:          w.organization_id                             AS "organizationId",
+blockchain-api/src/services/wallet.service.js.bak_fix_wallet_create_profile:175:          ON bo.organization_id = w.organization_id
+blockchain-api/src/services/wallet.service.js.bak_fix_wallet_create_profile:196:          w.organization_id                    AS "organizationId",
+blockchain-api/src/services/wallet.service.js.bak_fix_wallet_create_profile:225:          w.organization_id                             AS "organizationId",
+blockchain-api/src/services/wallet.service.js.bak_fix_wallet_create_profile:238:          ON bo.organization_id = w.organization_id
+blockchain-api/src/services/wallet.service.js.bak_fix_wallet_create_profile:259:          w.organization_id                    AS "organizationId",
+blockchain-api/src/services/wallet.service.js.bak_fix_wallet_create_profile:291:    organizationId: profile.organizationId,
+blockchain-api/src/services/wallet.service.js.bak_fix_wallet_create_profile:321:    organizationId: profile.organizationId,
+blockchain-api/src/services/wallet.service.js.bak_fix_wallet_create_profile:344:    organizationId,
+blockchain-api/src/services/wallet.service.js.bak_fix_wallet_create_profile:345:    organizationCode = null,
+blockchain-api/src/services/wallet.service.js.bak_fix_wallet_create_profile:373:  if (!organizationId) {
+blockchain-api/src/services/wallet.service.js.bak_fix_wallet_create_profile:374:    throw new Error('organizationId is required');
+blockchain-api/src/services/wallet.service.js.bak_fix_wallet_create_profile:402:    organization_id: organizationId,
+blockchain-api/src/services/wallet.service.js.bak_fix_wallet_create_profile:403:    organization_code: organizationCode,
+blockchain-api/src/services/wallet.service.js.bak_fix_wallet_create_profile:447:      organizationId: row.organization_id,
+blockchain-api/src/services/wallet.service.js.bak_fix_wallet_create_profile:448:      organizationCode: row.organization_code,
+blockchain-api/src/services/wallet.service.js.bak_fix_wallet_create_profile:489:      organization_id,
+blockchain-api/src/services/wallet.service.js.bak_fix_wallet_create_profile:490:      organization_code,
+blockchain-api/src/services/wallet.service.js.bak_fix_wallet_create_profile:528:      organizationId: wallet.organization_id,
+blockchain-api/src/services/wallet.service.js.bak_fix_wallet_create_profile:543:      organizationId: profile.organizationId || wallet.organization_id,
+blockchain-api/src/services/wallet.service.js.bak_fix_wallet_create_profile:545:      organizationCode: wallet.organization_code,
+blockchain-api/src/services/wallet.service.js.bak_next_customer_id:70:        OR COALESCE(organization_code, '') ILIKE $1
+blockchain-api/src/services/wallet.service.js.bak_next_customer_id:88:      organization_id,
+blockchain-api/src/services/wallet.service.js.bak_next_customer_id:89:      organization_code,
+blockchain-api/src/services/wallet.service.js.bak_next_customer_id:119:      organizationId: row.organization_id,
+blockchain-api/src/services/wallet.service.js.bak_next_customer_id:120:      organizationCode: row.organization_code,
+blockchain-api/src/services/wallet.service.js.bak_next_customer_id:151:          w.organization_id                             AS "organizationId",
+blockchain-api/src/services/wallet.service.js.bak_next_customer_id:164:          ON bo.organization_id = w.organization_id
+blockchain-api/src/services/wallet.service.js.bak_next_customer_id:185:          w.organization_id                    AS "organizationId",
+blockchain-api/src/services/wallet.service.js.bak_next_customer_id:214:          w.organization_id                             AS "organizationId",
+blockchain-api/src/services/wallet.service.js.bak_next_customer_id:227:          ON bo.organization_id = w.organization_id
+blockchain-api/src/services/wallet.service.js.bak_next_customer_id:248:          w.organization_id                    AS "organizationId",
+blockchain-api/src/services/wallet.service.js.bak_next_customer_id:280:    organizationId: profile.organizationId,
+blockchain-api/src/services/wallet.service.js.bak_next_customer_id:310:    organizationId: profile.organizationId,
+blockchain-api/src/services/wallet.service.js.bak_next_customer_id:333:    organizationId,
+blockchain-api/src/services/wallet.service.js.bak_next_customer_id:334:    organizationCode = null,
+blockchain-api/src/services/wallet.service.js.bak_next_customer_id:362:  if (!organizationId) {
+blockchain-api/src/services/wallet.service.js.bak_next_customer_id:363:    throw new Error('organizationId is required');
+blockchain-api/src/services/wallet.service.js.bak_next_customer_id:391:    organization_id: organizationId,
+blockchain-api/src/services/wallet.service.js.bak_next_customer_id:392:    organization_code: organizationCode,
+blockchain-api/src/services/wallet.service.js.bak_next_customer_id:436:      organizationId: row.organization_id,
+blockchain-api/src/services/wallet.service.js.bak_next_customer_id:437:      organizationCode: row.organization_code,
+blockchain-api/src/services/wallet.service.js.bak_next_customer_id:478:      organization_id,
+blockchain-api/src/services/wallet.service.js.bak_next_customer_id:479:      organization_code,
+blockchain-api/src/services/wallet.service.js.bak_next_customer_id:517:      organizationId: wallet.organization_id,
+blockchain-api/src/services/wallet.service.js.bak_next_customer_id:532:      organizationId: profile.organizationId || wallet.organization_id,
+blockchain-api/src/services/wallet.service.js.bak_next_customer_id:534:      organizationCode: wallet.organization_code,
+blockchain-api/src/services/transaction.service.js.bak_org_to_org_final_fix:112:    organizationId: getAny(row, ['organization_id', 'organizationId']),
+blockchain-api/src/services/transaction.service.js.bak_org_to_org_final_fix:114:    organizationCode: getAny(row, ['organization_code', 'organizationCode']),
+blockchain-api/src/services/transaction.service.js.bak_org_to_org_final_fix:134:    organizationId: getAny(row, ['organization_id', 'organizationId']),
+blockchain-api/src/services/transaction.service.js.bak_org_to_org_final_fix:243:    organization_id: transactionData.organizationId,
+blockchain-api/src/services/transaction.service.js.bak_org_to_org_final_fix:431:      organizationId: null,
+blockchain-api/src/services/transaction.service.js.bak_org_to_org_final_fix:643:      organizationId: null,
+blockchain-api/src/services/transaction.service.js.bak_org_to_org_final_fix:673:        senderOrganizationId: senderWallet.organizationId,
+blockchain-api/src/services/transaction.service.js.bak_org_to_org_final_fix:674:        receiverOrganizationId: receiverWallet.organizationId,
+blockchain-api/src/services/transaction.service.js.bak_org_to_org_final_fix:761:    addFilter(['organization_id'], filters.organizationId);
+blockchain-api/src/services/transaction.service.js.bak_org_to_org_final_fix:837:        organizationId: filters.organizationId || null,
+blockchain-api/src/services/wallet-auth.service.js:17:    organizationId: wallet.organization_id,
+blockchain-api/src/services/wallet-auth.service.js:18:    organizationCode: wallet.organization_code || null,
+blockchain-api/src/services/wallet-auth.service.js:80:      organization_id,
+blockchain-api/src/services/wallet-auth.service.js:81:      organization_code,
+blockchain-api/src/services/organization.service.js:45:    organizationId: row.organization_id || row.id || null,
+blockchain-api/src/services/organization.service.js:47:    organizationCode: row.organization_code || row.code || null,
+blockchain-api/src/services/transaction.service.js.bak_step_32_1_org_fk_fix:105:    organizationId: getAny(row, ['organization_id', 'organizationId']),
+blockchain-api/src/services/transaction.service.js.bak_step_32_1_org_fk_fix:107:    organizationCode: getAny(row, ['organization_code', 'organizationCode']),
+blockchain-api/src/services/transaction.service.js.bak_step_32_1_org_fk_fix:126:    organizationId: getAny(row, ['organization_id', 'organizationId']),
+blockchain-api/src/services/transaction.service.js.bak_step_32_1_org_fk_fix:185:async function getOrganizationByIdInternal(client, organizationId) {
+blockchain-api/src/services/transaction.service.js.bak_step_32_1_org_fk_fix:201:        WHERE organization_id::text = $1
+blockchain-api/src/services/transaction.service.js.bak_step_32_1_org_fk_fix:204:        [String(organizationId)]
+blockchain-api/src/services/transaction.service.js.bak_step_32_1_org_fk_fix:268:    organization_id: transactionData.organizationId,
+blockchain-api/src/services/transaction.service.js.bak_step_32_1_org_fk_fix:425:      organizationId: null,
+blockchain-api/src/services/transaction.service.js.bak_step_32_1_org_fk_fix:564:      senderWallet.organizationId &&
+blockchain-api/src/services/transaction.service.js.bak_step_32_1_org_fk_fix:565:      receiverWallet.organizationId &&
+blockchain-api/src/services/transaction.service.js.bak_step_32_1_org_fk_fix:566:      String(senderWallet.organizationId) === String(receiverWallet.organizationId)
+blockchain-api/src/services/transaction.service.js.bak_step_32_1_org_fk_fix:577:          senderOrganizationId: senderWallet.organizationId,
+blockchain-api/src/services/transaction.service.js.bak_step_32_1_org_fk_fix:578:          receiverOrganizationId: receiverWallet.organizationId
+blockchain-api/src/services/transaction.service.js.bak_step_32_1_org_fk_fix:623:      organizationId: receiverWallet.organizationId,
+blockchain-api/src/services/transaction.service.js.bak_step_32_1_org_fk_fix:653:        senderOrganizationId: senderWallet.organizationId,
+blockchain-api/src/services/transaction.service.js.bak_step_32_1_org_fk_fix:654:        receiverOrganizationId: receiverWallet.organizationId,
+blockchain-api/src/services/transaction.service.js.bak_step_32_1_org_fk_fix:729:    addFilter(['organization_id'], filters.organizationId);
+blockchain-api/src/services/transaction.service.js.bak_step_32_1_org_fk_fix:805:        organizationId: filters.organizationId || null,
+blockchain-api/src/services/transaction.service.js.bak.step32_type_fix:105:    organizationId: getAny(row, ['organization_id', 'organizationId']),
+blockchain-api/src/services/transaction.service.js.bak.step32_type_fix:107:    organizationCode: getAny(row, ['organization_code', 'organizationCode']),
+blockchain-api/src/services/transaction.service.js.bak.step32_type_fix:126:    organizationId: getAny(row, ['organization_id', 'organizationId']),
+blockchain-api/src/services/transaction.service.js.bak.step32_type_fix:185:async function getOrganizationByIdInternal(client, organizationId) {
+blockchain-api/src/services/transaction.service.js.bak.step32_type_fix:201:        WHERE organization_id::text = $1
+blockchain-api/src/services/transaction.service.js.bak.step32_type_fix:204:        [String(organizationId)]
+blockchain-api/src/services/transaction.service.js.bak.step32_type_fix:268:    organization_id: transactionData.organizationId,
+blockchain-api/src/services/transaction.service.js.bak.step32_type_fix:424:      organizationId: null,
+blockchain-api/src/services/transaction.service.js.bak.step32_type_fix:465:  const organizationId = payload.organizationId;
+blockchain-api/src/services/transaction.service.js.bak.step32_type_fix:478:  if (!organizationId) {
+blockchain-api/src/services/transaction.service.js.bak.step32_type_fix:482:      errorCode: 'ORGANIZATION_ID_REQUIRED',
+blockchain-api/src/services/transaction.service.js.bak.step32_type_fix:535:    const organization = await getOrganizationByIdInternal(client, organizationId);
+blockchain-api/src/services/transaction.service.js.bak.step32_type_fix:557:      organizationId,
+blockchain-api/src/services/transaction.service.js.bak.step32_type_fix:583:        organizationId,
+blockchain-api/src/services/transaction.service.js.bak.step32_type_fix:651:    addFilter(['organization_id'], filters.organizationId);
+blockchain-api/src/services/transaction.service.js.bak.step32_type_fix:727:        organizationId: filters.organizationId || null,
+blockchain-api/src/services/wallet.service.js.bak.restore_working_20260506_152505:55:      organizationId: wallet.organizationId,
+blockchain-api/src/services/wallet.service.js.bak.restore_working_20260506_152505:73:    organizationId:
+blockchain-api/src/services/wallet.service.js.bak.restore_working_20260506_152505:74:      payload.organizationId ||
+blockchain-api/src/services/wallet.service.js.bak.restore_working_20260506_152505:75:      payload.organization_id ||
+blockchain-api/src/services/wallet.service.js.bak.restore_working_20260506_152505:183:        w.organization_id                             AS "organizationId",
+blockchain-api/src/services/wallet.service.js.bak.restore_working_20260506_152505:196:        ON bo.organization_id = w.organization_id
+blockchain-api/src/services/wallet.service.js.bak.restore_working_20260506_152505:214:        w.organization_id                             AS "organizationId",
+blockchain-api/src/services/wallet.service.js.bak.restore_working_20260506_152505:227:        ON bo.organization_id = w.organization_id
+blockchain-api/src/services/wallet.service.js.bak.restore_working_20260506_152505:248:  requireValue(data.organizationId, 'organizationId');
+blockchain-api/src/services/wallet.service.js.bak.restore_working_20260506_152505:266:          organization_id,
+blockchain-api/src/services/wallet.service.js.bak.restore_working_20260506_152505:270:      WHERE organization_id = $1
+blockchain-api/src/services/wallet.service.js.bak.restore_working_20260506_152505:273:      [data.organizationId]
+blockchain-api/src/services/wallet.service.js.bak.restore_working_20260506_152505:278:        `Invalid organizationId. Organization not found: ${data.organizationId}`,
+blockchain-api/src/services/wallet.service.js.bak.restore_working_20260506_152505:286:        `Organization is not active: ${data.organizationId}`,
+blockchain-api/src/services/wallet.service.js.bak.restore_working_20260506_152505:325:        data.organizationId,
+blockchain-api/src/services/wallet.service.js.bak.restore_working_20260506_152505:350:          organization_id,
+blockchain-api/src/services/wallet.service.js.bak.restore_working_20260506_152505:375:          organization_id,
+blockchain-api/src/services/wallet.service.js.bak.restore_working_20260506_152505:389:        data.organizationId,
+blockchain-api/src/services/wallet.service.js.bak.restore_working_20260506_152505:415:          organizationId: insertResult.rows[0].organization_id,
+blockchain-api/src/services/wallet.service.js.bak.restore_working_20260506_152505:455:        organization_id,
+blockchain-api/src/services/wallet.service.js.bak.restore_working_20260506_152505:495:    organizationId: profile?.organizationId || walletRecord.organization_id,
+blockchain-api/src/services/wallet.service.js.bak.restore_working_20260506_152505:508:        organizationId: walletRecord.organization_id,
+blockchain-api/src/services/audit.service.js:104:          organization_id,
+blockchain-api/src/services/audit.service.js:105:          organization_code,
+blockchain-api/src/services/audit.service.js:151:        event.organizationId || event.organization_id || null,
+blockchain-api/src/services/audit.service.js:152:        event.organizationCode || event.organization_code || null,
+blockchain-api/src/services/transaction.service.js.bak_step_32_1_status_fix:105:    organizationId: getAny(row, ['organization_id', 'organizationId']),
+blockchain-api/src/services/transaction.service.js.bak_step_32_1_status_fix:107:    organizationCode: getAny(row, ['organization_code', 'organizationCode']),
+blockchain-api/src/services/transaction.service.js.bak_step_32_1_status_fix:126:    organizationId: getAny(row, ['organization_id', 'organizationId']),
+blockchain-api/src/services/transaction.service.js.bak_step_32_1_status_fix:185:async function getOrganizationByIdInternal(client, organizationId) {
+blockchain-api/src/services/transaction.service.js.bak_step_32_1_status_fix:201:        WHERE organization_id::text = $1
+blockchain-api/src/services/transaction.service.js.bak_step_32_1_status_fix:204:        [String(organizationId)]
+blockchain-api/src/services/transaction.service.js.bak_step_32_1_status_fix:268:    organization_id: transactionData.organizationId,
+blockchain-api/src/services/transaction.service.js.bak_step_32_1_status_fix:425:      organizationId: null,
+blockchain-api/src/services/transaction.service.js.bak_step_32_1_status_fix:561:      senderWallet.organizationId &&
+blockchain-api/src/services/transaction.service.js.bak_step_32_1_status_fix:562:      receiverWallet.organizationId &&
+blockchain-api/src/services/transaction.service.js.bak_step_32_1_status_fix:563:      String(senderWallet.organizationId) === String(receiverWallet.organizationId)
+blockchain-api/src/services/transaction.service.js.bak_step_32_1_status_fix:574:          senderOrganizationId: senderWallet.organizationId,
+blockchain-api/src/services/transaction.service.js.bak_step_32_1_status_fix:575:          receiverOrganizationId: receiverWallet.organizationId
+blockchain-api/src/services/transaction.service.js.bak_step_32_1_status_fix:620:      organizationId: receiverWallet.organizationId,
+blockchain-api/src/services/transaction.service.js.bak_step_32_1_status_fix:647:        senderOrganizationId: senderWallet.organizationId,
+blockchain-api/src/services/transaction.service.js.bak_step_32_1_status_fix:648:        receiverOrganizationId: receiverWallet.organizationId,
+blockchain-api/src/services/transaction.service.js.bak_step_32_1_status_fix:723:    addFilter(['organization_id'], filters.organizationId);
+blockchain-api/src/services/transaction.service.js.bak_step_32_1_status_fix:799:        organizationId: filters.organizationId || null,
+blockchain-api/src/scripts/generate-wallets-transactions-fast.js.backup_before_duplicate_fix_20260511_162339:280:        organization_id: '1',
+blockchain-api/src/scripts/generate-wallets-transactions-fast.js.backup_before_duplicate_fix_20260511_162339:282:        organization_code: 'GEN_ORG'
+blockchain-api/src/scripts/generate-wallets-transactions-fast.js.backup_before_duplicate_fix_20260511_162339:289:  const idColumn = pickColumn(columns, ['organization_id', 'id']);
+blockchain-api/src/scripts/generate-wallets-transactions-fast.js.backup_before_duplicate_fix_20260511_162339:291:  const codeColumn = pickColumn(columns, ['organization_code', 'registration_number', 'code']);
+blockchain-api/src/scripts/generate-wallets-transactions-fast.js.backup_before_duplicate_fix_20260511_162339:297:      ${idColumn}::text AS organization_id,
+blockchain-api/src/scripts/generate-wallets-transactions-fast.js.backup_before_duplicate_fix_20260511_162339:299:      ${codeColumn ? codeColumn : `'GEN_ORG'`} AS organization_code
+blockchain-api/src/scripts/generate-wallets-transactions-fast.js.backup_before_duplicate_fix_20260511_162339:425:        organization_id: organization.organization_id,
+blockchain-api/src/scripts/generate-wallets-transactions-fast.js.backup_before_duplicate_fix_20260511_162339:426:        organization_code: organization.organization_code,
+blockchain-api/src/scripts/generate-wallets-transactions-fast.js.backup_before_duplicate_fix_20260511_162339:497:      organization_id,
+blockchain-api/src/scripts/generate-wallets-transactions-fast.js.backup_before_duplicate_fix_20260511_162339:692:        sender_organization_id: sender.organization_id,
+blockchain-api/src/scripts/generate-wallets-transactions-fast.js.backup_before_duplicate_fix_20260511_162339:693:        receiver_organization_id: receiver.organization_id,
+blockchain-api/src/scripts/generate-wallets-transactions-fast.js.backup_before_duplicate_fix_20260511_162339:694:        from_organization_id: sender.organization_id,
+blockchain-api/src/scripts/generate-wallets-transactions-fast.js.backup_before_duplicate_fix_20260511_162339:695:        to_organization_id: receiver.organization_id,
+blockchain-api/src/scripts/generate-wallets-transactions-fast.js:280:        organization_id: '1',
+blockchain-api/src/scripts/generate-wallets-transactions-fast.js:282:        organization_code: 'GEN_ORG'
+blockchain-api/src/scripts/generate-wallets-transactions-fast.js:289:  const idColumn = pickColumn(columns, ['organization_id', 'id']);
+blockchain-api/src/scripts/generate-wallets-transactions-fast.js:291:  const codeColumn = pickColumn(columns, ['organization_code', 'registration_number', 'code']);
+blockchain-api/src/scripts/generate-wallets-transactions-fast.js:297:      ${idColumn}::text AS organization_id,
+blockchain-api/src/scripts/generate-wallets-transactions-fast.js:299:      ${codeColumn ? codeColumn : `'GEN_ORG'`} AS organization_code
+blockchain-api/src/scripts/generate-wallets-transactions-fast.js:427:        organization_id: organization.organization_id,
+blockchain-api/src/scripts/generate-wallets-transactions-fast.js:428:        organization_code: organization.organization_code,
+blockchain-api/src/scripts/generate-wallets-transactions-fast.js:511:      organization_id,
+blockchain-api/src/scripts/generate-wallets-transactions-fast.js:706:        sender_organization_id: sender.organization_id,
+blockchain-api/src/scripts/generate-wallets-transactions-fast.js:707:        receiver_organization_id: receiver.organization_id,
+blockchain-api/src/scripts/generate-wallets-transactions-fast.js:708:        from_organization_id: sender.organization_id,
+blockchain-api/src/scripts/generate-wallets-transactions-fast.js:709:        to_organization_id: receiver.organization_id,
+blockchain-api/src/scripts/generate-wallets-transactions.js:358:        organization_id: '1',
+blockchain-api/src/scripts/generate-wallets-transactions.js:360:        organization_code: 'GEN_ORG'
+blockchain-api/src/scripts/generate-wallets-transactions.js:367:  const idColumn = pickColumn(columns, ['organization_id', 'id']);
+blockchain-api/src/scripts/generate-wallets-transactions.js:369:  const codeColumn = pickColumn(columns, ['organization_code', 'registration_number', 'code']);
+blockchain-api/src/scripts/generate-wallets-transactions.js:374:      ${idColumn}::text AS organization_id,
+blockchain-api/src/scripts/generate-wallets-transactions.js:376:      ${codeColumn ? codeColumn : `'GEN_ORG'`} AS organization_code
+blockchain-api/src/scripts/generate-wallets-transactions.js:500:      organization_id: organization.organization_id,
+blockchain-api/src/scripts/generate-wallets-transactions.js:501:      organization_code: organization.organization_code,
+blockchain-api/src/scripts/generate-wallets-transactions.js:591:      organization_id,
+blockchain-api/src/scripts/generate-wallets-transactions.js:764:      sender_organization_id: sender.organization_id,
+blockchain-api/src/scripts/generate-wallets-transactions.js:765:      receiver_organization_id: receiver.organization_id,
+blockchain-api/src/scripts/generate-wallets-transactions.js:766:      from_organization_id: sender.organization_id,
+blockchain-api/src/scripts/generate-wallets-transactions.js:767:      to_organization_id: receiver.organization_id,
+blockchain-api/src/utils/jwt.util.js:17:    organizationId: wallet.organization_id,
+blockchain-api/src/utils/jwt.util.js:18:    organizationCode: wallet.organization_code || null,
+blockchain-api/src/utils/token.util.js:15:  organizationId,
+blockchain-api/src/utils/token.util.js:28:    organizationId: organizationId || null,
+blockchain-api/src/controllers/transaction.controller.js:140:        organizationId: req.body.organizationId || null,
+blockchain-api/src/controllers/transaction.controller.js:141:        organizationCode: req.body.organizationCode || null,
+blockchain-api/src/controllers/transaction.controller.js:191:        organizationId: req.body.organizationId || null,
+blockchain-api/src/controllers/transaction.controller.js:192:        organizationCode: req.body.organizationCode || null,
+blockchain-api/src/controllers/transaction.controller.js:216:        organizationId: req.body.organizationId || null,
+blockchain-api/src/controllers/transaction.controller.js:217:        organizationCode: req.body.organizationCode || null,
+blockchain-api/src/controllers/reference.controller.js.bak_org_type_filter:46:        organization_id,
+blockchain-api/src/controllers/auth.controller.js:44:     * SELECT customer_id, wallet_address, password_hash, organization_id, roles
+blockchain-api/src/controllers/auth.controller.js:65:      organizationId: null,
+blockchain-api/src/controllers/reference.controller.js:103:          organization_id::text AS organization_id,
+blockchain-api/src/controllers/reference.controller.js:116:          organization_id::text AS organization_id,
+blockchain-api/src/repositories/enterprise-persistence.repository.js:131:      organization_id,
+blockchain-api/src/repositories/enterprise-persistence.repository.js:132:      organization_code,
+blockchain-api/src/repositories/enterprise-persistence.repository.js:155:      organization_id,
+blockchain-api/src/repositories/enterprise-persistence.repository.js:156:      organization_code,
+blockchain-api/src/repositories/enterprise-persistence.repository.js:178:      organization_id,
+blockchain-api/src/repositories/enterprise-persistence.repository.js:179:      organization_code,
+blockchain-api/src/repositories/enterprise-persistence.repository.js:223:      walletData.organizationId || null,
+blockchain-api/src/repositories/enterprise-persistence.repository.js:224:      walletData.organizationCode || null,
+blockchain-api/src/repositories/enterprise-persistence.repository.js:333:    organizationId: walletRow.organization_id,
+blockchain-api/src/repositories/enterprise-persistence.repository.js:334:    organizationCode: walletRow.organization_code,
+blockchain-api/src/repositories/enterprise-persistence.repository.js:408:      organization_id,
+blockchain-api/src/repositories/enterprise-persistence.repository.js:409:      organization_code,
+blockchain-api/src/repositories/enterprise-persistence.repository.js:474:      transactionData.organizationId || null,
+blockchain-api/src/repositories/enterprise-persistence.repository.js:475:      transactionData.organizationCode || null,
+blockchain-api/src/routes/transaction.routes.js:123:  body("sourceOrganizationId")
+blockchain-api/src/routes/transaction.routes.js:129:  body("targetOrganizationId")
+blockchain-api/src/routes/transaction.routes.js:135:  body("organizationId")
+blockchain-api/src/routes/transaction.routes.js:209:  query("organizationId")
+blockchain-api/src/middleware/jwt.middleware.js:50:      organizationId: decoded.organizationId || null,
+blockchain-api/src/middleware/jwt.middleware.js:131:          organizationId: decodedUser.organizationId || null,
+
+---- Frontend organization references ----
+blockchain-test-ui/src/app/features/transactions/wallet-transfer/wallet-transfer.component.html:74:      <strong>{{ session.organizationName || session.organizationId || '-' }}</strong>
+blockchain-test-ui/src/app/features/transactions/organization-transfer/organization-transfer.component.html:70:      <strong>{{ session.organizationName || session.organizationId || '-' }}</strong>
+blockchain-test-ui/src/app/features/transactions/organization-transfer/organization-transfer.component.ts:360:      organizationId:
+blockchain-test-ui/src/app/features/transactions/organization-transfer/organization-transfer.component.ts:361:        wallet?.organizationId ||
+blockchain-test-ui/src/app/features/transactions/organization-transfer/organization-transfer.component.ts:362:        wallet?.organization_id ||
+blockchain-test-ui/src/app/features/transactions/organization-transfer/organization-transfer.component.ts:363:        parsed?.organizationId ||
+blockchain-test-ui/src/app/features/transactions/organization-transfer/organization-transfer.component.ts:364:        parsed?.organization_id ||
+blockchain-test-ui/src/app/features/transactions/organization-transfer/organization-transfer.component.ts:367:      organization_id:
+blockchain-test-ui/src/app/features/transactions/organization-transfer/organization-transfer.component.ts:368:        wallet?.organizationId ||
+blockchain-test-ui/src/app/features/transactions/organization-transfer/organization-transfer.component.ts:369:        wallet?.organization_id ||
+blockchain-test-ui/src/app/features/transactions/organization-transfer/organization-transfer.component.ts:370:        parsed?.organizationId ||
+blockchain-test-ui/src/app/features/transactions/organization-transfer/organization-transfer.component.ts:371:        parsed?.organization_id ||
+blockchain-test-ui/src/app/features/transactions/organization-transfer/organization-transfer.component.ts:471:    const organizationId = String(
+blockchain-test-ui/src/app/features/transactions/organization-transfer/organization-transfer.component.ts:472:      wallet?.organizationId ||
+blockchain-test-ui/src/app/features/transactions/organization-transfer/organization-transfer.component.ts:473:      wallet?.organization_id ||
+blockchain-test-ui/src/app/features/transactions/organization-transfer/organization-transfer.component.ts:483:    if (customerId.startsWith('ORG_') || organizationId.startsWith('ORG_')) {
+blockchain-test-ui/src/app/features/transactions/transaction-history/transaction-history.component.html:68:        <input type="text" [(ngModel)]="filters.organizationId" name="organizationId" />
+blockchain-test-ui/src/app/features/transactions/transaction-history/transaction-history.component.html:183:            <td class="mono">{{ getField(tx, 'organizationId', 'organization_id') }}</td>
+blockchain-test-ui/src/app/features/transactions/transaction-history/transaction-history.component.ts:26:    organizationId: '',
+blockchain-test-ui/src/app/features/transactions/transaction-history/transaction-history.component.ts:111:      organizationId: '',
+blockchain-test-ui/src/app/features/transactions/balance-query/balance-query.component.html:115:          <strong>{{ wallet.organizationId || wallet.organization_id || '-' }}</strong>
+blockchain-test-ui/src/app/features/dashboard/dashboard.component.ts:127:                      'organizationCode',
+blockchain-test-ui/src/app/features/dashboard/dashboard.component.ts:128:                      'organization_code',
+blockchain-test-ui/src/app/features/dashboard/dashboard.component.ts:129:                      'organizationId',
+blockchain-test-ui/src/app/features/dashboard/dashboard.component.ts:130:                      'organization_id'
+blockchain-test-ui/src/app/pages/organization-wallet-create/organization-wallet-create.html:26:              name="organizationId"
+blockchain-test-ui/src/app/pages/organization-wallet-create/organization-wallet-create.html:27:              [(ngModel)]="form.organizationId"
+blockchain-test-ui/src/app/pages/organization-wallet-create/organization-wallet-create.html:33:                [value]="org.organizationId"
+blockchain-test-ui/src/app/pages/organization-wallet-create/organization-wallet-create.ts:8:  organizationId: string;
+blockchain-test-ui/src/app/pages/organization-wallet-create/organization-wallet-create.ts:10:  organizationCode?: string;
+blockchain-test-ui/src/app/pages/organization-wallet-create/organization-wallet-create.ts:31:    organizationId: '',
+blockchain-test-ui/src/app/pages/organization-wallet-create/organization-wallet-create.ts:72:              organizationId:
+blockchain-test-ui/src/app/pages/organization-wallet-create/organization-wallet-create.ts:73:                org.organizationId ||
+blockchain-test-ui/src/app/pages/organization-wallet-create/organization-wallet-create.ts:74:                org.organization_id ||
+blockchain-test-ui/src/app/pages/organization-wallet-create/organization-wallet-create.ts:82:              organizationCode:
+blockchain-test-ui/src/app/pages/organization-wallet-create/organization-wallet-create.ts:83:                org.organizationCode ||
+blockchain-test-ui/src/app/pages/organization-wallet-create/organization-wallet-create.ts:84:                org.organization_code ||
+blockchain-test-ui/src/app/pages/organization-wallet-create/organization-wallet-create.ts:91:          this.form.organizationId = this.organizations[0].organizationId;
+blockchain-test-ui/src/app/pages/organization-wallet-create/organization-wallet-create.ts:123:        (org) => org.organizationId === this.form.organizationId
+blockchain-test-ui/src/app/pages/organization-wallet-create/organization-wallet-create.ts:129:    if (!this.form.organizationId) {
+blockchain-test-ui/src/app/pages/organization-wallet-create/organization-wallet-create.ts:160:      organizationId: this.form.organizationId,
+blockchain-test-ui/src/app/pages/organization-wallet-create/organization-wallet-create.ts:229:      this.form.organizationId = this.organizations[0].organizationId;
+blockchain-test-ui/src/app/pages/wallet-query/wallet-query.html:117:          <span>ORGANIZATION_ID</span>
+blockchain-test-ui/src/app/pages/wallet-query/wallet-query.html:118:          <strong>{{ getValue(wallet.organizationId, wallet.organization_id) }}</strong>
+blockchain-test-ui/src/app/pages/wallet-login/wallet-login.html.bak_wallet_address_login:106:        <small>{{ walletSummary.organizationId }}</small>
+blockchain-test-ui/src/app/pages/wallet-login/wallet-login.html.bak_wallet_address_login:142:          <span>ORGANIZATION_ID</span>
+blockchain-test-ui/src/app/pages/wallet-login/wallet-login.html.bak_wallet_address_login:143:          <strong>{{ walletSummary.organizationId }}</strong>
+blockchain-test-ui/src/app/pages/wallet-login/wallet-login.ts.bak_wallet_address_login:37:    organizationId: '-',
+blockchain-test-ui/src/app/pages/wallet-login/wallet-login.ts.bak_wallet_address_login:125:      organizationId: '-',
+blockchain-test-ui/src/app/pages/wallet-login/wallet-login.ts.bak_wallet_address_login:203:          organizationId:
+blockchain-test-ui/src/app/pages/wallet-login/wallet-login.ts.bak_wallet_address_login:204:            wallet?.organizationId ||
+blockchain-test-ui/src/app/pages/wallet-login/wallet-login.ts.bak_wallet_address_login:205:            wallet?.organization_id ||
+blockchain-test-ui/src/app/pages/wallet-login/wallet-login.ts.bak_wallet_address_login:260:          organizationId: this.walletSummary.organizationId,
+blockchain-test-ui/src/app/pages/wallet-login/wallet-login.ts.bak_fix_wallet_type_org:37:    organizationId: '-',
+blockchain-test-ui/src/app/pages/wallet-login/wallet-login.ts.bak_fix_wallet_type_org:95:      organizationId: '-',
+blockchain-test-ui/src/app/pages/wallet-login/wallet-login.ts.bak_fix_wallet_type_org:173:          organizationId:
+blockchain-test-ui/src/app/pages/wallet-login/wallet-login.ts.bak_fix_wallet_type_org:174:            wallet?.organizationId ||
+blockchain-test-ui/src/app/pages/wallet-login/wallet-login.ts.bak_fix_wallet_type_org:175:            wallet?.organization_id ||
+blockchain-test-ui/src/app/pages/wallet-login/wallet-login.ts.bak_fix_wallet_type_org:230:          organizationId: this.walletSummary.organizationId,
+blockchain-test-ui/src/app/pages/wallet-login/wallet-login.ts:37:    organizationId: '-',
+blockchain-test-ui/src/app/pages/wallet-login/wallet-login.ts:95:      organizationId: '-',
+blockchain-test-ui/src/app/pages/wallet-login/wallet-login.ts:176:          organizationId:
+blockchain-test-ui/src/app/pages/wallet-login/wallet-login.ts:177:            normalizedWallet.organizationId ||
+blockchain-test-ui/src/app/pages/wallet-login/wallet-login.ts:226:          organizationId: normalizedWallet.organizationId,
+blockchain-test-ui/src/app/pages/wallet-login/wallet-login.ts:316:    const organizationId = String(
+blockchain-test-ui/src/app/pages/wallet-login/wallet-login.ts:317:      wallet.organizationId ||
+blockchain-test-ui/src/app/pages/wallet-login/wallet-login.ts:318:      wallet.organization_id ||
+blockchain-test-ui/src/app/pages/wallet-login/wallet-login.ts:353:      organizationId.toUpperCase().startsWith('ORG_')
+blockchain-test-ui/src/app/pages/wallet-login/wallet-login.ts:381:      organizationId,
+blockchain-test-ui/src/app/pages/wallet-login/wallet-login.ts:382:      organization_id: organizationId,
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.html.bak_step_32_1:40:              name="organizationId"
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.html.bak_step_32_1:41:              [(ngModel)]="form.organizationId"
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.html.bak_step_32_1:48:                [value]="org.organizationId"
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts:8:  organizationId: string;
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts:10:  organizationCode?: string;
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts:60:    organizationId: '',
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts:156:    this.form.organizationId = '';
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts:163:          this.form.organizationId = this.organizations[0].organizationId;
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts:196:        organizationId:
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts:197:          org.organizationId ||
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts:198:          org.organization_id ||
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts:206:          org.organization_code ||
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts:209:        organizationCode:
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts:210:          org.organizationCode ||
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts:211:          org.organization_code ||
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts:224:      .filter((org: Organization) => !!org.organizationId && !!org.organizationName);
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts:287:      (org) => org.organizationId === this.form.organizationId
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts:322:      this.form.organizationId = this.organizations[0].organizationId;
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts:351:      organizationId: '',
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts:387:    if (!this.form.organizationId) {
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts:436:      organizationId: this.form.organizationId,
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_fix_org_type_loop:8:  organizationId: string;
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_fix_org_type_loop:10:  organizationCode?: string;
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_fix_org_type_loop:60:    organizationId: '',
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_fix_org_type_loop:156:    this.form.organizationId = '';
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_fix_org_type_loop:163:          this.form.organizationId = this.organizations[0].organizationId;
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_fix_org_type_loop:196:        organizationId:
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_fix_org_type_loop:197:          org.organizationId ||
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_fix_org_type_loop:198:          org.organization_id ||
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_fix_org_type_loop:206:          org.organization_code ||
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_fix_org_type_loop:209:        organizationCode:
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_fix_org_type_loop:210:          org.organizationCode ||
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_fix_org_type_loop:211:          org.organization_code ||
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_fix_org_type_loop:224:      .filter((org: Organization) => !!org.organizationId && !!org.organizationName);
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_fix_org_type_loop:287:      (org) => org.organizationId === this.form.organizationId
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_fix_org_type_loop:322:      this.form.organizationId = this.organizations[0].organizationId;
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_fix_org_type_loop:351:      organizationId: '',
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_fix_org_type_loop:387:    if (!this.form.organizationId) {
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_fix_org_type_loop:436:      organizationId: this.form.organizationId,
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_step_32_1:7:  organizationId: string;
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_step_32_1:9:  organizationCode?: string;
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_step_32_1:50:    organizationId: '',
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_step_32_1:109:              organizationId:
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_step_32_1:110:                org.organizationId ||
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_step_32_1:111:                org.organization_id ||
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_step_32_1:118:                org.organization_code ||
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_step_32_1:120:              organizationCode:
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_step_32_1:121:                org.organizationCode ||
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_step_32_1:122:                org.organization_code ||
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_step_32_1:127:        if (this.organizations.length > 0 && !this.form.organizationId) {
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_step_32_1:128:          this.form.organizationId = this.organizations[0].organizationId;
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_step_32_1:205:      this.form.organizationId = this.organizations[0].organizationId;
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_step_32_1:226:      organizationId: '',
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_step_32_1:269:      organizationId: this.form.organizationId,
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_org_type_methods_fix:10:  organizationId: string;
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_org_type_methods_fix:12:  organizationCode?: string;
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_org_type_methods_fix:62:    organizationId: '',
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_org_type_methods_fix:159:    this.form.organizationId = '';
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_org_type_methods_fix:166:          this.form.organizationId = this.organizations[0].organizationId;
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_org_type_methods_fix:199:        organizationId:
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_org_type_methods_fix:200:          org.organizationId ||
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_org_type_methods_fix:201:          org.organization_id ||
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_org_type_methods_fix:209:          org.organization_code ||
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_org_type_methods_fix:212:        organizationCode:
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_org_type_methods_fix:213:          org.organizationCode ||
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_org_type_methods_fix:214:          org.organization_code ||
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_org_type_methods_fix:227:      .filter((org: Organization) => !!org.organizationId && !!org.organizationName);
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_org_type_methods_fix:290:      (org) => org.organizationId === this.form.organizationId
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_org_type_methods_fix:325:      this.form.organizationId = this.organizations[0].organizationId;
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_org_type_methods_fix:354:      organizationId: '',
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_org_type_methods_fix:390:    if (!this.form.organizationId) {
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_org_type_methods_fix:439:      organizationId: this.form.organizationId,
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.html.bak_org_type_filter:49:              name="organizationId"
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.html.bak_org_type_filter:50:              [(ngModel)]="form.organizationId"
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.html.bak_org_type_filter:60:                [value]="org.organizationId"
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_org_type_filter:10:  organizationId: string;
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_org_type_filter:12:  organizationCode?: string;
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_org_type_filter:60:    organizationId: '',
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_org_type_filter:132:        if (this.organizations.length > 0 && !this.form.organizationId) {
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_org_type_filter:133:          this.form.organizationId = this.organizations[0].organizationId;
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_org_type_filter:144:            if (this.organizations.length > 0 && !this.form.organizationId) {
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_org_type_filter:145:              this.form.organizationId = this.organizations[0].organizationId;
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_org_type_filter:180:        organizationId:
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_org_type_filter:181:          org.organizationId ||
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_org_type_filter:182:          org.organization_id ||
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_org_type_filter:190:          org.organization_code ||
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_org_type_filter:193:        organizationCode:
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_org_type_filter:194:          org.organizationCode ||
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_org_type_filter:195:          org.organization_code ||
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_org_type_filter:208:      .filter((org: Organization) => !!org.organizationId && !!org.organizationName);
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_org_type_filter:266:      (org) => org.organizationId === this.form.organizationId
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_org_type_filter:301:      this.form.organizationId = this.organizations[0].organizationId;
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_org_type_filter:330:      organizationId: '',
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_org_type_filter:365:    if (!this.form.organizationId) {
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.ts.bak_org_type_filter:414:      organizationId: this.form.organizationId,
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.html:66:              name="organizationId"
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.html:67:              [(ngModel)]="form.organizationId"
+blockchain-test-ui/src/app/pages/wallet-create/wallet-create.html:77:                [value]="org.organizationId"
+blockchain-test-ui/src/app/pages/wallet-information/wallet-information.component.html:64:        <strong>{{ session.organizationName || session.organizationId || '-' }}</strong>
+blockchain-test-ui/src/app/pages/wallet-information/wallet-information.component.html:86:        <strong>{{ session.organizationId || '-' }}</strong>
+blockchain-test-ui/src/app/services/wallet.service.ts:14:  organizationId: string;
+blockchain-test-ui/src/app/services/wallet.service.ts:52:      organizationId: payload.organizationId || payload.organization_id,
+blockchain-test-ui/src/app/services/wallet.service.ts:85:      organizationId: payload.organizationId || payload.organization_id,
+blockchain-test-ui/src/app/services/wallet.service.ts:159:              organizationId:
+blockchain-test-ui/src/app/services/wallet.service.ts:160:                org.organizationId ||
+blockchain-test-ui/src/app/services/wallet.service.ts:161:                org.organization_id ||
+blockchain-test-ui/src/app/services/wallet.service.ts:168:                org.organization_code ||
+blockchain-test-ui/src/app/services/wallet.service.ts:170:              organizationCode:
+blockchain-test-ui/src/app/services/wallet.service.ts:171:                org.organizationCode ||
+blockchain-test-ui/src/app/services/wallet.service.ts:172:                org.organization_code ||
+blockchain-test-ui/src/app/services/wallet.service.ts.bak_fix_missing_methods:12:  organizationId: number | string;
+blockchain-test-ui/src/app/services/wallet.service.ts.bak_org_type_filter:35:      organizationId: payload.organizationId || payload.organization_id,
+blockchain-test-ui/src/app/services/wallet.service.ts.bak_org_type_filter:52:      organizationId: payload.organizationId || payload.organization_id,
+blockchain-test-ui/src/app/services/wallet.service.ts.bak_org_type_filter:87:              organizationId:
+blockchain-test-ui/src/app/services/wallet.service.ts.bak_org_type_filter:88:                org.organizationId ||
+blockchain-test-ui/src/app/services/wallet.service.ts.bak_org_type_filter:89:                org.organization_id ||
+blockchain-test-ui/src/app/services/wallet.service.ts.bak_org_type_filter:96:                org.organization_code ||
+blockchain-test-ui/src/app/services/wallet.service.ts.bak_org_type_filter:98:              organizationCode:
+blockchain-test-ui/src/app/services/wallet.service.ts.bak_org_type_filter:99:                org.organizationCode ||
+blockchain-test-ui/src/app/services/wallet.service.ts.bak_org_type_filter:100:                org.organization_code ||
+blockchain-test-ui/src/app/services/wallet-session.service.ts:6:  organizationId: string;
+blockchain-test-ui/src/app/services/wallet-session.service.ts:168:    const organizationId = String(
+blockchain-test-ui/src/app/services/wallet-session.service.ts:169:      wallet?.organizationId ||
+blockchain-test-ui/src/app/services/wallet-session.service.ts:170:      wallet?.organization_id ||
+blockchain-test-ui/src/app/services/wallet-session.service.ts:171:      input?.organizationId ||
+blockchain-test-ui/src/app/services/wallet-session.service.ts:172:      input?.organization_id ||
+blockchain-test-ui/src/app/services/wallet-session.service.ts:203:      organizationId
+blockchain-test-ui/src/app/services/wallet-session.service.ts:209:      organizationId,
+blockchain-test-ui/src/app/services/wallet-session.service.ts:261:    organizationId: string
+blockchain-test-ui/src/app/services/wallet-session.service.ts:287:      organizationId.toUpperCase().startsWith('ORG_')
+blockchain-test-ui/src/app/services/organization.service.js:45:    organizationId: row.organization_id || row.id || null,
+blockchain-test-ui/src/app/services/organization.service.js:47:    organizationCode: row.organization_code || row.code || null,
+blockchain-test-ui/src/app/services/wallet.service.ts.bak_fix_wallet_routes:34:      organizationId: payload.organizationId || payload.organization_id,
+blockchain-test-ui/src/app/services/wallet.service.ts.bak_fix_wallet_routes:68:              organizationId:
+blockchain-test-ui/src/app/services/wallet.service.ts.bak_fix_wallet_routes:69:                org.organizationId ||
+blockchain-test-ui/src/app/services/wallet.service.ts.bak_fix_wallet_routes:70:                org.organization_id ||
+blockchain-test-ui/src/app/services/wallet.service.ts.bak_fix_wallet_routes:77:                org.organization_code ||
+blockchain-test-ui/src/app/services/wallet.service.ts.bak_fix_wallet_routes:79:              organizationCode:
+blockchain-test-ui/src/app/services/wallet.service.ts.bak_fix_wallet_routes:80:                org.organizationCode ||
+blockchain-test-ui/src/app/services/wallet.service.ts.bak_fix_wallet_routes:81:                org.organization_code ||
+blockchain-test-ui/src/app/services/wallet.service.ts.bak_bulk_wallet_fix:14:  organizationId: string;
+blockchain-test-ui/src/app/services/wallet.service.ts.bak_bulk_wallet_fix:49:      organizationId: payload.organizationId || payload.organization_id,
+blockchain-test-ui/src/app/services/wallet.service.ts.bak_bulk_wallet_fix:73:      organizationId: payload.organizationId || payload.organization_id,
+blockchain-test-ui/src/app/services/wallet.service.ts.bak_bulk_wallet_fix:147:              organizationId:
+blockchain-test-ui/src/app/services/wallet.service.ts.bak_bulk_wallet_fix:148:                org.organizationId ||
+blockchain-test-ui/src/app/services/wallet.service.ts.bak_bulk_wallet_fix:149:                org.organization_id ||
+blockchain-test-ui/src/app/services/wallet.service.ts.bak_bulk_wallet_fix:156:                org.organization_code ||
+blockchain-test-ui/src/app/services/wallet.service.ts.bak_bulk_wallet_fix:158:              organizationCode:
+blockchain-test-ui/src/app/services/wallet.service.ts.bak_bulk_wallet_fix:159:                org.organizationCode ||
+blockchain-test-ui/src/app/services/wallet.service.ts.bak_bulk_wallet_fix:160:                org.organization_code ||
+blockchain-test-ui/src/app/services/wallet.service.ts.bak_restore_safe_bulk:14:  organizationId: string;
+blockchain-test-ui/src/app/services/wallet.service.ts.bak_restore_safe_bulk:52:      organizationId: payload.organizationId || payload.organization_id,
+blockchain-test-ui/src/app/services/wallet.service.ts.bak_restore_safe_bulk:87:        organizationId: row.organizationId,
+blockchain-test-ui/src/app/services/wallet.service.ts.bak_restore_safe_bulk:137:      organizationId: payload.organizationId || payload.organization_id,
+blockchain-test-ui/src/app/services/wallet.service.ts.bak_restore_safe_bulk:211:              organizationId:
+blockchain-test-ui/src/app/services/wallet.service.ts.bak_restore_safe_bulk:212:                org.organizationId ||
+blockchain-test-ui/src/app/services/wallet.service.ts.bak_restore_safe_bulk:213:                org.organization_id ||
+blockchain-test-ui/src/app/services/wallet.service.ts.bak_restore_safe_bulk:220:                org.organization_code ||
+blockchain-test-ui/src/app/services/wallet.service.ts.bak_restore_safe_bulk:222:              organizationCode:
+blockchain-test-ui/src/app/services/wallet.service.ts.bak_restore_safe_bulk:223:                org.organizationCode ||
+blockchain-test-ui/src/app/services/wallet.service.ts.bak_restore_safe_bulk:224:                org.organization_code ||
+blockchain-test-ui/src/app/services/wallet-session.service.ts.bak_duplicate_wallet_type:7:  organizationId: string;
+blockchain-test-ui/src/app/services/wallet-session.service.ts.bak_duplicate_wallet_type:35:      organizationId: walletProfile.organizationId || walletProfile.organization_id || '',
+blockchain-test-ui/src/app/services/wallet-session.service.ts.bak_duplicate_wallet_type:106:  getOrganizationId(): string {
+blockchain-test-ui/src/app/services/wallet-session.service.ts.bak_duplicate_wallet_type:107:    return this.getSession()?.organizationId || '';
+blockchain-test-ui/src/app/services/wallet-session.service.ts.bak_fix_org_wallet_type:7:  organizationId: string;
+blockchain-test-ui/src/app/services/wallet-session.service.ts.bak_fix_org_wallet_type:34:      organizationId: walletProfile.organizationId || walletProfile.organization_id || '',
+blockchain-test-ui/src/app/services/wallet-session.service.ts.bak_fix_org_wallet_type:98:  getOrganizationId(): string {
+blockchain-test-ui/src/app/services/wallet-session.service.ts.bak_fix_org_wallet_type:99:    return this.getSession()?.organizationId || '';
+blockchain-test-ui/src/app/layout/sidebar/sidebar.component.html:94:          {{ walletSession?.organizationName || walletSession?.organizationId || '-' }}
+blockchain-test-ui/src/app/layout/sidebar/sidebar.component.html.bak_logo_update:87:        <strong>{{ walletSession?.organizationName || walletSession?.organizationId || '-' }}</strong>
+blockchain-test-ui/src/app/layout/sidebar/sidebar.component.html.bak_logo_image_only:87:        <strong>{{ walletSession?.organizationName || walletSession?.organizationId || '-' }}</strong>
+blockchain-test-ui/src/app/core/services/wallet-api.service.ts:13:  organizationId?: string;
+blockchain-test-ui/src/app/core/services/wallet-api.service.ts:203:      organizationId: wallet?.organizationId || wallet?.organization_id || '',
+blockchain-test-ui/src/app/core/services/dashboard-api.service.ts:11:  organizationId: string;
+blockchain-test-ui/src/app/core/services/dashboard-api.service.ts:12:  organizationCode: string | null;
