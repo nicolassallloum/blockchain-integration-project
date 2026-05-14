@@ -1,0 +1,2034 @@
+==================================================
+REAL ANGULAR API FILE EXPORT
+Generated at: Thu May 14 10:54:16 AM EEST 2026
+Current folder: /home/nix/u01/blockchain-integration
+==================================================
+
+================ ANGULAR PROJECT SEARCH ================
+./blockchain-api/node_modules/abbrev/package.json
+./blockchain-api/node_modules/accepts/package.json
+./blockchain-api/node_modules/acorn-jsx/package.json
+./blockchain-api/node_modules/acorn/package.json
+./blockchain-api/node_modules/agent-base/package.json
+./blockchain-api/node_modules/ajv/package.json
+./blockchain-api/node_modules/ansi-regex/package.json
+./blockchain-api/node_modules/ansi-styles/package.json
+./blockchain-api/node_modules/anymatch/package.json
+./blockchain-api/node_modules/aproba/package.json
+./blockchain-api/node_modules/are-we-there-yet/package.json
+./blockchain-api/node_modules/argparse/package.json
+./blockchain-api/node_modules/ascli/package.json
+./blockchain-api/node_modules/async/package.json
+./blockchain-api/node_modules/balanced-match/package.json
+./blockchain-api/node_modules/basic-auth/package.json
+./blockchain-api/node_modules/bcryptjs/package.json
+./blockchain-api/node_modules/binary-extensions/package.json
+./blockchain-api/node_modules/body-parser/package.json
+./blockchain-api/node_modules/brace-expansion/package.json
+./blockchain-api/node_modules/braces/package.json
+./blockchain-api/node_modules/buffer-equal-constant-time/package.json
+./blockchain-api/node_modules/bytebuffer/package.json
+./blockchain-api/node_modules/bytes/package.json
+./blockchain-api/node_modules/call-bind-apply-helpers/package.json
+./blockchain-api/node_modules/call-bound/package.json
+./blockchain-api/node_modules/callsites/package.json
+./blockchain-api/node_modules/camelcase/package.json
+./blockchain-api/node_modules/chalk/package.json
+./blockchain-api/node_modules/chokidar/package.json
+./blockchain-api/node_modules/chownr/package.json
+./blockchain-api/node_modules/cliui/package.json
+./blockchain-api/node_modules/code-point-at/package.json
+./blockchain-api/node_modules/color-convert/package.json
+./blockchain-api/node_modules/color-name/package.json
+./blockchain-api/node_modules/color/package.json
+./blockchain-api/node_modules/color-string/package.json
+./blockchain-api/node_modules/color-support/package.json
+./blockchain-api/node_modules/colour/package.json
+./blockchain-api/node_modules/commander/package.json
+./blockchain-api/node_modules/compressible/package.json
+./blockchain-api/node_modules/compression/package.json
+./blockchain-api/node_modules/concat-map/package.json
+./blockchain-api/node_modules/console-control-strings/package.json
+./blockchain-api/node_modules/content-disposition/package.json
+./blockchain-api/node_modules/content-type/package.json
+./blockchain-api/node_modules/cookie/package.json
+./blockchain-api/node_modules/cookie-signature/package.json
+./blockchain-api/node_modules/cors/package.json
+./blockchain-api/node_modules/cross-spawn/package.json
+./blockchain-api/node_modules/debug/package.json
+./blockchain-api/node_modules/decamelize/package.json
+./blockchain-api/node_modules/deep-is/package.json
+./blockchain-api/node_modules/delegates/package.json
+./blockchain-api/node_modules/depd/package.json
+./blockchain-api/node_modules/detect-libc/package.json
+./blockchain-api/node_modules/dotenv/package.json
+./blockchain-api/node_modules/dunder-proto/package.json
+./blockchain-api/node_modules/ecdsa-sig-formatter/package.json
+./blockchain-api/node_modules/eciesjs/package.json
+./blockchain-api/node_modules/ee-first/package.json
+./blockchain-api/node_modules/emoji-regex/package.json
+./blockchain-api/node_modules/enabled/package.json
+./blockchain-api/node_modules/encodeurl/package.json
+./blockchain-api/node_modules/escalade/package.json
+./blockchain-api/node_modules/escape-html/package.json
+./blockchain-api/node_modules/escape-string-regexp/package.json
+./blockchain-api/node_modules/es-define-property/package.json
+./blockchain-api/node_modules/es-errors/package.json
+./blockchain-api/node_modules/eslint/package.json
+./blockchain-api/node_modules/eslint-scope/package.json
+./blockchain-api/node_modules/eslint-visitor-keys/package.json
+./blockchain-api/node_modules/es-object-atoms/package.json
+./blockchain-api/node_modules/espree/package.json
+./blockchain-api/node_modules/esquery/package.json
+./blockchain-api/node_modules/esrecurse/package.json
+./blockchain-api/node_modules/estraverse/package.json
+./blockchain-api/node_modules/esutils/package.json
+./blockchain-api/node_modules/etag/package.json
+./blockchain-api/node_modules/execa/package.json
+./blockchain-api/node_modules/express/package.json
+./blockchain-api/node_modules/express-rate-limit/package.json
+./blockchain-api/node_modules/express-validator/package.json
+./blockchain-api/node_modules/fast-deep-equal/package.json
+./blockchain-api/node_modules/fast-json-stable-stringify/package.json
+./blockchain-api/node_modules/fast-levenshtein/package.json
+./blockchain-api/node_modules/fecha/package.json
+./blockchain-api/node_modules/file-entry-cache/package.json
+./blockchain-api/node_modules/fill-range/package.json
+./blockchain-api/node_modules/finalhandler/package.json
+./blockchain-api/node_modules/find-up/package.json
+./blockchain-api/node_modules/flat-cache/package.json
+./blockchain-api/node_modules/flatted/package.json
+./blockchain-api/node_modules/fn.name/package.json
+./blockchain-api/node_modules/forwarded/package.json
+./blockchain-api/node_modules/fresh/package.json
+./blockchain-api/node_modules/fs-minipass/package.json
+./blockchain-api/node_modules/fs.realpath/package.json
+./blockchain-api/node_modules/function-bind/package.json
+./blockchain-api/node_modules/gauge/package.json
+./blockchain-api/node_modules/get-caller-file/package.json
+./blockchain-api/node_modules/get-intrinsic/package.json
+./blockchain-api/node_modules/get-proto/package.json
+./blockchain-api/node_modules/get-stream/package.json
+./blockchain-api/node_modules/globals/package.json
+./blockchain-api/node_modules/glob/package.json
+./blockchain-api/node_modules/glob-parent/package.json
+./blockchain-api/node_modules/google-protobuf/package.json
+./blockchain-api/node_modules/gopd/package.json
+./blockchain-api/node_modules/grpc/package.json
+./blockchain-api/node_modules/has-flag/package.json
+./blockchain-api/node_modules/hasown/package.json
+./blockchain-api/node_modules/has-symbols/package.json
+./blockchain-api/node_modules/has-unicode/package.json
+./blockchain-api/node_modules/helmet/package.json
+./blockchain-api/node_modules/hpp/package.json
+./blockchain-api/node_modules/http-errors/package.json
+./blockchain-api/node_modules/https-proxy-agent/package.json
+./blockchain-api/node_modules/human-signals/package.json
+./blockchain-api/node_modules/iconv-lite/package.json
+./blockchain-api/node_modules/ignore-by-default/package.json
+./blockchain-api/node_modules/ignore/package.json
+./blockchain-api/node_modules/import-fresh/package.json
+./blockchain-api/node_modules/imurmurhash/package.json
+./blockchain-api/node_modules/inflight/package.json
+./blockchain-api/node_modules/inherits/package.json
+./blockchain-api/node_modules/invert-kv/package.json
+./blockchain-api/node_modules/ip-address/package.json
+./blockchain-api/node_modules/ipaddr.js/package.json
+./blockchain-api/node_modules/is-binary-path/package.json
+./blockchain-api/node_modules/isexe/package.json
+./blockchain-api/node_modules/is-extglob/package.json
+./blockchain-api/node_modules/is-fullwidth-code-point/package.json
+./blockchain-api/node_modules/is-glob/package.json
+./blockchain-api/node_modules/is-number/package.json
+./blockchain-api/node_modules/is-promise/package.json
+./blockchain-api/node_modules/is-stream/package.json
+./blockchain-api/node_modules/joi/package.json
+./blockchain-api/node_modules/json-buffer/package.json
+./blockchain-api/node_modules/json-schema-traverse/package.json
+./blockchain-api/node_modules/json-stable-stringify-without-jsonify/package.json
+./blockchain-api/node_modules/jsonwebtoken/package.json
+./blockchain-api/node_modules/js-yaml/package.json
+./blockchain-api/node_modules/jwa/package.json
+./blockchain-api/node_modules/jws/package.json
+./blockchain-api/node_modules/keyv/package.json
+./blockchain-api/node_modules/kuler/package.json
+./blockchain-api/node_modules/lcid/package.json
+./blockchain-api/node_modules/levn/package.json
+./blockchain-api/node_modules/locate-path/package.json
+./blockchain-api/node_modules/lodash.camelcase/package.json
+./blockchain-api/node_modules/lodash.clone/package.json
+./blockchain-api/node_modules/lodash.includes/package.json
+./blockchain-api/node_modules/lodash.isboolean/package.json
+./blockchain-api/node_modules/lodash.isinteger/package.json
+./blockchain-api/node_modules/lodash.isnumber/package.json
+./blockchain-api/node_modules/lodash.isplainobject/package.json
+./blockchain-api/node_modules/lodash.isstring/package.json
+./blockchain-api/node_modules/lodash.merge/package.json
+./blockchain-api/node_modules/lodash.once/package.json
+./blockchain-api/node_modules/lodash/package.json
+./blockchain-api/node_modules/logform/package.json
+./blockchain-api/node_modules/long/package.json
+./blockchain-api/node_modules/make-dir/package.json
+./blockchain-api/node_modules/math-intrinsics/package.json
+./blockchain-api/node_modules/media-typer/package.json
+./blockchain-api/node_modules/merge-descriptors/package.json
+./blockchain-api/node_modules/merge-stream/package.json
+./blockchain-api/node_modules/mime-db/package.json
+./blockchain-api/node_modules/mime-types/package.json
+./blockchain-api/node_modules/mimic-fn/package.json
+./blockchain-api/node_modules/minimatch/package.json
+./blockchain-api/node_modules/minipass/package.json
+./blockchain-api/node_modules/minizlib/package.json
+./blockchain-api/node_modules/mkdirp/package.json
+./blockchain-api/node_modules/morgan/package.json
+./blockchain-api/node_modules/ms/package.json
+./blockchain-api/node_modules/nan/package.json
+./blockchain-api/node_modules/natural-compare/package.json
+./blockchain-api/node_modules/negotiator/package.json
+./blockchain-api/node_modules/node-fetch/package.json
+./blockchain-api/node_modules/nodemon/package.json
+./blockchain-api/node_modules/nopt/package.json
+./blockchain-api/node_modules/normalize-path/package.json
+./blockchain-api/node_modules/npmlog/package.json
+./blockchain-api/node_modules/npm-run-path/package.json
+./blockchain-api/node_modules/number-is-nan/package.json
+./blockchain-api/node_modules/object-assign/package.json
+./blockchain-api/node_modules/object-inspect/package.json
+./blockchain-api/node_modules/object-treeify/package.json
+./blockchain-api/node_modules/once/package.json
+./blockchain-api/node_modules/one-time/package.json
+./blockchain-api/node_modules/onetime/package.json
+./blockchain-api/node_modules/on-finished/package.json
+./blockchain-api/node_modules/on-headers/package.json
+./blockchain-api/node_modules/optionator/package.json
+./blockchain-api/node_modules/optjs/package.json
+./blockchain-api/node_modules/os-locale/package.json
+./blockchain-api/node_modules/parent-module/package.json
+./blockchain-api/node_modules/parseurl/package.json
+./blockchain-api/node_modules/path-exists/package.json
+./blockchain-api/node_modules/path-is-absolute/package.json
+./blockchain-api/node_modules/path-key/package.json
+./blockchain-api/node_modules/path-to-regexp/package.json
+./blockchain-api/node_modules/pg-cloudflare/package.json
+./blockchain-api/node_modules/pg-connection-string/package.json
+./blockchain-api/node_modules/pg-int8/package.json
+./blockchain-api/node_modules/pg/package.json
+./blockchain-api/node_modules/pgpass/package.json
+./blockchain-api/node_modules/pg-pool/package.json
+./blockchain-api/node_modules/pg-protocol/package.json
+./blockchain-api/node_modules/pg-types/package.json
+./blockchain-api/node_modules/picomatch/package.json
+./blockchain-api/node_modules/pkcs11js/package.json
+./blockchain-api/node_modules/p-limit/package.json
+./blockchain-api/node_modules/p-locate/package.json
+./blockchain-api/node_modules/postgres-array/package.json
+./blockchain-api/node_modules/postgres-bytea/package.json
+./blockchain-api/node_modules/postgres-date/package.json
+./blockchain-api/node_modules/postgres-interval/package.json
+./blockchain-api/node_modules/prelude-ls/package.json
+./blockchain-api/node_modules/prettier/package.json
+./blockchain-api/node_modules/protobufjs/package.json
+./blockchain-api/node_modules/proxy-addr/package.json
+./blockchain-api/node_modules/pstree.remy/package.json
+./blockchain-api/node_modules/punycode/package.json
+./blockchain-api/node_modules/qs/package.json
+./blockchain-api/node_modules/range-parser/package.json
+./blockchain-api/node_modules/raw-body/package.json
+./blockchain-api/node_modules/readable-stream/package.json
+./blockchain-api/node_modules/readdirp/package.json
+./blockchain-api/node_modules/require-directory/package.json
+./blockchain-api/node_modules/resolve-from/package.json
+./blockchain-api/node_modules/rimraf/package.json
+./blockchain-api/node_modules/router/package.json
+./blockchain-api/node_modules/safe-buffer/package.json
+./blockchain-api/node_modules/safer-buffer/package.json
+./blockchain-api/node_modules/safe-stable-stringify/package.json
+./blockchain-api/node_modules/semver/package.json
+./blockchain-api/node_modules/send/package.json
+./blockchain-api/node_modules/serve-static/package.json
+./blockchain-api/node_modules/set-blocking/package.json
+./blockchain-api/node_modules/setprototypeof/package.json
+./blockchain-api/node_modules/shebang-command/package.json
+./blockchain-api/node_modules/shebang-regex/package.json
+./blockchain-api/node_modules/side-channel-list/package.json
+./blockchain-api/node_modules/side-channel-map/package.json
+./blockchain-api/node_modules/side-channel/package.json
+./blockchain-api/node_modules/side-channel-weakmap/package.json
+./blockchain-api/node_modules/signal-exit/package.json
+./blockchain-api/node_modules/simple-update-notifier/package.json
+./blockchain-api/node_modules/split2/package.json
+./blockchain-api/node_modules/stack-trace/package.json
+./blockchain-api/node_modules/statuses/package.json
+./blockchain-api/node_modules/string_decoder/package.json
+./blockchain-api/node_modules/string-width/package.json
+./blockchain-api/node_modules/strip-ansi/package.json
+./blockchain-api/node_modules/strip-final-newline/package.json
+./blockchain-api/node_modules/strip-json-comments/package.json
+./blockchain-api/node_modules/supports-color/package.json
+./blockchain-api/node_modules/tar/package.json
+./blockchain-api/node_modules/text-hex/package.json
+./blockchain-api/node_modules/toidentifier/package.json
+./blockchain-api/node_modules/to-regex-range/package.json
+./blockchain-api/node_modules/touch/package.json
+./blockchain-api/node_modules/tr46/package.json
+./blockchain-api/node_modules/triple-beam/package.json
+./blockchain-api/node_modules/type-check/package.json
+./blockchain-api/node_modules/type-is/package.json
+./blockchain-api/node_modules/undefsafe/package.json
+./blockchain-api/node_modules/undici-types/api.d.ts
+./blockchain-api/node_modules/undici-types/cache-interceptor.d.ts
+./blockchain-api/node_modules/undici-types/interceptors.d.ts
+./blockchain-api/node_modules/undici-types/mock-interceptor.d.ts
+./blockchain-api/node_modules/undici-types/package.json
+./blockchain-api/node_modules/unpipe/package.json
+./blockchain-api/node_modules/uri-js/package.json
+./blockchain-api/node_modules/util-deprecate/package.json
+./blockchain-api/node_modules/uuid/package.json
+./blockchain-api/node_modules/validator/package.json
+./blockchain-api/node_modules/vary/package.json
+./blockchain-api/node_modules/webidl-conversions/package.json
+./blockchain-api/node_modules/whatwg-url/package.json
+./blockchain-api/node_modules/which/package.json
+./blockchain-api/node_modules/wide-align/package.json
+./blockchain-api/node_modules/window-size/package.json
+./blockchain-api/node_modules/winston/package.json
+./blockchain-api/node_modules/winston-transport/package.json
+./blockchain-api/node_modules/word-wrap/package.json
+./blockchain-api/node_modules/wrap-ansi/package.json
+./blockchain-api/node_modules/wrappy/package.json
+./blockchain-api/node_modules/xtend/package.json
+./blockchain-api/node_modules/y18n/package.json
+./blockchain-api/node_modules/yallist/package.json
+./blockchain-api/node_modules/yargs/package.json
+./blockchain-api/node_modules/yargs-parser/package.json
+./blockchain-api/node_modules/yoctocolors/package.json
+./blockchain-api/node_modules/yocto-queue/package.json
+./blockchain-api/node_modules/yocto-spinner/package.json
+./blockchain-api/package.json
+./blockchain-test-ui/angular.json
+./blockchain-test-ui/backups/step-32-1-20260507_103136/api-auth.interceptor.ts
+./blockchain-test-ui/backups/step-32-1-20260507_103136/environment.ts
+./blockchain-test-ui/backups/step-32-1-20260507_103136/fabric-api.service.ts
+./blockchain-test-ui/backups/step-32-1-20260507_103142/api-auth.interceptor.ts
+./blockchain-test-ui/backups/step-32-1-20260507_103142/environment.ts
+./blockchain-test-ui/backups/step-32-1-20260507_103142/fabric-api.service.ts
+./blockchain-test-ui/backups/step-32-2-org-wallet-20260507_154644/organization-transfer.component.ts
+./blockchain-test-ui/node_modules/abbrev/package.json
+./blockchain-test-ui/node_modules/accepts/package.json
+./blockchain-test-ui/node_modules/agent-base/package.json
+./blockchain-test-ui/node_modules/ajv-formats/package.json
+./blockchain-test-ui/node_modules/ajv/package.json
+./blockchain-test-ui/node_modules/algoliasearch/package.json
+./blockchain-test-ui/node_modules/ansi-escapes/package.json
+./blockchain-test-ui/node_modules/ansi-regex/package.json
+./blockchain-test-ui/node_modules/ansi-styles/package.json
+./blockchain-test-ui/node_modules/balanced-match/package.json
+./blockchain-test-ui/node_modules/baseline-browser-mapping/package.json
+./blockchain-test-ui/node_modules/beasties/package.json
+./blockchain-test-ui/node_modules/body-parser/package.json
+./blockchain-test-ui/node_modules/boolbase/package.json
+./blockchain-test-ui/node_modules/brace-expansion/package.json
+./blockchain-test-ui/node_modules/browserslist/package.json
+./blockchain-test-ui/node_modules/buffer-from/package.json
+./blockchain-test-ui/node_modules/bytes/package.json
+./blockchain-test-ui/node_modules/cacache/package.json
+./blockchain-test-ui/node_modules/call-bind-apply-helpers/package.json
+./blockchain-test-ui/node_modules/call-bound/package.json
+./blockchain-test-ui/node_modules/caniuse-lite/package.json
+./blockchain-test-ui/node_modules/chalk/package.json
+./blockchain-test-ui/node_modules/chardet/package.json
+./blockchain-test-ui/node_modules/chokidar/package.json
+./blockchain-test-ui/node_modules/chownr/package.json
+./blockchain-test-ui/node_modules/cli-cursor/package.json
+./blockchain-test-ui/node_modules/cli-spinners/package.json
+./blockchain-test-ui/node_modules/cli-truncate/package.json
+./blockchain-test-ui/node_modules/cliui/package.json
+./blockchain-test-ui/node_modules/cli-width/package.json
+./blockchain-test-ui/node_modules/color-convert/package.json
+./blockchain-test-ui/node_modules/colorette/package.json
+./blockchain-test-ui/node_modules/color-name/package.json
+./blockchain-test-ui/node_modules/content-disposition/package.json
+./blockchain-test-ui/node_modules/content-type/package.json
+./blockchain-test-ui/node_modules/convert-source-map/package.json
+./blockchain-test-ui/node_modules/cookie/package.json
+./blockchain-test-ui/node_modules/cookie-signature/package.json
+./blockchain-test-ui/node_modules/cors/package.json
+./blockchain-test-ui/node_modules/cross-spawn/package.json
+./blockchain-test-ui/node_modules/css-select/package.json
+./blockchain-test-ui/node_modules/css-what/package.json
+./blockchain-test-ui/node_modules/debug/package.json
+./blockchain-test-ui/node_modules/depd/package.json
+./blockchain-test-ui/node_modules/detect-libc/package.json
+./blockchain-test-ui/node_modules/domelementtype/package.json
+./blockchain-test-ui/node_modules/domhandler/package.json
+./blockchain-test-ui/node_modules/dom-serializer/package.json
+./blockchain-test-ui/node_modules/domutils/package.json
+./blockchain-test-ui/node_modules/dunder-proto/package.json
+./blockchain-test-ui/node_modules/ee-first/package.json
+./blockchain-test-ui/node_modules/electron-to-chromium/package.json
+./blockchain-test-ui/node_modules/emoji-regex/package.json
+./blockchain-test-ui/node_modules/encodeurl/package.json
+./blockchain-test-ui/node_modules/entities/package.json
+./blockchain-test-ui/node_modules/environment/package.json
+./blockchain-test-ui/node_modules/env-paths/package.json
+./blockchain-test-ui/node_modules/err-code/package.json
+./blockchain-test-ui/node_modules/esbuild/package.json
+./blockchain-test-ui/node_modules/escalade/package.json
+./blockchain-test-ui/node_modules/escape-html/package.json
+./blockchain-test-ui/node_modules/es-define-property/package.json
+./blockchain-test-ui/node_modules/es-errors/package.json
+./blockchain-test-ui/node_modules/es-object-atoms/package.json
+./blockchain-test-ui/node_modules/etag/package.json
+./blockchain-test-ui/node_modules/eventemitter3/package.json
+./blockchain-test-ui/node_modules/eventsource/package.json
+./blockchain-test-ui/node_modules/eventsource-parser/package.json
+./blockchain-test-ui/node_modules/exponential-backoff/package.json
+./blockchain-test-ui/node_modules/express/package.json
+./blockchain-test-ui/node_modules/express-rate-limit/package.json
+./blockchain-test-ui/node_modules/fast-deep-equal/package.json
+./blockchain-test-ui/node_modules/fast-uri/package.json
+./blockchain-test-ui/node_modules/fdir/package.json
+./blockchain-test-ui/node_modules/finalhandler/package.json
+./blockchain-test-ui/node_modules/forwarded/package.json
+./blockchain-test-ui/node_modules/fresh/package.json
+./blockchain-test-ui/node_modules/fs-minipass/package.json
+./blockchain-test-ui/node_modules/function-bind/package.json
+./blockchain-test-ui/node_modules/gensync/package.json
+./blockchain-test-ui/node_modules/get-caller-file/package.json
+./blockchain-test-ui/node_modules/get-east-asian-width/package.json
+./blockchain-test-ui/node_modules/get-intrinsic/package.json
+./blockchain-test-ui/node_modules/get-proto/package.json
+./blockchain-test-ui/node_modules/glob/package.json
+./blockchain-test-ui/node_modules/glob-to-regexp/package.json
+./blockchain-test-ui/node_modules/gopd/package.json
+./blockchain-test-ui/node_modules/graceful-fs/package.json
+./blockchain-test-ui/node_modules/hasown/package.json
+./blockchain-test-ui/node_modules/has-symbols/package.json
+./blockchain-test-ui/node_modules/hono/package.json
+./blockchain-test-ui/node_modules/hosted-git-info/package.json
+./blockchain-test-ui/node_modules/htmlparser2/package.json
+./blockchain-test-ui/node_modules/http-cache-semantics/package.json
+./blockchain-test-ui/node_modules/http-errors/package.json
+./blockchain-test-ui/node_modules/http-proxy-agent/package.json
+./blockchain-test-ui/node_modules/https-proxy-agent/package.json
+./blockchain-test-ui/node_modules/iconv-lite/package.json
+./blockchain-test-ui/node_modules/ignore-walk/package.json
+./blockchain-test-ui/node_modules/immutable/package.json
+./blockchain-test-ui/node_modules/inherits/package.json
+./blockchain-test-ui/node_modules/ini/package.json
+./blockchain-test-ui/node_modules/ip-address/package.json
+./blockchain-test-ui/node_modules/ipaddr.js/package.json
+./blockchain-test-ui/node_modules/isexe/package.json
+./blockchain-test-ui/node_modules/is-extglob/package.json
+./blockchain-test-ui/node_modules/is-fullwidth-code-point/package.json
+./blockchain-test-ui/node_modules/is-glob/package.json
+./blockchain-test-ui/node_modules/is-interactive/package.json
+./blockchain-test-ui/node_modules/is-promise/package.json
+./blockchain-test-ui/node_modules/istanbul-lib-coverage/package.json
+./blockchain-test-ui/node_modules/istanbul-lib-instrument/package.json
+./blockchain-test-ui/node_modules/is-unicode-supported/package.json
+./blockchain-test-ui/node_modules/jose/package.json
+./blockchain-test-ui/node_modules/jsesc/package.json
+./blockchain-test-ui/node_modules/json5/package.json
+./blockchain-test-ui/node_modules/jsonc-parser/package.json
+./blockchain-test-ui/node_modules/json-parse-even-better-errors/package.json
+./blockchain-test-ui/node_modules/jsonparse/package.json
+./blockchain-test-ui/node_modules/json-schema-traverse/package.json
+./blockchain-test-ui/node_modules/json-schema-typed/package.json
+./blockchain-test-ui/node_modules/js-tokens/package.json
+./blockchain-test-ui/node_modules/listr2/package.json
+./blockchain-test-ui/node_modules/lmdb/package.json
+./blockchain-test-ui/node_modules/log-symbols/package.json
+./blockchain-test-ui/node_modules/log-update/package.json
+./blockchain-test-ui/node_modules/lru-cache/package.json
+./blockchain-test-ui/node_modules/magic-string/package.json
+./blockchain-test-ui/node_modules/make-fetch-happen/package.json
+./blockchain-test-ui/node_modules/math-intrinsics/package.json
+./blockchain-test-ui/node_modules/media-typer/package.json
+./blockchain-test-ui/node_modules/merge-descriptors/package.json
+./blockchain-test-ui/node_modules/mime-db/package.json
+./blockchain-test-ui/node_modules/mime-types/package.json
+./blockchain-test-ui/node_modules/mimic-function/package.json
+./blockchain-test-ui/node_modules/minimatch/package.json
+./blockchain-test-ui/node_modules/minipass-collect/package.json
+./blockchain-test-ui/node_modules/minipass-fetch/package.json
+./blockchain-test-ui/node_modules/minipass-flush/package.json
+./blockchain-test-ui/node_modules/minipass/package.json
+./blockchain-test-ui/node_modules/minipass-pipeline/package.json
+./blockchain-test-ui/node_modules/minipass-sized/package.json
+./blockchain-test-ui/node_modules/minizlib/package.json
+./blockchain-test-ui/node_modules/mrmime/package.json
+./blockchain-test-ui/node_modules/msgpackr-extract/package.json
+./blockchain-test-ui/node_modules/msgpackr/package.json
+./blockchain-test-ui/node_modules/ms/package.json
+./blockchain-test-ui/node_modules/mute-stream/package.json
+./blockchain-test-ui/node_modules/nanoid/package.json
+./blockchain-test-ui/node_modules/negotiator/package.json
+./blockchain-test-ui/node_modules/node-addon-api/package.json
+./blockchain-test-ui/node_modules/node-gyp-build-optional-packages/package.json
+./blockchain-test-ui/node_modules/node-gyp/package.json
+./blockchain-test-ui/node_modules/node-releases/package.json
+./blockchain-test-ui/node_modules/nopt/package.json
+./blockchain-test-ui/node_modules/npm-bundled/package.json
+./blockchain-test-ui/node_modules/npm-install-checks/package.json
+./blockchain-test-ui/node_modules/npm-normalize-package-bin/package.json
+./blockchain-test-ui/node_modules/npm-package-arg/package.json
+./blockchain-test-ui/node_modules/npm-packlist/package.json
+./blockchain-test-ui/node_modules/npm-pick-manifest/package.json
+./blockchain-test-ui/node_modules/npm-registry-fetch/package.json
+./blockchain-test-ui/node_modules/nth-check/package.json
+./blockchain-test-ui/node_modules/object-assign/package.json
+./blockchain-test-ui/node_modules/object-inspect/package.json
+./blockchain-test-ui/node_modules/once/package.json
+./blockchain-test-ui/node_modules/onetime/package.json
+./blockchain-test-ui/node_modules/on-finished/package.json
+./blockchain-test-ui/node_modules/ora/package.json
+./blockchain-test-ui/node_modules/ordered-binary/package.json
+./blockchain-test-ui/node_modules/pacote/package.json
+./blockchain-test-ui/node_modules/parse5-html-rewriting-stream/package.json
+./blockchain-test-ui/node_modules/parse5/package.json
+./blockchain-test-ui/node_modules/parse5-sax-parser/package.json
+./blockchain-test-ui/node_modules/parseurl/package.json
+./blockchain-test-ui/node_modules/path-key/package.json
+./blockchain-test-ui/node_modules/path-scurry/package.json
+./blockchain-test-ui/node_modules/path-to-regexp/package.json
+./blockchain-test-ui/node_modules/picocolors/package.json
+./blockchain-test-ui/node_modules/picomatch/package.json
+./blockchain-test-ui/node_modules/piscina/package.json
+./blockchain-test-ui/node_modules/pkce-challenge/package.json
+./blockchain-test-ui/node_modules/p-map/package.json
+./blockchain-test-ui/node_modules/postcss-media-query-parser/package.json
+./blockchain-test-ui/node_modules/postcss/package.json
+./blockchain-test-ui/node_modules/postcss-safe-parser/package.json
+./blockchain-test-ui/node_modules/prettier/package.json
+./blockchain-test-ui/node_modules/proc-log/package.json
+./blockchain-test-ui/node_modules/promise-retry/package.json
+./blockchain-test-ui/node_modules/proxy-addr/package.json
+./blockchain-test-ui/node_modules/qs/package.json
+./blockchain-test-ui/node_modules/range-parser/package.json
+./blockchain-test-ui/node_modules/raw-body/package.json
+./blockchain-test-ui/node_modules/readdirp/package.json
+./blockchain-test-ui/node_modules/reflect-metadata/package.json
+./blockchain-test-ui/node_modules/require-from-string/package.json
+./blockchain-test-ui/node_modules/restore-cursor/package.json
+./blockchain-test-ui/node_modules/retry/package.json
+./blockchain-test-ui/node_modules/rfdc/package.json
+./blockchain-test-ui/node_modules/rolldown/package.json
+./blockchain-test-ui/node_modules/rollup/package.json
+./blockchain-test-ui/node_modules/router/package.json
+./blockchain-test-ui/node_modules/rxjs/package.json
+./blockchain-test-ui/node_modules/safer-buffer/package.json
+./blockchain-test-ui/node_modules/sass/package.json
+./blockchain-test-ui/node_modules/semver/package.json
+./blockchain-test-ui/node_modules/send/package.json
+./blockchain-test-ui/node_modules/serve-static/package.json
+./blockchain-test-ui/node_modules/setprototypeof/package.json
+./blockchain-test-ui/node_modules/shebang-command/package.json
+./blockchain-test-ui/node_modules/shebang-regex/package.json
+./blockchain-test-ui/node_modules/side-channel-list/package.json
+./blockchain-test-ui/node_modules/side-channel-map/package.json
+./blockchain-test-ui/node_modules/side-channel/package.json
+./blockchain-test-ui/node_modules/side-channel-weakmap/package.json
+./blockchain-test-ui/node_modules/signal-exit/package.json
+./blockchain-test-ui/node_modules/sigstore/package.json
+./blockchain-test-ui/node_modules/slice-ansi/package.json
+./blockchain-test-ui/node_modules/smart-buffer/package.json
+./blockchain-test-ui/node_modules/socks/package.json
+./blockchain-test-ui/node_modules/socks-proxy-agent/package.json
+./blockchain-test-ui/node_modules/source-map-js/package.json
+./blockchain-test-ui/node_modules/source-map/package.json
+./blockchain-test-ui/node_modules/source-map-support/package.json
+./blockchain-test-ui/node_modules/spdx-exceptions/package.json
+./blockchain-test-ui/node_modules/spdx-expression-parse/package.json
+./blockchain-test-ui/node_modules/spdx-license-ids/package.json
+./blockchain-test-ui/node_modules/ssri/package.json
+./blockchain-test-ui/node_modules/statuses/package.json
+./blockchain-test-ui/node_modules/stdin-discarder/package.json
+./blockchain-test-ui/node_modules/string-width/package.json
+./blockchain-test-ui/node_modules/strip-ansi/package.json
+./blockchain-test-ui/node_modules/tar/package.json
+./blockchain-test-ui/node_modules/tinyglobby/package.json
+./blockchain-test-ui/node_modules/toidentifier/package.json
+./blockchain-test-ui/node_modules/tslib/package.json
+./blockchain-test-ui/node_modules/tuf-js/package.json
+./blockchain-test-ui/node_modules/type-is/package.json
+./blockchain-test-ui/node_modules/typescript/package.json
+./blockchain-test-ui/node_modules/undici/package.json
+./blockchain-test-ui/node_modules/unpipe/package.json
+./blockchain-test-ui/node_modules/update-browserslist-db/package.json
+./blockchain-test-ui/node_modules/validate-npm-package-name/package.json
+./blockchain-test-ui/node_modules/vary/package.json
+./blockchain-test-ui/node_modules/vite/package.json
+./blockchain-test-ui/node_modules/watchpack/package.json
+./blockchain-test-ui/node_modules/weak-lru-cache/package.json
+./blockchain-test-ui/node_modules/which/package.json
+./blockchain-test-ui/node_modules/wrap-ansi/package.json
+./blockchain-test-ui/node_modules/wrappy/package.json
+./blockchain-test-ui/node_modules/y18n/package.json
+./blockchain-test-ui/node_modules/yallist/package.json
+./blockchain-test-ui/node_modules/yargs/package.json
+./blockchain-test-ui/node_modules/yargs-parser/package.json
+./blockchain-test-ui/node_modules/yoctocolors-cjs/package.json
+./blockchain-test-ui/node_modules/yoctocolors/package.json
+./blockchain-test-ui/node_modules/zod/package.json
+./blockchain-test-ui/node_modules/zod-to-json-schema/package.json
+./blockchain-test-ui/node_modules/zone.js/package.json
+./blockchain-test-ui/package.json
+./blockchain-test-ui/src/environments/environment.ts
+./chaincode/kyc-wallet-chaincode-js/package.json
+./cleanup-backup-20260506_121948/blockchain-api.backup/package.json
+./cleanup-backup-20260506_121948/blockchain-test-ui.backup/angular.json
+./cleanup-backup-20260506_121948/blockchain-test-ui.backup/package.json
+
+================ API SEARCH ================
+./cleanup-backup-20260506_121948/blockchain-test-ui.backup/proxy.conf.json:3:    "target": "http://127.0.0.1:3001",
+./cleanup-backup-20260506_121948/blockchain-test-ui.backup/src/app/features/organization-transfer/organization-transfer.component.ts:4:  selector: 'app-organization-transfer',
+./cleanup-backup-20260506_121948/blockchain-test-ui.backup/src/app/features/organization-transfer/organization-transfer.component.ts:6:  template: `<div class="card"><h1>Organization Transfer</h1><p>This page will test POST /api/v1/transactions/organization-transfer.</p></div>`,
+./cleanup-backup-20260506_121948/blockchain-test-ui.backup/src/app/app.ts:20:    { label: 'Organization Transfer', route: '/organization-transfer', icon: '●' },
+./cleanup-backup-20260506_121948/blockchain-test-ui.backup/src/app/services/wallet.service.ts:15:  private readonly apiBaseUrl = 'http://172.31.13.90:3001/api/v1';
+./cleanup-backup-20260506_121948/blockchain-test-ui.backup/src/app/services/wallet.service.ts:33:      `${this.apiBaseUrl}/wallets`,
+./cleanup-backup-20260506_121948/blockchain-test-ui.backup/src/app/services/wallet.service.ts:47:      `${this.apiBaseUrl}/wallets/login`,
+./cleanup-backup-20260506_121948/blockchain-test-ui.backup/src/app/services/wallet.service.ts:67:      `${this.apiBaseUrl}/wallets/customer/${encodeURIComponent(customerId)}`,
+./cleanup-backup-20260506_121948/blockchain-test-ui.backup/src/app/services/wallet.service.ts:86:      `${this.apiBaseUrl}/wallets/address/${encodeURIComponent(walletAddress)}`,
+./cleanup-backup-20260506_121948/blockchain-test-ui.backup/src/app/services/wallet.service.ts:99:      `${this.apiBaseUrl}/reference/next-customer-id`,
+./cleanup-backup-20260506_121948/blockchain-test-ui.backup/src/app/services/wallet.service.ts:121:      `${this.apiBaseUrl}/reference/organizations`,
+./cleanup-backup-20260506_121948/blockchain-test-ui.backup/src/app/services/wallet.service.ts:143:      `${this.apiBaseUrl}/reference/countries`,
+./cleanup-backup-20260506_121948/blockchain-test-ui.backup/src/app/core/services/wallet-api.service.ts:8:  private readonly apiBaseUrl = 'http://127.0.0.1:3001/api/v1';
+./cleanup-backup-20260506_121948/blockchain-test-ui.backup/src/app/core/services/wallet-api.service.ts:22:      `${this.apiBaseUrl}/wallets`,
+./cleanup-backup-20260506_121948/blockchain-test-ui.backup/src/app/core/services/wallet-api.service.ts:30:      `${this.apiBaseUrl}/wallets/login`,
+./cleanup-backup-20260506_121948/blockchain-test-ui.backup/src/app/core/services/wallet-api.service.ts:44:      `${this.apiBaseUrl}/wallets/customer/${customerId}`,
+./cleanup-backup-20260506_121948/blockchain-test-ui.backup/src/app/core/services/wallet-api.service.ts:57:      `${this.apiBaseUrl}/wallets/address/${walletAddress}`,
+./cleanup-backup-20260506_121948/blockchain-test-ui.backup/src/app/core/services/fabric-api.service.ts:14:    return this.http.post(`${this.config.baseUrl}/fabric/evaluate`, payload);
+./cleanup-backup-20260506_121948/blockchain-test-ui.backup/src/app/core/services/fabric-api.service.ts:18:    return this.http.post(`${this.config.baseUrl}/fabric/submit`, payload);
+./cleanup-backup-20260506_121948/blockchain-test-ui.backup/src/app/core/services/api-config.service.ts:9:  get baseUrl(): string {
+./cleanup-backup-20260506_121948/blockchain-test-ui.backup/src/app/core/services/transaction-api.service.ts:14:    return this.http.post(`${this.config.baseUrl}/transactions/wallet-transfer`, payload);
+./cleanup-backup-20260506_121948/blockchain-test-ui.backup/src/app/core/services/transaction-api.service.ts:18:    return this.http.post(`${this.config.baseUrl}/transactions/organization-transfer`, payload);
+./cleanup-backup-20260506_121948/blockchain-test-ui.backup/src/app/core/services/transaction-api.service.ts:32:    return this.http.get(`${this.config.baseUrl}/transactions`, { params });
+./cleanup-backup-20260506_121948/blockchain-test-ui.backup/src/app/core/services/dashboard-api.service.ts:63:    return this.http.get<WalletDashboardResponse>(`${this.config.baseUrl}/wallets`, { params });
+./cleanup-backup-20260506_121948/blockchain-test-ui.backup/src/app/core/interceptors/api-auth.interceptor.ts:13:    headers = headers.set('x-api-key', apiKey);
+./cleanup-backup-20260506_121948/blockchain-test-ui.backup/src/services/wallet.service.ts:9:  private readonly apiBaseUrl = 'http://127.0.0.1:3001/api/v1';
+./cleanup-backup-20260506_121948/blockchain-test-ui.backup/src/services/wallet.service.ts:23:      `${this.apiBaseUrl}/wallets`,
+./cleanup-backup-20260506_121948/blockchain-test-ui.backup/src/services/wallet.service.ts:31:      `${this.apiBaseUrl}/wallets/login`,
+./cleanup-backup-20260506_121948/blockchain-test-ui.backup/src/services/wallet.service.ts:45:      `${this.apiBaseUrl}/wallets/customer/${customerId}`,
+./cleanup-backup-20260506_121948/blockchain-test-ui.backup/src/services/wallet.service.ts:58:      `${this.apiBaseUrl}/wallets/address/${walletAddress}`,
+./cleanup-backup-20260506_121948/blockchain-test-ui.backup/src/services/wallet.service.ts:65:      `${this.apiBaseUrl}/reference/next-customer-id`,
+./cleanup-backup-20260506_121948/blockchain-test-ui.backup/src/services/wallet.service.ts:72:      `${this.apiBaseUrl}/reference/organizations`,
+./cleanup-backup-20260506_121948/blockchain-test-ui.backup/src/services/wallet.service.ts:79:      `${this.apiBaseUrl}/reference/countries`,
+./cleanup-backup-20260506_121948/blockchain-test-ui.backup/.vscode/launch.json:10:      "url": "http://localhost:4200/"
+./blockchain-test-ui/proxy.conf.json:3:    "target": "http://172.31.13.90:3001",
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/features/transactions/organization-transfer/organization-transfer.component.html:38:      [queryParams]="{ redirectTo: '/digital-kyc/organization-transfer' }"
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/features/transactions/organization-transfer/organization-transfer.component.ts:8:  selector: 'app-organization-transfer',
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/features/transactions/organization-transfer/organization-transfer.component.ts:11:  templateUrl: './organization-transfer.component.html',
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/features/transactions/organization-transfer/organization-transfer.component.ts:12:  styleUrl: './organization-transfer.component.css'
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/features/dashboard/dashboard.component.ts:89:            <span>{{ apiBaseUrl }}/wallets</span>
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/features/dashboard/dashboard.component.ts:508:  apiBaseUrl = environment.apiBaseUrl;
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/features/dashboard/dashboard.component.ts:583:          `Http failure while loading ${this.apiBaseUrl}/wallets`;
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/app.ts:20:    { label: 'Organization Transfer', route: '/organization-transfer', icon: '●' },
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/services/wallet.service.ts:28:  private readonly baseUrl = environment.apiBaseUrl;
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/services/wallet.service.ts:41:    return this.http.get(`${this.baseUrl}/wallets`, { params: httpParams });
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/services/wallet.service.ts:45:    return this.http.get(`${this.baseUrl}/wallets/next-customer-id`);
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/services/wallet.service.ts:75:    return this.http.post(`${this.baseUrl}/wallets`, normalizedPayload);
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/services/wallet.service.ts:79:    return this.http.post(`${this.baseUrl}/wallets/bulk-create`, { wallets });
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/services/wallet.service.ts:95:    return this.http.post(`${this.baseUrl}/wallets/organization-wallets`, normalizedPayload);
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/services/wallet.service.ts:99:    return this.http.post(`${this.baseUrl}/wallets/login`, payload);
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/services/wallet.service.ts:103:    return this.http.get(`${this.baseUrl}/wallets/customer/${encodeURIComponent(customerId)}`);
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/services/wallet.service.ts:107:    return this.http.get(`${this.baseUrl}/wallets/${encodeURIComponent(walletAddress)}`);
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/services/wallet.service.ts:111:    return this.http.get(`${this.baseUrl}/reference/organization-types`).pipe(
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/services/wallet.service.ts:147:    return this.http.get(`${this.baseUrl}/reference/organizations`, { params }).pipe(
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/services/wallet.service.ts:148:      catchError(() => this.http.get(`${this.baseUrl}/organizations`, { params })),
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/services/wallet.service.ts:199:    return this.http.get(`${this.baseUrl}/reference/countries`).pipe(
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/services/transaction.service.ts:11:  private readonly baseUrl = environment.apiBaseUrl;
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/services/transaction.service.ts:18:   * Therefore all protected transaction calls must include x-api-key.
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/services/transaction.service.ts:34:      .set('x-api-key', this.apiKey)
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/services/transaction.service.ts:53:      `${this.baseUrl}/transactions/wallet-transfer`,
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/services/transaction.service.ts:61:      `${this.baseUrl}/transactions/organization-transfer`,
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/services/transaction.service.ts:79:      `${this.baseUrl}/transactions`,
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/services/transaction.service.ts:89:      `${this.baseUrl}/transactions/${encodeURIComponent(transactionId)}`,
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/services/fabric.service.ts:11:  private readonly baseUrl = environment.apiBaseUrl;
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/services/fabric.service.ts:27:      .set('x-api-key', this.apiKey)
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/services/fabric.service.ts:36:      `${this.baseUrl}/fabric/evaluate`,
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/services/fabric.service.ts:49:      `${this.baseUrl}/fabric/submit`,
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/services/fabric.service.ts:70:        `${this.baseUrl}/fabric/submit`,
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/services/fabric.service.ts:79:      `${this.baseUrl}/fabric/evaluate`,
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/layout/sidebar/sidebar.component.html:115:        routerLink="/digital-kyc/organization-transfer"
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/app.html:59:      <a routerLink="/digital-kyc/organization-transfer" routerLinkActive="active">
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/app.routes.ts:11:import { OrganizationTransferComponent } from './features/transactions/organization-transfer/organization-transfer.component';
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/app.routes.ts:52:    path: 'digital-kyc/organization-transfer',
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/app.routes.ts:100:    path: 'organization-transfer',
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/app.routes.ts:101:    redirectTo: 'digital-kyc/organization-transfer',
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/core/services/wallet-api.service.ts:20:  private readonly apiBaseUrl = environment.apiBaseUrl;
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/core/services/wallet-api.service.ts:21:  private readonly walletsUrl = `${environment.apiBaseUrl}/wallets`;
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/core/services/wallet-api.service.ts:77:    return this.http.get<any>(`${this.apiBaseUrl}/reference/next-customer-id`);
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/core/services/wallet-api.service.ts:81:    return this.http.get<any>(`${this.apiBaseUrl}/reference/countries`);
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/core/services/wallet-api.service.ts:85:    return this.http.get<any>(`${this.apiBaseUrl}/reference/nationalities`);
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/core/services/wallet-api.service.ts:89:    return this.http.get<any>(`${this.apiBaseUrl}/organizations`);
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/core/services/wallet-api.service.ts:104:    return this.http.get<any>(`${this.apiBaseUrl}/transactions`, { params });
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/core/services/wallet-api.service.ts:109:      `${this.apiBaseUrl}/transactions/wallet-transfer`,
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/core/services/wallet-api.service.ts:116:      `${this.apiBaseUrl}/transactions/organization-transfer`,
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/core/services/fabric-api.service.ts:28:      .set('x-api-key', this.apiKey)
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/core/services/fabric-api.service.ts:37:      `${this.config.baseUrl}/fabric/evaluate`,
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/core/services/fabric-api.service.ts:47:      `${this.config.baseUrl}/fabric/submit`,
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/core/services/api-config.service.ts:12:   * http://172.31.13.90:3001/api/v1
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/core/services/api-config.service.ts:14:  public readonly baseUrl = environment.apiBaseUrl;
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/core/services/api-config.service.ts:20:    return this.baseUrl;
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/core/services/api-config.service.ts:27:    return this.baseUrl;
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/core/services/api-config.service.ts:34:    return `${this.baseUrl}/wallets`;
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/core/services/api-config.service.ts:41:    return `${this.baseUrl}/transactions`;
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/core/services/api-config.service.ts:48:    return `${this.baseUrl}/fabric`;
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/core/services/api-config.service.ts:55:    return `${this.baseUrl}/reference`;
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/core/services/api-config.service.ts:62:    return `${this.baseUrl}/organizations`;
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/core/services/transaction-api.service.ts:14:    return this.http.post(`${this.config.baseUrl}/transactions/wallet-transfer`, payload);
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/core/services/transaction-api.service.ts:18:    return this.http.post(`${this.config.baseUrl}/transactions/organization-transfer`, payload);
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/core/services/transaction-api.service.ts:32:    return this.http.get(`${this.config.baseUrl}/transactions`, { params });
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/core/services/dashboard-api.service.ts:63:    return this.http.get<WalletDashboardResponse>(`${this.config.baseUrl}/wallets`, { params });
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/core/interceptors/api-auth.interceptor.ts:14:    normalizedUrl.includes('/api/v1/transactions/organization-transfer');
+./blockchain-test-ui/src/app.bak_before_wallet_session_fix_20260508_154442/core/interceptors/api-auth.interceptor.ts:31:    headers['x-api-key'] = environment.fabricApiKey;
+./blockchain-test-ui/src/environments/environment.ts:3:  apiBaseUrl: '/api/v1',
+./blockchain-test-ui/src/environments/environment.prod.ts:3:  apiBaseUrl: '/api/v1'
+./blockchain-test-ui/src/app/features/transactions/organization-transfer/organization-transfer.component.html:40:      [queryParams]="{ redirectTo: '/digital-kyc/organization-transfer' }"
+./blockchain-test-ui/src/app/features/transactions/organization-transfer/organization-transfer.component.ts:10:  selector: 'app-organization-transfer',
+./blockchain-test-ui/src/app/features/transactions/organization-transfer/organization-transfer.component.ts:13:  templateUrl: './organization-transfer.component.html',
+./blockchain-test-ui/src/app/features/transactions/organization-transfer/organization-transfer.component.ts:14:  styleUrl: './organization-transfer.component.css'
+./blockchain-test-ui/src/app/features/dashboard/dashboard.component.ts:88:            <span>{{ apiBaseUrl }}/wallets</span>
+./blockchain-test-ui/src/app/features/dashboard/dashboard.component.ts:507:  apiBaseUrl = environment.apiBaseUrl;
+./blockchain-test-ui/src/app/features/dashboard/dashboard.component.ts:586:          `Http failure while loading ${this.apiBaseUrl}/wallets`;
+./blockchain-test-ui/src/app/app.ts:79:      route: '/digital-kyc/organization-transfer',
+./blockchain-test-ui/src/app/pages/data-generation-engine/data-generation-engine.ts:34:private readonly apiBaseUrl = '/api/v1';
+./blockchain-test-ui/src/app/pages/data-generation-engine/data-generation-engine.ts:55:      .post<any>(`${this.apiBaseUrl}/data-generator/run`, this.form, { headers })
+./blockchain-test-ui/src/app/pages/wallet-information/wallet-information.component.ts:48:    this.router.navigateByUrl('/digital-kyc/organization-transfer');
+./blockchain-test-ui/src/app/services/wallet.service.ts:28:  private readonly baseUrl = environment.apiBaseUrl;
+./blockchain-test-ui/src/app/services/wallet.service.ts:41:    return this.http.get(`${this.baseUrl}/wallets`, { params: httpParams });
+./blockchain-test-ui/src/app/services/wallet.service.ts:45:    return this.http.get(`${this.baseUrl}/wallets/next-customer-id`);
+./blockchain-test-ui/src/app/services/wallet.service.ts:75:    return this.http.post(`${this.baseUrl}/wallets`, normalizedPayload);
+./blockchain-test-ui/src/app/services/wallet.service.ts:79:    return this.http.post(`${this.baseUrl}/wallets/bulk-create`, { wallets });
+./blockchain-test-ui/src/app/services/wallet.service.ts:95:    return this.http.post(`${this.baseUrl}/wallets/organization-wallets`, normalizedPayload);
+./blockchain-test-ui/src/app/services/wallet.service.ts:99:    return this.http.post(`${this.baseUrl}/wallets/login`, payload);
+./blockchain-test-ui/src/app/services/wallet.service.ts:103:    return this.http.get(`${this.baseUrl}/wallets/customer/${encodeURIComponent(customerId)}`);
+./blockchain-test-ui/src/app/services/wallet.service.ts:107:    return this.http.get(`${this.baseUrl}/wallets/${encodeURIComponent(walletAddress)}`);
+./blockchain-test-ui/src/app/services/wallet.service.ts:111:    return this.http.get(`${this.baseUrl}/reference/organization-types`).pipe(
+./blockchain-test-ui/src/app/services/wallet.service.ts:147:    return this.http.get(`${this.baseUrl}/reference/organizations`, { params }).pipe(
+./blockchain-test-ui/src/app/services/wallet.service.ts:148:      catchError(() => this.http.get(`${this.baseUrl}/organizations`, { params })),
+./blockchain-test-ui/src/app/services/wallet.service.ts:199:    return this.http.get(`${this.baseUrl}/reference/countries`).pipe(
+./blockchain-test-ui/src/app/services/transaction.service.ts:11:  private readonly baseUrl = environment.apiBaseUrl;
+./blockchain-test-ui/src/app/services/transaction.service.ts:18:   * Therefore all protected transaction calls must include x-api-key.
+./blockchain-test-ui/src/app/services/transaction.service.ts:34:      .set('x-api-key', this.apiKey)
+./blockchain-test-ui/src/app/services/transaction.service.ts:53:      `${this.baseUrl}/transactions/wallet-transfer`,
+./blockchain-test-ui/src/app/services/transaction.service.ts:61:      `${this.baseUrl}/transactions/organization-transfer`,
+./blockchain-test-ui/src/app/services/transaction.service.ts:79:      `${this.baseUrl}/transactions`,
+./blockchain-test-ui/src/app/services/transaction.service.ts:89:      `${this.baseUrl}/transactions/${encodeURIComponent(transactionId)}`,
+./blockchain-test-ui/src/app/services/fabric.service.ts:11:  private readonly baseUrl = environment.apiBaseUrl;
+./blockchain-test-ui/src/app/services/fabric.service.ts:27:      .set('x-api-key', this.apiKey)
+./blockchain-test-ui/src/app/services/fabric.service.ts:36:      `${this.baseUrl}/fabric/evaluate`,
+./blockchain-test-ui/src/app/services/fabric.service.ts:49:      `${this.baseUrl}/fabric/submit`,
+./blockchain-test-ui/src/app/services/fabric.service.ts:70:        `${this.baseUrl}/fabric/submit`,
+./blockchain-test-ui/src/app/services/fabric.service.ts:79:      `${this.baseUrl}/fabric/evaluate`,
+./blockchain-test-ui/src/app/layout/sidebar/sidebar.component.html:132:        routerLink="/digital-kyc/organization-transfer"
+./blockchain-test-ui/src/app/app.html:111:      <a routerLink="/digital-kyc/organization-transfer" routerLinkActive="active">
+./blockchain-test-ui/src/app/app.routes.ts:12:import { OrganizationTransferComponent } from './features/transactions/organization-transfer/organization-transfer.component';
+./blockchain-test-ui/src/app/app.routes.ts:62:    path: 'digital-kyc/organization-transfer',
+./blockchain-test-ui/src/app/app.routes.ts:115:    path: 'organization-transfer',
+./blockchain-test-ui/src/app/app.routes.ts:116:    redirectTo: 'digital-kyc/organization-transfer',
+./blockchain-test-ui/src/app/app.component.html:50:      <a routerLink="/digital-kyc/organization-transfer" routerLinkActive="active-link">
+./blockchain-test-ui/src/app/core/services/wallet-api.service.ts:20:  private readonly apiBaseUrl = environment.apiBaseUrl;
+./blockchain-test-ui/src/app/core/services/wallet-api.service.ts:21:  private readonly walletsUrl = `${environment.apiBaseUrl}/wallets`;
+./blockchain-test-ui/src/app/core/services/wallet-api.service.ts:77:    return this.http.get<any>(`${this.apiBaseUrl}/reference/next-customer-id`);
+./blockchain-test-ui/src/app/core/services/wallet-api.service.ts:81:    return this.http.get<any>(`${this.apiBaseUrl}/reference/countries`);
+./blockchain-test-ui/src/app/core/services/wallet-api.service.ts:85:    return this.http.get<any>(`${this.apiBaseUrl}/reference/nationalities`);
+./blockchain-test-ui/src/app/core/services/wallet-api.service.ts:89:    return this.http.get<any>(`${this.apiBaseUrl}/organizations`);
+./blockchain-test-ui/src/app/core/services/wallet-api.service.ts:104:    return this.http.get<any>(`${this.apiBaseUrl}/transactions`, { params });
+./blockchain-test-ui/src/app/core/services/wallet-api.service.ts:109:      `${this.apiBaseUrl}/transactions/wallet-transfer`,
+./blockchain-test-ui/src/app/core/services/wallet-api.service.ts:116:      `${this.apiBaseUrl}/transactions/organization-transfer`,
+./blockchain-test-ui/src/app/core/services/fabric-api.service.ts:28:      .set('x-api-key', this.apiKey)
+./blockchain-test-ui/src/app/core/services/fabric-api.service.ts:37:      `${this.config.baseUrl}/fabric/evaluate`,
+./blockchain-test-ui/src/app/core/services/fabric-api.service.ts:47:      `${this.config.baseUrl}/fabric/submit`,
+./blockchain-test-ui/src/app/core/services/api-config.service.ts:12:   * http://172.31.13.90:3001/api/v1
+./blockchain-test-ui/src/app/core/services/api-config.service.ts:14:  public readonly baseUrl = environment.apiBaseUrl;
+./blockchain-test-ui/src/app/core/services/api-config.service.ts:20:    return this.baseUrl;
+./blockchain-test-ui/src/app/core/services/api-config.service.ts:27:    return this.baseUrl;
+./blockchain-test-ui/src/app/core/services/api-config.service.ts:34:    return `${this.baseUrl}/wallets`;
+./blockchain-test-ui/src/app/core/services/api-config.service.ts:41:    return `${this.baseUrl}/transactions`;
+./blockchain-test-ui/src/app/core/services/api-config.service.ts:48:    return `${this.baseUrl}/fabric`;
+./blockchain-test-ui/src/app/core/services/api-config.service.ts:55:    return `${this.baseUrl}/reference`;
+./blockchain-test-ui/src/app/core/services/api-config.service.ts:62:    return `${this.baseUrl}/organizations`;
+./blockchain-test-ui/src/app/core/services/transaction-api.service.ts:14:    return this.http.post(`${this.config.baseUrl}/transactions/wallet-transfer`, payload);
+./blockchain-test-ui/src/app/core/services/transaction-api.service.ts:18:    return this.http.post(`${this.config.baseUrl}/transactions/organization-transfer`, payload);
+./blockchain-test-ui/src/app/core/services/transaction-api.service.ts:32:    return this.http.get(`${this.config.baseUrl}/transactions`, { params });
+./blockchain-test-ui/src/app/core/services/dashboard-api.service.ts:63:    return this.http.get<WalletDashboardResponse>(`${this.config.baseUrl}/wallets`, { params });
+./blockchain-test-ui/src/app/core/interceptors/api-auth.interceptor.ts:14:    normalizedUrl.includes('/api/v1/transactions/organization-transfer');
+./blockchain-test-ui/src/app/core/interceptors/api-auth.interceptor.ts:31:    headers['x-api-key'] = environment.fabricApiKey;
+./blockchain-test-ui/.vscode/launch.json:10:      "url": "http://localhost:4200/"
+./blockchain-test-ui/backups/step-32-2-org-wallet-20260507_154644/wallet.service.ts:11:  private readonly baseUrl = environment.apiBaseUrl;
+./blockchain-test-ui/backups/step-32-2-org-wallet-20260507_154644/wallet.service.ts:24:    return this.http.get(`${this.baseUrl}/wallets`, { params: httpParams });
+./blockchain-test-ui/backups/step-32-2-org-wallet-20260507_154644/wallet.service.ts:28:    return this.http.get(`${this.baseUrl}/wallets/next-customer-id`);
+./blockchain-test-ui/backups/step-32-2-org-wallet-20260507_154644/wallet.service.ts:46:    return this.http.post(`${this.baseUrl}/wallets`, normalizedPayload);
+./blockchain-test-ui/backups/step-32-2-org-wallet-20260507_154644/wallet.service.ts:50:    return this.http.post(`${this.baseUrl}/wallets/login`, payload);
+./blockchain-test-ui/backups/step-32-2-org-wallet-20260507_154644/wallet.service.ts:54:    return this.http.get(`${this.baseUrl}/wallets/customer/${encodeURIComponent(customerId)}`);
+./blockchain-test-ui/backups/step-32-2-org-wallet-20260507_154644/wallet.service.ts:58:    return this.http.get(`${this.baseUrl}/wallets/${encodeURIComponent(walletAddress)}`);
+./blockchain-test-ui/backups/step-32-2-org-wallet-20260507_154644/wallet.service.ts:62:    return this.http.get(`${this.baseUrl}/reference/organizations`).pipe(
+./blockchain-test-ui/backups/step-32-2-org-wallet-20260507_154644/wallet.service.ts:63:      catchError(() => this.http.get(`${this.baseUrl}/organizations`)),
+./blockchain-test-ui/backups/step-32-2-org-wallet-20260507_154644/wallet.service.ts:102:    return this.http.get(`${this.baseUrl}/reference/countries`).pipe(
+./blockchain-test-ui/backups/step-32-2-org-wallet-20260507_154644/sidebar.component.html:100:        routerLink="/digital-kyc/organization-transfer"
+./blockchain-test-ui/backups/step-32-2-org-wallet-20260507_154644/organization-transfer.component.ts:10:  selector: 'app-organization-transfer',
+./blockchain-test-ui/backups/step-32-2-org-wallet-20260507_154644/organization-transfer.component.ts:13:  templateUrl: './organization-transfer.component.html',
+./blockchain-test-ui/backups/step-32-2-org-wallet-20260507_154644/organization-transfer.component.ts:14:  styleUrl: './organization-transfer.component.css'
+./blockchain-test-ui/backups/step-32-2-org-wallet-20260507_154644/app.routes.ts:10:import { OrganizationTransferComponent } from './features/transactions/organization-transfer/organization-transfer.component';
+./blockchain-test-ui/backups/step-32-2-org-wallet-20260507_154644/app.routes.ts:58:    path: 'digital-kyc/organization-transfer',
+./blockchain-test-ui/backups/step-32-2-org-wallet-20260507_154644/app.routes.ts:106:    path: 'organization-transfer',
+./blockchain-test-ui/backups/step-32-2-org-wallet-20260507_154644/app.routes.ts:107:    redirectTo: 'digital-kyc/organization-transfer',
+./blockchain-test-ui/backups/step-32-1-20260507_103142/wallet.service.ts:10:  private readonly apiBaseUrl = environment.apiBaseUrl;
+./blockchain-test-ui/backups/step-32-1-20260507_103142/wallet.service.ts:11:  private readonly baseUrl = `${environment.apiBaseUrl}/wallets`;
+./blockchain-test-ui/backups/step-32-1-20260507_103142/wallet.service.ts:23:    return this.http.post(`${this.baseUrl}`, payload);
+./blockchain-test-ui/backups/step-32-1-20260507_103142/wallet.service.ts:30:    return this.http.post(`${this.baseUrl}/login`, payload);
+./blockchain-test-ui/backups/step-32-1-20260507_103142/wallet.service.ts:37:    return this.http.get(`${this.baseUrl}/customer/${encodeURIComponent(customerId)}`);
+./blockchain-test-ui/backups/step-32-1-20260507_103142/wallet.service.ts:44:    return this.http.get(`${this.baseUrl}/address/${encodeURIComponent(walletAddress)}`);
+./blockchain-test-ui/backups/step-32-1-20260507_103142/wallet.service.ts:61:    return this.http.get(`${this.baseUrl}`, { params });
+./blockchain-test-ui/backups/step-32-1-20260507_103142/wallet.service.ts:75:    return this.http.get(`${this.apiBaseUrl}/reference/next-customer-id`);
+./blockchain-test-ui/backups/step-32-1-20260507_103142/wallet.service.ts:79:    return this.http.get(`${this.apiBaseUrl}/organizations`);
+./blockchain-test-ui/backups/step-32-1-20260507_103142/wallet.service.ts:83:    return this.http.get(`${this.apiBaseUrl}/reference/countries`);
+./blockchain-test-ui/backups/step-32-1-20260507_103142/wallet.service.ts:87:    return this.http.get(`${this.apiBaseUrl}/reference/nationalities`);
+./blockchain-test-ui/backups/step-32-1-20260507_103142/sidebar.component.html:40:    <a routerLink="/digital-kyc/organization-transfer" routerLinkActive="active" class="sidebar-link">
+./blockchain-test-ui/backups/step-32-1-20260507_103142/environment.ts:3:  apiBaseUrl: 'api/v1'
+./blockchain-test-ui/backups/step-32-1-20260507_103142/fabric-api.service.ts:16:    return this.http.post(`${this.config.baseUrl}/fabric/evaluate`, payload);
+./blockchain-test-ui/backups/step-32-1-20260507_103142/fabric-api.service.ts:20:    return this.http.post(`${this.config.baseUrl}/fabric/submit`, payload);
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/features/transactions/organization-transfer/organization-transfer.component.html:38:      [queryParams]="{ redirectTo: '/digital-kyc/organization-transfer' }"
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/features/transactions/organization-transfer/organization-transfer.component.ts:8:  selector: 'app-organization-transfer',
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/features/transactions/organization-transfer/organization-transfer.component.ts:11:  templateUrl: './organization-transfer.component.html',
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/features/transactions/organization-transfer/organization-transfer.component.ts:12:  styleUrl: './organization-transfer.component.css'
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/features/dashboard/dashboard.component.ts:89:            <span>{{ apiBaseUrl }}/wallets</span>
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/features/dashboard/dashboard.component.ts:508:  apiBaseUrl = environment.apiBaseUrl;
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/features/dashboard/dashboard.component.ts:583:          `Http failure while loading ${this.apiBaseUrl}/wallets`;
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/app.ts:20:    { label: 'Organization Transfer', route: '/organization-transfer', icon: '●' },
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/services/wallet.service.ts:28:  private readonly baseUrl = environment.apiBaseUrl;
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/services/wallet.service.ts:41:    return this.http.get(`${this.baseUrl}/wallets`, { params: httpParams });
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/services/wallet.service.ts:45:    return this.http.get(`${this.baseUrl}/wallets/next-customer-id`);
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/services/wallet.service.ts:75:    return this.http.post(`${this.baseUrl}/wallets`, normalizedPayload);
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/services/wallet.service.ts:79:    return this.http.post(`${this.baseUrl}/wallets/bulk-create`, { wallets });
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/services/wallet.service.ts:95:    return this.http.post(`${this.baseUrl}/wallets/organization-wallets`, normalizedPayload);
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/services/wallet.service.ts:99:    return this.http.post(`${this.baseUrl}/wallets/login`, payload);
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/services/wallet.service.ts:103:    return this.http.get(`${this.baseUrl}/wallets/customer/${encodeURIComponent(customerId)}`);
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/services/wallet.service.ts:107:    return this.http.get(`${this.baseUrl}/wallets/${encodeURIComponent(walletAddress)}`);
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/services/wallet.service.ts:111:    return this.http.get(`${this.baseUrl}/reference/organization-types`).pipe(
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/services/wallet.service.ts:147:    return this.http.get(`${this.baseUrl}/reference/organizations`, { params }).pipe(
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/services/wallet.service.ts:148:      catchError(() => this.http.get(`${this.baseUrl}/organizations`, { params })),
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/services/wallet.service.ts:199:    return this.http.get(`${this.baseUrl}/reference/countries`).pipe(
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/services/transaction.service.ts:11:  private readonly baseUrl = environment.apiBaseUrl;
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/services/transaction.service.ts:18:   * Therefore all protected transaction calls must include x-api-key.
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/services/transaction.service.ts:34:      .set('x-api-key', this.apiKey)
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/services/transaction.service.ts:53:      `${this.baseUrl}/transactions/wallet-transfer`,
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/services/transaction.service.ts:61:      `${this.baseUrl}/transactions/organization-transfer`,
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/services/transaction.service.ts:79:      `${this.baseUrl}/transactions`,
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/services/transaction.service.ts:89:      `${this.baseUrl}/transactions/${encodeURIComponent(transactionId)}`,
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/services/fabric.service.ts:11:  private readonly baseUrl = environment.apiBaseUrl;
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/services/fabric.service.ts:27:      .set('x-api-key', this.apiKey)
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/services/fabric.service.ts:36:      `${this.baseUrl}/fabric/evaluate`,
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/services/fabric.service.ts:49:      `${this.baseUrl}/fabric/submit`,
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/services/fabric.service.ts:70:        `${this.baseUrl}/fabric/submit`,
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/services/fabric.service.ts:79:      `${this.baseUrl}/fabric/evaluate`,
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/layout/sidebar/sidebar.component.html:115:        routerLink="/digital-kyc/organization-transfer"
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/app.html:65:      <a routerLink="/digital-kyc/organization-transfer" routerLinkActive="active">
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/app.routes.ts:11:import { OrganizationTransferComponent } from './features/transactions/organization-transfer/organization-transfer.component';
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/app.routes.ts:52:    path: 'digital-kyc/organization-transfer',
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/app.routes.ts:100:    path: 'organization-transfer',
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/app.routes.ts:101:    redirectTo: 'digital-kyc/organization-transfer',
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/core/services/wallet-api.service.ts:20:  private readonly apiBaseUrl = environment.apiBaseUrl;
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/core/services/wallet-api.service.ts:21:  private readonly walletsUrl = `${environment.apiBaseUrl}/wallets`;
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/core/services/wallet-api.service.ts:77:    return this.http.get<any>(`${this.apiBaseUrl}/reference/next-customer-id`);
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/core/services/wallet-api.service.ts:81:    return this.http.get<any>(`${this.apiBaseUrl}/reference/countries`);
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/core/services/wallet-api.service.ts:85:    return this.http.get<any>(`${this.apiBaseUrl}/reference/nationalities`);
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/core/services/wallet-api.service.ts:89:    return this.http.get<any>(`${this.apiBaseUrl}/organizations`);
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/core/services/wallet-api.service.ts:104:    return this.http.get<any>(`${this.apiBaseUrl}/transactions`, { params });
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/core/services/wallet-api.service.ts:109:      `${this.apiBaseUrl}/transactions/wallet-transfer`,
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/core/services/wallet-api.service.ts:116:      `${this.apiBaseUrl}/transactions/organization-transfer`,
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/core/services/fabric-api.service.ts:28:      .set('x-api-key', this.apiKey)
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/core/services/fabric-api.service.ts:37:      `${this.config.baseUrl}/fabric/evaluate`,
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/core/services/fabric-api.service.ts:47:      `${this.config.baseUrl}/fabric/submit`,
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/core/services/api-config.service.ts:12:   * http://172.31.13.90:3001/api/v1
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/core/services/api-config.service.ts:14:  public readonly baseUrl = environment.apiBaseUrl;
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/core/services/api-config.service.ts:20:    return this.baseUrl;
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/core/services/api-config.service.ts:27:    return this.baseUrl;
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/core/services/api-config.service.ts:34:    return `${this.baseUrl}/wallets`;
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/core/services/api-config.service.ts:41:    return `${this.baseUrl}/transactions`;
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/core/services/api-config.service.ts:48:    return `${this.baseUrl}/fabric`;
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/core/services/api-config.service.ts:55:    return `${this.baseUrl}/reference`;
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/core/services/api-config.service.ts:62:    return `${this.baseUrl}/organizations`;
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/core/services/transaction-api.service.ts:14:    return this.http.post(`${this.config.baseUrl}/transactions/wallet-transfer`, payload);
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/core/services/transaction-api.service.ts:18:    return this.http.post(`${this.config.baseUrl}/transactions/organization-transfer`, payload);
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/core/services/transaction-api.service.ts:32:    return this.http.get(`${this.config.baseUrl}/transactions`, { params });
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/core/services/dashboard-api.service.ts:63:    return this.http.get<WalletDashboardResponse>(`${this.config.baseUrl}/wallets`, { params });
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/core/interceptors/api-auth.interceptor.ts:14:    normalizedUrl.includes('/api/v1/transactions/organization-transfer');
+./blockchain-test-ui/backups/before-wallet-information-fix-20260508_153504/app/core/interceptors/api-auth.interceptor.ts:31:    headers['x-api-key'] = environment.fabricApiKey;
+./blockchain-test-ui/backups/step-32-1-20260507_103136/wallet.service.ts:10:  private readonly apiBaseUrl = environment.apiBaseUrl;
+./blockchain-test-ui/backups/step-32-1-20260507_103136/wallet.service.ts:11:  private readonly baseUrl = `${environment.apiBaseUrl}/wallets`;
+./blockchain-test-ui/backups/step-32-1-20260507_103136/wallet.service.ts:23:    return this.http.post(`${this.baseUrl}`, payload);
+./blockchain-test-ui/backups/step-32-1-20260507_103136/wallet.service.ts:30:    return this.http.post(`${this.baseUrl}/login`, payload);
+./blockchain-test-ui/backups/step-32-1-20260507_103136/wallet.service.ts:37:    return this.http.get(`${this.baseUrl}/customer/${encodeURIComponent(customerId)}`);
+./blockchain-test-ui/backups/step-32-1-20260507_103136/wallet.service.ts:44:    return this.http.get(`${this.baseUrl}/address/${encodeURIComponent(walletAddress)}`);
+./blockchain-test-ui/backups/step-32-1-20260507_103136/wallet.service.ts:61:    return this.http.get(`${this.baseUrl}`, { params });
+./blockchain-test-ui/backups/step-32-1-20260507_103136/wallet.service.ts:75:    return this.http.get(`${this.apiBaseUrl}/reference/next-customer-id`);
+./blockchain-test-ui/backups/step-32-1-20260507_103136/wallet.service.ts:79:    return this.http.get(`${this.apiBaseUrl}/organizations`);
+./blockchain-test-ui/backups/step-32-1-20260507_103136/wallet.service.ts:83:    return this.http.get(`${this.apiBaseUrl}/reference/countries`);
+./blockchain-test-ui/backups/step-32-1-20260507_103136/wallet.service.ts:87:    return this.http.get(`${this.apiBaseUrl}/reference/nationalities`);
+./blockchain-test-ui/backups/step-32-1-20260507_103136/sidebar.component.html:40:    <a routerLink="/digital-kyc/organization-transfer" routerLinkActive="active" class="sidebar-link">
+./blockchain-test-ui/backups/step-32-1-20260507_103136/environment.ts:3:  apiBaseUrl: 'api/v1'
+./blockchain-test-ui/backups/step-32-1-20260507_103136/fabric-api.service.ts:16:    return this.http.post(`${this.config.baseUrl}/fabric/evaluate`, payload);
+./blockchain-test-ui/backups/step-32-1-20260507_103136/fabric-api.service.ts:20:    return this.http.post(`${this.config.baseUrl}/fabric/submit`, payload);
+./fabric/fabric-samples/full-stack-asset-transfer-guide/applications/frontend/tsconfig.json:5:    "baseUrl": "./",
+
+==================================================
+FILE: blockchain-test-ui/src/environments/environment.ts
+==================================================
+export const environment = {
+  production: false,
+  apiBaseUrl: '/api/v1',
+
+  /**
+   * Backend protected service key.
+   * Used by Fabric Test and protected transaction routes.
+   */
+  fabricApiKey: '774101c2e4e6e8d46a8bb6c02571f0239ac7c8bd548c22db1162671e502278f7'
+};
+
+==================================================
+FILE: blockchain-test-ui/src/environments/environment.development.ts
+==================================================
+NOT FOUND: blockchain-test-ui/src/environments/environment.development.ts
+
+==================================================
+FILE: blockchain-test-ui/src/app/services/transaction.service.ts
+==================================================
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { Observable } from 'rxjs';
+
+import { environment } from '../../environments/environment';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class TransactionService {
+  private readonly baseUrl = environment.apiBaseUrl;
+
+  /**
+   * IMPORTANT:
+   * Backend API security is enabled:
+   * ENABLE_API_KEY_PROTECTION=true
+   *
+   * Therefore all protected transaction calls must include x-api-key.
+   */
+  private readonly apiKey =
+    '774101c2e4e6e8d46a8bb6c02571f0239ac7c8bd548c22db1162671e502278f7';
+
+  constructor(private http: HttpClient) {}
+
+  private getHeaders(): HttpHeaders {
+    const requestId = `REQ_UI_${Date.now()}_${Math.random()
+      .toString(16)
+      .slice(2)
+      .toUpperCase()}`;
+
+    let headers = new HttpHeaders()
+      .set('Content-Type', 'application/json')
+      .set('Accept', 'application/json')
+      .set('x-api-key', this.apiKey)
+      .set('x-request-id', requestId)
+      .set('x-correlation-id', requestId)
+      .set('x-source-system', 'BLOCKCHAIN_TEST_UI')
+      .set('x-request-source', 'ANGULAR_UI');
+
+    const token =
+      localStorage.getItem('digital_kyc_wallet_token') ||
+      sessionStorage.getItem('digital_kyc_wallet_token');
+
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+
+    return headers;
+  }
+
+  walletTransfer(payload: any): Observable<any> {
+    return this.http.post(
+      `${this.baseUrl}/transactions/wallet-transfer`,
+      payload,
+      { headers: this.getHeaders() }
+    );
+  }
+
+  organizationTransfer(payload: any): Observable<any> {
+    return this.http.post(
+      `${this.baseUrl}/transactions/organization-transfer`,
+      payload,
+      { headers: this.getHeaders() }
+    );
+  }
+
+  getTransactions(filters: any = {}): Observable<any> {
+    let params = new HttpParams();
+
+    Object.keys(filters || {}).forEach((key) => {
+      const value = filters[key];
+
+      if (value !== undefined && value !== null && value !== '') {
+        params = params.set(key, value);
+      }
+    });
+
+    return this.http.get(
+      `${this.baseUrl}/transactions`,
+      {
+        headers: this.getHeaders(),
+        params
+      }
+    );
+  }
+
+  getTransactionById(transactionId: string): Observable<any> {
+    return this.http.get(
+      `${this.baseUrl}/transactions/${encodeURIComponent(transactionId)}`,
+      { headers: this.getHeaders() }
+    );
+  }
+}
+
+==================================================
+FILE: blockchain-test-ui/src/app/core/services/transaction-api.service.ts
+==================================================
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { ApiConfigService } from './api-config.service';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class TransactionApiService {
+  private http = inject(HttpClient);
+  private config = inject(ApiConfigService);
+
+  walletTransfer(payload: any): Observable<any> {
+    return this.http.post(`${this.config.baseUrl}/transactions/wallet-transfer`, payload);
+  }
+
+  organizationTransfer(payload: any): Observable<any> {
+    return this.http.post(`${this.config.baseUrl}/transactions/organization-transfer`, payload);
+  }
+
+  searchTransactions(filters: any): Observable<any> {
+    let params = new HttpParams();
+
+    Object.keys(filters).forEach((key) => {
+      const value = filters[key];
+
+      if (value !== null && value !== undefined && value !== '') {
+        params = params.set(key, value);
+      }
+    });
+
+    return this.http.get(`${this.config.baseUrl}/transactions`, { params });
+  }
+}
+
+==================================================
+FILE: blockchain-test-ui/src/app/core/services/api-config.service.ts
+==================================================
+import { Injectable } from '@angular/core';
+import { environment } from '../../../environments/environment';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class ApiConfigService {
+  /**
+   * Main Blockchain API base URL.
+   *
+   * Example:
+   * http://172.31.13.90:3001/api/v1
+   */
+  public readonly baseUrl = environment.apiBaseUrl;
+
+  /**
+   * Compatibility getter for older services.
+   */
+  getBaseUrl(): string {
+    return this.baseUrl;
+  }
+
+  /**
+   * Compatibility getter for services using getApiBaseUrl().
+   */
+  getApiBaseUrl(): string {
+    return this.baseUrl;
+  }
+
+  /**
+   * Wallet APIs
+   */
+  get walletsUrl(): string {
+    return `${this.baseUrl}/wallets`;
+  }
+
+  /**
+   * Transaction APIs
+   */
+  get transactionsUrl(): string {
+    return `${this.baseUrl}/transactions`;
+  }
+
+  /**
+   * Fabric APIs
+   */
+  get fabricUrl(): string {
+    return `${this.baseUrl}/fabric`;
+  }
+
+  /**
+   * Reference APIs
+   */
+  get referenceUrl(): string {
+    return `${this.baseUrl}/reference`;
+  }
+
+  /**
+   * Organization APIs
+   */
+  get organizationsUrl(): string {
+    return `${this.baseUrl}/organizations`;
+  }
+}
+==================================================
+FILE: blockchain-test-ui/src/app/core/interceptors/api-auth.interceptor.ts
+==================================================
+import { HttpInterceptorFn } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
+
+export const apiAuthInterceptor: HttpInterceptorFn = (req, next) => {
+  const requestId = `REQ_UI_${Date.now()}`;
+
+  const normalizedUrl = req.url.startsWith('/')
+    ? req.url
+    : `/${req.url}`;
+
+  const isReferenceApi = normalizedUrl.includes('/api/v1/reference/');
+  const isFabricApi = normalizedUrl.includes('/api/v1/fabric/');
+  const isProtectedTransactionApi =
+    normalizedUrl.includes('/api/v1/transactions/organization-transfer');
+
+  /**
+   * Keep reference APIs simple.
+   */
+  if (isReferenceApi) {
+    return next(req);
+  }
+
+  const headers: Record<string, string> = {
+    'x-request-id': requestId
+  };
+
+  /**
+   * Required for Fabric Test and protected service routes.
+   */
+  if (isFabricApi || isProtectedTransactionApi) {
+    headers['x-api-key'] = environment.fabricApiKey;
+  }
+
+  /**
+   * Optional wallet token after login.
+   */
+  const walletToken =
+    localStorage.getItem('digital_kyc_wallet_token') ||
+    '';
+
+  if (walletToken && !req.headers.has('Authorization')) {
+    headers['Authorization'] = `Bearer ${walletToken}`;
+  }
+
+  return next(
+    req.clone({
+      setHeaders: headers
+    })
+  );
+};
+
+==================================================
+FILE: blockchain-test-ui/src/app/features/transactions/organization-transfer/organization-transfer.component.ts
+==================================================
+import { CommonModule } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { Router, RouterModule } from '@angular/router';
+
+import { TransactionService } from '../../../services/transaction.service';
+import { WalletSessionService } from '../../../services/wallet-session.service';
+
+@Component({
+  selector: 'app-organization-transfer',
+  standalone: true,
+  imports: [CommonModule, FormsModule, RouterModule],
+  templateUrl: './organization-transfer.component.html',
+  styleUrl: './organization-transfer.component.css'
+})
+export class OrganizationTransferComponent implements OnInit {
+  session: any = null;
+
+  loading = false;
+  successMessage = '';
+  errorMessage = '';
+  transactionId = '';
+  apiResponse: any = null;
+
+  form = {
+    senderWalletAddress: '',
+    receiverWalletAddress: '',
+    amount: '',
+    currency: 'USD',
+    transactionPurpose: 'Inter-organization customer transfer',
+    transactionDescription: 'Customer wallet transfer to another customer wallet in a different organization',
+    requestSource: 'ANGULAR_UI',
+    sourceSystem: 'BLOCKCHAIN_TEST_UI',
+    createdBy: 'nix'
+  };
+
+  constructor(
+    private transactionService: TransactionService,
+    private walletSessionService: WalletSessionService,
+    private router: Router
+  ) {}
+
+  ngOnInit(): void {
+    this.loadSession();
+  }
+
+  loadSession(): void {
+    this.session =
+      this.walletSessionService.getSession() ||
+      this.getLoggedInWallet();
+
+    if (!this.session) {
+      return;
+    }
+
+    this.form.senderWalletAddress =
+      this.session.walletAddress ||
+      this.session.wallet_address ||
+      '';
+
+    this.form.currency =
+      this.session.currencyCode ||
+      this.session.currency_code ||
+      this.session.currency ||
+      'USD';
+  }
+
+  fillSample(): void {
+    this.loadSession();
+
+    this.form.receiverWalletAddress = 'fe43dce35bdf18108fa5b0b9788858df518c36ff';
+    this.form.amount = '100';
+
+    this.form.currency =
+      this.session?.currencyCode ||
+      this.session?.currency_code ||
+      this.session?.currency ||
+      'USD';
+
+    this.form.transactionPurpose = 'Inter-organization customer transfer';
+    this.form.transactionDescription =
+      'Customer wallet transfer to another customer wallet in a different organization';
+
+    this.clearMessages();
+  }
+
+  validateForm(): string | null {
+    this.loadSession();
+
+    if (!this.session) {
+      return 'No wallet session found. Please login first.';
+    }
+
+    /*
+     * IMPORTANT BUSINESS RULE:
+     * This screen is Inter-Organization Customer Transfer.
+     * The logged-in sender can be a CUSTOMER wallet.
+     * Do not block the screen by requiring ORGANIZATION wallet type.
+     */
+
+    if (!this.form.senderWalletAddress) {
+      return 'Sender wallet address is required from the logged-in session.';
+    }
+
+    if (!this.form.receiverWalletAddress) {
+      return 'Receiver customer wallet address is required.';
+    }
+
+    if (this.form.senderWalletAddress === this.form.receiverWalletAddress) {
+      return 'Receiver wallet address cannot be the same as sender wallet address.';
+    }
+
+    const transferAmount = Number(this.form.amount);
+
+    if (!Number.isFinite(transferAmount) || transferAmount <= 0) {
+      return 'Amount is required and must be greater than zero.';
+    }
+
+    if (!this.form.currency) {
+      return 'Currency is required.';
+    }
+
+    return null;
+  }
+
+  submitTransfer(): void {
+    this.clearMessages();
+
+    const validationError = this.validateForm();
+
+    if (validationError) {
+      this.errorMessage = validationError;
+
+      console.warn('[INTER_ORG_TRANSFER_FRONTEND_VALIDATION_FAILED]', {
+        validationError,
+        session: this.session,
+        detectedWalletType: this.getWalletType(this.session),
+        senderWalletAddress: this.form.senderWalletAddress,
+        receiverWalletAddress: this.form.receiverWalletAddress
+      });
+
+      return;
+    }
+
+    const payload = {
+      senderWalletAddress: this.form.senderWalletAddress,
+      receiverWalletAddress: this.form.receiverWalletAddress,
+      amount: String(this.form.amount),
+      currency: this.form.currency,
+      transactionPurpose: this.form.transactionPurpose,
+      transactionDescription: this.form.transactionDescription,
+      requestSource: this.form.requestSource,
+      sourceSystem: this.form.sourceSystem,
+      createdBy: this.form.createdBy
+    };
+
+    this.loading = true;
+
+    this.transactionService.organizationTransfer(payload).subscribe({
+      next: (response: any) => {
+        this.loading = false;
+        this.apiResponse = response;
+
+        if (response?.success === false) {
+          this.errorMessage =
+            response?.message ||
+            'Inter-organization customer transfer failed.';
+          return;
+        }
+
+        this.transactionId =
+          response?.data?.transactionId ||
+          response?.transactionId ||
+          response?.data?.id ||
+          '';
+
+        const senderBalanceAfter =
+          response?.data?.senderBalanceAfter ??
+          response?.senderBalanceAfter ??
+          null;
+
+        if (senderBalanceAfter !== null && senderBalanceAfter !== undefined) {
+          this.walletSessionService.updateBalance(Number(senderBalanceAfter));
+          this.updateLocalSessionBalance(Number(senderBalanceAfter));
+          this.loadSession();
+        }
+
+        this.successMessage =
+          response?.message ||
+          'Inter-organization customer transfer completed successfully.';
+      },
+      error: (error: any) => {
+        this.loading = false;
+        this.apiResponse = error?.error || error;
+
+        this.errorMessage =
+          error?.error?.message ||
+          error?.message ||
+          'Inter-organization customer transfer failed.';
+      }
+    });
+  }
+
+  clearForm(): void {
+    this.form.receiverWalletAddress = '';
+    this.form.amount = '';
+    this.form.transactionPurpose = 'Inter-organization customer transfer';
+    this.form.transactionDescription =
+      'Customer wallet transfer to another customer wallet in a different organization';
+
+    this.clearMessages();
+  }
+
+  clearMessages(): void {
+    this.successMessage = '';
+    this.errorMessage = '';
+    this.transactionId = '';
+    this.apiResponse = null;
+  }
+
+  logoutWallet(): void {
+    this.walletSessionService.clearSession();
+
+    this.session = null;
+
+    this.form.senderWalletAddress = '';
+    this.form.receiverWalletAddress = '';
+    this.form.amount = '';
+    this.form.currency = 'USD';
+
+    this.clearMessages();
+
+    this.router.navigateByUrl('/digital-kyc/wallet-login');
+  }
+
+  goToWalletInformation(): void {
+    this.router.navigateByUrl('/digital-kyc/wallet-information');
+  }
+
+  private getLoggedInWallet(): any | null {
+    const possibleKeys = [
+      'blockchain_logged_wallet',
+      'digital_kyc_wallet_session',
+      'digital_kyc_wallet_profile',
+      'digitalKycWalletSession',
+      'digitalKycWalletProfile',
+      'walletSession',
+      'walletProfile',
+      'loggedInWallet',
+      'currentWallet',
+      'loggedWallet',
+      'wallet_session',
+      'wallet_profile'
+    ];
+
+    for (const key of possibleKeys) {
+      const rawValue =
+        localStorage.getItem(key) ||
+        sessionStorage.getItem(key);
+
+      if (!rawValue) {
+        continue;
+      }
+
+      try {
+        const parsed = JSON.parse(rawValue);
+        const wallet = this.extractWalletFromSession(parsed);
+
+        if (wallet?.walletAddress || wallet?.wallet_address) {
+          this.walletSessionService.setSession(wallet);
+          return wallet;
+        }
+      } catch {
+        continue;
+      }
+    }
+
+    return null;
+  }
+
+  private extractWalletFromSession(parsed: any): any {
+    const wallet =
+      parsed?.data?.wallet ||
+      parsed?.data?.profile ||
+      parsed?.data?.walletProfile ||
+      parsed?.wallet ||
+      parsed?.profile ||
+      parsed?.walletProfile ||
+      parsed?.data ||
+      parsed;
+
+    const walletAddress =
+      wallet?.walletAddress ||
+      wallet?.wallet_address ||
+      parsed?.walletAddress ||
+      parsed?.wallet_address ||
+      '';
+
+    const customerId =
+      wallet?.customerId ||
+      wallet?.customer_id ||
+      parsed?.customerId ||
+      parsed?.customer_id ||
+      '';
+
+    const currencyCode =
+      wallet?.currencyCode ||
+      wallet?.currency_code ||
+      wallet?.currency ||
+      parsed?.currencyCode ||
+      parsed?.currency_code ||
+      parsed?.currency ||
+      'USD';
+
+    const currentBalance =
+      wallet?.currentBalance ??
+      wallet?.current_balance ??
+      wallet?.balance ??
+      parsed?.currentBalance ??
+      parsed?.current_balance ??
+      parsed?.balance ??
+      0;
+
+    const walletType = this.getWalletType(wallet || parsed);
+
+    return {
+      ...wallet,
+
+      walletAddress,
+      wallet_address: walletAddress,
+
+      customerId,
+      customer_id: customerId,
+
+      walletType,
+      wallet_type: walletType,
+
+      fullName:
+        wallet?.fullName ||
+        wallet?.full_name ||
+        wallet?.customerName ||
+        wallet?.customer_name ||
+        parsed?.fullName ||
+        parsed?.full_name ||
+        parsed?.customerName ||
+        parsed?.customer_name ||
+        '',
+
+      full_name:
+        wallet?.fullName ||
+        wallet?.full_name ||
+        wallet?.customerName ||
+        wallet?.customer_name ||
+        parsed?.fullName ||
+        parsed?.full_name ||
+        parsed?.customerName ||
+        parsed?.customer_name ||
+        '',
+
+      organizationId:
+        wallet?.organizationId ||
+        wallet?.organization_id ||
+        parsed?.organizationId ||
+        parsed?.organization_id ||
+        '',
+
+      organization_id:
+        wallet?.organizationId ||
+        wallet?.organization_id ||
+        parsed?.organizationId ||
+        parsed?.organization_id ||
+        '',
+
+      organizationName:
+        wallet?.organizationName ||
+        wallet?.organization_name ||
+        parsed?.organizationName ||
+        parsed?.organization_name ||
+        '',
+
+      organization_name:
+        wallet?.organizationName ||
+        wallet?.organization_name ||
+        parsed?.organizationName ||
+        parsed?.organization_name ||
+        '',
+
+      currencyCode,
+      currency_code: currencyCode,
+      currency: currencyCode,
+
+      currentBalance,
+      current_balance: currentBalance,
+
+      token:
+        wallet?.token ||
+        parsed?.token ||
+        parsed?.data?.token ||
+        localStorage.getItem('digital_kyc_wallet_token') ||
+        sessionStorage.getItem('digital_kyc_wallet_token') ||
+        ''
+    };
+  }
+
+  private isOrganizationWallet(wallet: any): boolean {
+    return this.getWalletType(wallet) === 'ORGANIZATION';
+  }
+
+  private isCustomerWallet(wallet: any): boolean {
+    return this.getWalletType(wallet) === 'CUSTOMER';
+  }
+
+  private getWalletType(wallet: any): string {
+    const walletType = String(
+      wallet?.walletType ||
+      wallet?.wallet_type ||
+      wallet?.customerType ||
+      wallet?.customer_type ||
+      wallet?.type ||
+      this.inferWalletType(wallet)
+    )
+      .trim()
+      .toUpperCase();
+
+    if (
+      walletType === 'ORG' ||
+      walletType === 'ORGANIZATION' ||
+      walletType === 'ORGANIZATION_WALLET'
+    ) {
+      return 'ORGANIZATION';
+    }
+
+    if (
+      walletType === 'CUSTOMER' ||
+      walletType === 'CUSTOMER_WALLET'
+    ) {
+      return 'CUSTOMER';
+    }
+
+    return 'CUSTOMER';
+  }
+
+  private inferWalletType(wallet: any): string {
+    const rawWalletType = String(
+      wallet?.walletType ||
+      wallet?.wallet_type ||
+      wallet?.customerType ||
+      wallet?.customer_type ||
+      wallet?.type ||
+      ''
+    )
+      .trim()
+      .toUpperCase();
+
+    if (
+      rawWalletType === 'ORG' ||
+      rawWalletType === 'ORGANIZATION' ||
+      rawWalletType === 'ORGANIZATION_WALLET'
+    ) {
+      return 'ORGANIZATION';
+    }
+
+    const customerId = String(
+      wallet?.customerId ||
+      wallet?.customer_id ||
+      ''
+    )
+      .trim()
+      .toUpperCase();
+
+    const organizationId = String(
+      wallet?.organizationId ||
+      wallet?.organization_id ||
+      ''
+    )
+      .trim();
+
+    /*
+     * New wallet addresses are 40-character hexadecimal values.
+     * Do not infer wallet type from wallet address anymore.
+     * Only use explicit wallet type fields or safe organization/customer metadata.
+     */
+    if (customerId.startsWith('ORG_') || organizationId.startsWith('ORG_')) {
+      return 'ORGANIZATION';
+    }
+
+    return 'CUSTOMER';
+  }
+
+  private updateLocalSessionBalance(newBalance: number): void {
+    const possibleKeys = [
+      'blockchain_logged_wallet',
+      'digital_kyc_wallet_session',
+      'digital_kyc_wallet_profile',
+      'digitalKycWalletSession',
+      'digitalKycWalletProfile',
+      'walletSession',
+      'walletProfile',
+      'loggedInWallet',
+      'currentWallet',
+      'loggedWallet',
+      'wallet_session',
+      'wallet_profile'
+    ];
+
+    for (const key of possibleKeys) {
+      const localRawValue = localStorage.getItem(key);
+      const sessionRawValue = sessionStorage.getItem(key);
+
+      if (localRawValue) {
+        this.updateStorageBalance(localStorage, key, localRawValue, newBalance);
+      }
+
+      if (sessionRawValue) {
+        this.updateStorageBalance(sessionStorage, key, sessionRawValue, newBalance);
+      }
+    }
+  }
+
+  private updateStorageBalance(
+    storage: Storage,
+    key: string,
+    rawValue: string,
+    newBalance: number
+  ): void {
+    try {
+      const parsed = JSON.parse(rawValue);
+
+      if (parsed?.data?.wallet) {
+        parsed.data.wallet.currentBalance = newBalance;
+        parsed.data.wallet.current_balance = newBalance;
+      } else if (parsed?.wallet) {
+        parsed.wallet.currentBalance = newBalance;
+        parsed.wallet.current_balance = newBalance;
+      } else if (parsed?.data) {
+        parsed.data.currentBalance = newBalance;
+        parsed.data.current_balance = newBalance;
+      } else {
+        parsed.currentBalance = newBalance;
+        parsed.current_balance = newBalance;
+      }
+
+      storage.setItem(key, JSON.stringify(parsed));
+    } catch {
+      // Ignore invalid legacy session payloads.
+    }
+  }
+}
+==================================================
+FILE: blockchain-test-ui/src/app/features/transactions/organization-transfer/organization-transfer.component.html
+==================================================
+<div class="page">
+  <div class="breadcrumb">
+    <span>Digital KYC</span>
+    <span>/</span>
+    <strong>Inter-Organization Customer Transfer</strong>
+  </div>
+
+  <div class="header-actions">
+    <button
+      class="secondary-btn"
+      type="button"
+      (click)="fillSample()"
+      [disabled]="!session || loading"
+    >
+      Fill Sample
+    </button>
+
+    <button
+      class="logout-btn"
+      type="button"
+      *ngIf="session"
+      (click)="logoutWallet()"
+      [disabled]="loading"
+    >
+      Logout Wallet
+    </button>
+  </div>
+
+  <div *ngIf="!session" class="warning-card">
+    <h3>No wallet session found. Please login first.</h3>
+
+    <p>
+      Before submitting an inter-organization customer transfer, the customer must login
+      from the Wallet Login screen. After successful login, you will return automatically
+      to this Organization Transfer page.
+    </p>
+
+    <a
+      routerLink="/digital-kyc/wallet-login"
+      [queryParams]="{ redirectTo: '/digital-kyc/organization-transfer' }"
+      class="primary-link"
+    >
+      Go to Wallet Login
+    </a>
+  </div>
+
+  <div *ngIf="session" class="summary-card">
+    <div>
+      <label>Sender Customer ID</label>
+      <strong>{{ session.customerId || '-' }}</strong>
+    </div>
+
+    <div>
+      <label>Sender Full Name</label>
+      <strong>{{ session.fullName || '-' }}</strong>
+    </div>
+
+    <div>
+      <label>Sender Wallet Address</label>
+      <strong class="mono">{{ session.walletAddress || '-' }}</strong>
+    </div>
+
+    <div>
+      <label>Sender Balance</label>
+      <strong>{{ session.currentBalance ?? 0 }} {{ session.currencyCode || 'USD' }}</strong>
+    </div>
+
+    <div>
+      <label>Sender Organization</label>
+      <strong>{{ session.organizationName || session.organizationId || '-' }}</strong>
+    </div>
+  </div>
+
+  <div class="content-grid">
+    <div class="card">
+      <h2>Inter-Organization Transfer Form</h2>
+
+      <form (ngSubmit)="submitTransfer()">
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>Sender Wallet Address</label>
+            <input
+              type="text"
+              name="senderWalletAddress"
+              [(ngModel)]="form.senderWalletAddress"
+              readonly
+              class="readonly-input"
+              placeholder="Loaded automatically from wallet session"
+            />
+          </div>
+
+          <!--
+            IMPORTANT:
+            This field is the receiver customer wallet address.
+            Backend should validate that sender organization and receiver organization are different.
+          -->
+          <div class="form-group full">
+            <label>Receiver Customer Wallet Address</label>
+            <input
+              type="text"
+              name="receiverWalletAddress"
+              [(ngModel)]="form.receiverWalletAddress"
+              placeholder="Enter receiver customer wallet address from another organization"
+              [disabled]="!session || loading"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Amount</label>
+            <input
+              type="number"
+              name="amount"
+              [(ngModel)]="form.amount"
+              placeholder="100"
+              min="0.01"
+              step="0.01"
+              [disabled]="!session || loading"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Currency</label>
+            <input
+              type="text"
+              name="currency"
+              [(ngModel)]="form.currency"
+              placeholder="USD"
+              [disabled]="!session || loading"
+              required
+            />
+          </div>
+
+          <div class="form-group full">
+            <label>Transaction Purpose</label>
+            <input
+              type="text"
+              name="transactionPurpose"
+              [(ngModel)]="form.transactionPurpose"
+              placeholder="Inter-organization customer transfer"
+              [disabled]="!session || loading"
+            />
+          </div>
+
+          <div class="form-group full">
+            <label>Transaction Description</label>
+            <textarea
+              name="transactionDescription"
+              rows="4"
+              [(ngModel)]="form.transactionDescription"
+              placeholder="Customer from organization A transfers to customer from organization B"
+              [disabled]="!session || loading"
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="message success" *ngIf="successMessage">
+          {{ successMessage }}
+
+          <div *ngIf="transactionId">
+            Transaction ID:
+            <strong class="mono">{{ transactionId }}</strong>
+          </div>
+        </div>
+
+        <div class="message error" *ngIf="errorMessage">
+          {{ errorMessage }}
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="primary-btn" [disabled]="!session || loading">
+            {{ loading ? 'Submitting Transfer...' : 'Submit Inter-Organization Transfer' }}
+          </button>
+
+          <button type="button" class="secondary-btn" (click)="clearMessages()" [disabled]="loading">
+            Clear
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>API Response Preview</h2>
+
+      <pre *ngIf="apiResponse">{{ apiResponse | json }}</pre>
+
+      <div class="empty-json" *ngIf="!apiResponse">
+        API response will appear here after submission.
+      </div>
+    </div>
+  </div>
+</div>
+==================================================
+FILE: blockchain-test-ui/angular.json
+==================================================
+{
+  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+  "version": 1,
+  "cli": {
+    "packageManager": "npm",
+    "analytics": "fa7ac0e8-f17d-4733-aa6a-0027b56999b0"
+  },
+  "newProjectRoot": "projects",
+  "projects": {
+    "blockchain-test-ui": {
+      "projectType": "application",
+      "schematics": {
+        "@schematics/angular:component": {
+          "style": "scss",
+          "skipTests": true
+        },
+        "@schematics/angular:class": {
+          "skipTests": true
+        },
+        "@schematics/angular:directive": {
+          "skipTests": true
+        },
+        "@schematics/angular:guard": {
+          "skipTests": true
+        },
+        "@schematics/angular:interceptor": {
+          "skipTests": true
+        },
+        "@schematics/angular:pipe": {
+          "skipTests": true
+        },
+        "@schematics/angular:resolver": {
+          "skipTests": true
+        },
+        "@schematics/angular:service": {
+          "skipTests": true
+        }
+      },
+      "root": "",
+      "sourceRoot": "src",
+      "prefix": "app",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "browser": "src/main.ts",
+            "tsConfig": "tsconfig.app.json",
+            "inlineStyleLanguage": "scss",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "public"
+              }
+            ],
+            "styles": [
+              "src/styles.scss"
+            ]
+          },
+          "configurations": {
+            "production": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "500kB",
+                  "maximumError": "1MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "4kB",
+                  "maximumError": "8kB"
+                }
+              ],
+              "outputHashing": "all"
+            },
+            "development": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "builder": "@angular/build:dev-server",
+          "configurations": {
+            "production": {
+              "buildTarget": "blockchain-test-ui:build:production"
+            },
+            "development": {
+              "buildTarget": "blockchain-test-ui:build:development"
+            }
+          },
+          "defaultConfiguration": "development"
+        }
+      }
+    }
+  }
+}
+
+==================================================
+FILE: blockchain-test-ui/package.json
+==================================================
+{
+  "name": "blockchain-test-ui",
+  "version": "0.0.0",
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve",
+    "build": "ng build",
+    "watch": "ng build --watch --configuration development",
+    "test": "ng test"
+  },
+  "private": true,
+  "packageManager": "npm@10.8.2",
+  "dependencies": {
+    "@angular/common": "^21.2.0",
+    "@angular/compiler": "^21.2.0",
+    "@angular/core": "^21.2.0",
+    "@angular/forms": "^21.2.0",
+    "@angular/platform-browser": "^21.2.0",
+    "@angular/router": "^21.2.0",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0",
+    "zone.js": "^0.16.1"
+  },
+  "devDependencies": {
+    "@angular/build": "^21.2.9",
+    "@angular/cli": "^21.2.9",
+    "@angular/compiler-cli": "^21.2.0",
+    "prettier": "^3.8.1",
+    "typescript": "~5.9.2"
+  }
+}
