@@ -1,0 +1,202 @@
+==================================================
+ORGANIZATION TRANSFER BACKEND FILE EXPORT
+Generated at: Thu May 14 09:36:30 AM EEST 2026
+==================================================
+
+==================================================
+FILE: src/app.js
+==================================================
+NOT FOUND: src/app.js
+
+==================================================
+FILE: src/server.js
+==================================================
+NOT FOUND: src/server.js
+
+==================================================
+FILE: src/routes/transaction.routes.js
+==================================================
+NOT FOUND: src/routes/transaction.routes.js
+
+==================================================
+FILE: src/controllers/transaction.controller.js
+==================================================
+NOT FOUND: src/controllers/transaction.controller.js
+
+==================================================
+FILE: src/services/transaction.service.js
+==================================================
+NOT FOUND: src/services/transaction.service.js
+
+==================================================
+FILE: src/services/fabric.service.js
+==================================================
+NOT FOUND: src/services/fabric.service.js
+
+==================================================
+FILE: src/middlewares/error.middleware.js
+==================================================
+NOT FOUND: src/middlewares/error.middleware.js
+
+================ ROUTE SEARCH ================
+src/app.bak_before_wallet_session_fix_20260508_154442/app.html.bak_valoores_reference_design:39:      <a routerLink="/digital-kyc/wallet-transfer" routerLinkActive="active">
+src/app.bak_before_wallet_session_fix_20260508_154442/app.html.bak_valoores_reference_design:43:      <a routerLink="/digital-kyc/organization-transfer" routerLinkActive="active">
+src/app.bak_before_wallet_session_fix_20260508_154442/features/transactions/wallet-transfer/wallet-transfer.component.html:34:      [queryParams]="{ redirectTo: '/digital-kyc/wallet-transfer' }"
+src/app.bak_before_wallet_session_fix_20260508_154442/features/transactions/wallet-transfer/wallet-transfer.component.ts:9:  selector: 'app-wallet-transfer',
+src/app.bak_before_wallet_session_fix_20260508_154442/features/transactions/wallet-transfer/wallet-transfer.component.ts:12:  templateUrl: './wallet-transfer.component.html',
+src/app.bak_before_wallet_session_fix_20260508_154442/features/transactions/wallet-transfer/wallet-transfer.component.ts:13:  styleUrl: './wallet-transfer.component.css'
+src/app.bak_before_wallet_session_fix_20260508_154442/features/transactions/organization-transfer/organization-transfer.component.html:38:      [queryParams]="{ redirectTo: '/digital-kyc/organization-transfer' }"
+src/app.bak_before_wallet_session_fix_20260508_154442/features/transactions/organization-transfer/organization-transfer.component.ts.bak_org_to_org_final:10:  selector: 'app-organization-transfer',
+src/app.bak_before_wallet_session_fix_20260508_154442/features/transactions/organization-transfer/organization-transfer.component.ts.bak_org_to_org_final:13:  templateUrl: './organization-transfer.component.html',
+src/app.bak_before_wallet_session_fix_20260508_154442/features/transactions/organization-transfer/organization-transfer.component.ts.bak_org_to_org_final:14:  styleUrl: './organization-transfer.component.css'
+src/app.bak_before_wallet_session_fix_20260508_154442/features/transactions/organization-transfer/organization-transfer.component.ts.bak_fix_session_detection:10:  selector: 'app-organization-transfer',
+src/app.bak_before_wallet_session_fix_20260508_154442/features/transactions/organization-transfer/organization-transfer.component.ts.bak_fix_session_detection:13:  templateUrl: './organization-transfer.component.html',
+src/app.bak_before_wallet_session_fix_20260508_154442/features/transactions/organization-transfer/organization-transfer.component.ts.bak_fix_session_detection:14:  styleUrl: './organization-transfer.component.css'
+src/app.bak_before_wallet_session_fix_20260508_154442/features/transactions/organization-transfer/organization-transfer.component.ts:8:  selector: 'app-organization-transfer',
+src/app.bak_before_wallet_session_fix_20260508_154442/features/transactions/organization-transfer/organization-transfer.component.ts:11:  templateUrl: './organization-transfer.component.html',
+src/app.bak_before_wallet_session_fix_20260508_154442/features/transactions/organization-transfer/organization-transfer.component.ts:12:  styleUrl: './organization-transfer.component.css'
+src/app.bak_before_wallet_session_fix_20260508_154442/features/transactions/organization-transfer/organization-transfer.component.css:1:@import '../wallet-transfer/wallet-transfer.component.css';
+src/app.bak_before_wallet_session_fix_20260508_154442/features/transactions/organization-transfer/organization-transfer.component.ts.bak_org_to_org_frontend_fix:10:  selector: 'app-organization-transfer',
+src/app.bak_before_wallet_session_fix_20260508_154442/features/transactions/organization-transfer/organization-transfer.component.ts.bak_org_to_org_frontend_fix:13:  templateUrl: './organization-transfer.component.html',
+src/app.bak_before_wallet_session_fix_20260508_154442/features/transactions/organization-transfer/organization-transfer.component.ts.bak_org_to_org_frontend_fix:14:  styleUrl: './organization-transfer.component.css'
+src/app.bak_before_wallet_session_fix_20260508_154442/features/transactions/transaction-history/transaction-history.component.html:143:    <div class="empty-json" *ngIf="!loading && transactions.length === 0">
+src/app.bak_before_wallet_session_fix_20260508_154442/features/transactions/transaction-history/transaction-history.component.html:144:      No transactions found for the selected filters.
+src/app.bak_before_wallet_session_fix_20260508_154442/features/transactions/transaction-history/transaction-history.component.html:147:    <div class="table-wrapper" *ngIf="!loading && transactions.length > 0">
+src/app.bak_before_wallet_session_fix_20260508_154442/features/transactions/transaction-history/transaction-history.component.html:167:          <tr *ngFor="let tx of transactions">
+src/app.bak_before_wallet_session_fix_20260508_154442/features/transactions/transaction-history/transaction-history.component.css:1:@import '../wallet-transfer/wallet-transfer.component.css';
+src/app.bak_before_wallet_session_fix_20260508_154442/features/transactions/transaction-history/transaction-history.component.ts:20:  transactions: any[] = [];
+src/app.bak_before_wallet_session_fix_20260508_154442/features/transactions/transaction-history/transaction-history.component.ts:71:        this.transactions = Array.isArray(response?.data) ? response.data : [];
+src/app.bak_before_wallet_session_fix_20260508_154442/features/transactions/transaction-history/transaction-history.component.ts:87:        this.transactions = [];
+src/app.bak_before_wallet_session_fix_20260508_154442/features/transactions/balance-query/balance-query.component.css:1:@import '../wallet-transfer/wallet-transfer.component.css';
+src/app.bak_before_wallet_session_fix_20260508_154442/app.ts:19:    { label: 'Wallet Transfer', route: '/wallet-transfer', icon: '●' },
+src/app.bak_before_wallet_session_fix_20260508_154442/app.ts:20:    { label: 'Organization Transfer', route: '/organization-transfer', icon: '●' },
+src/app.bak_before_wallet_session_fix_20260508_154442/pages/wallet-login/wallet-login.ts.bak_wallet_address_login:25:  redirectTo = '/digital-kyc/wallet-transfer';
+src/app.bak_before_wallet_session_fix_20260508_154442/pages/wallet-login/wallet-login.ts.bak_wallet_address_login:60:      '/digital-kyc/wallet-transfer';
+src/app.bak_before_wallet_session_fix_20260508_154442/pages/wallet-login/wallet-login.ts.bak_fix_wallet_type_org:25:  redirectTo = '/digital-kyc/wallet-transfer';
+src/app.bak_before_wallet_session_fix_20260508_154442/pages/wallet-login/wallet-login.ts.bak_fix_wallet_type_org:58:      '/digital-kyc/wallet-transfer';
+src/app.bak_before_wallet_session_fix_20260508_154442/pages/wallet-login/wallet-login.ts:25:  redirectTo = '/digital-kyc/wallet-transfer';
+src/app.bak_before_wallet_session_fix_20260508_154442/pages/wallet-login/wallet-login.ts:58:      '/digital-kyc/wallet-transfer';
+src/app.bak_before_wallet_session_fix_20260508_154442/services/transaction.service.ts:53:      `${this.baseUrl}/transactions/wallet-transfer`,
+src/app.bak_before_wallet_session_fix_20260508_154442/services/transaction.service.ts:61:      `${this.baseUrl}/transactions/organization-transfer`,
+src/app.bak_before_wallet_session_fix_20260508_154442/services/transaction.service.ts:79:      `${this.baseUrl}/transactions`,
+src/app.bak_before_wallet_session_fix_20260508_154442/services/transaction.service.ts:89:      `${this.baseUrl}/transactions/${encodeURIComponent(transactionId)}`,
+src/app.bak_before_wallet_session_fix_20260508_154442/services/transaction.service.ts.bak_add_api_key_header:10:  private readonly baseUrl = `${environment.apiBaseUrl}/transactions`;
+src/app.bak_before_wallet_session_fix_20260508_154442/services/transaction.service.ts.bak_add_api_key_header:15:    return this.http.post(`${this.baseUrl}/wallet-transfer`, payload);
+src/app.bak_before_wallet_session_fix_20260508_154442/services/transaction.service.ts.bak_add_api_key_header:19:    return this.http.post(`${this.baseUrl}/organization-transfer`, payload);
+src/app.bak_before_wallet_session_fix_20260508_154442/layout/sidebar/sidebar.component.html:106:        routerLink="/digital-kyc/wallet-transfer"
+src/app.bak_before_wallet_session_fix_20260508_154442/layout/sidebar/sidebar.component.html:115:        routerLink="/digital-kyc/organization-transfer"
+src/app.bak_before_wallet_session_fix_20260508_154442/layout/sidebar/sidebar.component.html.bak_logo_update:109:        routerLink="/digital-kyc/wallet-transfer"
+src/app.bak_before_wallet_session_fix_20260508_154442/layout/sidebar/sidebar.component.html.bak_logo_update:118:        routerLink="/digital-kyc/organization-transfer"
+src/app.bak_before_wallet_session_fix_20260508_154442/layout/sidebar/sidebar.component.html.bak_logo_image_only:109:        routerLink="/digital-kyc/wallet-transfer"
+src/app.bak_before_wallet_session_fix_20260508_154442/layout/sidebar/sidebar.component.html.bak_logo_image_only:118:        routerLink="/digital-kyc/organization-transfer"
+src/app.bak_before_wallet_session_fix_20260508_154442/app.html:54:      <a routerLink="/digital-kyc/wallet-transfer" routerLinkActive="active">
+src/app.bak_before_wallet_session_fix_20260508_154442/app.html:59:      <a routerLink="/digital-kyc/organization-transfer" routerLinkActive="active">
+src/app.bak_before_wallet_session_fix_20260508_154442/app.routes.ts:10:import { WalletTransferComponent } from './features/transactions/wallet-transfer/wallet-transfer.component';
+src/app.bak_before_wallet_session_fix_20260508_154442/app.routes.ts:11:import { OrganizationTransferComponent } from './features/transactions/organization-transfer/organization-transfer.component';
+src/app.bak_before_wallet_session_fix_20260508_154442/app.routes.ts:12:import { TransactionHistoryComponent } from './features/transactions/transaction-history/transaction-history.component';
+src/app.bak_before_wallet_session_fix_20260508_154442/app.routes.ts:13:import { BalanceQueryComponent } from './features/transactions/balance-query/balance-query.component';
+src/app.bak_before_wallet_session_fix_20260508_154442/app.routes.ts:48:    path: 'digital-kyc/wallet-transfer',
+src/app.bak_before_wallet_session_fix_20260508_154442/app.routes.ts:52:    path: 'digital-kyc/organization-transfer',
+src/app.bak_before_wallet_session_fix_20260508_154442/app.routes.ts:95:    path: 'wallet-transfer',
+src/app.bak_before_wallet_session_fix_20260508_154442/app.routes.ts:96:    redirectTo: 'digital-kyc/wallet-transfer',
+src/app.bak_before_wallet_session_fix_20260508_154442/app.routes.ts:100:    path: 'organization-transfer',
+src/app.bak_before_wallet_session_fix_20260508_154442/app.routes.ts:101:    redirectTo: 'digital-kyc/organization-transfer',
+src/app.bak_before_wallet_session_fix_20260508_154442/app.routes.ts.bak_fix_routes_build:67:    path: 'wallet-transfer',
+src/app.bak_before_wallet_session_fix_20260508_154442/app.routes.ts.bak_fix_routes_build:69:      import('./features/wallet-transfer/wallet-transfer.component').then(
+src/app.bak_before_wallet_session_fix_20260508_154442/app.routes.ts.bak_fix_routes_build:75:    path: 'organization-transfer',
+src/app.bak_before_wallet_session_fix_20260508_154442/app.routes.ts.bak_fix_routes_build:77:      import('./features/organization-transfer/organization-transfer.component').then(
+src/app.bak_before_wallet_session_fix_20260508_154442/core/services/wallet-api.service.ts:104:    return this.http.get<any>(`${this.apiBaseUrl}/transactions`, { params });
+src/app.bak_before_wallet_session_fix_20260508_154442/core/services/wallet-api.service.ts:109:      `${this.apiBaseUrl}/transactions/wallet-transfer`,
+src/app.bak_before_wallet_session_fix_20260508_154442/core/services/wallet-api.service.ts:116:      `${this.apiBaseUrl}/transactions/organization-transfer`,
+src/app.bak_before_wallet_session_fix_20260508_154442/core/services/api-config.service.ts:40:  get transactionsUrl(): string {
+src/app.bak_before_wallet_session_fix_20260508_154442/core/services/api-config.service.ts:41:    return `${this.baseUrl}/transactions`;
+src/app.bak_before_wallet_session_fix_20260508_154442/core/services/transaction-api.service.ts:14:    return this.http.post(`${this.config.baseUrl}/transactions/wallet-transfer`, payload);
+src/app.bak_before_wallet_session_fix_20260508_154442/core/services/transaction-api.service.ts:18:    return this.http.post(`${this.config.baseUrl}/transactions/organization-transfer`, payload);
+src/app.bak_before_wallet_session_fix_20260508_154442/core/services/transaction-api.service.ts:32:    return this.http.get(`${this.config.baseUrl}/transactions`, { params });
+src/app.bak_before_wallet_session_fix_20260508_154442/core/interceptors/api-auth.interceptor.ts:14:    normalizedUrl.includes('/api/v1/transactions/organization-transfer');
+src/app/app.html.bak_valoores_reference_design:39:      <a routerLink="/digital-kyc/wallet-transfer" routerLinkActive="active">
+src/app/app.html.bak_valoores_reference_design:43:      <a routerLink="/digital-kyc/organization-transfer" routerLinkActive="active">
+src/app/features/transactions/wallet-transfer/wallet-transfer.component.html:44:      [queryParams]="{ redirectTo: '/digital-kyc/wallet-transfer' }"
+src/app/features/transactions/wallet-transfer/wallet-transfer.component.ts:10:  selector: 'app-wallet-transfer',
+src/app/features/transactions/wallet-transfer/wallet-transfer.component.ts:13:  templateUrl: './wallet-transfer.component.html',
+src/app/features/transactions/wallet-transfer/wallet-transfer.component.ts:14:  styleUrl: './wallet-transfer.component.css'
+src/app/features/transactions/organization-transfer/organization-transfer.component.html:40:      [queryParams]="{ redirectTo: '/digital-kyc/organization-transfer' }"
+src/app/features/transactions/organization-transfer/organization-transfer.component.ts.bak_org_to_org_final:10:  selector: 'app-organization-transfer',
+src/app/features/transactions/organization-transfer/organization-transfer.component.ts.bak_org_to_org_final:13:  templateUrl: './organization-transfer.component.html',
+src/app/features/transactions/organization-transfer/organization-transfer.component.ts.bak_org_to_org_final:14:  styleUrl: './organization-transfer.component.css'
+src/app/features/transactions/organization-transfer/organization-transfer.component.ts.bak_fix_session_detection:10:  selector: 'app-organization-transfer',
+src/app/features/transactions/organization-transfer/organization-transfer.component.ts.bak_fix_session_detection:13:  templateUrl: './organization-transfer.component.html',
+src/app/features/transactions/organization-transfer/organization-transfer.component.ts.bak_fix_session_detection:14:  styleUrl: './organization-transfer.component.css'
+src/app/features/transactions/organization-transfer/organization-transfer.component.ts:10:  selector: 'app-organization-transfer',
+src/app/features/transactions/organization-transfer/organization-transfer.component.ts:13:  templateUrl: './organization-transfer.component.html',
+src/app/features/transactions/organization-transfer/organization-transfer.component.ts:14:  styleUrl: './organization-transfer.component.css'
+src/app/features/transactions/organization-transfer/organization-transfer.component.css:1:@import '../wallet-transfer/wallet-transfer.component.css';
+src/app/features/transactions/organization-transfer/organization-transfer.component.ts.bak_org_to_org_frontend_fix:10:  selector: 'app-organization-transfer',
+src/app/features/transactions/organization-transfer/organization-transfer.component.ts.bak_org_to_org_frontend_fix:13:  templateUrl: './organization-transfer.component.html',
+src/app/features/transactions/organization-transfer/organization-transfer.component.ts.bak_org_to_org_frontend_fix:14:  styleUrl: './organization-transfer.component.css'
+src/app/features/transactions/transaction-history/transaction-history.component.html:153:    <div class="empty-json" *ngIf="!loading && transactions.length === 0">
+src/app/features/transactions/transaction-history/transaction-history.component.html:154:      No transactions found for the selected filters.
+src/app/features/transactions/transaction-history/transaction-history.component.html:157:    <div class="table-wrapper" *ngIf="!loading && transactions.length > 0">
+src/app/features/transactions/transaction-history/transaction-history.component.html:177:          <tr *ngFor="let tx of transactions">
+src/app/features/transactions/transaction-history/transaction-history.component.css:1:@import '../wallet-transfer/wallet-transfer.component.css';
+src/app/features/transactions/transaction-history/transaction-history.component.ts:20:  transactions: any[] = [];
+src/app/features/transactions/transaction-history/transaction-history.component.ts:73:        this.transactions = Array.isArray(response?.data) ? response.data : [];
+src/app/features/transactions/transaction-history/transaction-history.component.ts:89:        this.transactions = [];
+src/app/features/transactions/transaction-history/transaction-history.component.ts:164:  this.transactions = [];
+src/app/features/transactions/balance-query/balance-query.component.css:1:@import '../wallet-transfer/wallet-transfer.component.css';
+src/app/app.ts:73:      route: '/digital-kyc/wallet-transfer',
+src/app/app.ts:79:      route: '/digital-kyc/organization-transfer',
+src/app/pages/data-generation-engine/data-generation-engine.html:6:        Generate blockchain wallets and transactions directly from the UI for testing,
+src/app/pages/data-generation-engine/data-generation-engine.html:42:          <input type="number" [(ngModel)]="form.transactions" min="0" [disabled]="isRunning" />
+src/app/pages/data-generation-engine/data-generation-engine.html:96:        <strong>{{ form.transactions | number }}</strong>
+src/app/pages/data-generation-engine/data-generation-engine.ts:24:    transactions: 20000,
+src/app/pages/data-generation-engine/data-generation-engine.ts:86:      transactions: 20,
+src/app/pages/data-generation-engine/data-generation-engine.ts:100:      transactions: 20000,
+src/app/pages/data-generation-engine/data-generation-engine.ts:114:      transactions: 100000,
+src/app/pages/data-generation-engine/data-generation-engine.ts:132:      Number(this.form.wallets || 0) + Number(this.form.transactions || 0);
+src/app/pages/wallet-login/wallet-login.ts.bak_wallet_address_login:25:  redirectTo = '/digital-kyc/wallet-transfer';
+src/app/pages/wallet-login/wallet-login.ts.bak_wallet_address_login:60:      '/digital-kyc/wallet-transfer';
+src/app/pages/wallet-login/wallet-login.ts.bak_fix_wallet_type_org:25:  redirectTo = '/digital-kyc/wallet-transfer';
+src/app/pages/wallet-login/wallet-login.ts.bak_fix_wallet_type_org:58:      '/digital-kyc/wallet-transfer';
+src/app/pages/wallet-information/wallet-information.component.ts:44:    this.router.navigateByUrl('/digital-kyc/wallet-transfer');
+src/app/pages/wallet-information/wallet-information.component.ts:48:    this.router.navigateByUrl('/digital-kyc/organization-transfer');
+src/app/services/transaction.service.ts:53:      `${this.baseUrl}/transactions/wallet-transfer`,
+src/app/services/transaction.service.ts:61:      `${this.baseUrl}/transactions/organization-transfer`,
+src/app/services/transaction.service.ts:79:      `${this.baseUrl}/transactions`,
+src/app/services/transaction.service.ts:89:      `${this.baseUrl}/transactions/${encodeURIComponent(transactionId)}`,
+src/app/services/transaction.service.ts.bak_add_api_key_header:10:  private readonly baseUrl = `${environment.apiBaseUrl}/transactions`;
+src/app/services/transaction.service.ts.bak_add_api_key_header:15:    return this.http.post(`${this.baseUrl}/wallet-transfer`, payload);
+src/app/services/transaction.service.ts.bak_add_api_key_header:19:    return this.http.post(`${this.baseUrl}/organization-transfer`, payload);
+src/app/layout/sidebar/sidebar.component.html:124:        routerLink="/digital-kyc/wallet-transfer"
+src/app/layout/sidebar/sidebar.component.html:132:        routerLink="/digital-kyc/organization-transfer"
+src/app/layout/sidebar/sidebar.component.html.bak_logo_update:109:        routerLink="/digital-kyc/wallet-transfer"
+src/app/layout/sidebar/sidebar.component.html.bak_logo_update:118:        routerLink="/digital-kyc/organization-transfer"
+src/app/layout/sidebar/sidebar.component.html.bak_logo_image_only:109:        routerLink="/digital-kyc/wallet-transfer"
+src/app/layout/sidebar/sidebar.component.html.bak_logo_image_only:118:        routerLink="/digital-kyc/organization-transfer"
+src/app/app.html:106:      <a routerLink="/digital-kyc/wallet-transfer" routerLinkActive="active">
+src/app/app.html:111:      <a routerLink="/digital-kyc/organization-transfer" routerLinkActive="active">
+src/app/app.routes.ts:11:import { WalletTransferComponent } from './features/transactions/wallet-transfer/wallet-transfer.component';
+src/app/app.routes.ts:12:import { OrganizationTransferComponent } from './features/transactions/organization-transfer/organization-transfer.component';
+src/app/app.routes.ts:13:import { TransactionHistoryComponent } from './features/transactions/transaction-history/transaction-history.component';
+src/app/app.routes.ts:14:import { BalanceQueryComponent } from './features/transactions/balance-query/balance-query.component';
+src/app/app.routes.ts:58:    path: 'digital-kyc/wallet-transfer',
+src/app/app.routes.ts:62:    path: 'digital-kyc/organization-transfer',
+src/app/app.routes.ts:110:    path: 'wallet-transfer',
+src/app/app.routes.ts:111:    redirectTo: 'digital-kyc/wallet-transfer',
+src/app/app.routes.ts:115:    path: 'organization-transfer',
+src/app/app.routes.ts:116:    redirectTo: 'digital-kyc/organization-transfer',
+src/app/app.component.html:46:      <a routerLink="/digital-kyc/wallet-transfer" routerLinkActive="active-link">
+src/app/app.component.html:50:      <a routerLink="/digital-kyc/organization-transfer" routerLinkActive="active-link">
+src/app/app.routes.ts.bak_fix_routes_build:67:    path: 'wallet-transfer',
+src/app/app.routes.ts.bak_fix_routes_build:69:      import('./features/wallet-transfer/wallet-transfer.component').then(
+src/app/app.routes.ts.bak_fix_routes_build:75:    path: 'organization-transfer',
+src/app/app.routes.ts.bak_fix_routes_build:77:      import('./features/organization-transfer/organization-transfer.component').then(
+src/app/core/services/wallet-api.service.ts:104:    return this.http.get<any>(`${this.apiBaseUrl}/transactions`, { params });
+src/app/core/services/wallet-api.service.ts:109:      `${this.apiBaseUrl}/transactions/wallet-transfer`,
+src/app/core/services/wallet-api.service.ts:116:      `${this.apiBaseUrl}/transactions/organization-transfer`,
+src/app/core/services/api-config.service.ts:40:  get transactionsUrl(): string {
+src/app/core/services/api-config.service.ts:41:    return `${this.baseUrl}/transactions`;
+src/app/core/services/transaction-api.service.ts:14:    return this.http.post(`${this.config.baseUrl}/transactions/wallet-transfer`, payload);
+src/app/core/services/transaction-api.service.ts:18:    return this.http.post(`${this.config.baseUrl}/transactions/organization-transfer`, payload);
+src/app/core/services/transaction-api.service.ts:32:    return this.http.get(`${this.config.baseUrl}/transactions`, { params });
+src/app/core/interceptors/api-auth.interceptor.ts:14:    normalizedUrl.includes('/api/v1/transactions/organization-transfer');

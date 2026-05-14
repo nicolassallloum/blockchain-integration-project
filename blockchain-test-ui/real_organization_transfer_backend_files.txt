@@ -1,0 +1,142 @@
+==================================================
+REAL ORGANIZATION TRANSFER BACKEND FILE EXPORT
+Generated at: Thu May 14 09:37:15 AM EEST 2026
+==================================================
+
+================ PROJECT TREE SEARCH ================
+./.angular/cache/21.2.9/blockchain-test-ui/vite/deps/@angular_router.js
+./backups/before-wallet-information-fix-20260508_153504/app/services/organization.service.js
+./node_modules/@angular/build/src/builders/dev-server/vite/server.js
+./node_modules/@angular/build/src/tools/angular/transformers/lazy-routes-transformer.js
+./node_modules/@angular/build/src/tools/sass/sass-service.js
+./node_modules/@angular/build/src/utils/server-rendering/routes-extractor-worker.js
+./node_modules/@angular/build/src/utils/service-worker.js
+./node_modules/caniuse-lite/data/features/abortcontroller.js
+./node_modules/caniuse-lite/data/features/serviceworkers.js
+./node_modules/color-convert/route.js
+./node_modules/hono/dist/adapter/bun/server.js
+./node_modules/hono/dist/cjs/adapter/bun/server.js
+./node_modules/hono/dist/cjs/jsx/dom/server.js
+./node_modules/hono/dist/cjs/router.js
+./node_modules/hono/dist/cjs/router/linear-router/router.js
+./node_modules/hono/dist/cjs/router/pattern-router/router.js
+./node_modules/hono/dist/cjs/router/reg-exp-router/prepared-router.js
+./node_modules/hono/dist/cjs/router/reg-exp-router/router.js
+./node_modules/hono/dist/cjs/router/smart-router/router.js
+./node_modules/hono/dist/cjs/router/trie-router/router.js
+./node_modules/hono/dist/jsx/dom/server.js
+./node_modules/hono/dist/router.js
+./node_modules/hono/dist/router/linear-router/router.js
+./node_modules/hono/dist/router/pattern-router/router.js
+./node_modules/hono/dist/router/reg-exp-router/prepared-router.js
+./node_modules/hono/dist/router/reg-exp-router/router.js
+./node_modules/hono/dist/router/smart-router/router.js
+./node_modules/hono/dist/router/trie-router/router.js
+./node_modules/@hono/node-server/dist/server.js
+./node_modules/@modelcontextprotocol/sdk/dist/cjs/experimental/tasks/server.js
+./node_modules/@modelcontextprotocol/sdk/dist/cjs/server/auth/router.js
+./node_modules/@modelcontextprotocol/sdk/dist/esm/experimental/tasks/server.js
+./node_modules/@modelcontextprotocol/sdk/dist/esm/server/auth/router.js
+./node_modules/@npmcli/redact/lib/server.js
+./node_modules/router/lib/route.js
+./node_modules/vite/dist/node/chunks/server.js
+./src/app.bak_before_wallet_session_fix_20260508_154442/services/organization.service.js
+./src/app/services/organization.service.js
+./src/controllers/organization.controller.js
+./src/controllers/reference.controller.js
+./src/routes/organization.routes.js
+./src/routes/reference.routes.js
+
+================ BACKEND ROUTE SEARCH ================
+
+================ LIKELY BACKEND FILES ================
+
+==================================================
+FILE: blockchain-api/server.js
+==================================================
+NOT FOUND: blockchain-api/server.js
+
+==================================================
+FILE: blockchain-api/app.js
+==================================================
+NOT FOUND: blockchain-api/app.js
+
+==================================================
+FILE: blockchain-api/src/server.js
+==================================================
+NOT FOUND: blockchain-api/src/server.js
+
+==================================================
+FILE: blockchain-api/src/app.js
+==================================================
+NOT FOUND: blockchain-api/src/app.js
+
+==================================================
+FILE: blockchain-api/routes/transaction.routes.js
+==================================================
+NOT FOUND: blockchain-api/routes/transaction.routes.js
+
+==================================================
+FILE: blockchain-api/src/routes/transaction.routes.js
+==================================================
+NOT FOUND: blockchain-api/src/routes/transaction.routes.js
+
+==================================================
+FILE: blockchain-api/routes/transactions.routes.js
+==================================================
+NOT FOUND: blockchain-api/routes/transactions.routes.js
+
+==================================================
+FILE: blockchain-api/src/routes/transactions.routes.js
+==================================================
+NOT FOUND: blockchain-api/src/routes/transactions.routes.js
+
+==================================================
+FILE: blockchain-api/controllers/transaction.controller.js
+==================================================
+NOT FOUND: blockchain-api/controllers/transaction.controller.js
+
+==================================================
+FILE: blockchain-api/src/controllers/transaction.controller.js
+==================================================
+NOT FOUND: blockchain-api/src/controllers/transaction.controller.js
+
+==================================================
+FILE: blockchain-api/controllers/transactions.controller.js
+==================================================
+NOT FOUND: blockchain-api/controllers/transactions.controller.js
+
+==================================================
+FILE: blockchain-api/src/controllers/transactions.controller.js
+==================================================
+NOT FOUND: blockchain-api/src/controllers/transactions.controller.js
+
+==================================================
+FILE: blockchain-api/services/transaction.service.js
+==================================================
+NOT FOUND: blockchain-api/services/transaction.service.js
+
+==================================================
+FILE: blockchain-api/src/services/transaction.service.js
+==================================================
+NOT FOUND: blockchain-api/src/services/transaction.service.js
+
+==================================================
+FILE: blockchain-api/services/fabric.service.js
+==================================================
+NOT FOUND: blockchain-api/services/fabric.service.js
+
+==================================================
+FILE: blockchain-api/src/services/fabric.service.js
+==================================================
+NOT FOUND: blockchain-api/src/services/fabric.service.js
+
+==================================================
+FILE: blockchain-api/middlewares/error.middleware.js
+==================================================
+NOT FOUND: blockchain-api/middlewares/error.middleware.js
+
+==================================================
+FILE: blockchain-api/src/middlewares/error.middleware.js
+==================================================
+NOT FOUND: blockchain-api/src/middlewares/error.middleware.js
