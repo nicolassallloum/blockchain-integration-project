@@ -135,39 +135,57 @@ import { ProjectViewApiService } from '../../core/services/project-view-api.serv
           <div class="health-grid">
             <div class="health-item">
               <span>Fabric Peer Status</span>
-              <strong>{{ blockchainHealth.fabricPeerStatus || '-' }}</strong>
+              <strong>{{ blockchainHealth.fabricPeerStatus || blockchainHealth.fabric_peer_status || '-' }}</strong>
             </div>
+
             <div class="health-item">
               <span>Orderer Status</span>
-              <strong>{{ blockchainHealth.ordererStatus || '-' }}</strong>
+              <strong>{{ blockchainHealth.ordererStatus || blockchainHealth.orderer_status || '-' }}</strong>
             </div>
+
             <div class="health-item">
               <span>CouchDB Status</span>
-              <strong>{{ blockchainHealth.couchDbStatus || '-' }}</strong>
+              <strong>{{ blockchainHealth.couchDbStatus || blockchainHealth.couchdbStatus || blockchainHealth.couch_db_status || '-' }}</strong>
             </div>
+
             <div class="health-item">
               <span>PostgreSQL Status</span>
-              <strong>{{ blockchainHealth.postgresqlStatus || '-' }}</strong>
+              <strong>{{ blockchainHealth.postgresqlStatus || blockchainHealth.postgresql_status || '-' }}</strong>
             </div>
+
             <div class="health-item">
               <span>Chaincode Status</span>
-              <strong>{{ blockchainHealth.chaincodeStatus || '-' }}</strong>
+              <strong>{{ blockchainHealth.chaincodeStatus || blockchainHealth.chaincode_status || '-' }}</strong>
             </div>
+
             <div class="health-item">
               <span>Channel Name</span>
-              <strong>{{ blockchainHealth.channelName || '-' }}</strong>
+              <strong>{{ blockchainHealth.channelName || blockchainHealth.channel_name || '-' }}</strong>
             </div>
+
             <div class="health-item">
               <span>Chaincode Version</span>
-              <strong>{{ blockchainHealth.chaincodeVersion || '-' }}</strong>
+              <strong>{{ blockchainHealth.chaincodeVersion || blockchainHealth.chaincode_version || '-' }}</strong>
             </div>
+
             <div class="health-item">
               <span>Last Block Number</span>
-              <strong>{{ blockchainHealth.lastBlockNumber || 0 }}</strong>
+              <strong>{{ getLastBlockNumber() | number }}</strong>
             </div>
+
+            <div class="health-item">
+              <span>Channel Height</span>
+              <strong>{{ getChannelHeight() | number }}</strong>
+            </div>
+
             <div class="health-item wide">
               <span>Last Sync Time</span>
-              <strong>{{ formatDateTime(blockchainHealth.lastSyncTime) }}</strong>
+              <strong>{{ formatDateTime(getLastSyncTime()) }}</strong>
+            </div>
+
+            <div class="health-item wide debug-item" *ngIf="showBlockchainDebug">
+              <span>Debug Blockchain Health</span>
+              <pre>{{ blockchainHealth | json }}</pre>
             </div>
           </div>
         </section>
@@ -179,6 +197,10 @@ import { ProjectViewApiService } from '../../core/services/project-view-api.serv
             <h2>Transactions Overview</h2>
             <p>High-level transaction metrics for wallet and organization movement.</p>
           </div>
+
+          <button class="light-btn" type="button" (click)="toggleBlockchainDebug()">
+            {{ showBlockchainDebug ? 'Hide Debug' : 'Show Debug' }}
+          </button>
         </div>
 
         <div class="metric-grid">
@@ -186,24 +208,29 @@ import { ProjectViewApiService } from '../../core/services/project-view-api.serv
             <span>Wallet-to-Wallet Transfers</span>
             <strong>{{ transactionSummary.walletToWalletTransfers | number }}</strong>
           </div>
+
           <div class="metric-card">
             <span>Wallet-to-Organization Transfers</span>
             <strong>{{ transactionSummary.walletToOrganizationTransfers | number }}</strong>
           </div>
+
           <div class="metric-card">
             <span>Total Transaction Volume</span>
             <strong>{{ transactionSummary.totalTransactionVolume | number:'1.2-2' }}</strong>
             <small>{{ transactionSummary.currencyCode || 'USD' }}</small>
           </div>
+
           <div class="metric-card">
             <span>Average Transaction Amount</span>
             <strong>{{ transactionSummary.averageTransactionAmount | number:'1.2-2' }}</strong>
             <small>{{ transactionSummary.currencyCode || 'USD' }}</small>
           </div>
+
           <div class="metric-card danger">
             <span>Failed Transactions</span>
             <strong>{{ transactionSummary.failedTransactions | number }}</strong>
           </div>
+
           <div class="metric-card warning">
             <span>Pending Transactions</span>
             <strong>{{ transactionSummary.pendingTransactions | number }}</strong>
@@ -232,17 +259,18 @@ import { ProjectViewApiService } from '../../core/services/project-view-api.serv
                 <th>Status</th>
               </tr>
             </thead>
+
             <tbody>
               <tr *ngFor="let org of organizationSummary">
-                <td>{{ org.organizationName }}</td>
-                <td>{{ org.organizationCode }}</td>
-                <td>{{ org.organizationType }}</td>
+                <td>{{ org.organizationName || org.organization_name || '-' }}</td>
+                <td>{{ org.organizationCode || org.organization_code || '-' }}</td>
+                <td>{{ org.organizationType || org.organization_type || '-' }}</td>
                 <td>{{ org.wallets | number }}</td>
                 <td>{{ org.balance | number:'1.2-2' }} USD</td>
                 <td>{{ org.transactions | number }}</td>
                 <td>
                   <span class="status-pill" [class.active]="String(org.status).toUpperCase() === 'ACTIVE'">
-                    {{ org.status }}
+                    {{ org.status || '-' }}
                   </span>
                 </td>
               </tr>
@@ -403,13 +431,14 @@ import { ProjectViewApiService } from '../../core/services/project-view-api.serv
                 <th>Date</th>
               </tr>
             </thead>
+
             <tbody>
               <tr *ngFor="let tx of latestTransactions">
-                <td class="mono">{{ tx.txId }}</td>
-                <td class="mono">{{ tx.from }}</td>
-                <td class="mono">{{ tx.to }}</td>
-                <td>{{ tx.type }}</td>
-                <td>{{ tx.amount | number:'1.2-2' }} {{ tx.currency }}</td>
+                <td class="mono">{{ tx.txId || tx.tx_id || '-' }}</td>
+                <td class="mono">{{ tx.from || tx.fromWalletAddress || tx.from_wallet_address || '-' }}</td>
+                <td class="mono">{{ tx.to || tx.toWalletAddress || tx.to_wallet_address || '-' }}</td>
+                <td>{{ tx.type || tx.transactionType || tx.transaction_type || '-' }}</td>
+                <td>{{ tx.amount | number:'1.2-2' }} {{ tx.currency || tx.currencyCode || tx.currency_code || 'USD' }}</td>
                 <td>
                   <span
                     class="status-pill"
@@ -417,10 +446,10 @@ import { ProjectViewApiService } from '../../core/services/project-view-api.serv
                     [class.warning]="String(tx.status).toUpperCase() === 'PENDING'"
                     [class.danger]="String(tx.status).toUpperCase() === 'FAILED'"
                   >
-                    {{ tx.status }}
+                    {{ tx.status || '-' }}
                   </span>
                 </td>
-                <td>{{ formatDateTime(tx.date) }}</td>
+                <td>{{ formatDateTime(tx.date || tx.createdAt || tx.created_at) }}</td>
               </tr>
             </tbody>
           </table>
@@ -659,6 +688,12 @@ import { ProjectViewApiService } from '../../core/services/project-view-api.serv
         font-size: 14px;
         font-weight: 900;
         word-break: break-word;
+      }
+
+      .debug-item pre {
+        margin: 8px 0 0;
+        max-height: 220px;
+        font-size: 12px;
       }
 
       .bar-chart {
@@ -992,6 +1027,7 @@ export class DashboardComponent implements OnInit {
   loading = false;
   errorMessage = '';
   successMessage = '';
+  showBlockchainDebug = false;
 
   wallets: any[] = [];
   apiResponse: any = null;
@@ -1099,6 +1135,8 @@ export class DashboardComponent implements OnInit {
           error?.error?.message ||
           error?.message ||
           `Http failure while loading ${this.apiBaseUrl}/wallets`;
+
+        this.cdr.detectChanges();
       }
     });
   }
@@ -1120,17 +1158,29 @@ export class DashboardComponent implements OnInit {
 
         this.walletGrowth = Array.isArray(data.walletGrowth) ? data.walletGrowth : [];
         this.organizationSummary = Array.isArray(data.organizationSummary) ? data.organizationSummary : [];
-        this.blockchainHealth = data.blockchainHealth || {};
-        this.latestTransactions = Array.isArray(data.latestTransactions) ? data.latestTransactions : [];
+
+        this.blockchainHealth =
+          data.blockchainHealth ||
+          data.blockchain_health ||
+          response?.blockchainHealth ||
+          response?.blockchain_health ||
+          {};
+
+        this.latestTransactions = Array.isArray(data.latestTransactions)
+          ? data.latestTransactions
+          : Array.isArray(data.latest_transactions)
+            ? data.latest_transactions
+            : [];
 
         this.totalWallets = Number(this.walletSummary.totalWallets || this.totalWallets || 0);
         this.activeWallets = Number(this.walletSummary.activeWallets || this.activeWallets || 0);
-        this.dataSource = response?.meta?.source || 'postgres';
+        this.dataSource = response?.meta?.source || response?.source || 'postgres';
 
         this.loading = false;
         this.successMessage = showSuccessMessage
           ? 'Dashboard data loaded successfully.'
           : 'Dashboard data loaded successfully.';
+
         this.cdr.detectChanges();
       },
       error: (error: any) => {
@@ -1139,6 +1189,7 @@ export class DashboardComponent implements OnInit {
           error?.error?.message ||
           error?.message ||
           `Http failure while loading ${this.apiBaseUrl}/dashboard/summary`;
+
         this.cdr.detectChanges();
       }
     });
@@ -1182,8 +1233,48 @@ export class DashboardComponent implements OnInit {
     this.successMessage = `${reportName} shortcut is ready. Backend report export endpoint can be connected in the next step.`;
   }
 
+  toggleBlockchainDebug(): void {
+    this.showBlockchainDebug = !this.showBlockchainDebug;
+  }
+
+  getLastBlockNumber(): number {
+    const value =
+      this.blockchainHealth?.lastBlockNumber ??
+      this.blockchainHealth?.last_block_number ??
+      this.blockchainHealth?.blockNumber ??
+      this.blockchainHealth?.block_number ??
+      this.blockchainHealth?.latestBlockNumber ??
+      this.blockchainHealth?.latest_block_number ??
+      0;
+
+    return Number(value) || 0;
+  }
+
+  getChannelHeight(): number {
+    const value =
+      this.blockchainHealth?.channelHeight ??
+      this.blockchainHealth?.channel_height ??
+      this.blockchainHealth?.height ??
+      this.blockchainHealth?.ledgerHeight ??
+      this.blockchainHealth?.ledger_height ??
+      0;
+
+    return Number(value) || 0;
+  }
+
+  getLastSyncTime(): string | null {
+    return (
+      this.blockchainHealth?.lastSyncTime ||
+      this.blockchainHealth?.last_sync_time ||
+      this.blockchainHealth?.updatedAt ||
+      this.blockchainHealth?.updated_at ||
+      null
+    );
+  }
+
   getWalletGrowthPercent(wallets: any): number {
     const value = Number(wallets || 0);
+
     const max = this.walletGrowth.reduce((largest: number, item: any) => {
       const count = Number(item?.wallets || 0);
       return count > largest ? count : largest;
@@ -1231,6 +1322,7 @@ export class DashboardComponent implements OnInit {
 
     const page = Number(pagination.page || this.filters.page || 1);
     const limit = Number(pagination.limit || this.filters.limit || 100);
+
     const totalRecords = Number(
       pagination.totalRecords ??
         pagination.total ??
@@ -1271,6 +1363,8 @@ export class DashboardComponent implements OnInit {
           lastViewedAt: data.lastViewedAt || null,
           mostViewedPages: Array.isArray(data.mostViewedPages) ? data.mostViewedPages : []
         };
+
+        this.cdr.detectChanges();
       },
       error: () => {
         this.projectViewStats = {
@@ -1280,6 +1374,8 @@ export class DashboardComponent implements OnInit {
           lastViewedAt: null,
           mostViewedPages: []
         };
+
+        this.cdr.detectChanges();
       }
     });
   }

@@ -16,6 +16,7 @@
  */
 
 const db = require('../config/database');
+const fabricService = require('./fabric.service');
 
 function toNumber(value, defaultValue = 0) {
   const numberValue = Number(value);
@@ -185,30 +186,131 @@ async function getOrganizationSummary() {
   }));
 }
 
-async function getBlockchainHealth() {
+async function getLastSyncTimeFromPostgres() {
   const result = await db.query(`
     SELECT
-      COALESCE(MAX(fabric_block_number), 0)::bigint AS last_block_number,
       GREATEST(
         COALESCE((SELECT MAX(updated_at) FROM blockchain.wallets), TIMESTAMPTZ '1970-01-01'),
         COALESCE((SELECT MAX(updated_at) FROM blockchain.transactions), TIMESTAMPTZ '1970-01-01')
       ) AS last_sync_time
-    FROM blockchain.transactions
   `);
 
   const row = firstRow(result);
+  return row.last_sync_time || null;
+}
+
+async function getFabricChannelInfo() {
+  const config = fabricService.getConfig();
+  const connection = await fabricService.connect();
+
+  const qsccContract = connection.network.getContract('qscc');
+
+  const resultBuffer = await qsccContract.evaluateTransaction(
+    'GetChainInfo',
+    config.channelName
+  );
+
+  let channelHeight = 0;
+
+  try {
+    const text = Buffer.from(resultBuffer).toString('utf8');
+
+    if (text && text.trim().startsWith('{')) {
+      const parsed = JSON.parse(text);
+      channelHeight = toNumber(parsed.height);
+    }
+  } catch {
+    channelHeight = 0;
+  }
+
+  if (!channelHeight) {
+    /*
+      Fabric QSCC GetChainInfo returns protobuf bytes.
+      In most Fabric Gateway versions, the height is encoded in the response.
+      This fallback reads the uint64 height from the protobuf buffer.
+    */
+    const buffer = Buffer.from(resultBuffer);
+
+    for (let index = 0; index < buffer.length - 1; index += 1) {
+      if (buffer[index] === 0x08) {
+        let shift = 0;
+        let value = 0;
+        let position = index + 1;
+
+        while (position < buffer.length) {
+          const byte = buffer[position];
+          value += (byte & 0x7f) * Math.pow(2, shift);
+
+          if ((byte & 0x80) === 0) {
+            break;
+          }
+
+          shift += 7;
+          position += 1;
+        }
+
+        if (value > 0) {
+          channelHeight = value;
+          break;
+        }
+      }
+    }
+  }
+
+  const lastBlockNumber = channelHeight > 0 ? channelHeight - 1 : 0;
 
   return {
-    fabricPeerStatus: process.env.FABRIC_PEER_STATUS || 'Online',
+    channelHeight,
+    lastBlockNumber
+  };
+}
+
+async function getBlockchainHealth() {
+  const config = fabricService.getConfig();
+  const lastSyncTime = await getLastSyncTimeFromPostgres();
+
+  let fabricPeerStatus = 'Online';
+  let channelHeight = 0;
+  let lastBlockNumber = 0;
+  let fabricError = null;
+
+  try {
+    const fabricInfo = await getFabricChannelInfo();
+    channelHeight = toNumber(fabricInfo.channelHeight);
+    lastBlockNumber = toNumber(fabricInfo.lastBlockNumber);
+  } catch (error) {
+    fabricPeerStatus = 'Error';
+    fabricError = error.message;
+
+    /*
+      Fallback only if Fabric Gateway read fails.
+      This keeps the dashboard alive but marks the Fabric read error.
+    */
+    const fallbackResult = await db.query(`
+      SELECT
+        COALESCE(MAX(fabric_block_number), 0)::bigint AS last_block_number
+      FROM blockchain.transactions
+    `);
+
+    const fallbackRow = firstRow(fallbackResult);
+    lastBlockNumber = toNumber(fallbackRow.last_block_number);
+    channelHeight = lastBlockNumber > 0 ? lastBlockNumber + 1 : 0;
+  }
+
+  return {
+    fabricPeerStatus,
     ordererStatus: process.env.FABRIC_ORDERER_STATUS || 'Online',
     couchDbStatus: process.env.COUCHDB_STATUS || 'Online',
     postgresqlStatus: 'Online',
     chaincodeStatus: process.env.FABRIC_CHAINCODE_STATUS || 'Committed',
-    channelName: process.env.FABRIC_CHANNEL_NAME || process.env.CHANNEL_NAME || 'kycchannelnix1',
+    channelName: config.channelName,
     chaincodeVersion: process.env.FABRIC_CHAINCODE_VERSION || process.env.CHAINCODE_VERSION || '2.x',
-    chaincodeName: process.env.FABRIC_CHAINCODE_NAME || process.env.CHAINCODE_NAME || 'kyc-wallet-chaincode-js',
-    lastBlockNumber: toNumber(row.last_block_number),
-    lastSyncTime: row.last_sync_time || null
+    chaincodeName: config.chaincodeName,
+    channelHeight,
+    lastBlockNumber,
+    lastSyncTime,
+    fabricReadSource: fabricError ? 'postgres_fallback' : 'fabric_qscc',
+    fabricError
   };
 }
 
