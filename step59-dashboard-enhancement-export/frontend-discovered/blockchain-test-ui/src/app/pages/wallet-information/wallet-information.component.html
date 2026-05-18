@@ -1,0 +1,144 @@
+<div class="wallet-info-page">
+  <div class="page-header">
+    <div>
+      <h1>Wallet Information</h1>
+      <p>Logged-in wallet profile and transaction navigation.</p>
+    </div>
+
+    <button
+      type="button"
+      class="logout-btn"
+      *ngIf="session"
+      (click)="logoutWallet()"
+    >
+      Logout Wallet
+    </button>
+  </div>
+
+  <div *ngIf="errorMessage" class="alert error">
+    {{ errorMessage }}
+
+    <div class="alert-action">
+      <a routerLink="/digital-kyc/wallet-login" class="primary-link">
+        Go to Wallet Login
+      </a>
+    </div>
+  </div>
+
+  <div *ngIf="successMessage" class="alert success">
+    {{ successMessage }}
+  </div>
+
+  <div *ngIf="session" class="profile-card">
+    <div class="profile-top">
+      <div>
+        <span class="eyebrow">Authenticated Wallet</span>
+        <h2>{{ session.fullName || 'Customer Wallet' }}</h2>
+        <p>{{ session.walletType || 'CUSTOMER' }} wallet session is active.</p>
+      </div>
+
+      <div class="status-pill">
+        ACTIVE
+      </div>
+    </div>
+
+    <div class="wallet-address-box">
+      <div>
+        <label>Wallet Address</label>
+        <strong>{{ session.walletAddress || '-' }}</strong>
+      </div>
+
+      <button type="button" class="secondary-btn" (click)="copyWalletAddress()">
+        Copy
+      </button>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <span>Customer ID</span>
+        <strong>{{ session.customerId || '-' }}</strong>
+      </div>
+
+      <div class="kpi-card">
+        <span>Organization</span>
+        <strong>{{ session.organizationName || session.organizationId || '-' }}</strong>
+      </div>
+
+      <div class="kpi-card">
+        <span>Current Balance</span>
+        <strong>{{ session.currentBalance ?? 0 }} {{ session.currencyCode || 'USD' }}</strong>
+      </div>
+
+      <div class="kpi-card">
+        <span>Wallet Type</span>
+        <strong>{{ session.walletType || 'CUSTOMER' }}</strong>
+      </div>
+    </div>
+
+    <div class="details-grid">
+      <div class="detail-item">
+        <span>Full Name</span>
+        <strong>{{ session.fullName || '-' }}</strong>
+      </div>
+
+      <div class="detail-item">
+        <span>Organization ID</span>
+        <strong>{{ session.organizationId || '-' }}</strong>
+      </div>
+
+      <div class="detail-item">
+        <span>Currency</span>
+        <strong>{{ session.currencyCode || 'USD' }}</strong>
+      </div>
+
+      <div class="detail-item">
+        <span>Login Time</span>
+        <strong>{{ session.loginTime || '-' }}</strong>
+      </div>
+
+      <div class="detail-item">
+        <span>Session Source</span>
+        <strong>{{ session.sessionSource || 'blockchain_logged_wallet' }}</strong>
+      </div>
+
+      <div class="detail-item">
+        <span>Token</span>
+        <strong>{{ maskToken(session.token) }}</strong>
+      </div>
+    </div>
+
+    <div class="action-grid">
+      <button
+        type="button"
+        class="primary-btn"
+        (click)="goToWalletTransfer()"
+      >
+        Wallet Transfer
+      </button>
+
+      <button
+        type="button"
+        class="primary-btn"
+        (click)="goToOrganizationTransfer()"
+      >
+        Organization Transfer
+      </button>
+
+      <button
+        type="button"
+        class="secondary-btn"
+        (click)="goToTransactionHistory()"
+      >
+        Transaction History
+      </button>
+
+      <button
+        type="button"
+        class="danger-btn"
+        (click)="logoutWallet()"
+      >
+        Logout Wallet
+      </button>
+    </div>
+  </div>
+</div>

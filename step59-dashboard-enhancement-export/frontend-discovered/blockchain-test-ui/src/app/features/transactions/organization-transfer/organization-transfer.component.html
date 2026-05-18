@@ -1,0 +1,193 @@
+<div class="page">
+  <div class="breadcrumb">
+    <span>Digital KYC</span>
+    <span>/</span>
+    <strong>Inter-Organization Customer Transfer</strong>
+  </div>
+
+  <div class="header-actions">
+    <button
+      class="secondary-btn"
+      type="button"
+      (click)="fillSample()"
+      [disabled]="!session || loading"
+    >
+      Fill Sample
+    </button>
+
+    <button
+      class="logout-btn"
+      type="button"
+      *ngIf="session"
+      (click)="logoutWallet()"
+      [disabled]="loading"
+    >
+      Logout Wallet
+    </button>
+  </div>
+
+  <div *ngIf="!session" class="warning-card">
+    <h3>No wallet session found. Please login first.</h3>
+
+    <p>
+      Before submitting an inter-organization customer transfer, the customer must login
+      from the Wallet Login screen. After successful login, you will return automatically
+      to this Organization Transfer page.
+    </p>
+
+    <a
+      routerLink="/digital-kyc/wallet-login"
+      [queryParams]="{ redirectTo: '/digital-kyc/organization-transfer' }"
+      class="primary-link"
+    >
+      Go to Wallet Login
+    </a>
+  </div>
+
+  <div *ngIf="session" class="summary-card">
+    <div>
+      <label>Sender Customer ID</label>
+      <strong>{{ session.customerId || '-' }}</strong>
+    </div>
+
+    <div>
+      <label>Sender Full Name</label>
+      <strong>{{ session.fullName || '-' }}</strong>
+    </div>
+
+    <div>
+      <label>Sender Wallet Address</label>
+      <strong class="mono">{{ session.walletAddress || '-' }}</strong>
+    </div>
+
+    <div>
+      <label>Sender Balance</label>
+      <strong>{{ session.currentBalance ?? 0 }} {{ session.currencyCode || 'USD' }}</strong>
+    </div>
+
+    <div>
+      <label>Sender Organization</label>
+      <strong>{{ session.organizationName || session.organizationId || '-' }}</strong>
+    </div>
+  </div>
+
+  <div class="content-grid">
+    <div class="card">
+      <h2>Inter-Organization Transfer Form</h2>
+
+      <form (ngSubmit)="submitTransfer()">
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>Sender Wallet Address</label>
+            <input
+              type="text"
+              name="senderWalletAddress"
+              [(ngModel)]="form.senderWalletAddress"
+              readonly
+              class="readonly-input"
+              placeholder="Loaded automatically from wallet session"
+            />
+          </div>
+
+          <!--
+            IMPORTANT:
+            This field is the receiver customer wallet address.
+            Backend should validate that sender organization and receiver organization are different.
+          -->
+          <div class="form-group full">
+            <label>Receiver Customer Wallet Address</label>
+            <input
+              type="text"
+              name="receiverWalletAddress"
+              [(ngModel)]="form.receiverWalletAddress"
+              placeholder="Enter receiver customer wallet address from another organization"
+              [disabled]="!session || loading"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Amount</label>
+            <input
+              type="number"
+              name="amount"
+              [(ngModel)]="form.amount"
+              placeholder="100"
+              min="0.01"
+              step="0.01"
+              [disabled]="!session || loading"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Currency</label>
+            <input
+              type="text"
+              name="currency"
+              [(ngModel)]="form.currency"
+              placeholder="USD"
+              [disabled]="!session || loading"
+              required
+            />
+          </div>
+
+          <div class="form-group full">
+            <label>Transaction Purpose</label>
+            <input
+              type="text"
+              name="transactionPurpose"
+              [(ngModel)]="form.transactionPurpose"
+              placeholder="Inter-organization customer transfer"
+              [disabled]="!session || loading"
+            />
+          </div>
+
+          <div class="form-group full">
+            <label>Transaction Description</label>
+            <textarea
+              name="transactionDescription"
+              rows="4"
+              [(ngModel)]="form.transactionDescription"
+              placeholder="Customer from organization A transfers to customer from organization B"
+              [disabled]="!session || loading"
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="message success" *ngIf="successMessage">
+          {{ successMessage }}
+
+          <div *ngIf="transactionId">
+            Transaction ID:
+            <strong class="mono">{{ transactionId }}</strong>
+          </div>
+        </div>
+
+        <div class="message error" *ngIf="errorMessage">
+          {{ errorMessage }}
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="primary-btn" [disabled]="!session || loading">
+            {{ loading ? 'Submitting Transfer...' : 'Submit Inter-Organization Transfer' }}
+          </button>
+
+          <button type="button" class="secondary-btn" (click)="clearMessages()" [disabled]="loading">
+            Clear
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>API Response Preview</h2>
+
+      <pre *ngIf="apiResponse">{{ apiResponse | json }}</pre>
+
+      <div class="empty-json" *ngIf="!apiResponse">
+        API response will appear here after submission.
+      </div>
+    </div>
+  </div>
+</div>

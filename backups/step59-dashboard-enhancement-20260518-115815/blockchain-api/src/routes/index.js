@@ -21,7 +21,6 @@ const walletRoutes = require('./wallet.routes');
 const transactionRoutes = require('./transaction.routes');
 const fabricRoutes = require('./fabric.routes');
 const referenceRoutes = require('./reference.routes');
-const dashboardRoutes = safeLoadRoute("dashboard", "./dashboard.routes");
 
 
 const healthRoutes = safeLoadRoute("health", "./health.routes");
@@ -52,10 +51,6 @@ if (transactionRoutes) {
 
 if (referenceRoutes) {
   router.use("/reference", referenceRoutes);
-}
-
-if (dashboardRoutes) {
-  router.use("/dashboard", dashboardRoutes);
 }
 
 

@@ -258,7 +258,6 @@ const fabricRoutes = safeRoute('./routes/fabric.routes', 'fabric.routes');
 const referenceRoutes = safeRoute('./routes/reference.routes', 'reference.routes');
 const organizationRoutes = safeRoute('./routes/organization.routes', 'organization.routes');
 const projectViewRoutes = safeRoute('./routes/project-view.routes', 'project-view.routes');
-const dashboardRoutes = safeRoute('./routes/dashboard.routes', 'dashboard.routes');
 
 /**
  * Optional root API routes aggregator.
@@ -335,10 +334,6 @@ if (projectViewRoutes) {
   app.use('/api/v1/project-views', projectViewRoutes);
 }
 
-if (dashboardRoutes) {
-  app.use('/api/v1/dashboard', dashboardRoutes);
-}
-
 /**
  * Optional generic API route aggregator.
  * Registered after specific routes to avoid overriding them.
@@ -364,8 +359,7 @@ app.get('/', (req, res) => {
       fabric: '/api/v1/fabric',
       reference: '/api/v1/reference',
       organizations: '/api/v1/organizations',
-      projectViews: '/api/v1/project-views/stats',
-      dashboard: '/api/v1/dashboard/summary'
+      projectViews: '/api/v1/project-views/stats'
     },
     requestId: req.requestId,
     correlationId: req.correlationId

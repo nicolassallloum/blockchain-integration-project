@@ -1,0 +1,180 @@
+ table_schema |                 table_name                 
+--------------+--------------------------------------------
+ blockchain   | audit_logs
+ blockchain   | blockchain_audit_log
+ blockchain   | blockchain_auth_metadata
+ blockchain   | blockchain_customer_mapping
+ blockchain   | blockchain_event_sync_status
+ blockchain   | blockchain_organization
+ blockchain   | blockchain_organization_backup_before_uuid
+ blockchain   | blockchain_organization_mapping
+ blockchain   | blockchain_postgres_audit_log
+ blockchain   | blockchain_transaction
+ blockchain   | blockchain_transaction_integration
+ blockchain   | blockchain_wallet
+ blockchain   | blockchain_wallet_balance
+ blockchain   | blockchain_wallet_integration
+ blockchain   | countries
+ blockchain   | fabric_transactions
+ blockchain   | integration_requests
+ blockchain   | kyc_hashes
+ blockchain   | kyc_requests
+ blockchain   | kyc_users
+ blockchain   | organizations
+ blockchain   | project_view_logs
+ blockchain   | sync_events
+ blockchain   | system_mappings
+ blockchain   | transactions
+ blockchain   | transactions_backup_before_generator
+ blockchain   | vw_blockchain_customer_wallet
+ blockchain   | vw_existing_customer_mapping
+ blockchain   | wallets
+ blockchain   | wallets_backup_before_generator
+(30 rows)
+
+       column_name       |        data_type         | is_nullable 
+-------------------------+--------------------------+-------------
+ wallet_id               | uuid                     | NO
+ wallet_address          | character varying        | NO
+ customer_id             | character varying        | NO
+ organization_id         | uuid                     | YES
+ organization_code       | character varying        | YES
+ wallet_type             | character varying        | NO
+ full_name               | character varying        | YES
+ national_id_hash        | character varying        | YES
+ mobile_hash             | character varying        | YES
+ email_hash              | character varying        | YES
+ password_hash_reference | character varying        | YES
+ ledger_doc_type         | character varying        | YES
+ ledger_key              | character varying        | YES
+ fabric_tx_id            | character varying        | YES
+ fabric_channel_name     | character varying        | YES
+ chaincode_name          | character varying        | YES
+ current_balance         | numeric                  | NO
+ currency_code           | character varying        | NO
+ status                  | character varying        | NO
+ kyc_status              | character varying        | NO
+ risk_level              | character varying        | NO
+ wallet_metadata         | jsonb                    | NO
+ kyc_payload             | jsonb                    | NO
+ blockchain_payload      | jsonb                    | NO
+ created_by              | character varying        | YES
+ updated_by              | character varying        | YES
+ created_at              | timestamp with time zone | NO
+ updated_at              | timestamp with time zone | NO
+ password_hash           | text                     | YES
+ pin_hash                | text                     | YES
+ login_failed_count      | integer                  | NO
+ login_locked_until      | timestamp with time zone | YES
+ last_login_at           | timestamp with time zone | YES
+ last_failed_login_at    | timestamp with time zone | YES
+ last_login_ip           | inet                     | YES
+ login_status            | character varying        | NO
+ wallet_status           | character varying        | YES
+ is_active               | boolean                  | YES
+ currency                | text                     | YES
+ fabric_response         | jsonb                    | YES
+ fabric_transaction_id   | text                     | YES
+ request_id              | text                     | YES
+ request_source          | text                     | YES
+ source_system           | text                     | YES
+(44 rows)
+
+       column_name       |        data_type         | is_nullable 
+-------------------------+--------------------------+-------------
+ transaction_id          | uuid                     | NO
+ business_transaction_id | character varying        | YES
+ ledger_transaction_id   | character varying        | YES
+ fabric_tx_id            | character varying        | YES
+ ledger_key              | character varying        | YES
+ transaction_type        | character varying        | NO
+ transaction_direction   | character varying        | YES
+ from_wallet_id          | uuid                     | YES
+ to_wallet_id            | uuid                     | YES
+ from_wallet_address     | character varying        | YES
+ to_wallet_address       | character varying        | YES
+ organization_id         | uuid                     | YES
+ organization_code       | character varying        | YES
+ amount                  | numeric                  | NO
+ currency_code           | character varying        | NO
+ transaction_fee         | numeric                  | NO
+ total_amount            | numeric                  | YES
+ status                  | character varying        | NO
+ risk_level              | character varying        | NO
+ aml_status              | character varying        | NO
+ failure_code            | character varying        | YES
+ failure_reason          | text                     | YES
+ request_reference       | character varying        | YES
+ external_reference      | character varying        | YES
+ idempotency_key         | character varying        | YES
+ fabric_channel_name     | character varying        | YES
+ chaincode_name          | character varying        | YES
+ transaction_payload     | jsonb                    | NO
+ blockchain_response     | jsonb                    | NO
+ aml_payload             | jsonb                    | NO
+ metadata                | jsonb                    | NO
+ submitted_at            | timestamp with time zone | YES
+ confirmed_at            | timestamp with time zone | YES
+ failed_at               | timestamp with time zone | YES
+ created_by              | character varying        | YES
+ updated_by              | character varying        | YES
+ created_at              | timestamp with time zone | NO
+ updated_at              | timestamp with time zone | NO
+ sender_wallet_id        | uuid                     | YES
+ sender_wallet_address   | character varying        | YES
+ sender_customer_id      | character varying        | YES
+ receiver_wallet_id      | uuid                     | YES
+ receiver_wallet_address | character varying        | YES
+ receiver_customer_id    | character varying        | YES
+ currency                | character varying        | YES
+ transaction_purpose     | text                     | YES
+ transaction_description | text                     | YES
+ transaction_status      | character varying        | YES
+ fabric_status           | character varying        | YES
+ request_id              | character varying        | YES
+ error_code              | character varying        | YES
+ error_message           | text                     | YES
+ fabric_response         | jsonb                    | YES
+ fabric_transaction_id   | character varying        | YES
+ source_system           | character varying        | YES
+ request_source          | character varying        | YES
+ fabric_block_number     | bigint                   | YES
+(57 rows)
+
+  table_name   |       column_name        |        data_type         | is_nullable 
+---------------+--------------------------+--------------------------+-------------
+ organizations | organization_id          | uuid                     | NO
+ organizations | organization_code        | character varying        | NO
+ organizations | organization_name        | character varying        | NO
+ organizations | organization_type        | character varying        | NO
+ organizations | fabric_org_msp_id        | character varying        | YES
+ organizations | fabric_org_name          | character varying        | YES
+ organizations | external_system_code     | character varying        | YES
+ organizations | external_organization_id | character varying        | YES
+ organizations | country_code             | character varying        | YES
+ organizations | registration_number      | character varying        | YES
+ organizations | tax_number               | character varying        | YES
+ organizations | status                   | character varying        | NO
+ organizations | metadata                 | jsonb                    | NO
+ organizations | api_payload              | jsonb                    | NO
+ organizations | blockchain_payload       | jsonb                    | NO
+ organizations | created_by               | character varying        | YES
+ organizations | updated_by               | character varying        | YES
+ organizations | created_at               | timestamp with time zone | NO
+ organizations | updated_at               | timestamp with time zone | NO
+(19 rows)
+
+              wallet_id               |                 wallet_address                  | customer_id |           organization_id            | organization_code | wallet_type |    full_name    | national_id_hash | mobile_hash |          email_hash          | password_hash_reference | ledger_doc_type |                   ledger_key                    |                           fabric_tx_id                           | fabric_channel_name |     chaincode_name      | current_balance | currency_code | status | kyc_status | risk_level |                                                                                                                      wallet_metadata                                                                                                                       |                                                                                                      kyc_payload                                                                                                      |                                                                                                                                                                                                                                       blockchain_payload                                                                                                                                                                                                                                        | created_by | updated_by |          created_at           |          updated_at           |                        password_hash                         | pin_hash | login_failed_count | login_locked_until | last_login_at | last_failed_login_at | last_login_ip | login_status | wallet_status | is_active | currency |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     fabric_response                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |                      fabric_transaction_id                       |          request_id          | request_source |   source_system    
+--------------------------------------+-------------------------------------------------+-------------+--------------------------------------+-------------------+-------------+-----------------+------------------+-------------+------------------------------+-------------------------+-----------------+-------------------------------------------------+------------------------------------------------------------------+---------------------+-------------------------+-----------------+---------------+--------+------------+------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+------------+------------+-------------------------------+-------------------------------+--------------------------------------------------------------+----------+--------------------+--------------------+---------------+----------------------+---------------+--------------+---------------+-----------+----------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------+------------------------------+----------------+--------------------
+ 1f948df9-541f-4a31-81ad-542848332faf | WALLET_7B4005C8A52163B92422B3AA1D8A409F4943DDED | 3274155255  | 5c4beb22-cfcd-4473-9966-3e8ddcd7a304 | 149               | CUSTOMER    | MIKE CHEHADE    | 3535             | 71978519    | mike.chehade@valoores.com    |                         | wallet          | WALLET_7B4005C8A52163B92422B3AA1D8A409F4943DDED | 5e48c87808cf32034bd6fc22bbf552f07b5623b54ebccf540feb827a7a565fad | kycchannelnix1      | kyc-wallet-chaincode-js |         1000.00 | USD           | ACTIVE | PENDING    | LOW        | {"source": "BLOCKCHAIN_API", "fabricTxId": "5e48c87808cf32034bd6fc22bbf552f07b5623b54ebccf540feb827a7a565fad", "walletType": "CUSTOMER", "createdFrom": "ANGULAR_UI", "organizationId": "5c4beb22-cfcd-4473-9966-3e8ddcd7a304", "organizationCode": "149"} | {"fullName": "MIKE CHEHADE", "emailHash": "mike.chehade@valoores.com", "mobileHash": "71978519", "nationalIdHash": "3535", "organizationId": "5c4beb22-cfcd-4473-9966-3e8ddcd7a304", "organizationCode": "149"}       | {"status": "ACTIVE", "balance": 1000, "docType": "wallet", "currency": "TOKEN", "fullName": "MIKE CHEHADE", "createdAt": "2026-05-18T07:29:50.201Z", "updatedAt": "2026-05-18T07:29:50.201Z", "customerId": "3274155255", "createdTxId": "5e48c87808cf32034bd6fc22bbf552f07b5623b54ebccf540feb827a7a565fad", "updatedTxId": "5e48c87808cf32034bd6fc22bbf552f07b5623b54ebccf540feb827a7a565fad", "walletAddress": "WALLET_7B4005C8A52163B92422B3AA1D8A409F4943DDED", "organizationId": "149"}    | nix        | nix        | 2026-05-18 10:29:52.304229+03 | 2026-05-18 10:29:52.304229+03 | $2b$10$gfGqpVA0SiOhEX5CSe.Ssefv3F5zxSlbiHtTHHqAt7Etx/wHjuiBm |          |                  0 |                    |               |                      |               | ACTIVE       | ACTIVE        | t         |          | {"args": ["3274155255", "149", "MIKE CHEHADE", "3535", "71978519", "mike.chehade@valoores.com", "$2b$10$gfGqpVA0SiOhEX5CSe.Ssefv3F5zxSlbiHtTHHqAt7Etx/wHjuiBm", "1000"], "data": {"data": {"wallet": {"status": "ACTIVE", "balance": 1000, "docType": "wallet", "currency": "TOKEN", "fullName": "MIKE CHEHADE", "createdAt": "2026-05-18T07:29:50.201Z", "updatedAt": "2026-05-18T07:29:50.201Z", "customerId": "3274155255", "createdTxId": "5e48c87808cf32034bd6fc22bbf552f07b5623b54ebccf540feb827a7a565fad", "updatedTxId": "5e48c87808cf32034bd6fc22bbf552f07b5623b54ebccf540feb827a7a565fad", "walletAddress": "WALLET_7B4005C8A52163B92422B3AA1D8A409F4943DDED", "organizationId": "149"}, "transaction": {"amount": 1000, "status": "SUCCESS", "docType": "transaction", "currency": "TOKEN", "createdAt": "2026-05-18T07:29:50.201Z", "riskStatus": "LOW", "createdTxId": "5e48c87808cf32034bd6fc22bbf552f07b5623b54ebccf540feb827a7a565fad", "description": "Wallet created", "transactionId": "5e48c87808cf32034bd6fc22bbf552f07b5623b54ebccf540feb827a7a565fad", "organizationId": "149", "toWalletAddress": "WALLET_7B4005C8A52163B92422B3AA1D8A409F4943DDED", "transactionType": "WALLET_CREATED", "fromWalletAddress": null}}, "message": "Wallet created successfully", "success": true}, "type": "submit", "success": true, "durationMs": 2103, "channelName": "kycchannelnix1", "functionName": "CreateWallet", "chaincodeName": "kyc-wallet-chaincode-js"}          | 5e48c87808cf32034bd6fc22bbf552f07b5623b54ebccf540feb827a7a565fad | REQ_4D373661B13CBC4ABFF37032 | ANGULAR_UI     | BLOCKCHAIN_TEST_UI
+ f662e292-6d8b-41d8-bdc9-1eaa6367bf66 | WALLET_EB0D1FEA30076A1AB916EEAF7365648A9226C0D1 | 3274155253  | 52501adb-75e9-4568-8083-476381a1115e | 171               | CUSTOMER    | Nicolas Salloum | 3535             | 79170430    | nicolas.salloum@valoores.com |                         | wallet          | WALLET_EB0D1FEA30076A1AB916EEAF7365648A9226C0D1 | 2f1c825ffffe994af07bf9bbdd52815fe6c2bc895665b48f0410cec4b4ead0ed | kycchannelnix1      | kyc-wallet-chaincode-js |         1000.00 | USD           | ACTIVE | PENDING    | LOW        | {"source": "BLOCKCHAIN_API", "fabricTxId": "2f1c825ffffe994af07bf9bbdd52815fe6c2bc895665b48f0410cec4b4ead0ed", "walletType": "CUSTOMER", "createdFrom": "ANGULAR_UI", "organizationId": "52501adb-75e9-4568-8083-476381a1115e", "organizationCode": "171"} | {"fullName": "Nicolas Salloum", "emailHash": "nicolas.salloum@valoores.com", "mobileHash": "79170430", "nationalIdHash": "3535", "organizationId": "52501adb-75e9-4568-8083-476381a1115e", "organizationCode": "171"} | {"status": "ACTIVE", "balance": 1000, "docType": "wallet", "currency": "TOKEN", "fullName": "Nicolas Salloum", "createdAt": "2026-05-18T07:03:16.492Z", "updatedAt": "2026-05-18T07:03:16.492Z", "customerId": "3274155253", "createdTxId": "2f1c825ffffe994af07bf9bbdd52815fe6c2bc895665b48f0410cec4b4ead0ed", "updatedTxId": "2f1c825ffffe994af07bf9bbdd52815fe6c2bc895665b48f0410cec4b4ead0ed", "walletAddress": "WALLET_EB0D1FEA30076A1AB916EEAF7365648A9226C0D1", "organizationId": "171"} | nix        | nix        | 2026-05-18 10:03:18.590446+03 | 2026-05-18 10:03:18.590446+03 | $2b$10$zJ300HBr5hNfqx5e/x7wpOtcSiUrP.Nqh4V2gCauwQrSgLXEtPCXK |          |                  0 |                    |               |                      |               | ACTIVE       | ACTIVE        | t         |          | {"args": ["3274155253", "171", "Nicolas Salloum", "3535", "79170430", "nicolas.salloum@valoores.com", "$2b$10$zJ300HBr5hNfqx5e/x7wpOtcSiUrP.Nqh4V2gCauwQrSgLXEtPCXK", "1000"], "data": {"data": {"wallet": {"status": "ACTIVE", "balance": 1000, "docType": "wallet", "currency": "TOKEN", "fullName": "Nicolas Salloum", "createdAt": "2026-05-18T07:03:16.492Z", "updatedAt": "2026-05-18T07:03:16.492Z", "customerId": "3274155253", "createdTxId": "2f1c825ffffe994af07bf9bbdd52815fe6c2bc895665b48f0410cec4b4ead0ed", "updatedTxId": "2f1c825ffffe994af07bf9bbdd52815fe6c2bc895665b48f0410cec4b4ead0ed", "walletAddress": "WALLET_EB0D1FEA30076A1AB916EEAF7365648A9226C0D1", "organizationId": "171"}, "transaction": {"amount": 1000, "status": "SUCCESS", "docType": "transaction", "currency": "TOKEN", "createdAt": "2026-05-18T07:03:16.492Z", "riskStatus": "LOW", "createdTxId": "2f1c825ffffe994af07bf9bbdd52815fe6c2bc895665b48f0410cec4b4ead0ed", "description": "Wallet created", "transactionId": "2f1c825ffffe994af07bf9bbdd52815fe6c2bc895665b48f0410cec4b4ead0ed", "organizationId": "171", "toWalletAddress": "WALLET_EB0D1FEA30076A1AB916EEAF7365648A9226C0D1", "transactionType": "WALLET_CREATED", "fromWalletAddress": null}}, "message": "Wallet created successfully", "success": true}, "type": "submit", "success": true, "durationMs": 2096, "channelName": "kycchannelnix1", "functionName": "CreateWallet", "chaincodeName": "kyc-wallet-chaincode-js"} | 2f1c825ffffe994af07bf9bbdd52815fe6c2bc895665b48f0410cec4b4ead0ed | REQ_B914A10FC025A3EFA46ECF2A | ANGULAR_UI     | BLOCKCHAIN_TEST_UI
+ bb86e8da-1923-42a1-b5e2-76606dcaebbb | WALLET_6C09412B8F09A356749E127FF70D8FA062D7F060 | 3274155252  | edd41070-5d74-447c-bf47-7a8653c71ac0 | 169               | CUSTOMER    | NICOLAS SALLOUM | 3535             | 79170430    | Nsalloum95@gmail.com         |                         | wallet          | WALLET_6C09412B8F09A356749E127FF70D8FA062D7F060 | 66d0ef480598b8ec0de8d4def0b85456cb250005cbc948beb76bed5354cb90c2 | kycchannelnix1      | kyc-wallet-chaincode-js |         1000.00 | USD           | ACTIVE | PENDING    | LOW        | {"source": "BLOCKCHAIN_API", "fabricTxId": "66d0ef480598b8ec0de8d4def0b85456cb250005cbc948beb76bed5354cb90c2", "walletType": "CUSTOMER", "createdFrom": "ANGULAR_UI", "organizationId": "edd41070-5d74-447c-bf47-7a8653c71ac0", "organizationCode": "169"} | {"fullName": "NICOLAS SALLOUM", "emailHash": "Nsalloum95@gmail.com", "mobileHash": "79170430", "nationalIdHash": "3535", "organizationId": "edd41070-5d74-447c-bf47-7a8653c71ac0", "organizationCode": "169"}         | {"status": "ACTIVE", "balance": 1000, "docType": "wallet", "currency": "TOKEN", "fullName": "NICOLAS SALLOUM", "createdAt": "2026-05-18T07:00:09.514Z", "updatedAt": "2026-05-18T07:00:09.514Z", "customerId": "3274155252", "createdTxId": "66d0ef480598b8ec0de8d4def0b85456cb250005cbc948beb76bed5354cb90c2", "updatedTxId": "66d0ef480598b8ec0de8d4def0b85456cb250005cbc948beb76bed5354cb90c2", "walletAddress": "WALLET_6C09412B8F09A356749E127FF70D8FA062D7F060", "organizationId": "169"} | nix        | nix        | 2026-05-18 10:00:11.612278+03 | 2026-05-18 10:00:11.612278+03 | $2b$10$i77glJlxAxyNz5naPqVzJu/WqXbRVv7tLyqpX3k7LLEZMYXMtctEa |          |                  0 |                    |               |                      |               | ACTIVE       | ACTIVE        | t         |          | {"args": ["3274155252", "169", "NICOLAS SALLOUM", "3535", "79170430", "Nsalloum95@gmail.com", "$2b$10$i77glJlxAxyNz5naPqVzJu/WqXbRVv7tLyqpX3k7LLEZMYXMtctEa", "1000"], "data": {"data": {"wallet": {"status": "ACTIVE", "balance": 1000, "docType": "wallet", "currency": "TOKEN", "fullName": "NICOLAS SALLOUM", "createdAt": "2026-05-18T07:00:09.514Z", "updatedAt": "2026-05-18T07:00:09.514Z", "customerId": "3274155252", "createdTxId": "66d0ef480598b8ec0de8d4def0b85456cb250005cbc948beb76bed5354cb90c2", "updatedTxId": "66d0ef480598b8ec0de8d4def0b85456cb250005cbc948beb76bed5354cb90c2", "walletAddress": "WALLET_6C09412B8F09A356749E127FF70D8FA062D7F060", "organizationId": "169"}, "transaction": {"amount": 1000, "status": "SUCCESS", "docType": "transaction", "currency": "TOKEN", "createdAt": "2026-05-18T07:00:09.514Z", "riskStatus": "LOW", "createdTxId": "66d0ef480598b8ec0de8d4def0b85456cb250005cbc948beb76bed5354cb90c2", "description": "Wallet created", "transactionId": "66d0ef480598b8ec0de8d4def0b85456cb250005cbc948beb76bed5354cb90c2", "organizationId": "169", "toWalletAddress": "WALLET_6C09412B8F09A356749E127FF70D8FA062D7F060", "transactionType": "WALLET_CREATED", "fromWalletAddress": null}}, "message": "Wallet created successfully", "success": true}, "type": "submit", "success": true, "durationMs": 2098, "channelName": "kycchannelnix1", "functionName": "CreateWallet", "chaincodeName": "kyc-wallet-chaincode-js"}         | 66d0ef480598b8ec0de8d4def0b85456cb250005cbc948beb76bed5354cb90c2 | REQ_AE97AE98A28A2AD59B770B6F | ANGULAR_UI     | BLOCKCHAIN_TEST_UI
+(3 rows)
+
+            transaction_id            | business_transaction_id | ledger_transaction_id |              fabric_tx_id               | ledger_key | transaction_type | transaction_direction | from_wallet_id | to_wallet_id |           from_wallet_address            |            to_wallet_address             | organization_id | organization_code |    amount    | currency_code | transaction_fee | total_amount | status  | risk_level | aml_status  | failure_code | failure_reason | request_reference | external_reference | idempotency_key | fabric_channel_name | chaincode_name | transaction_payload | blockchain_response | aml_payload | metadata | submitted_at | confirmed_at | failed_at | created_by | updated_by |         created_at         |         updated_at         | sender_wallet_id |          sender_wallet_address           | sender_customer_id | receiver_wallet_id |         receiver_wallet_address          | receiver_customer_id | currency |          transaction_purpose           |                             transaction_description                             | transaction_status | fabric_status |          request_id          | error_code | error_message | fabric_response |          fabric_transaction_id          |         source_system         |   request_source    | fabric_block_number 
+--------------------------------------+-------------------------+-----------------------+-----------------------------------------+------------+------------------+-----------------------+----------------+--------------+------------------------------------------+------------------------------------------+-----------------+-------------------+--------------+---------------+-----------------+--------------+---------+------------+-------------+--------------+----------------+-------------------+--------------------+-----------------+---------------------+----------------+---------------------+---------------------+-------------+----------+--------------+--------------+-----------+------------+------------+----------------------------+----------------------------+------------------+------------------------------------------+--------------------+--------------------+------------------------------------------+----------------------+----------+----------------------------------------+---------------------------------------------------------------------------------+--------------------+---------------+------------------------------+------------+---------------+-----------------+-----------------------------------------+-------------------------------+---------------------+---------------------
+ 5563237a-66a3-46b6-93ff-9fa420c9cab8 |                         |                       | FABRIC_D7C2BCDFCF66B076790C853684DBB802 |            | TRANSFER         |                       |                |              | c9736ee1f8a6cc455ceec921c617670636b7206c | 723e8e4eef2dc888dad1c783dc25a1f0287e101f |                 |                   | 238.06000000 | USD           |      1.19000000 | 239.25000000 | PENDING | LOW        | NOT_CHECKED |              |                |                   |                    |                 |                     |                | {}                  | {}                  | {}          | {}       |              |              |           | nix        |            | 2026-05-15 11:42:01.966+03 | 2026-05-15 11:42:01.966+03 |                  | c9736ee1f8a6cc455ceec921c617670636b7206c | 3274117581         |                    | 723e8e4eef2dc888dad1c783dc25a1f0287e101f | 3274036052           | USD      | Generated wallet-to-wallet transaction | Synthetic transaction generated for dashboard, history, and performance testing | PENDING            | PENDING       | REQ_717D249364BBCF7623D90643 |            |               |                 | FABRIC_D7C2BCDFCF66B076790C853684DBB802 | BLOCKCHAIN_API_FAST_GENERATOR | DATA_GENERATOR_FAST |                    
+ 61223f6b-c32a-48ef-8d12-ecea8133b02a |                         |                       | FABRIC_8ECAD0522FBA86CB7BD7207452CE92C9 |            | TRANSFER         |                       |                |              | 6e619bc8f52a37475b226b8ca99fa00e2253d6c6 | 2c0934daa8238930de9c99f4af119dcb0c3ea93e |                 |                   | 181.54000000 | USD           |      0.91000000 | 182.45000000 | PENDING | LOW        | NOT_CHECKED |              |                |                   |                    |                 |                     |                | {}                  | {}                  | {}          | {}       |              |              |           | nix        |            | 2026-05-15 11:42:01.966+03 | 2026-05-15 11:42:01.966+03 |                  | 6e619bc8f52a37475b226b8ca99fa00e2253d6c6 | 3274126960         |                    | 2c0934daa8238930de9c99f4af119dcb0c3ea93e | 3273988760           | USD      | Generated wallet-to-wallet transaction | Synthetic transaction generated for dashboard, history, and performance testing | PENDING            | PENDING       | REQ_DE4B84424EED7A8DFD81204D |            |               |                 | FABRIC_8ECAD0522FBA86CB7BD7207452CE92C9 | BLOCKCHAIN_API_FAST_GENERATOR | DATA_GENERATOR_FAST |                    
+ 7e18c289-05ed-4063-b180-d279a290e90a |                         |                       | FABRIC_4A6BEDB4C9D3319ECDA1EF89A2FF899B |            | TRANSFER         |                       |                |              | 860faecab4120432a737fc5b9646f83c9ae6b3d8 | bcd4898e8e6271b98a730bb33f0de4198e8d98de |                 |                   |   1.79000000 | USD           |      0.01000000 |   1.80000000 | PENDING | LOW        | NOT_CHECKED |              |                |                   |                    |                 |                     |                | {}                  | {}                  | {}          | {}       |              |              |           | nix        |            | 2026-05-15 11:42:01.966+03 | 2026-05-15 11:42:01.966+03 |                  | 860faecab4120432a737fc5b9646f83c9ae6b3d8 | 3274110948         |                    | bcd4898e8e6271b98a730bb33f0de4198e8d98de | 3274118861           | USD      | Generated wallet-to-wallet transaction | Synthetic transaction generated for dashboard, history, and performance testing | PENDING            | PENDING       | REQ_FFE347F23A2C70B1BC007F0D |            |               |                 | FABRIC_4A6BEDB4C9D3319ECDA1EF89A2FF899B | BLOCKCHAIN_API_FAST_GENERATOR | DATA_GENERATOR_FAST |                    
+(3 rows)
+

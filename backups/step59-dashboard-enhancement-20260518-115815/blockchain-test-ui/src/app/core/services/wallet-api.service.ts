@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export interface WalletListFilters {
@@ -119,10 +119,54 @@ export class WalletApiService {
   }
 
   /**
-   * STEP 59 Dashboard Enhancement API.
+   * Dashboard summary helper.
+   * If backend does not have a dedicated dashboard endpoint,
+   * this method calculates summary from /wallets.
    */
-  getDashboardSummary(): Observable<any> {
-    return this.http.get<any>(`${this.apiBaseUrl}/dashboard/summary`);
+  getDashboardSummary(limit: number = 13): Observable<any> {
+    return this.getWallets({ page: 1, limit }).pipe(
+      map((response: any) => {
+        const wallets = this.extractWalletArray(response);
+
+        const totalWallets =
+          response?.pagination?.totalRecords ??
+          response?.pagination?.total ??
+          response?.totalRecords ??
+          wallets.length;
+
+        const activeWallets = wallets.filter((wallet: any) => {
+          const status =
+            wallet?.status ||
+            wallet?.walletStatus ||
+            wallet?.wallet_status ||
+            '';
+
+          return String(status).toUpperCase() === 'ACTIVE';
+        }).length;
+
+        return {
+          success: true,
+          message: 'Dashboard summary calculated successfully',
+          data: {
+            totalWallets,
+            activeWallets,
+            currentPage: response?.pagination?.page || 1,
+            limit: response?.pagination?.limit || limit,
+            dataSource: response?.source || 'PostgreSQL',
+            table: response?.table || 'blockchain.wallets',
+            wallets
+          },
+          pagination: response?.pagination || {
+            page: 1,
+            limit,
+            totalRecords: totalWallets,
+            totalPages: 1,
+            hasNextPage: false,
+            hasPreviousPage: false
+          }
+        };
+      })
+    );
   }
 
   /**
