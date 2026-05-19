@@ -1,0 +1,20 @@
+src/services/wallet.service.js:188:    throw new Error('Blockchain CreateWallet did not return wallet.walletAddress');
+src/services/wallet.service.js:489:    fabricResult = await fabricService.submitTransaction(
+src/services/wallet.service.js:490:      'CreateWallet',
+src/services/wallet.service.js:701:    fabricResult = await fabricService.submitTransaction(
+src/services/wallet.service.js:702:      'CreateWallet',
+src/services/wallet-query.service.js:52:        const fabricResult = await fabricService.evaluateTransaction(
+src/services/wallet-query.service.js:107:        const fabricResult = await fabricService.evaluateTransaction(
+src/services/dashboard.service.js:208:  const resultBuffer = await qsccContract.evaluateTransaction(
+src/services/fabric.service.js:262:  async submitTransaction(functionName, args = [], context = {}) {
+src/services/fabric.service.js:311:        resultBuffer = await connection.contract.submitTransaction(
+src/services/fabric.service.js:368:  async evaluateTransaction(functionName, args = [], context = {}) {
+src/services/fabric.service.js:391:      const resultBuffer = await connection.contract.evaluateTransaction(
+src/services/wallet.service.js.bak.restore_working_20260506_152505:322:    if (fabricService && typeof fabricService.submitTransaction === 'function') {
+src/services/wallet.service.js.bak.restore_working_20260506_152505:323:      fabricResult = await fabricService.submitTransaction('CreateWallet', [
+src/controllers/fabric.controller.js:20:      const result = await fabricService.evaluateTransaction(
+src/controllers/fabric.controller.js:64:      const result = await fabricService.submitTransaction(
+src/routes/fabric.routes.js:29:  fabricController.submitTransaction ||
+src/routes/fabric.routes.js:32:  unavailableHandler("submitTransaction");
+src/routes/fabric.routes.js:35:  fabricController.evaluateTransaction ||
+src/routes/fabric.routes.js:38:  unavailableHandler("evaluateTransaction");

@@ -1,0 +1,20 @@
+src/scripts/README_REF_CUSTOMER_TRANSACTION_FIX.txt:8:Key (src_customer_id) is not present in table "ref_customer".
+src/scripts/README_REF_CUSTOMER_TRANSACTION_FIX.txt:14:- `sdedba.ref_customer`
+src/scripts/README_REF_CUSTOMER_TRANSACTION_FIX.txt:24:- `src_customer_id` from `sdedba.ref_customer`
+src/scripts/README_REF_CUSTOMER_TRANSACTION_FIX.txt:25:- `dst_customer_id` from `sdedba.ref_customer`
+src/scripts/README_REF_CUSTOMER_TRANSACTION_FIX.txt:27:The generator must not invent transaction customer IDs and must not select blockchain wallets unless the wallet customer already exists in `sdedba.ref_customer`.
+src/scripts/README_REF_CUSTOMER_TRANSACTION_FIX.txt:52:LEFT JOIN sdedba.ref_customer c
+src/scripts/enterprise-persistence.repository.js:265:      `sdedba.ref_customer requires numeric customer_id, but received: ${walletRow.customer_id}`
+src/scripts/enterprise-persistence.repository.js:271:    INSERT INTO sdedba.ref_customer (
+src/scripts/enterprise-persistence.repository.js:324:      `sdedba.cfg_customer_def requires numeric customer_id, but received: ${walletRow.customer_id}`
+src/scripts/enterprise-persistence.repository.js:352:    INSERT INTO sdedba.cfg_customer_def (
+src/scripts/generate-wallets-transactions-fast.js:489:    'Enterprise Sync': 'YES - blockchain.wallets + sdedba.ref_customer + sdedba.cfg_customer_def',
+src/scripts/generate-wallets-transactions-fast.js:532:   * findba.fin_transaction has FK constraints to sdedba.ref_customer.
+src/scripts/generate-wallets-transactions-fast.js:534:   * already exists in sdedba.ref_customer.
+src/scripts/generate-wallets-transactions-fast.js:564:    INNER JOIN sdedba.ref_customer c
+src/scripts/generate-wallets-transactions-fast.js:577:  console.log(`[TRANSACTION_FAST_WALLETS] eligibleWallets=${formatNumber(result.rows.length)} | customerSource=sdedba.ref_customer | organizationSource=${hasOrganizationTable ? `blockchain.${organizationTable}` : 'NONE'}`);
+src/scripts/generate-wallets-transactions.js:567:    'Enterprise Sync': 'YES - blockchain.wallets + sdedba.ref_customer + sdedba.cfg_customer_def',
+src/repositories/enterprise-persistence.repository.js:265:      `sdedba.ref_customer requires numeric customer_id, but received: ${walletRow.customer_id}`
+src/repositories/enterprise-persistence.repository.js:271:    INSERT INTO sdedba.ref_customer (
+src/repositories/enterprise-persistence.repository.js:324:      `sdedba.cfg_customer_def requires numeric customer_id, but received: ${walletRow.customer_id}`
+src/repositories/enterprise-persistence.repository.js:352:    INSERT INTO sdedba.cfg_customer_def (

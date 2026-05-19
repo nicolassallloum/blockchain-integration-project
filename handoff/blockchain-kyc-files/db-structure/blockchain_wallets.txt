@@ -1,0 +1,92 @@
+                                        Table "blockchain.wallets"
+         Column          |           Type           | Collation | Nullable |            Default            
+-------------------------+--------------------------+-----------+----------+-------------------------------
+ wallet_id               | uuid                     |           | not null | gen_random_uuid()
+ wallet_address          | character varying(100)   |           | not null | 
+ customer_id             | character varying(150)   |           | not null | 
+ organization_id         | uuid                     |           |          | 
+ organization_code       | character varying(100)   |           |          | 
+ wallet_type             | character varying(50)    |           | not null | 'CUSTOMER'::character varying
+ full_name               | character varying(255)   |           |          | 
+ national_id_hash        | character varying(255)   |           |          | 
+ mobile_hash             | character varying(255)   |           |          | 
+ email_hash              | character varying(255)   |           |          | 
+ password_hash_reference | character varying(255)   |           |          | 
+ ledger_doc_type         | character varying(100)   |           |          | 'wallet'::character varying
+ ledger_key              | character varying(255)   |           |          | 
+ fabric_tx_id            | character varying(255)   |           |          | 
+ fabric_channel_name     | character varying(150)   |           |          | 
+ chaincode_name          | character varying(150)   |           |          | 
+ current_balance         | numeric(18,2)            |           | not null | 0
+ currency_code           | character varying(10)    |           | not null | 'USD'::character varying
+ status                  | character varying(30)    |           | not null | 'ACTIVE'::character varying
+ kyc_status              | character varying(30)    |           | not null | 'PENDING'::character varying
+ risk_level              | character varying(30)    |           | not null | 'LOW'::character varying
+ wallet_metadata         | jsonb                    |           | not null | '{}'::jsonb
+ kyc_payload             | jsonb                    |           | not null | '{}'::jsonb
+ blockchain_payload      | jsonb                    |           | not null | '{}'::jsonb
+ created_by              | character varying(150)   |           |          | CURRENT_USER
+ updated_by              | character varying(150)   |           |          | 
+ created_at              | timestamp with time zone |           | not null | CURRENT_TIMESTAMP
+ updated_at              | timestamp with time zone |           | not null | CURRENT_TIMESTAMP
+ password_hash           | text                     |           |          | 
+ pin_hash                | text                     |           |          | 
+ login_failed_count      | integer                  |           | not null | 0
+ login_locked_until      | timestamp with time zone |           |          | 
+ last_login_at           | timestamp with time zone |           |          | 
+ last_failed_login_at    | timestamp with time zone |           |          | 
+ last_login_ip           | inet                     |           |          | 
+ login_status            | character varying(30)    |           | not null | 'ACTIVE'::character varying
+ wallet_status           | character varying(30)    |           |          | 'ACTIVE'::character varying
+ is_active               | boolean                  |           |          | true
+ currency                | text                     |           |          | 
+ fabric_response         | jsonb                    |           |          | 
+ fabric_transaction_id   | text                     |           |          | 
+ request_id              | text                     |           |          | 
+ request_source          | text                     |           |          | 
+ source_system           | text                     |           |          | 
+Indexes:
+    "wallets_pkey" PRIMARY KEY, btree (wallet_id)
+    "idx_blockchain_wallets_blockchain_payload_gin" gin (blockchain_payload)
+    "idx_blockchain_wallets_created_at" btree (created_at)
+    "idx_blockchain_wallets_customer_id" btree (customer_id)
+    "idx_blockchain_wallets_fabric_tx_id" btree (fabric_tx_id)
+    "idx_blockchain_wallets_kyc_payload_gin" gin (kyc_payload)
+    "idx_blockchain_wallets_kyc_status" btree (kyc_status)
+    "idx_blockchain_wallets_ledger_key" btree (ledger_key)
+    "idx_blockchain_wallets_metadata_gin" gin (wallet_metadata)
+    "idx_blockchain_wallets_organization_code" btree (organization_code)
+    "idx_blockchain_wallets_organization_id" btree (organization_id)
+    "idx_blockchain_wallets_risk_level" btree (risk_level)
+    "idx_blockchain_wallets_status" btree (status)
+    "idx_blockchain_wallets_wallet_address" btree (wallet_address)
+    "idx_wallets_currency_code" btree (currency_code)
+    "idx_wallets_customer_id" btree (customer_id)
+    "idx_wallets_customer_id_login" btree (customer_id)
+    "idx_wallets_fabric_tx_id" btree (fabric_tx_id)
+    "idx_wallets_login_locked_until" btree (login_locked_until)
+    "idx_wallets_login_status" btree (login_status)
+    "idx_wallets_wallet_address" btree (wallet_address)
+    "idx_wallets_wallet_address_login" btree (wallet_address)
+    "idx_wallets_wallet_metadata_gin" gin (wallet_metadata)
+    "uq_blockchain_wallets_customer_org" UNIQUE CONSTRAINT, btree (customer_id, organization_code)
+    "uq_blockchain_wallets_wallet_address" UNIQUE CONSTRAINT, btree (wallet_address)
+    "uq_wallets_customer_id" UNIQUE CONSTRAINT, btree (customer_id)
+    "uq_wallets_customer_org" UNIQUE CONSTRAINT, btree (customer_id, organization_id)
+    "uq_wallets_wallet_address" UNIQUE CONSTRAINT, btree (wallet_address)
+    "ux_blockchain_wallets_customer_id" UNIQUE, btree (customer_id)
+    "ux_blockchain_wallets_wallet_address" UNIQUE, btree (wallet_address)
+Check constraints:
+    "chk_blockchain_wallets_balance_non_negative" CHECK (current_balance >= 0::numeric)
+    "chk_blockchain_wallets_kyc_status" CHECK (kyc_status::text = ANY (ARRAY['PENDING'::character varying, 'APPROVED'::character varying, 'REJECTED'::character varying, 'EXPIRED'::character varying, 'UNDER_REVIEW'::character varying]::text[]))
+    "chk_blockchain_wallets_risk_level" CHECK (risk_level::text = ANY (ARRAY['LOW'::character varying, 'MEDIUM'::character varying, 'HIGH'::character varying, 'CRITICAL'::character varying]::text[]))
+    "chk_blockchain_wallets_status" CHECK (status::text = ANY (ARRAY['ACTIVE'::character varying, 'INACTIVE'::character varying, 'BLOCKED'::character varying, 'SUSPENDED'::character varying, 'CLOSED'::character varying, 'DELETED'::character varying]::text[]))
+    "chk_blockchain_wallets_wallet_type" CHECK (wallet_type::text = ANY (ARRAY['CUSTOMER'::character varying, 'ORGANIZATION'::character varying, 'BANK'::character varying, 'SYSTEM'::character varying, 'MERCHANT'::character varying]::text[]))
+Referenced by:
+    TABLE "blockchain.integration_requests" CONSTRAINT "fk_blockchain_integration_requests_wallet" FOREIGN KEY (related_wallet_id) REFERENCES blockchain.wallets(wallet_id) ON UPDATE CASCADE ON DELETE SET NULL
+    TABLE "blockchain.system_mappings" CONSTRAINT "fk_blockchain_system_mappings_wallet" FOREIGN KEY (wallet_id) REFERENCES blockchain.wallets(wallet_id) ON UPDATE CASCADE ON DELETE SET NULL
+    TABLE "blockchain.transactions" CONSTRAINT "fk_blockchain_transactions_from_wallet" FOREIGN KEY (from_wallet_id) REFERENCES blockchain.wallets(wallet_id) ON UPDATE CASCADE ON DELETE SET NULL
+    TABLE "blockchain.transactions" CONSTRAINT "fk_blockchain_transactions_to_wallet" FOREIGN KEY (to_wallet_id) REFERENCES blockchain.wallets(wallet_id) ON UPDATE CASCADE ON DELETE SET NULL
+Triggers:
+    trg_blockchain_wallets_updated_at BEFORE UPDATE ON blockchain.wallets FOR EACH ROW EXECUTE FUNCTION blockchain.set_updated_at()
+

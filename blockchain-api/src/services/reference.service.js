@@ -57,7 +57,7 @@ async function getBlockchainOrganizations() {
 
 async function getSourceOfFunds() {
   const sql = `
-    SELECT *
+    SELECT lin_name AS "sourceOfFunds"
     FROM sdedba.ref_sysp68
     ORDER BY 1
   `;
@@ -66,20 +66,58 @@ async function getSourceOfFunds() {
   return result.rows;
 }
 
-async function getOccupations() {
-  const sql = `
-    SELECT *
-    FROM sdedba.ref_hr_activity_sector
-    ORDER BY 1
-  `;
+exports.getOccupations = async (req, res) => {
+  try {
+    const result = await db.query(`
+      SELECT
+        activity_sector_desc AS occupation_name
+      FROM sdedba.ref_hr_activity_sector
+      WHERE activity_sector_desc IS NOT NULL
+      ORDER BY activity_sector_desc ASC
+    `);
 
-  const result = await db.query(sql);
-  return result.rows;
-}
+    return res.status(200).json({
+      success: true,
+      message: 'Occupations retrieved successfully',
+      data: result.rows.map((row) => ({
+        code: row.occupation_code,
+        name: row.occupation_name,
+        occupationCode: row.occupation_code,
+        occupationName: row.occupation_name
+      })),
+      meta: {
+        totalRecords: result.rowCount
+      },
+      requestId: getRequestId(req)
+    });
+  } catch (error) {
+    console.error('[REFERENCE_OCCUPATIONS_ERROR]', {
+      message: error.message,
+      code: error.code,
+      detail: error.detail,
+      table: error.table,
+      column: error.column
+    });
+
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve occupations',
+      error: {
+        message: error.message,
+        code: error.code,
+        detail: error.detail,
+        table: error.table,
+        column: error.column
+      },
+      data: [],
+      requestId: getRequestId(req)
+    });
+  }
+};
 
 async function getEconomicSectors() {
   const sql = `
-    SELECT *
+    SELECT economic_sector_desc AS "economicSector"
     FROM sdedba.ref_com_economic_sector
     ORDER BY 1
   `;

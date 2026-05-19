@@ -1,0 +1,147 @@
+                                            Table "sdedba.ref_customer"
+             Column             |           Type           | Collation | Nullable |             Default             
+--------------------------------+--------------------------+-----------+----------+---------------------------------
+ customer_id                    | numeric(10,0)            |           | not null | nextval('s_customer'::regclass)
+ customer_name                  | character varying(480)   |           |          | 
+ status_code                    | numeric(10,0)            |           |          | 
+ status_bdate                   | date                     |           |          | 
+ customer_sname                 | character varying(60)    |           |          | 
+ customer_internal_code         | character varying(400)   |           |          | 
+ fiscal_exercise_bdate          | date                     |           |          | 
+ fiscal_exercise_edate          | date                     |           |          | 
+ soc_id                         | numeric(10,0)            |           |          | 
+ is_consolidated_inv_required   | character varying(1)     |           | not null | '0'::character varying
+ is_consolidation_dc            | character varying(1)     |           | not null | '0'::character varying
+ is_ticket_making_internal      | character varying(1)     |           | not null | '0'::character varying
+ credit_limit                   | numeric                  |           |          | 
+ comments                       | character varying(1020)  |           |          | 
+ customer_vendor_code           | character varying(30)    |           |          | 
+ sys_nc00017$                   | bytea                    |           |          | 
+ customer_name_ml               | character varying        |           |          | 
+ cur_id                         | numeric(10,0)            |           |          | 
+ lan_id                         | numeric(10,0)            |           |          | 
+ bsn_group_id                   | numeric(10,0)            |           |          | 
+ sku_template                   | character varying(120)   |           |          | 
+ customer_p_id                  | numeric(10,0)            |           |          | 
+ bill_to_location_id            | numeric(10,0)            |           |          | 
+ customer_previous_name         | character varying(240)   |           |          | 
+ creation_date                  | date                     |           | not null | CURRENT_DATE
+ created_by                     | numeric(10,0)            |           |          | 
+ update_date                    | date                     |           |          | 
+ updated_by                     | numeric(10,0)            |           |          | 
+ party_id                       | numeric(10,0)            |           |          | 
+ is_customer_displayed          | character varying(4)     |           | not null | '0'::character varying
+ customer_embossing_name        | character varying(240)   |           |          | 
+ mother_name                    | character varying(240)   |           |          | 
+ is_card_auto_generated         | character varying(1)     |           | not null | '0'::character varying
+ income_amount                  | numeric                  |           |          | 
+ tech_lgcy_customer_code        | character varying(40)    |           |          | 
+ tech_lgcy_customer_code_nbr    | character varying(10)    |           |          | 
+ tech_lgcy_customer_code_letter | character varying(10)    |           |          | 
+ is_valid                       | character varying(1)     |           | not null | '0'::character varying
+ party_type_code                | numeric(5,0)             |           |          | 
+ person_dob                     | date                     |           |          | 
+ birth_cou_id                   | numeric(10,0)            |           |          | 
+ person_image                   | bytea                    |           |          | 
+ income_interval_id             | numeric(10,0)            |           |          | 
+ person_gender                  | numeric                  |           |          | 
+ birth_place_id                 | numeric                  |           |          | 
+ person_title                   | numeric                  |           |          | 
+ registration_no                | character varying(400)   |           |          | 
+ registration_place_id          | numeric                  |           |          | 
+ comments2                      | character(1020)          |           |          | 
+ registration_date              | date                     |           |          | 
+ registration_cou_id            | numeric                  |           |          | 
+ social_capital                 | character varying(30)    |           |          | 
+ customer_reference             | character varying(400)   |           |          | 
+ legacy_customer_name           | character varying(800)   |           |          | 
+ tax_rule_id                    | numeric                  |           |          | 
+ lgcy_charge_group_code         | numeric                  |           |          | 
+ lgcy_limit_group_code          | numeric                  |           |          | 
+ customer_nature                | numeric                  |           |          | 
+ parent_registration_cou_id     | numeric                  |           |          | 
+ social_paid_capital            | numeric                  |           |          | 
+ tech_customer_name             | character varying(800)   |           |          | 
+ tech_updated_customer_name     | character varying(800)   |           |          | 
+ tech_substr_cst_nm_sndx_value  | character varying(20)    |           |          | 
+ tech_updt_sbstr_cst_nm_sdx_val | character varying(20)    |           |          | 
+ tech_updated_customer_fname    | character varying(256)   |           |          | 
+ tech_updated_customer_lname    | character varying(256)   |           |          | 
+ legacy_creation_date           | date                     |           |          | 
+ customer_embossing_name_ml     | xml                      |           |          | 
+ last_extraction_date           | date                     |           |          | 
+ is_gross_income_passive        | character varying(1)     |           |          | 
+ is_asst_hld_passive_incme_prod | character varying(1)     |           |          | 
+ social_capital_cur_id          | numeric                  |           |          | 
+ birth_palce_desc               | character varying(240)   |           |          | 
+ adr_desc                       | character varying(800)   |           |          | 
+ tech_is_cust_name_dictionary   | character varying(800)   |           |          | 
+ yearly_income_amnt             | numeric                  |           |          | 
+ legacy_customer_name_ml        | character varying(800)   |           |          | 
+ reason_id                      | numeric                  |           |          | 
+ legacy_update_date             | date                     |           |          | 
+ tech_last_saved_web_page_no    | character varying(10)    |           |          | 
+ customer_sname_ml              | character varying(200)   |           |          | 
+ birth_nationality_id           | numeric                  |           |          | 
+ registration_place_name        | character varying(60)    |           |          | 
+ registration_place_name_ind    | character varying(60)    |           |          | 
+ tech_suspect_person_name       | character varying(240)   |           |          | 
+ customer_first_name            | character varying(240)   |           |          | 
+ customer_last_name             | character varying(240)   |           |          | 
+ customer_father_name           | character varying(240)   |           |          | 
+ customer_mother_name           | character varying(240)   |           |          | 
+ capital_source                 | numeric(10,0)            |           |          | 
+ customer_maiden_name           | character varying(120)   |           |          | 
+ mother_maiden_name             | character varying(120)   |           |          | 
+ last_update_date               | date                     |           |          | 
+ registration_subdivision_name  | character varying(120)   |           |          | 
+ registration_p_subdiv_name     | character varying(120)   |           |          | 
+ last_update_emp_id             | numeric(10,0)            |           |          | 
+ tech_info_completion_desc      | character varying(16000) |           |          | 
+ customer_aka                   | character varying(120)   |           |          | 
+ customer_trade_name            | character varying(120)   |           |          | 
+ mother_grandfather_name        | character varying(120)   |           |          | 
+ father_middle_name             | character varying(120)   |           |          | 
+ father_grandfather_name        | character varying(120)   |           |          | 
+ tech_account_no                | character varying(240)   |           |          | 
+ client_id                      | numeric(10,0)            |           |          | 
+ party_sub_type                 | numeric(10,0)            |           |          | 
+ tech_cust_name_soundex_value   | character varying(200)   |           |          | 
+ tech_updt_cst_name_soundex_val | character varying(200)   |           |          | 
+ tech_is_cust_name_updated      | character varying(1)     |           |          | 
+ tech_customer_profile_id       | character varying(32000) |           |          | 
+ data_source                    | numeric(5,0)             |           |          | 
+Indexes:
+    "ref_customer_pkey" PRIMARY KEY, btree (customer_id)
+    "ind_customer_id_1" btree (customer_id)
+    "indx_cus_customer_id" btree (customer_id)
+    "ref_customer_customer_name_idx" gin (customer_name gin_trgm_ops) WITH (fastupdate=off, gin_pending_list_limit='16384')
+Referenced by:
+    TABLE "ref_customer_financial_info" CONSTRAINT "FK_ref_cst_fin_inf_cus_id" FOREIGN KEY (customer_id) REFERENCES ref_customer(customer_id)
+    TABLE "ref_cust_item_ven_denomination" CONSTRAINT "fk01_ref_cust_item_ven_denomination" FOREIGN KEY (customer_id) REFERENCES ref_customer(customer_id)
+    TABLE "ref_customer_freetext" CONSTRAINT "fk01_ref_customer_freetext" FOREIGN KEY (customer_id) REFERENCES ref_customer(customer_id)
+    TABLE "suitedba.cfg_customer_def" CONSTRAINT "fk02_cfg_customer_def" FOREIGN KEY (customer_id) REFERENCES ref_customer(customer_id)
+    TABLE "cfg_customer_def" CONSTRAINT "fk03_vlp_cfg_customer_def" FOREIGN KEY (customer_id) REFERENCES ref_customer(customer_id)
+    TABLE "ref_com_customer_white_list" CONSTRAINT "fk_com_cus_white_list" FOREIGN KEY (customer_id) REFERENCES ref_customer(customer_id)
+    TABLE "ref_com_referral_info" CONSTRAINT "fk_com_rfrl_cust_id" FOREIGN KEY (customer_id) REFERENCES ref_customer(customer_id)
+    TABLE "ref_com_referral_info" CONSTRAINT "fk_com_rfrl_rb_cust_id" FOREIGN KEY (referred_by_customer_id) REFERENCES ref_customer(customer_id)
+    TABLE "ref_customer_economic_sector" CONSTRAINT "fk_cst_eco_sec_cus_id" FOREIGN KEY (customer_id) REFERENCES ref_customer(customer_id)
+    TABLE "ref_customer_general_info" CONSTRAINT "fk_cst_gen_inf_cus_id" FOREIGN KEY (customer_id) REFERENCES ref_customer(customer_id)
+    TABLE "ref_customer_media" CONSTRAINT "fk_cst_md_cus_id" FOREIGN KEY (customer_id) REFERENCES ref_customer(customer_id) ON DELETE CASCADE
+    TABLE "ref_customer_occupation_info" CONSTRAINT "fk_cst_ocp_inf_cus_id" FOREIGN KEY (customer_id) REFERENCES ref_customer(customer_id)
+    TABLE "ref_customer_multi_misc_info" CONSTRAINT "fk_cus_mlt_msc_inf_cus_id" FOREIGN KEY (customer_id) REFERENCES ref_customer(customer_id) ON DELETE CASCADE
+    TABLE "ref_customer_nationality" CONSTRAINT "fk_cus_nat_cus_id" FOREIGN KEY (customer_id) REFERENCES ref_customer(customer_id)
+    TABLE "ref_customer_pep_misc_info" CONSTRAINT "fk_customer_pep_misc_info_id" FOREIGN KEY (customer_id) REFERENCES ref_customer(customer_id)
+    TABLE "ref_item_cust_mlti_misc_info" CONSTRAINT "fk_icmmi_customer_id" FOREIGN KEY (customer_id) REFERENCES ref_customer(customer_id)
+    TABLE "ref_com_pic_verification" CONSTRAINT "fk_pic_verification_customer" FOREIGN KEY (customer_id) REFERENCES ref_customer(customer_id)
+    TABLE "ref_item_commission_info" CONSTRAINT "fk_ref_itm_com_info_customer_id" FOREIGN KEY (customer_id) REFERENCES ref_customer(customer_id)
+    TABLE "ref_customer_bsngp_date" CONSTRAINT "fk_sde_ref_customer_id" FOREIGN KEY (customer_id) REFERENCES ref_customer(customer_id)
+    TABLE "ref_sim_acc_crs_cntrolng_prsns" CONSTRAINT "fk_sim_acc_crs_customer" FOREIGN KEY (customer_id) REFERENCES ref_customer(customer_id)
+    TABLE "fin_transaction" CONSTRAINT "fk_trnsctn_src_cust_id" FOREIGN KEY (src_customer_id) REFERENCES ref_customer(customer_id)
+Triggers:
+    audit_users AFTER INSERT OR DELETE OR UPDATE ON ref_customer FOR EACH ROW EXECUTE FUNCTION audit_trigger()
+    audit_users_1 AFTER INSERT OR DELETE OR UPDATE ON ref_customer FOR EACH ROW EXECUTE FUNCTION audit_trigger()
+    trigger_notify_ref_customer_delete AFTER DELETE ON ref_customer FOR EACH ROW EXECUTE FUNCTION notify_ref_customer_delete()
+    trigger_notify_ref_customer_insert AFTER INSERT ON ref_customer FOR EACH ROW EXECUTE FUNCTION notify_ref_customer_insert()
+    trigger_notify_ref_customer_update AFTER UPDATE ON ref_customer FOR EACH ROW EXECUTE FUNCTION notify_ref_customer_update()
+

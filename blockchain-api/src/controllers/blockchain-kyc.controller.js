@@ -2,7 +2,7 @@
 
 const blockchainKycService = require('../services/blockchain-kyc.service');
 
-async function createBlockchainKycWallet(req, res, next) {
+async function createBlockchainKycWallet(req, res) {
   try {
     const data = await blockchainKycService.createBlockchainKycWallet(
       req.body,
@@ -11,31 +11,37 @@ async function createBlockchainKycWallet(req, res, next) {
 
     return res.status(201).json({
       success: true,
-      message: 'Blockchain KYC wallet request created successfully.',
+      message: data.message || 'Blockchain KYC wallet created successfully.',
       data
     });
   } catch (error) {
     console.error('[BLOCKCHAIN_KYC_CREATE_ERROR]', {
       message: error.message,
-      code: error.code,
-      detail: error.detail,
-      table: error.table,
-      column: error.column,
-      constraint: error.constraint
+      originalMessage: error.originalError?.message,
+      code: error.code || error.originalError?.code,
+      detail: error.detail || error.originalError?.detail,
+      table: error.table || error.originalError?.table,
+      column: error.column || error.originalError?.column,
+      constraint: error.constraint || error.originalError?.constraint,
+      kycRequestId: error.kycRequest?.request_id
     });
 
     return res.status(500).json({
       success: false,
-      message: 'Failed to create Blockchain KYC wallet request',
+      message: 'Failed to create Blockchain KYC wallet in enterprise tables and Fabric ledger.',
       error: {
         message: error.message,
-        code: error.code,
-        detail: error.detail,
-        table: error.table,
-        column: error.column,
-        constraint: error.constraint
+        originalMessage: error.originalError?.message,
+        code: error.code || error.originalError?.code,
+        detail: error.detail || error.originalError?.detail,
+        table: error.table || error.originalError?.table,
+        column: error.column || error.originalError?.column,
+        constraint: error.constraint || error.originalError?.constraint
       },
-      data: null
+      data: {
+        kycRequest: error.kycRequest || null,
+        walletCreationStatus: 'FAILED'
+      }
     });
   }
 }

@@ -1,0 +1,341 @@
+src/server.js.bak_project_viewers_20260514_112226:12: * - /api/v1/wallets route
+src/server.js.bak_project_viewers_20260514_112226:309:  app.use('/api/v1/wallets', walletRoutes);
+src/server.js.bak_project_viewers_20260514_112226:351:      wallets: '/api/v1/wallets',
+src/server.js:12: * - /api/v1/wallets route
+src/server.js:311:  app.use('/api/v1/wallets', walletRoutes);
+src/server.js:364:      wallets: '/api/v1/wallets',
+src/services/transaction.service.js.bak_fixed_org_wallet_rules:8: * - blockchain.wallets
+src/services/transaction.service.js.bak_fixed_org_wallet_rules:46:  if (await tableExists(client, 'blockchain', 'wallets')) {
+src/services/transaction.service.js.bak_fixed_org_wallet_rules:47:    return 'wallets';
+src/services/transaction.service.js.bak_fixed_org_wallet_rules:54:  throw new Error('No wallet table found. Expected blockchain.wallets or blockchain.blockchain_wallet');
+src/services/transaction.service.js.bak_fixed_org_wallet_rules:957:const createWalletTransfer = walletTransfer;
+src/services/transaction.service.js.bak_fixed_org_wallet_rules:971:  createWalletTransfer,
+src/services/transaction.service.js.bak_fix_org_receiver_type_only:43:  if (await tableExists(client, 'blockchain', 'wallets')) {
+src/services/transaction.service.js.bak_fix_org_receiver_type_only:44:    return 'wallets';
+src/services/transaction.service.js.bak_fix_org_receiver_type_only:51:  throw new Error('No wallet table found. Expected blockchain.wallets or blockchain.blockchain_wallet');
+src/services/transaction.service.js.bak_fix_org_receiver_type_only:916:const createWalletTransfer = walletTransfer;
+src/services/transaction.service.js.bak_fix_org_receiver_type_only:930:  createWalletTransfer,
+src/services/transaction.service.js.bak.step32_constraint_fix:8: * - blockchain.wallets
+src/services/transaction.service.js.bak.step32_constraint_fix:46:  if (await tableExists(client, 'blockchain', 'wallets')) {
+src/services/transaction.service.js.bak.step32_constraint_fix:47:    return 'wallets';
+src/services/transaction.service.js.bak.step32_constraint_fix:54:  throw new Error('No wallet table found. Expected blockchain.wallets or blockchain.blockchain_wallet');
+src/services/transaction.service.js.bak.step32_constraint_fix:806:const createWalletTransfer = walletTransfer;
+src/services/transaction.service.js.bak.step32_constraint_fix:820:  createWalletTransfer,
+src/services/transaction.service.js.bak_balance_after_transfer:8: * - blockchain.wallets
+src/services/transaction.service.js.bak_balance_after_transfer:46:  if (await tableExists(client, 'blockchain', 'wallets')) {
+src/services/transaction.service.js.bak_balance_after_transfer:47:    return 'wallets';
+src/services/transaction.service.js.bak_balance_after_transfer:54:  throw new Error('No wallet table found. Expected blockchain.wallets or blockchain.blockchain_wallet');
+src/services/transaction.service.js.bak_balance_after_transfer:894:const createWalletTransfer = walletTransfer;
+src/services/transaction.service.js.bak_balance_after_transfer:908:  createWalletTransfer,
+src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:17:    FROM blockchain.wallets
+src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:29:    FROM blockchain.wallets
+src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:73:      AND table_name = 'wallets'
+src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:176:  const hasCurrentBalance = await tableColumnExists('wallets', 'current_balance');
+src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:177:  const hasCurrencyCode = await tableColumnExists('wallets', 'currency_code');
+src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:181:    FROM blockchain.wallets
+src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:204:    FROM blockchain.wallets
+src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:263:    FROM blockchain.wallets w
+src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:296:    FROM blockchain.wallets w
+src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:336:    INSERT INTO blockchain.wallets (${insertColumns.join(', ')})
+src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:345:exports.createWallet = async (payload) => {
+src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:392:    FROM blockchain.wallets
+src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:458:    FROM blockchain.wallets
+src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:559:    FROM blockchain.wallets
+src/services/wallet.service.js.bak_login_wallet_address:36:      AND table_name = 'wallets'
+src/services/wallet.service.js.bak_login_wallet_address:74:  const hasCurrentBalance = await tableColumnExists('wallets', 'current_balance');
+src/services/wallet.service.js.bak_login_wallet_address:75:  const hasCurrencyCode = await tableColumnExists('wallets', 'currency_code');
+src/services/wallet.service.js.bak_login_wallet_address:79:    FROM blockchain.wallets
+src/services/wallet.service.js.bak_login_wallet_address:102:    FROM blockchain.wallets
+src/services/wallet.service.js.bak_login_wallet_address:162:      FROM blockchain.wallets w
+src/services/wallet.service.js.bak_login_wallet_address:196:      FROM blockchain.wallets w
+src/services/wallet.service.js.bak_login_wallet_address:225:      FROM blockchain.wallets w
+src/services/wallet.service.js.bak_login_wallet_address:259:      FROM blockchain.wallets w
+src/services/wallet.service.js.bak_login_wallet_address:330:exports.createWallet = async (payload) => {
+src/services/wallet.service.js.bak_login_wallet_address:421:    INSERT INTO blockchain.wallets (${insertColumns.join(', ')})
+src/services/wallet.service.js.bak_login_wallet_address:482:    FROM blockchain.wallets
+src/services/wallet.service.js:65:      AND table_name = 'wallets'
+src/services/wallet.service.js:188:    throw new Error('Blockchain CreateWallet did not return wallet.walletAddress');
+src/services/wallet.service.js:212:    FROM blockchain.wallets
+src/services/wallet.service.js:244:  const hasCurrentBalance = await tableColumnExists('wallets', 'current_balance');
+src/services/wallet.service.js:245:  const hasCurrencyCode = await tableColumnExists('wallets', 'currency_code');
+src/services/wallet.service.js:249:    FROM blockchain.wallets
+src/services/wallet.service.js:272:    FROM blockchain.wallets
+src/services/wallet.service.js:331:    FROM blockchain.wallets w
+src/services/wallet.service.js:364:    FROM blockchain.wallets w
+src/services/wallet.service.js:404:    INSERT INTO blockchain.wallets (${insertColumns.join(', ')})
+src/services/wallet.service.js:413:exports.createWallet = async (payload) => {
+src/services/wallet.service.js:490:      'CreateWallet',
+src/services/wallet.service.js:657:    FROM blockchain.wallets
+src/services/wallet.service.js:702:      'CreateWallet',
+src/services/wallet.service.js:855:    FROM blockchain.wallets
+src/services/transaction.service.js:43:  if (await tableExists(client, 'blockchain', 'wallets')) {
+src/services/transaction.service.js:44:    return 'wallets';
+src/services/transaction.service.js:51:  throw new Error('No wallet table found. Expected blockchain.wallets or blockchain.blockchain_wallet');
+src/services/transaction.service.js:960:const createWalletTransfer = walletTransfer;
+src/services/transaction.service.js:974:  createWalletTransfer,
+src/services/wallet-query.service.js:370:      FROM blockchain.wallets
+src/services/wallet-query.service.js:391:      FROM blockchain.wallets
+src/services/dashboard.service.js:43:      COUNT(*)::bigint AS total_wallets,
+src/services/dashboard.service.js:44:      COUNT(*) FILTER (WHERE UPPER(COALESCE(status, wallet_status, login_status, '')) = 'ACTIVE')::bigint AS active_wallets,
+src/services/dashboard.service.js:49:      )::bigint AS today_created_wallets
+src/services/dashboard.service.js:50:    FROM blockchain.wallets
+src/services/dashboard.service.js:56:    totalWallets: toNumber(row.total_wallets),
+src/services/dashboard.service.js:57:    activeWallets: toNumber(row.active_wallets),
+src/services/dashboard.service.js:59:    todayCreatedWallets: toNumber(row.today_created_wallets),
+src/services/dashboard.service.js:122:      wallets::bigint AS wallets
+src/services/dashboard.service.js:126:        COUNT(*) AS wallets
+src/services/dashboard.service.js:127:      FROM blockchain.wallets
+src/services/dashboard.service.js:136:    wallets: toNumber(row.wallets)
+src/services/dashboard.service.js:145:        COUNT(*)::bigint AS wallets,
+src/services/dashboard.service.js:147:      FROM blockchain.wallets
+src/services/dashboard.service.js:165:      COALESCE(ws.wallets, 0)::bigint AS wallets,
+src/services/dashboard.service.js:174:    ORDER BY COALESCE(ws.wallets, 0) DESC, o.organization_name ASC
+src/services/dashboard.service.js:182:    wallets: toNumber(row.wallets),
+src/services/dashboard.service.js:193:        COALESCE((SELECT MAX(updated_at) FROM blockchain.wallets), TIMESTAMPTZ '1970-01-01'),
+src/services/transaction.service.js.bak.step32_23514_fix:8: * - blockchain.wallets
+src/services/transaction.service.js.bak.step32_23514_fix:46:  if (await tableExists(client, 'blockchain', 'wallets')) {
+src/services/transaction.service.js.bak.step32_23514_fix:47:    return 'wallets';
+src/services/transaction.service.js.bak.step32_23514_fix:54:  throw new Error('No wallet table found. Expected blockchain.wallets or blockchain.blockchain_wallet');
+src/services/transaction.service.js.bak.step32_23514_fix:806:const createWalletTransfer = walletTransfer;
+src/services/transaction.service.js.bak.step32_23514_fix:820:  createWalletTransfer,
+src/services/wallet.service.js.bak_fix_wallet_create_profile:16:    FROM blockchain.wallets
+src/services/wallet.service.js.bak_fix_wallet_create_profile:47:      AND table_name = 'wallets'
+src/services/wallet.service.js.bak_fix_wallet_create_profile:85:  const hasCurrentBalance = await tableColumnExists('wallets', 'current_balance');
+src/services/wallet.service.js.bak_fix_wallet_create_profile:86:  const hasCurrencyCode = await tableColumnExists('wallets', 'currency_code');
+src/services/wallet.service.js.bak_fix_wallet_create_profile:90:    FROM blockchain.wallets
+src/services/wallet.service.js.bak_fix_wallet_create_profile:113:    FROM blockchain.wallets
+src/services/wallet.service.js.bak_fix_wallet_create_profile:173:      FROM blockchain.wallets w
+src/services/wallet.service.js.bak_fix_wallet_create_profile:207:      FROM blockchain.wallets w
+src/services/wallet.service.js.bak_fix_wallet_create_profile:236:      FROM blockchain.wallets w
+src/services/wallet.service.js.bak_fix_wallet_create_profile:270:      FROM blockchain.wallets w
+src/services/wallet.service.js.bak_fix_wallet_create_profile:341:exports.createWallet = async (payload) => {
+src/services/wallet.service.js.bak_fix_wallet_create_profile:432:    INSERT INTO blockchain.wallets (${insertColumns.join(', ')})
+src/services/wallet.service.js.bak_fix_wallet_create_profile:495:    FROM blockchain.wallets
+src/services/wallet.service.js.bak_next_customer_id:36:      AND table_name = 'wallets'
+src/services/wallet.service.js.bak_next_customer_id:74:  const hasCurrentBalance = await tableColumnExists('wallets', 'current_balance');
+src/services/wallet.service.js.bak_next_customer_id:75:  const hasCurrencyCode = await tableColumnExists('wallets', 'currency_code');
+src/services/wallet.service.js.bak_next_customer_id:79:    FROM blockchain.wallets
+src/services/wallet.service.js.bak_next_customer_id:102:    FROM blockchain.wallets
+src/services/wallet.service.js.bak_next_customer_id:162:      FROM blockchain.wallets w
+src/services/wallet.service.js.bak_next_customer_id:196:      FROM blockchain.wallets w
+src/services/wallet.service.js.bak_next_customer_id:225:      FROM blockchain.wallets w
+src/services/wallet.service.js.bak_next_customer_id:259:      FROM blockchain.wallets w
+src/services/wallet.service.js.bak_next_customer_id:330:exports.createWallet = async (payload) => {
+src/services/wallet.service.js.bak_next_customer_id:421:    INSERT INTO blockchain.wallets (${insertColumns.join(', ')})
+src/services/wallet.service.js.bak_next_customer_id:484:    FROM blockchain.wallets
+src/services/transaction.service.js.bak_org_to_org_final_fix:43:  if (await tableExists(client, 'blockchain', 'wallets')) {
+src/services/transaction.service.js.bak_org_to_org_final_fix:44:    return 'wallets';
+src/services/transaction.service.js.bak_org_to_org_final_fix:51:  throw new Error('No wallet table found. Expected blockchain.wallets or blockchain.blockchain_wallet');
+src/services/transaction.service.js.bak_org_to_org_final_fix:916:const createWalletTransfer = walletTransfer;
+src/services/transaction.service.js.bak_org_to_org_final_fix:930:  createWalletTransfer,
+src/services/wallet-auth.service.js:91:    FROM blockchain.wallets
+src/services/wallet-auth.service.js:126:    UPDATE blockchain.wallets
+src/services/wallet-auth.service.js:173:    UPDATE blockchain.wallets
+src/services/transaction.service.js.bak_step_32_1_org_fk_fix:8: * - blockchain.wallets
+src/services/transaction.service.js.bak_step_32_1_org_fk_fix:46:  if (await tableExists(client, 'blockchain', 'wallets')) {
+src/services/transaction.service.js.bak_step_32_1_org_fk_fix:47:    return 'wallets';
+src/services/transaction.service.js.bak_step_32_1_org_fk_fix:54:  throw new Error('No wallet table found. Expected blockchain.wallets or blockchain.blockchain_wallet');
+src/services/transaction.service.js.bak_step_32_1_org_fk_fix:884:const createWalletTransfer = walletTransfer;
+src/services/transaction.service.js.bak_step_32_1_org_fk_fix:898:  createWalletTransfer,
+src/services/transaction.service.js.bak.step32_type_fix:8: * - blockchain.wallets
+src/services/transaction.service.js.bak.step32_type_fix:46:  if (await tableExists(client, 'blockchain', 'wallets')) {
+src/services/transaction.service.js.bak.step32_type_fix:47:    return 'wallets';
+src/services/transaction.service.js.bak.step32_type_fix:54:  throw new Error('No wallet table found. Expected blockchain.wallets or blockchain.blockchain_wallet');
+src/services/transaction.service.js.bak.step32_type_fix:806:const createWalletTransfer = walletTransfer;
+src/services/transaction.service.js.bak.step32_type_fix:820:  createWalletTransfer,
+src/services/transaction.service.js.bak_customer_to_org_20260514_132823:43:  if (await tableExists(client, 'blockchain', 'wallets')) {
+src/services/transaction.service.js.bak_customer_to_org_20260514_132823:44:    return 'wallets';
+src/services/transaction.service.js.bak_customer_to_org_20260514_132823:51:  throw new Error('No wallet table found. Expected blockchain.wallets or blockchain.blockchain_wallet');
+src/services/transaction.service.js.bak_customer_to_org_20260514_132823:960:const createWalletTransfer = walletTransfer;
+src/services/transaction.service.js.bak_customer_to_org_20260514_132823:974:  createWalletTransfer,
+src/services/wallet.service.js.bak.restore_working_20260506_152505:194:    FROM blockchain.wallets w
+src/services/wallet.service.js.bak.restore_working_20260506_152505:225:    FROM blockchain.wallets w
+src/services/wallet.service.js.bak.restore_working_20260506_152505:244:async function createWallet(payload = {}, context = {}) {
+src/services/wallet.service.js.bak.restore_working_20260506_152505:298:      FROM blockchain.wallets
+src/services/wallet.service.js.bak.restore_working_20260506_152505:323:      fabricResult = await fabricService.submitTransaction('CreateWallet', [
+src/services/wallet.service.js.bak.restore_working_20260506_152505:347:      INSERT INTO blockchain.wallets (
+src/services/wallet.service.js.bak.restore_working_20260506_152505:463:    FROM blockchain.wallets
+src/services/wallet.service.js.bak.restore_working_20260506_152505:589:    FROM blockchain.wallets w
+src/services/wallet.service.js.bak.restore_working_20260506_152505:614:  createWallet,
+src/services/transaction.service.js.bak_wallet_to_org_type_20260514_133559:43:  if (await tableExists(client, 'blockchain', 'wallets')) {
+src/services/transaction.service.js.bak_wallet_to_org_type_20260514_133559:44:    return 'wallets';
+src/services/transaction.service.js.bak_wallet_to_org_type_20260514_133559:51:  throw new Error('No wallet table found. Expected blockchain.wallets or blockchain.blockchain_wallet');
+src/services/transaction.service.js.bak_wallet_to_org_type_20260514_133559:960:const createWalletTransfer = walletTransfer;
+src/services/transaction.service.js.bak_wallet_to_org_type_20260514_133559:974:  createWalletTransfer,
+src/services/transaction.service.js.bak_step_32_1_status_fix:8: * - blockchain.wallets
+src/services/transaction.service.js.bak_step_32_1_status_fix:46:  if (await tableExists(client, 'blockchain', 'wallets')) {
+src/services/transaction.service.js.bak_step_32_1_status_fix:47:    return 'wallets';
+src/services/transaction.service.js.bak_step_32_1_status_fix:54:  throw new Error('No wallet table found. Expected blockchain.wallets or blockchain.blockchain_wallet');
+src/services/transaction.service.js.bak_step_32_1_status_fix:878:const createWalletTransfer = walletTransfer;
+src/services/transaction.service.js.bak_step_32_1_status_fix:892:  createWalletTransfer,
+src/services/blockchain-kyc.service.js:136:      'http://127.0.0.1:3001/api/v1/wallets',
+src/scripts/README_BLOCKCHAIN_ORGANIZATION_FIX.txt:12:1. `generate-wallets-transactions-fast.js`
+src/scripts/README_BLOCKCHAIN_ORGANIZATION_FIX.txt:16:2. `generate-wallets-transactions.js`
+src/scripts/README_BLOCKCHAIN_ORGANIZATION_FIX.txt:26:cp generate-wallets-transactions-fast.js /home/nix/u01/blockchain-integration/blockchain-api/src/scripts/generate-wallets-transactions-fast.js
+src/scripts/README_BLOCKCHAIN_ORGANIZATION_FIX.txt:27:cp generate-wallets-transactions.js /home/nix/u01/blockchain-integration/blockchain-api/src/scripts/generate-wallets-transactions.js
+src/scripts/README_BLOCKCHAIN_ORGANIZATION_FIX.txt:36:node src/scripts/generate-wallets-transactions-fast.js   --wallets 5   --transactions 10   --batchSize 5   --logEvery 5
+src/scripts/README_REF_CUSTOMER_TRANSACTION_FIX.txt:12:Updated `getActiveWallets()` in `generate-wallets-transactions-fast.js` so transaction generation only selects wallets that have matching customers in:
+src/scripts/README_REF_CUSTOMER_TRANSACTION_FIX.txt:27:The generator must not invent transaction customer IDs and must not select blockchain wallets unless the wallet customer already exists in `sdedba.ref_customer`.
+src/scripts/README_REF_CUSTOMER_TRANSACTION_FIX.txt:34:cp generate-wallets-transactions-fast.updated.js src/scripts/generate-wallets-transactions-fast.js
+src/scripts/README_REF_CUSTOMER_TRANSACTION_FIX.txt:40:node src/scripts/generate-wallets-transactions-fast.js \
+src/scripts/README_REF_CUSTOMER_TRANSACTION_FIX.txt:41:  --wallets 5 \
+src/scripts/README_REF_CUSTOMER_TRANSACTION_FIX.txt:51:FROM blockchain.wallets w
+src/scripts/enterprise-persistence.repository.js:138:    FROM blockchain.wallets
+src/scripts/enterprise-persistence.repository.js:162:    FROM blockchain.wallets
+src/scripts/enterprise-persistence.repository.js:175:    INSERT INTO blockchain.wallets (
+src/scripts/generate-wallets-transactions-fast.js.backup_before_duplicate_fix_20260511_162339:22:const WALLET_COUNT = Number(getArg('wallets', 1000));
+src/scripts/generate-wallets-transactions-fast.js.backup_before_duplicate_fix_20260511_162339:318:    FROM blockchain.wallets
+src/scripts/generate-wallets-transactions-fast.js.backup_before_duplicate_fix_20260511_162339:387:      walletsPerSecond: 0
+src/scripts/generate-wallets-transactions-fast.js.backup_before_duplicate_fix_20260511_162339:449:    const inserted = await batchInsertDynamic(client, 'wallets', batch);
+src/scripts/generate-wallets-transactions-fast.js.backup_before_duplicate_fix_20260511_162339:464:    'Throughput': `${ratePerSecond(created, durationMs)} wallets/sec`
+src/scripts/generate-wallets-transactions-fast.js.backup_before_duplicate_fix_20260511_162339:473:    walletsPerSecond: ratePerSecond(created, durationMs)
+src/scripts/generate-wallets-transactions-fast.js.backup_before_duplicate_fix_20260511_162339:478:  const columns = await getColumns(client, 'wallets');
+src/scripts/generate-wallets-transactions-fast.js.backup_before_duplicate_fix_20260511_162339:487:    throw new Error('No balance column found in blockchain.wallets');
+src/scripts/generate-wallets-transactions-fast.js.backup_before_duplicate_fix_20260511_162339:500:    FROM blockchain.wallets
+src/scripts/generate-wallets-transactions-fast.js.backup_before_duplicate_fix_20260511_162339:513:    wallets: result.rows.map((row) => ({
+src/scripts/generate-wallets-transactions-fast.js.backup_before_duplicate_fix_20260511_162339:538:    UPDATE blockchain.wallets w
+src/scripts/generate-wallets-transactions-fast.js.backup_before_duplicate_fix_20260511_162339:617:  const { balanceColumn, updatedAtColumn, wallets } = await getActiveWallets(client);
+src/scripts/generate-wallets-transactions-fast.js.backup_before_duplicate_fix_20260511_162339:619:  if (wallets.length < 2) {
+src/scripts/generate-wallets-transactions-fast.js.backup_before_duplicate_fix_20260511_162339:620:    throw new Error('At least 2 active wallets with positive balance are required');
+src/scripts/generate-wallets-transactions-fast.js.backup_before_duplicate_fix_20260511_162339:633:      let sender = randomItem(wallets);
+src/scripts/generate-wallets-transactions-fast.js.backup_before_duplicate_fix_20260511_162339:634:      let receiver = randomItem(wallets);
+src/scripts/generate-wallets-transactions-fast.js.backup_before_duplicate_fix_20260511_162339:639:        receiver = randomItem(wallets);
+src/scripts/generate-wallets-transactions-fast.js.backup_before_duplicate_fix_20260511_162339:761:    SELECT COUNT(*)::int AS total_wallets
+src/scripts/generate-wallets-transactions-fast.js.backup_before_duplicate_fix_20260511_162339:762:    FROM blockchain.wallets
+src/scripts/generate-wallets-transactions-fast.js.backup_before_duplicate_fix_20260511_162339:768:    SELECT COUNT(*)::int AS invalid_wallets
+src/scripts/generate-wallets-transactions-fast.js.backup_before_duplicate_fix_20260511_162339:769:    FROM blockchain.wallets
+src/scripts/generate-wallets-transactions-fast.js.backup_before_duplicate_fix_20260511_162339:784:    totalWallets: walletCount.rows[0]?.total_wallets || 0,
+src/scripts/generate-wallets-transactions-fast.js.backup_before_duplicate_fix_20260511_162339:785:    invalidWallets: invalidWallets.rows[0]?.invalid_wallets || 0,
+src/scripts/generate-wallets-transactions-fast.js.backup_before_duplicate_fix_20260511_162339:808:    const walletsResult = await generateWalletsFast(client, WALLET_COUNT);
+src/scripts/generate-wallets-transactions-fast.js.backup_before_duplicate_fix_20260511_162339:815:    const totalRowsCreated = Number(walletsResult.created || 0) + Number(transactionsResult.created || 0);
+src/scripts/generate-wallets-transactions-fast.js.backup_before_duplicate_fix_20260511_162339:821:      'Wallets Created': formatNumber(walletsResult.created),
+src/scripts/generate-wallets-transactions-fast.js.backup_before_duplicate_fix_20260511_162339:824:      'Wallet Throughput': `${walletsResult.walletsPerSecond} wallets/sec`,
+src/scripts/generate-wallets-transactions-fast.js:23:const WALLET_COUNT = Number(getArg('wallets', 1000));
+src/scripts/generate-wallets-transactions-fast.js:321:    FROM blockchain.wallets
+src/scripts/generate-wallets-transactions-fast.js:392:      walletsPerSecond: 0
+src/scripts/generate-wallets-transactions-fast.js:473:        generator: 'generate-wallets-transactions-fast.js'
+src/scripts/generate-wallets-transactions-fast.js:489:    'Enterprise Sync': 'YES - blockchain.wallets + sdedba.ref_customer + sdedba.cfg_customer_def',
+src/scripts/generate-wallets-transactions-fast.js:492:    'Throughput': `${ratePerSecond(created, durationMs)} wallets/sec`
+src/scripts/generate-wallets-transactions-fast.js:501:    walletsPerSecond: ratePerSecond(created, durationMs)
+src/scripts/generate-wallets-transactions-fast.js:506:  const columns = await getColumns(client, 'wallets');
+src/scripts/generate-wallets-transactions-fast.js:515:    throw new Error('No customer_id column found in blockchain.wallets');
+src/scripts/generate-wallets-transactions-fast.js:525:    throw new Error('No balance column found in blockchain.wallets');
+src/scripts/generate-wallets-transactions-fast.js:533:   * Therefore transaction generation must only use wallets whose customer_id
+src/scripts/generate-wallets-transactions-fast.js:563:    FROM blockchain.wallets w
+src/scripts/generate-wallets-transactions-fast.js:582:    wallets: result.rows.map((row) => ({
+src/scripts/generate-wallets-transactions-fast.js:607:    UPDATE blockchain.wallets w
+src/scripts/generate-wallets-transactions-fast.js:752:  const { balanceColumn, updatedAtColumn, wallets } = await getActiveWallets(client);
+src/scripts/generate-wallets-transactions-fast.js:754:  if (wallets.length < 2) {
+src/scripts/generate-wallets-transactions-fast.js:755:    throw new Error('At least 2 active wallets with positive balance are required');
+src/scripts/generate-wallets-transactions-fast.js:768:      let sender = randomItem(wallets);
+src/scripts/generate-wallets-transactions-fast.js:769:      let receiver = randomItem(wallets);
+src/scripts/generate-wallets-transactions-fast.js:774:        receiver = randomItem(wallets);
+src/scripts/generate-wallets-transactions-fast.js:896:    SELECT COUNT(*)::int AS total_wallets
+src/scripts/generate-wallets-transactions-fast.js:897:    FROM blockchain.wallets
+src/scripts/generate-wallets-transactions-fast.js:903:    SELECT COUNT(*)::int AS invalid_wallets
+src/scripts/generate-wallets-transactions-fast.js:904:    FROM blockchain.wallets
+src/scripts/generate-wallets-transactions-fast.js:920:    totalWallets: walletCount.rows[0]?.total_wallets || 0,
+src/scripts/generate-wallets-transactions-fast.js:921:    invalidWallets: invalidWallets.rows[0]?.invalid_wallets || 0,
+src/scripts/generate-wallets-transactions-fast.js:949:      SELECT pg_advisory_xact_lock(hashtext('blockchain.wallets.customer_id.generator'))
+src/scripts/generate-wallets-transactions-fast.js:952:    const walletsResult = await generateWalletsFast(client, WALLET_COUNT);
+src/scripts/generate-wallets-transactions-fast.js:959:    const totalRowsCreated = Number(walletsResult.created || 0) + Number(transactionsResult.created || 0);
+src/scripts/generate-wallets-transactions-fast.js:965:      'Wallets Created': formatNumber(walletsResult.created),
+src/scripts/generate-wallets-transactions-fast.js:968:      'Wallet Throughput': `${walletsResult.walletsPerSecond} wallets/sec`,
+src/scripts/generate-wallets-transactions.js:20: * - Customer wallets
+src/scripts/generate-wallets-transactions.js:24: * node src/scripts/generate-wallets-transactions.js --wallets 1000 --transactions 5000
+src/scripts/generate-wallets-transactions.js:46:const WALLET_COUNT = Number(getArg('wallets', 1000));
+src/scripts/generate-wallets-transactions.js:393:    FROM blockchain.wallets
+src/scripts/generate-wallets-transactions.js:405:    FROM blockchain.wallets
+src/scripts/generate-wallets-transactions.js:529:        generator: 'generate-wallets-transactions.js'
+src/scripts/generate-wallets-transactions.js:567:    'Enterprise Sync': 'YES - blockchain.wallets + sdedba.ref_customer + sdedba.cfg_customer_def',
+src/scripts/generate-wallets-transactions.js:571:    'Throughput': `${ratePerSecond(created, phaseDurationMs)} wallets/sec`
+src/scripts/generate-wallets-transactions.js:580:    walletsPerSecond: ratePerSecond(created, phaseDurationMs)
+src/scripts/generate-wallets-transactions.js:585:  const columns = await getColumns(client, 'wallets');
+src/scripts/generate-wallets-transactions.js:596:    throw new Error('No balance column found in blockchain.wallets');
+src/scripts/generate-wallets-transactions.js:608:          WHERE bo.organization_id::text = wallets.organization_id::text
+src/scripts/generate-wallets-transactions.js:610:        THEN wallets.organization_id
+src/scripts/generate-wallets-transactions.js:615:    FROM blockchain.wallets
+src/scripts/generate-wallets-transactions.js:628:    wallets: result.rows
+src/scripts/generate-wallets-transactions.js:635:    UPDATE blockchain.wallets
+src/scripts/generate-wallets-transactions.js:643:            AND table_name = 'wallets'
+src/scripts/generate-wallets-transactions.js:781:  const { balanceColumn, wallets } = await getActiveWallets(client);
+src/scripts/generate-wallets-transactions.js:783:  if (wallets.length < 2) {
+src/scripts/generate-wallets-transactions.js:784:    throw new Error('At least 2 active wallets with positive balance are required to generate transactions');
+src/scripts/generate-wallets-transactions.js:793:    let sender = randomItem(wallets);
+src/scripts/generate-wallets-transactions.js:794:    let receiver = randomItem(wallets);
+src/scripts/generate-wallets-transactions.js:801:      receiver = randomItem(wallets);
+src/scripts/generate-wallets-transactions.js:942:    SELECT COUNT(*)::int AS total_wallets
+src/scripts/generate-wallets-transactions.js:943:    FROM blockchain.wallets
+src/scripts/generate-wallets-transactions.js:949:    SELECT COUNT(*)::int AS invalid_wallets
+src/scripts/generate-wallets-transactions.js:950:    FROM blockchain.wallets
+src/scripts/generate-wallets-transactions.js:965:    totalWallets: walletCount.rows[0]?.total_wallets || 0,
+src/scripts/generate-wallets-transactions.js:966:    invalidWallets: invalidWallets.rows[0]?.invalid_wallets || 0,
+src/scripts/generate-wallets-transactions.js:989:    const walletsResult =
+src/scripts/generate-wallets-transactions.js:1006:      Number(walletsResult.created || 0) + Number(transactionsResult.created || 0);
+src/scripts/generate-wallets-transactions.js:1013:      'Wallets Created': formatNumber(walletsResult.created || 0),
+src/scripts/generate-wallets-transactions.js:1017:      'Wallet Throughput': `${walletsResult.walletsPerSecond || 0} wallets/sec`,
+src/scripts/README_FK_ORGANIZATION_FIX.txt:14:1. generate-wallets-transactions-fast.js
+src/scripts/README_FK_ORGANIZATION_FIX.txt:16:   - When loading active wallets for generated transactions, invalid organization IDs are converted to NULL.
+src/scripts/README_FK_ORGANIZATION_FIX.txt:18:2. generate-wallets-transactions.js
+src/scripts/README_FK_ORGANIZATION_FIX.txt:26:- blockchain-api/src/scripts/generate-wallets-transactions-fast.js
+src/scripts/README_FK_ORGANIZATION_FIX.txt:27:- blockchain-api/src/scripts/generate-wallets-transactions.js
+src/scripts/README_FK_ORGANIZATION_FIX.txt:32:node src/scripts/generate-wallets-transactions-fast.js --wallets 5 --transactions 10 --batchSize 5 --logEvery 5
+src/scripts/README_FK_ORGANIZATION_FIX.txt:36:FROM blockchain.wallets w
+src/index.js:14:router.use("/wallets", walletRoutes);
+src/server.js.bak.before_organizations_route_20260507_091230:10: * - /api/v1/wallets route
+src/server.js.bak.before_organizations_route_20260507_091230:270:  app.use('/api/v1/wallets', walletRoutes);
+src/server.js.bak.before_organizations_route_20260507_091230:312:      wallets: '/api/v1/wallets',
+src/app.js:207:// app.use('/api/v1/wallets', walletRoutes);
+src/controllers/wallet.controller.js.bak_next_customer_id:10: * GET /api/v1/wallets?page=1&limit=13&search=
+src/controllers/wallet.controller.js.bak_next_customer_id:11: * Reads wallets from PostgreSQL table blockchain.wallets
+src/controllers/wallet.controller.js.bak_next_customer_id:59: * POST /api/v1/wallets
+src/controllers/wallet.controller.js.bak_next_customer_id:61:exports.createWallet = async (req, res) => {
+src/controllers/wallet.controller.js.bak_next_customer_id:63:    const result = await walletService.createWallet(req.body);
+src/controllers/wallet.controller.js.bak_next_customer_id:85: * POST /api/v1/wallets/login
+src/controllers/wallet.controller.js.bak_next_customer_id:147: * GET /api/v1/wallets/customer/:customerId
+src/controllers/wallet.controller.js.bak_next_customer_id:187: * GET /api/v1/wallets/:walletAddress
+src/controllers/transaction.controller.js:50:        'createWalletTransfer',
+src/controllers/transaction.controller.js:59:          'No wallet transfer method found in transaction.service.js. Expected one of: walletTransfer, createWalletTransfer, walletToWalletTransfer, transferBetweenWallets, executeWalletTransfer, processWalletTransfer'
+src/controllers/data-generator.controller.js:37:  const wallets = toPositiveNumber(req.body.wallets, 1000, 1000000);
+src/controllers/data-generator.controller.js:49:    'src/scripts/generate-wallets-transactions-fast.js'
+src/controllers/data-generator.controller.js:54:    '--wallets',
+src/controllers/data-generator.controller.js:55:    String(wallets),
+src/controllers/data-generator.controller.js:81:    wallets,
+src/controllers/data-generator.controller.js:137:        wallets,
+src/controllers/auth.controller.js:45:     * FROM blockchain.wallets / auth table
+src/controllers/wallet.controller.js:96: * GET /api/v1/wallets?page=1&limit=13&search=
+src/controllers/wallet.controller.js:144: * POST /api/v1/wallets
+src/controllers/wallet.controller.js:146:exports.createWallet = async (req, res) => {
+src/controllers/wallet.controller.js:148:    const result = await walletService.createWallet({
+src/controllers/wallet.controller.js:177: * POST /api/v1/wallets/organization-wallets
+src/controllers/wallet.controller.js:210: * POST /api/v1/wallets/login
+src/controllers/wallet.controller.js:272: * GET /api/v1/wallets/customer/:customerId
+src/controllers/wallet.controller.js:312: * GET /api/v1/wallets/:walletAddress
+src/repositories/enterprise-persistence.repository.js:138:    FROM blockchain.wallets
+src/repositories/enterprise-persistence.repository.js:162:    FROM blockchain.wallets
+src/repositories/enterprise-persistence.repository.js:175:    INSERT INTO blockchain.wallets (
+src/routes/transaction.routes.js:50:  transactionController.createWalletTransfer ||
+src/routes/wallet.routes.js:16: * List wallets for Angular dashboard.
+src/routes/wallet.routes.js:18: * GET /api/v1/wallets?page=1&limit=13&search=
+src/routes/wallet.routes.js:25: * POST /api/v1/wallets
+src/routes/wallet.routes.js:27:router.post('/', walletController.createWallet);
+src/routes/wallet.routes.js:29:router.post('/organization-wallets', walletController.createOrganizationWallet);
+src/routes/wallet.routes.js:34: * POST /api/v1/wallets/login
+src/routes/wallet.routes.js:41: * GET /api/v1/wallets/customer/:customerId
+src/routes/wallet.routes.js:48: * GET /api/v1/wallets/:walletAddress
+src/routes/wallet-query.routes.js:9: * GET /api/v1/wallets/:walletAddress
+src/routes/wallet-query.routes.js:10: * GET /api/v1/wallets/:walletAddress/balance
+src/routes/wallet-query.routes.js:11: * GET /api/v1/wallets/:walletAddress/history
+src/routes/index.js:46:  router.use("/wallets", walletRoutes);
+src/routes/wallet.routes.js.bak_next_customer_id:16: * List wallets for Angular dashboard.
+src/routes/wallet.routes.js.bak_next_customer_id:18: * GET /api/v1/wallets?page=1&limit=13&search=
+src/routes/wallet.routes.js.bak_next_customer_id:25: * POST /api/v1/wallets
+src/routes/wallet.routes.js.bak_next_customer_id:27:router.post('/', walletController.createWallet);
+src/routes/wallet.routes.js.bak_next_customer_id:32: * POST /api/v1/wallets/login
+src/routes/wallet.routes.js.bak_next_customer_id:39: * GET /api/v1/wallets/customer/:customerId
+src/routes/wallet.routes.js.bak_next_customer_id:46: * GET /api/v1/wallets/:walletAddress
+src/routes/blockchain.routes.js:12: * POST   /wallets/create
+src/routes/blockchain.routes.js:13: * POST   /wallets/login
+src/routes/blockchain.routes.js:16: * GET    /wallets/:walletAddress/balance
+src/routes/blockchain.routes.js:17: * GET    /wallets/:walletAddress/transactions
+src/app.js.bak.fix_cors_options_20260506_133352:156: * router.use('/wallets', walletRoutes);

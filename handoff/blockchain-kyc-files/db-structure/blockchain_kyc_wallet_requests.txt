@@ -1,0 +1,47 @@
+                                    Table "blockchain.blockchain_kyc_wallet_requests"
+               Column                |            Type             | Collation | Nullable |           Default            
+-------------------------------------+-----------------------------+-----------+----------+------------------------------
+ request_id                          | uuid                        |           | not null | gen_random_uuid()
+ customer_id                         | character varying(50)       |           | not null | 
+ nationality                         | character varying(200)      |           |          | 
+ country_of_residence                | character varying(200)      |           |          | 
+ mobile_hash                         | text                        |           |          | 
+ email_hash                          | text                        |           |          | 
+ national_id_hash                    | text                        |           |          | 
+ organization_type                   | character varying(100)      |           |          | 
+ organization_id                     | uuid                        |           |          | 
+ organization_code                   | character varying(100)      |           |          | 
+ organization_name                   | character varying(255)      |           |          | 
+ city                                | character varying(200)      |           |          | 
+ area                                | character varying(200)      |           |          | 
+ address_hash                        | text                        |           |          | 
+ proof_of_address_file_name          | text                        |           |          | 
+ proof_of_address_file_path          | text                        |           |          | 
+ source_of_funds                     | character varying(255)      |           |          | 
+ occupation                          | character varying(255)      |           |          | 
+ employment_sector                   | character varying(255)      |           |          | 
+ monthly_income                      | numeric(18,2)               |           |          | 
+ expected_monthly_transaction_volume | numeric(18,2)               |           |          | 
+ expected_cash_transactions          | numeric(18,2)               |           |          | 
+ wallet_type                         | character varying(50)       |           |          | 
+ party_type_code                     | integer                     |           |          | 
+ wallet_status                       | character varying(50)       |           |          | 
+ initial_balance                     | numeric(18,2)               |           |          | 
+ currency_code                       | character varying(10)       |           |          | 
+ daily_transfer_limit                | numeric(18,2)               |           |          | 
+ monthly_transfer_limit              | numeric(18,2)               |           |          | 
+ legal_document_type                 | character varying(100)      |           |          | 
+ legal_id_number_hash                | text                        |           |          | 
+ document_file_name                  | text                        |           |          | 
+ document_file_path                  | text                        |           |          | 
+ document_expiry_date                | date                        |           |          | 
+ created_at                          | timestamp without time zone |           |          | now()
+ wallet_address                      | character varying(150)      |           |          | 
+ ledger_reference                    | character varying(255)      |           |          | 
+ blockchain_tx_id                    | character varying(255)      |           |          | 
+ request_status                      | character varying(50)       |           |          | 'CREATED'::character varying
+ error_message                       | text                        |           |          | 
+ updated_at                          | timestamp without time zone |           |          | now()
+Indexes:
+    "blockchain_kyc_wallet_requests_pkey" PRIMARY KEY, btree (request_id)
+
