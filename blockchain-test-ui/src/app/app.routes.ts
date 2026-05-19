@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-
+import { BlockchainKycComponent } from './pages/blockchain-kyc/blockchain-kyc.component';
 import { DashboardComponent } from './features/dashboard/dashboard.component';
 
 import { WalletCreate } from './pages/wallet-create/wallet-create';
@@ -21,7 +21,10 @@ export const routes: Routes = [
     redirectTo: 'digital-kyc/dashboard',
     pathMatch: 'full'
   },
-
+  {
+    path: 'digital-kyc/blockchain-kyc',
+    component: BlockchainKycComponent
+  },
   {
     path: 'digital-kyc/dashboard',
     component: DashboardComponent

@@ -1,0 +1,355 @@
+<div class="blockchain-kyc-page">
+  <div class="page-header">
+    <div>
+      <h1>Blockchain KYC</h1>
+      <p>Create a full KYC profile and prepare the customer wallet creation payload.</p>
+    </div>
+
+    <div class="header-actions">
+      <button type="button" class="btn btn-light" (click)="fillSample()">Fill Sample</button>
+      <button type="button" class="btn btn-light" (click)="generateCustomerId()">Generate Customer ID</button>
+      <button type="button" class="btn btn-light" (click)="generateKycReference()">Generate KYC Ref</button>
+      <button type="button" class="btn btn-danger-light" (click)="resetForm()">Reset</button>
+    </div>
+  </div>
+
+  <form class="kyc-form" (ngSubmit)="submitKycWallet()">
+
+    <section class="form-card">
+      <div class="section-title">
+        <h2>1. Customer Identity</h2>
+        <span>Personal KYC information</span>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Customer ID <span>*</span></label>
+          <input type="text" name="customerId" [(ngModel)]="form.customerId" required>
+        </div>
+
+        <div class="form-group">
+          <label>First Name <span>*</span></label>
+          <input type="text" name="firstName" [(ngModel)]="form.firstName" (input)="updateFullName()" required>
+        </div>
+
+        <div class="form-group">
+          <label>Middle Name</label>
+          <input type="text" name="middleName" [(ngModel)]="form.middleName" (input)="updateFullName()">
+        </div>
+
+        <div class="form-group">
+          <label>Last Name <span>*</span></label>
+          <input type="text" name="lastName" [(ngModel)]="form.lastName" (input)="updateFullName()" required>
+        </div>
+
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" name="fullName" [(ngModel)]="form.fullName" readonly>
+        </div>
+
+        <div class="form-group">
+          <label>Date of Birth <span>*</span></label>
+          <input type="date" name="dateOfBirth" [(ngModel)]="form.dateOfBirth" required>
+        </div>
+
+        <div class="form-group">
+          <label>Gender <span>*</span></label>
+          <select name="gender" [(ngModel)]="form.gender" required>
+            <option *ngFor="let item of genders" [value]="item">{{ item }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Nationality <span>*</span></label>
+          <input type="text" name="nationality" [(ngModel)]="form.nationality" required>
+        </div>
+
+        <div class="form-group">
+          <label>Country of Residence <span>*</span></label>
+          <input type="text" name="countryOfResidence" [(ngModel)]="form.countryOfResidence" required>
+        </div>
+      </div>
+    </section>
+
+    <section class="form-card">
+      <div class="section-title">
+        <h2>2. Contact & Identity </h2>
+        <span>Do not store raw sensitive data on blockchain</span>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Mobile <span>*</span></label>
+          <input type="text" name="mobileHash" [(ngModel)]="form.mobileHash" required>
+        </div>
+
+        <div class="form-group">
+          <label>Email <span>*</span></label>
+          <input type="text" name="emailHash" [(ngModel)]="form.emailHash" required>
+        </div>
+
+
+      </div>
+    </section>
+
+    <section class="form-card">
+      <div class="section-title">
+        <h2>3. Organization Details</h2>
+        <span>Bank, fintech, government, merchant, or international organization</span>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Organization Type <span>*</span></label>
+          <select name="organizationType" [(ngModel)]="form.organizationType" required>
+            <option *ngFor="let item of organizationTypes" [value]="item">{{ item }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Organization ID <span>*</span></label>
+          <input type="text" name="organizationId" [(ngModel)]="form.organizationId" required>
+        </div>
+
+        <div class="form-group">
+          <label>Organization Code <span>*</span></label>
+          <input type="text" name="organizationCode" [(ngModel)]="form.organizationCode" required>
+        </div>
+
+        <div class="form-group">
+          <label>Organization Name <span>*</span></label>
+          <input type="text" name="organizationName" [(ngModel)]="form.organizationName" required>
+        </div>
+
+        <div class="form-group">
+          <label>Branch</label>
+          <input type="text" name="branch" [(ngModel)]="form.branch">
+        </div>
+      </div>
+    </section>
+
+    <section class="form-card">
+      <div class="section-title">
+        <h2>4. Residential Address</h2>
+        <span>Store address details off-chain and keep only hashes on-chain</span>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>City</label>
+          <input type="text" name="city" [(ngModel)]="form.city">
+        </div>
+
+        <div class="form-group">
+          <label>Area</label>
+          <input type="text" name="area" [(ngModel)]="form.area">
+        </div>
+
+        <div class="form-group">
+          <label>Address</label>
+          <input type="text" name="addressHash" [(ngModel)]="form.addressHash">
+        </div>
+
+        <div class="form-group">
+          <label>Proof of Address</label>
+          <input type="text" name="proofOfAddressHash" [(ngModel)]="form.proofOfAddressHash">
+        </div>
+      </div>
+    </section>
+
+    <section class="form-card">
+      <div class="section-title">
+        <h2>5. KYC & Compliance</h2>
+        <span>KYC status, risk, PEP, and sanctions screening</span>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>KYC Reference ID <span>*</span></label>
+          <input type="text" name="kycReferenceId" [(ngModel)]="form.kycReferenceId" required>
+        </div>
+
+        <div class="form-group">
+          <label>KYC Status <span>*</span></label>
+          <select name="kycStatus" [(ngModel)]="form.kycStatus" required>
+            <option *ngFor="let item of kycStatuses" [value]="item">{{ item }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>KYC Risk Category <span>*</span></label>
+          <select name="kycRiskCategory" [(ngModel)]="form.kycRiskCategory" required>
+            <option *ngFor="let item of riskCategories" [value]="item">{{ item }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Sanction Screening Status <span>*</span></label>
+          <select name="sanctionScreeningStatus" [(ngModel)]="form.sanctionScreeningStatus" required>
+            <option *ngFor="let item of sanctionStatuses" [value]="item">{{ item }}</option>
+          </select>
+        </div>
+
+        <div class="form-group checkbox-group">
+          <label>
+            <input type="checkbox" name="pepFlag" [(ngModel)]="form.pepFlag">
+            Politically Exposed Person
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <section class="form-card">
+      <div class="section-title">
+        <h2>6. Profession & Source of Funds</h2>
+        <span>Required for AML and transaction behavior monitoring</span>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Source of Funds <span>*</span></label>
+          <input type="text" name="sourceOfFunds" [(ngModel)]="form.sourceOfFunds" required>
+        </div>
+
+        <div class="form-group">
+          <label>Occupation <span>*</span></label>
+          <input type="text" name="occupation" [(ngModel)]="form.occupation" required>
+        </div>
+
+        <div class="form-group">
+          <label>Employment Sector</label>
+          <input type="text" name="employmentSector" [(ngModel)]="form.employmentSector">
+        </div>
+
+        <div class="form-group">
+          <label>Monthly Income</label>
+          <input type="number" name="monthlyIncome" [(ngModel)]="form.monthlyIncome">
+        </div>
+
+        <div class="form-group">
+          <label>Expected Monthly Transaction Volume</label>
+          <input type="number" name="expectedMonthlyTransactionVolume" [(ngModel)]="form.expectedMonthlyTransactionVolume">
+        </div>
+
+        <div class="form-group">
+          <label>Expected Cash Transactions</label>
+          <input type="number" name="expectedCashTransactions" [(ngModel)]="form.expectedCashTransactions">
+        </div>
+      </div>
+    </section>
+
+    <section class="form-card">
+      <div class="section-title">
+        <h2>7. Wallet Details</h2>
+        <span>Blockchain wallet configuration and limits</span>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Wallet Type <span>*</span></label>
+          <select name="walletType" [(ngModel)]="form.walletType" required>
+            <option *ngFor="let item of walletTypes" [value]="item">{{ item }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Wallet Status <span>*</span></label>
+          <select name="walletStatus" [(ngModel)]="form.walletStatus" required>
+            <option *ngFor="let item of walletStatuses" [value]="item">{{ item }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Initial Balance <span>*</span></label>
+          <input type="number" name="initialBalance" [(ngModel)]="form.initialBalance" required>
+        </div>
+
+        <div class="form-group">
+          <label>Currency Code <span>*</span></label>
+          <select name="currencyCode" [(ngModel)]="form.currencyCode" required>
+            <option *ngFor="let item of currencies" [value]="item">{{ item }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Daily Transfer Limit</label>
+          <input type="number" name="dailyTransferLimit" [(ngModel)]="form.dailyTransferLimit">
+        </div>
+
+        <div class="form-group">
+          <label>Monthly Transfer Limit</label>
+          <input type="number" name="monthlyTransferLimit" [(ngModel)]="form.monthlyTransferLimit">
+        </div>
+
+        <div class="form-group full-width password-row">
+          <label>Generated Wallet Password</label>
+          <div class="inline-control">
+            <input type="text" name="generatedPassword" [(ngModel)]="form.generatedPassword" readonly>
+            <button type="button" class="btn btn-light" (click)="regeneratePassword()">Regenerate</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="form-card">
+      <div class="section-title">
+        <h2>8. Legal Document Proof</h2>
+        <span>Document metadata and hash references</span>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Legal Document Type <span>*</span></label>
+          <select name="legalDocumentType" [(ngModel)]="form.legalDocumentType" required>
+            <option *ngFor="let item of documentTypes" [value]="item">{{ item }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Legal ID Number</label>
+          <input type="text" name="legalIdNumberHash" [(ngModel)]="form.legalIdNumberHash">
+        </div>
+
+        <div class="form-group">
+          <label>Document File</label>
+          <input type="text" name="documentFileHash" [(ngModel)]="form.documentFileHash">
+        </div>
+
+        <div class="form-group">
+          <label>Document Verification Status <span>*</span></label>
+          <select name="documentVerificationStatus" [(ngModel)]="form.documentVerificationStatus" required>
+            <option *ngFor="let item of documentStatuses" [value]="item">{{ item }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Document Expiry Date</label>
+          <input type="date" name="documentExpiryDate" [(ngModel)]="form.documentExpiryDate">
+        </div>
+      </div>
+    </section>
+
+    <section class="payload-card">
+      <div class="section-title">
+        <h2>Generated API Payload Preview</h2>
+        <span>This is the object that will be sent to the backend wallet/KYC API.</span>
+      </div>
+
+      <pre>{{ buildPayload() | json }}</pre>
+    </section>
+
+    <div class="message success" *ngIf="successMessage">
+      {{ successMessage }}
+    </div>
+
+    <div class="message error" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </div>
+
+    <div class="submit-row">
+      <button type="submit" class="btn btn-primary" [disabled]="loading">
+        {{ loading ? 'Processing...' : 'Create Blockchain KYC Wallet' }}
+      </button>
+    </div>
+  </form>
+</div>
