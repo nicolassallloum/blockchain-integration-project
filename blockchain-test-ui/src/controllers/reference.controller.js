@@ -7,118 +7,150 @@ const pool = require('../config/db');
  */
 exports.getNextCustomerId = async (req, res) => {
   try {
-    const result = await pool.query(`
-      SELECT nextval('blockchain.customer_id_seq')::varchar AS customer_id
+    const result = await db.query(`
+      SELECT nextval('sdedba.s_customer')::text AS customer_id
     `);
 
     return res.status(200).json({
       success: true,
-      message: 'Next customer ID retrieved successfully',
-      data: result.rows[0],
-      meta: null,
-      timestamp: new Date().toISOString(),
-      requestId: req.requestId || req.headers['x-request-id'] || null,
-      correlationId: req.correlationId || req.headers['x-request-id'] || null
+      message: 'Next customer ID generated successfully',
+      data: {
+        customerId: result.rows[0].customer_id,
+        customer_id: result.rows[0].customer_id
+      },
+      requestId: getRequestId(req)
     });
   } catch (error) {
-    console.error('getNextCustomerId error:', error);
+    console.error('[REFERENCE_NEXT_CUSTOMER_ID_ERROR]', {
+      message: error.message,
+      code: error.code,
+      detail: error.detail
+    });
 
     return res.status(500).json({
       success: false,
-      message: 'Failed to retrieve next customer ID',
-      errorCode: 'REFERENCE_NEXT_CUSTOMER_ID_FAILED',
+      message: 'Failed to generate next customer ID',
+      error: {
+        message: error.message,
+        code: error.code,
+        detail: error.detail
+      },
       data: null,
-      error: error.message,
-      timestamp: new Date().toISOString(),
-      requestId: req.requestId || req.headers['x-request-id'] || null,
-      correlationId: req.correlationId || req.headers['x-request-id'] || null
+      requestId: getRequestId(req)
     });
   }
 };
 
-/**
- * GET /api/v1/reference/organizations
- */
-exports.getOrganizations = async (req, res) => {
+exports.getSourceOfFunds = async (req, res) => {
   try {
-    const result = await pool.query(`
-      SELECT
-        organization_id,
-        organization_name,
-        organization_type,
-        registration_number,
-        country_code,
-        status
-      FROM blockchain.blockchain_organization
-      WHERE status = 'ACTIVE'
-      ORDER BY organization_name ASC
+    const result = await db.query(`
+      SELECT *
+      FROM sdedba.ref_sysp68
+      ORDER BY 1
     `);
 
     return res.status(200).json({
       success: true,
-      message: 'Organizations retrieved successfully',
+      message: 'Source of funds retrieved successfully',
       data: result.rows,
       meta: {
         totalRecords: result.rowCount
       },
-      timestamp: new Date().toISOString(),
-      requestId: req.requestId || req.headers['x-request-id'] || null,
-      correlationId: req.correlationId || req.headers['x-request-id'] || null
+      requestId: getRequestId(req)
     });
   } catch (error) {
-    console.error('getOrganizations error:', error);
+    console.error('[REFERENCE_SOURCE_OF_FUNDS_ERROR]', {
+      message: error.message,
+      code: error.code,
+      detail: error.detail
+    });
 
     return res.status(500).json({
       success: false,
-      message: 'Failed to retrieve organizations',
-      errorCode: 'REFERENCE_ORGANIZATIONS_FAILED',
-      data: null,
-      error: error.message,
-      timestamp: new Date().toISOString(),
-      requestId: req.requestId || req.headers['x-request-id'] || null,
-      correlationId: req.correlationId || req.headers['x-request-id'] || null
+      message: 'Failed to retrieve source of funds',
+      error: {
+        message: error.message,
+        code: error.code,
+        detail: error.detail
+      },
+      data: [],
+      requestId: getRequestId(req)
     });
   }
 };
 
-/**
- * GET /api/v1/reference/countries
- */
-exports.getCountries = async (req, res) => {
+exports.getOccupations = async (req, res) => {
   try {
-    const result = await pool.query(`
-      SELECT
-        cou_id,
-        cou_name,
-        iso_cou_code_alpha
-      FROM blockchain.countries
-      WHERE cou_name IS NOT NULL
-      ORDER BY cou_name ASC
+    const result = await db.query(`
+      SELECT *
+      FROM sdedba.ref_hr_activity_sector
+      ORDER BY 1
     `);
 
     return res.status(200).json({
       success: true,
-      message: 'Countries retrieved successfully',
+      message: 'Occupations retrieved successfully',
       data: result.rows,
       meta: {
         totalRecords: result.rowCount
       },
-      timestamp: new Date().toISOString(),
-      requestId: req.requestId || req.headers['x-request-id'] || null,
-      correlationId: req.correlationId || req.headers['x-request-id'] || null
+      requestId: getRequestId(req)
     });
   } catch (error) {
-    console.error('getCountries error:', error);
+    console.error('[REFERENCE_OCCUPATIONS_ERROR]', {
+      message: error.message,
+      code: error.code,
+      detail: error.detail
+    });
 
     return res.status(500).json({
       success: false,
-      message: 'Failed to retrieve countries',
-      errorCode: 'REFERENCE_COUNTRIES_FAILED',
-      data: null,
-      error: error.message,
-      timestamp: new Date().toISOString(),
-      requestId: req.requestId || req.headers['x-request-id'] || null,
-      correlationId: req.correlationId || req.headers['x-request-id'] || null
+      message: 'Failed to retrieve occupations',
+      error: {
+        message: error.message,
+        code: error.code,
+        detail: error.detail
+      },
+      data: [],
+      requestId: getRequestId(req)
+    });
+  }
+};
+
+exports.getEconomicSectors = async (req, res) => {
+  try {
+    const result = await db.query(`
+      SELECT *
+      FROM sdedba.ref_com_economic_sector
+      ORDER BY 1
+    `);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Economic sectors retrieved successfully',
+      data: result.rows,
+      meta: {
+        totalRecords: result.rowCount
+      },
+      requestId: getRequestId(req)
+    });
+  } catch (error) {
+    console.error('[REFERENCE_ECONOMIC_SECTORS_ERROR]', {
+      message: error.message,
+      code: error.code,
+      detail: error.detail
+    });
+
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve economic sectors',
+      error: {
+        message: error.message,
+        code: error.code,
+        detail: error.detail
+      },
+      data: [],
+      requestId: getRequestId(req)
     });
   }
 };

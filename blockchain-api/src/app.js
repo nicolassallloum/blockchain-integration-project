@@ -14,7 +14,8 @@ const rateLimit = require('express-rate-limit');
 const crypto = require('crypto');
 const organizationRoutes = require('./routes/organization.routes');
 const routes = require('./routes');
-
+const referenceRoutes = require('./routes/reference.routes');
+const blockchainKycRoutes = require('./routes/blockchain-kyc.routes');
 const app = express();
 
 /**
@@ -108,6 +109,9 @@ app.use(helmet({
  * ---------------------------------------------------------
  */
 app.use(express.json({ limit: '10mb' }));
+
+app.use('/api/v1/reference', referenceRoutes);
+app.use('/api/v1/kyc', blockchainKycRoutes);
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 /**

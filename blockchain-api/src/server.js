@@ -18,13 +18,13 @@
  */
 
 require('dotenv').config();
-
 const express = require('express');
 const cors = require('cors');
 const crypto = require('crypto');
 const os = require('os');
 
 const app = express();
+const blockchainKycRoutes = require('./routes/blockchain-kyc.routes');
 
 /**
  * Optional packages.
@@ -310,7 +310,7 @@ app.get('/api/v1/health', (req, res) => {
 if (walletRoutes) {
   app.use('/api/v1/wallets', walletRoutes);
 }
-
+app.use('/api/v1/kyc', blockchainKycRoutes);
 if (dataGeneratorRoutes) {
   app.use('/api/v1/data-generator', dataGeneratorRoutes);
 }
@@ -325,6 +325,9 @@ if (fabricRoutes) {
 
 if (referenceRoutes) {
   app.use('/api/v1/reference', referenceRoutes);
+}
+if (blockchainKycRoutes) {
+  app.use('/api/v1/kyc', blockchainKycRoutes);
 }
 
 if (organizationRoutes) {

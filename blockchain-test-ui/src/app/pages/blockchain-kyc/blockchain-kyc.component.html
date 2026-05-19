@@ -2,13 +2,12 @@
   <div class="page-header">
     <div>
       <h1>Blockchain KYC</h1>
-      <p>Create a full KYC profile and prepare the customer wallet creation payload.</p>
+      <p>Create a customer or organization wallet using KYC reference data.</p>
     </div>
 
     <div class="header-actions">
       <button type="button" class="btn btn-light" (click)="fillSample()">Fill Sample</button>
       <button type="button" class="btn btn-light" (click)="generateCustomerId()">Generate Customer ID</button>
-      <button type="button" class="btn btn-light" (click)="generateKycReference()">Generate KYC Ref</button>
       <button type="button" class="btn btn-danger-light" (click)="resetForm()">Reset</button>
     </div>
   </div>
@@ -18,112 +17,106 @@
     <section class="form-card">
       <div class="section-title">
         <h2>1. Customer Identity</h2>
-        <span>Personal KYC information</span>
+        <span>Customer ID generated from database sequence and country references.</span>
       </div>
 
       <div class="form-grid">
         <div class="form-group">
           <label>Customer ID <span>*</span></label>
-          <input type="text" name="customerId" [(ngModel)]="form.customerId" required>
-        </div>
-
-        <div class="form-group">
-          <label>First Name <span>*</span></label>
-          <input type="text" name="firstName" [(ngModel)]="form.firstName" (input)="updateFullName()" required>
-        </div>
-
-        <div class="form-group">
-          <label>Middle Name</label>
-          <input type="text" name="middleName" [(ngModel)]="form.middleName" (input)="updateFullName()">
-        </div>
-
-        <div class="form-group">
-          <label>Last Name <span>*</span></label>
-          <input type="text" name="lastName" [(ngModel)]="form.lastName" (input)="updateFullName()" required>
-        </div>
-
-        <div class="form-group">
-          <label>Full Name</label>
-          <input type="text" name="fullName" [(ngModel)]="form.fullName" readonly>
-        </div>
-
-        <div class="form-group">
-          <label>Date of Birth <span>*</span></label>
-          <input type="date" name="dateOfBirth" [(ngModel)]="form.dateOfBirth" required>
-        </div>
-
-        <div class="form-group">
-          <label>Gender <span>*</span></label>
-          <select name="gender" [(ngModel)]="form.gender" required>
-            <option *ngFor="let item of genders" [value]="item">{{ item }}</option>
-          </select>
+          <input type="text" name="customerId" [(ngModel)]="form.customerId" readonly required>
         </div>
 
         <div class="form-group">
           <label>Nationality <span>*</span></label>
-          <input type="text" name="nationality" [(ngModel)]="form.nationality" required>
+          <select name="nationality" [(ngModel)]="form.nationality" required>
+            <option value="">Select nationality</option>
+            <option *ngFor="let country of countries" [value]="country.couName">
+              {{ country.couName }}
+            </option>
+          </select>
         </div>
 
         <div class="form-group">
-          <label>Country of Residence <span>*</span></label>
-          <input type="text" name="countryOfResidence" [(ngModel)]="form.countryOfResidence" required>
+          <label>Country Of Residence <span>*</span></label>
+          <select name="countryOfResidence" [(ngModel)]="form.countryOfResidence" required>
+            <option value="">Select country</option>
+            <option *ngFor="let country of countries" [value]="country.couName">
+              {{ country.couName }}
+            </option>
+          </select>
         </div>
       </div>
     </section>
 
     <section class="form-card">
       <div class="section-title">
-        <h2>2. Contact & Identity </h2>
-        <span>Do not store raw sensitive data on blockchain</span>
+        <h2>2. Contact & Identity</h2>
+        <span>Store sensitive identifiers as hashes only.</span>
       </div>
 
       <div class="form-grid">
         <div class="form-group">
-          <label>Mobile <span>*</span></label>
+          <label>Mobile Hash <span>*</span></label>
           <input type="text" name="mobileHash" [(ngModel)]="form.mobileHash" required>
         </div>
 
         <div class="form-group">
-          <label>Email <span>*</span></label>
+          <label>Email Hash <span>*</span></label>
           <input type="text" name="emailHash" [(ngModel)]="form.emailHash" required>
         </div>
 
-
+        <div class="form-group">
+          <label>National ID / Passport Hash <span>*</span></label>
+          <input type="text" name="nationalIdHash" [(ngModel)]="form.nationalIdHash" required>
+        </div>
       </div>
     </section>
 
     <section class="form-card">
       <div class="section-title">
         <h2>3. Organization Details</h2>
-        <span>Bank, fintech, government, merchant, or international organization</span>
+        <span>Organization ID and code are auto-filled from the selected organization.</span>
       </div>
 
       <div class="form-grid">
         <div class="form-group">
           <label>Organization Type <span>*</span></label>
-          <select name="organizationType" [(ngModel)]="form.organizationType" required>
-            <option *ngFor="let item of organizationTypes" [value]="item">{{ item }}</option>
+          <select
+            name="organizationType"
+            [(ngModel)]="form.organizationType"
+            (change)="onOrganizationTypeChange()"
+            required
+          >
+            <option value="">Select organization type</option>
+            <option *ngFor="let type of organizationTypes" [value]="type">
+              {{ type }}
+            </option>
           </select>
         </div>
 
         <div class="form-group">
-          <label>Organization ID <span>*</span></label>
-          <input type="text" name="organizationId" [(ngModel)]="form.organizationId" required>
+          <label>Organization <span>*</span></label>
+          <select
+            name="organization"
+            [(ngModel)]="form.organization"
+            (change)="onOrganizationChange()"
+            required
+          >
+            <option value="">Select organization</option>
+            <option *ngFor="let org of filteredOrganizations" [value]="org.organizationName">
+              {{ org.organizationName }}
+            </option>
+          </select>
         </div>
 
         <div class="form-group">
-          <label>Organization Code <span>*</span></label>
-          <input type="text" name="organizationCode" [(ngModel)]="form.organizationCode" required>
+          <label>Organization ID</label>
+          <input type="text" name="organizationId" [(ngModel)]="form.organizationId" readonly>
         </div>
 
         <div class="form-group">
-          <label>Organization Name <span>*</span></label>
-          <input type="text" name="organizationName" [(ngModel)]="form.organizationName" required>
-        </div>
-
-        <div class="form-group">
-          <label>Branch</label>
-          <input type="text" name="branch" [(ngModel)]="form.branch">
+          <label>Organization Code</label>
+          <input type="text" name="organizationCode" [(ngModel)]="form.organizationCode" readonly>
         </div>
       </div>
     </section>
@@ -131,7 +124,7 @@
     <section class="form-card">
       <div class="section-title">
         <h2>4. Residential Address</h2>
-        <span>Store address details off-chain and keep only hashes on-chain</span>
+        <span>Address proof is uploaded as a file and address hash can be stored on-chain.</span>
       </div>
 
       <div class="form-grid">
@@ -146,79 +139,57 @@
         </div>
 
         <div class="form-group">
-          <label>Address</label>
+          <label>Address Hash</label>
           <input type="text" name="addressHash" [(ngModel)]="form.addressHash">
         </div>
 
         <div class="form-group">
-          <label>Proof of Address</label>
-          <input type="text" name="proofOfAddressHash" [(ngModel)]="form.proofOfAddressHash">
+          <label>Proof Of Address File</label>
+          <input
+            type="file"
+            name="proofOfAddressFile"
+            accept=".pdf,.jpg,.jpeg,.png"
+            (change)="onProofOfAddressFileChange($event)"
+          >
         </div>
       </div>
     </section>
 
     <section class="form-card">
       <div class="section-title">
-        <h2>5. KYC & Compliance</h2>
-        <span>KYC status, risk, PEP, and sanctions screening</span>
+        <h2>5. Profession & Source Of Funds</h2>
+        <span>Reference values should be loaded from enterprise reference tables.</span>
       </div>
 
       <div class="form-grid">
         <div class="form-group">
-          <label>KYC Reference ID <span>*</span></label>
-          <input type="text" name="kycReferenceId" [(ngModel)]="form.kycReferenceId" required>
-        </div>
-
-        <div class="form-group">
-          <label>KYC Status <span>*</span></label>
-          <select name="kycStatus" [(ngModel)]="form.kycStatus" required>
-            <option *ngFor="let item of kycStatuses" [value]="item">{{ item }}</option>
+          <label>Source Of Funds <span>*</span></label>
+          <select name="sourceOfFunds" [(ngModel)]="form.sourceOfFunds" required>
+            <option value="">Select source of funds</option>
+            <option *ngFor="let item of sourceOfFundsList" [value]="item.name">
+              {{ item.name }}
+            </option>
           </select>
-        </div>
-
-        <div class="form-group">
-          <label>KYC Risk Category <span>*</span></label>
-          <select name="kycRiskCategory" [(ngModel)]="form.kycRiskCategory" required>
-            <option *ngFor="let item of riskCategories" [value]="item">{{ item }}</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label>Sanction Screening Status <span>*</span></label>
-          <select name="sanctionScreeningStatus" [(ngModel)]="form.sanctionScreeningStatus" required>
-            <option *ngFor="let item of sanctionStatuses" [value]="item">{{ item }}</option>
-          </select>
-        </div>
-
-        <div class="form-group checkbox-group">
-          <label>
-            <input type="checkbox" name="pepFlag" [(ngModel)]="form.pepFlag">
-            Politically Exposed Person
-          </label>
-        </div>
-      </div>
-    </section>
-
-    <section class="form-card">
-      <div class="section-title">
-        <h2>6. Profession & Source of Funds</h2>
-        <span>Required for AML and transaction behavior monitoring</span>
-      </div>
-
-      <div class="form-grid">
-        <div class="form-group">
-          <label>Source of Funds <span>*</span></label>
-          <input type="text" name="sourceOfFunds" [(ngModel)]="form.sourceOfFunds" required>
         </div>
 
         <div class="form-group">
           <label>Occupation <span>*</span></label>
-          <input type="text" name="occupation" [(ngModel)]="form.occupation" required>
+          <select name="occupation" [(ngModel)]="form.occupation" required>
+            <option value="">Select occupation</option>
+            <option *ngFor="let item of occupations" [value]="item.name">
+              {{ item.name }}
+            </option>
+          </select>
         </div>
 
         <div class="form-group">
           <label>Employment Sector</label>
-          <input type="text" name="employmentSector" [(ngModel)]="form.employmentSector">
+          <select name="employmentSector" [(ngModel)]="form.employmentSector">
+            <option value="">Select employment sector</option>
+            <option *ngFor="let item of employmentSectors" [value]="item.name">
+              {{ item.name }}
+            </option>
+          </select>
         </div>
 
         <div class="form-group">
@@ -240,22 +211,36 @@
 
     <section class="form-card">
       <div class="section-title">
-        <h2>7. Wallet Details</h2>
-        <span>Blockchain wallet configuration and limits</span>
+        <h2>6. Wallet Details</h2>
+        <span>Wallet type controls the party type code.</span>
       </div>
 
       <div class="form-grid">
         <div class="form-group">
           <label>Wallet Type <span>*</span></label>
-          <select name="walletType" [(ngModel)]="form.walletType" required>
-            <option *ngFor="let item of walletTypes" [value]="item">{{ item }}</option>
+          <select
+            name="walletType"
+            [(ngModel)]="form.walletType"
+            (change)="onWalletTypeChange()"
+            required
+          >
+            <option *ngFor="let item of walletTypes" [value]="item">
+              {{ item }}
+            </option>
           </select>
+        </div>
+
+        <div class="form-group">
+          <label>Party Type Code</label>
+          <input type="number" name="partyTypeCode" [(ngModel)]="form.partyTypeCode" readonly>
         </div>
 
         <div class="form-group">
           <label>Wallet Status <span>*</span></label>
           <select name="walletStatus" [(ngModel)]="form.walletStatus" required>
-            <option *ngFor="let item of walletStatuses" [value]="item">{{ item }}</option>
+            <option *ngFor="let item of walletStatuses" [value]="item">
+              {{ item }}
+            </option>
           </select>
         </div>
 
@@ -267,7 +252,9 @@
         <div class="form-group">
           <label>Currency Code <span>*</span></label>
           <select name="currencyCode" [(ngModel)]="form.currencyCode" required>
-            <option *ngFor="let item of currencies" [value]="item">{{ item }}</option>
+            <option *ngFor="let item of currencies" [value]="item">
+              {{ item }}
+            </option>
           </select>
         </div>
 
@@ -281,7 +268,7 @@
           <input type="number" name="monthlyTransferLimit" [(ngModel)]="form.monthlyTransferLimit">
         </div>
 
-        <div class="form-group full-width password-row">
+        <div class="form-group full-width">
           <label>Generated Wallet Password</label>
           <div class="inline-control">
             <input type="text" name="generatedPassword" [(ngModel)]="form.generatedPassword" readonly>
@@ -293,33 +280,33 @@
 
     <section class="form-card">
       <div class="section-title">
-        <h2>8. Legal Document Proof</h2>
-        <span>Document metadata and hash references</span>
+        <h2>7. Legal Document Proof</h2>
+        <span>Upload the legal document file and store the file reference/hash in the backend.</span>
       </div>
 
       <div class="form-grid">
         <div class="form-group">
           <label>Legal Document Type <span>*</span></label>
           <select name="legalDocumentType" [(ngModel)]="form.legalDocumentType" required>
-            <option *ngFor="let item of documentTypes" [value]="item">{{ item }}</option>
+            <option *ngFor="let item of documentTypes" [value]="item">
+              {{ item }}
+            </option>
           </select>
         </div>
 
         <div class="form-group">
-          <label>Legal ID Number</label>
+          <label>Legal ID Number Hash</label>
           <input type="text" name="legalIdNumberHash" [(ngModel)]="form.legalIdNumberHash">
         </div>
 
         <div class="form-group">
           <label>Document File</label>
-          <input type="text" name="documentFileHash" [(ngModel)]="form.documentFileHash">
-        </div>
-
-        <div class="form-group">
-          <label>Document Verification Status <span>*</span></label>
-          <select name="documentVerificationStatus" [(ngModel)]="form.documentVerificationStatus" required>
-            <option *ngFor="let item of documentStatuses" [value]="item">{{ item }}</option>
-          </select>
+          <input
+            type="file"
+            name="documentFile"
+            accept=".pdf,.jpg,.jpeg,.png"
+            (change)="onDocumentFileChange($event)"
+          >
         </div>
 
         <div class="form-group">
@@ -332,7 +319,7 @@
     <section class="payload-card">
       <div class="section-title">
         <h2>Generated API Payload Preview</h2>
-        <span>This is the object that will be sent to the backend wallet/KYC API.</span>
+        <span>This object will be sent with uploaded files as multipart/form-data.</span>
       </div>
 
       <pre>{{ buildPayload() | json }}</pre>
