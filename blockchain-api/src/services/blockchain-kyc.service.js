@@ -217,44 +217,57 @@ async function createBlockchainKycWallet(payload, files) {
     throw new Error('organizationId is required');
   }
 
-  const walletType = normalizeWalletType(payload.walletType);
-
   const kycRequest = await insertKycRequest(payload, files);
 
   try {
-    let walletResult;
+    const walletResult = await walletService.createWallet({
+      ...payload,
 
-    if (walletType === 'ORGANIZATION') {
-      walletResult = await walletService.createOrganizationWallet({
-        ...payload,
-        organizationId: payload.organizationId,
-        organizationCode: payload.organizationCode,
-        organizationName: payload.organization || payload.organizationName,
-        initialBalance: toNumber(payload.initialBalance, 0),
-        currencyCode: payload.currencyCode || 'USD',
-        requestSource: payload.requestSource || payload.request_source || 'BLOCKCHAIN_KYC_MODULE',
-        sourceSystem: payload.sourceSystem || payload.source_system || 'BLOCKCHAIN_KYC_MODULE',
-        createdBy: payload.createdBy || payload.created_by || 'blockchain-kyc-module'
-      });
-    } else {
-      walletResult = await walletService.createWallet({
-        ...payload,
-        customerId: payload.customerId,
-        organizationId: payload.organizationId,
-        organizationCode: payload.organizationCode,
-        organizationName: payload.organization || payload.organizationName,
-        fullName: resolveFullName(payload),
-        nationalIdHash: payload.nationalIdHash || payload.legalIdNumberHash || '',
-        mobileHash: payload.mobileHash || '',
-        emailHash: payload.emailHash || '',
-        password: payload.password || payload.generatedPassword || payload.oneTimePassword || null,
-        initialBalance: toNumber(payload.initialBalance, 0),
-        currencyCode: payload.currencyCode || 'USD',
-        requestSource: payload.requestSource || payload.request_source || 'BLOCKCHAIN_KYC_MODULE',
-        sourceSystem: payload.sourceSystem || payload.source_system || 'BLOCKCHAIN_KYC_MODULE',
-        createdBy: payload.createdBy || payload.created_by || 'blockchain-kyc-module'
-      });
-    }
+      customerId: payload.customerId,
+
+      organizationId: payload.organizationId,
+      organizationCode: payload.organizationCode,
+      organizationName: payload.organization || payload.organizationName,
+
+      fullName: resolveFullName(payload),
+
+      nationalIdHash: payload.nationalIdHash || payload.legalIdNumberHash || '',
+      mobileHash: payload.mobileHash || '',
+      emailHash: payload.emailHash || '',
+
+      password:
+        payload.password ||
+        payload.generatedPassword ||
+        payload.oneTimePassword ||
+        null,
+
+      initialBalance: toNumber(payload.initialBalance, 0),
+      currencyCode: payload.currencyCode || 'USD',
+
+      /**
+       * Important:
+       * Blockchain KYC creates a CUSTOMER wallet linked to an organization.
+       * Do not call createOrganizationWallet here because it generates ORG_* IDs,
+       * and enterprise tables require numeric customer_id.
+       */
+      walletType: 'CUSTOMER',
+      partyTypeCode: 7,
+
+      requestSource:
+        payload.requestSource ||
+        payload.request_source ||
+        'BLOCKCHAIN_KYC_MODULE',
+
+      sourceSystem:
+        payload.sourceSystem ||
+        payload.source_system ||
+        'BLOCKCHAIN_KYC_MODULE',
+
+      createdBy:
+        payload.createdBy ||
+        payload.created_by ||
+        'blockchain-kyc-module'
+    });
 
     const updatedKycRequest = await markKycRequestWalletCreated(
       kycRequest.request_id,
@@ -263,7 +276,8 @@ async function createBlockchainKycWallet(payload, files) {
 
     return {
       success: true,
-      message: 'Blockchain KYC wallet created successfully in enterprise tables, PostgreSQL wallet table, and Fabric ledger.',
+      message:
+        'Blockchain KYC customer wallet created successfully in enterprise tables, PostgreSQL wallet table, and Fabric ledger.',
       kycRequest: updatedKycRequest,
       walletCreationStatus: 'SUCCESS',
       walletResult

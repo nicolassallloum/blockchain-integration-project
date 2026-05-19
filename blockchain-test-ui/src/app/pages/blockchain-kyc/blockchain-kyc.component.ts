@@ -34,8 +34,22 @@ interface SimpleRef {
   raw?: any;
 }
 
+interface RegistrationResult {
+  customerId: string;
+  walletAddress: string;
+  organizationName: string;
+  initialBalance: string | number;
+  currencyCode: string;
+  oneTimePassword: string;
+  recoveryPhrase: string;
+  fabricTransactionId: string;
+  channelName: string;
+  chaincodeName: string;
+}
+
 interface BlockchainKycForm {
   customerId: string;
+  fullName: string;
 
   nationality: string;
   countryOfResidence: string;
@@ -94,6 +108,10 @@ export class BlockchainKycComponent implements OnInit {
   successMessage = '';
   errorMessage = '';
 
+  showRegistrationComplete = false;
+
+  registrationResult: RegistrationResult = this.getEmptyRegistrationResult();
+
   countries: CountryRef[] = [];
   organizations: OrganizationRef[] = [];
   organizationTypes: string[] = [];
@@ -102,7 +120,13 @@ export class BlockchainKycComponent implements OnInit {
   occupations: SimpleRef[] = [];
   employmentSectors: SimpleRef[] = [];
 
-  walletTypes = ['CUSTOMER', 'ORGANIZATION'];
+  /**
+   * Important:
+   * This Blockchain KYC screen creates a CUSTOMER wallet linked to a selected organization.
+   * Do not expose ORGANIZATION here because the organization wallet flow generates ORG_* IDs,
+   * while enterprise customer tables require numeric customer_id.
+   */
+  walletTypes = ['CUSTOMER'];
   walletStatuses = ['ACTIVE'];
   currencies = ['USD', 'LBP', 'EUR'];
   documentTypes = ['NATIONAL_ID', 'PASSPORT', 'RESIDENCY_CARD', 'DRIVING_LICENSE'];
@@ -124,9 +148,25 @@ export class BlockchainKycComponent implements OnInit {
     });
   }
 
+  getEmptyRegistrationResult(): RegistrationResult {
+    return {
+      customerId: '',
+      walletAddress: '',
+      organizationName: '',
+      initialBalance: '',
+      currencyCode: '',
+      oneTimePassword: '',
+      recoveryPhrase: 'No recovery phrase returned from API',
+      fabricTransactionId: '',
+      channelName: '',
+      chaincodeName: ''
+    };
+  }
+
   getEmptyForm(): BlockchainKycForm {
     return {
       customerId: '',
+      fullName: '',
 
       nationality: '',
       countryOfResidence: '',
@@ -423,13 +463,8 @@ export class BlockchainKycComponent implements OnInit {
   }
 
   onWalletTypeChange(): void {
-    if (this.form.walletType === 'CUSTOMER') {
-      this.form.partyTypeCode = 7;
-    } else if (this.form.walletType === 'ORGANIZATION') {
-      this.form.partyTypeCode = 8;
-    } else {
-      this.form.partyTypeCode = null;
-    }
+    this.form.walletType = 'CUSTOMER';
+    this.form.partyTypeCode = 7;
   }
 
   onProofOfAddressFileChange(event: Event): void {
@@ -460,6 +495,7 @@ export class BlockchainKycComponent implements OnInit {
   fillSample(): void {
     this.form.nationality = 'Lebanon';
     this.form.countryOfResidence = 'Lebanon';
+    this.form.fullName = 'Nicolas Salloum';
 
     this.form.mobileHash = 'HASHED_MOBILE_71970430';
     this.form.emailHash = 'HASHED_EMAIL_NSALLOUM95_GMAIL';
@@ -474,7 +510,7 @@ export class BlockchainKycComponent implements OnInit {
     this.form.area = 'Achrafieh';
     this.form.addressHash = 'HASHED_ADDRESS_BEIRUT_ACHRAFIEH';
 
-    this.form.sourceOfFunds = 'Business/ Trading';
+    this.form.sourceOfFunds = this.sourceOfFundsList[0]?.name || 'Business/ Trading';
     this.form.occupation = this.occupations[0]?.name || '';
     this.form.employmentSector = this.employmentSectors[0]?.name || '';
     this.form.monthlyIncome = 1500;
@@ -498,12 +534,20 @@ export class BlockchainKycComponent implements OnInit {
     this.form = this.getEmptyForm();
     this.successMessage = '';
     this.errorMessage = '';
+    this.showRegistrationComplete = false;
+    this.registrationResult = this.getEmptyRegistrationResult();
     this.generateCustomerId();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  createAnotherWallet(): void {
+    this.resetForm();
   }
 
   buildPayload(): any {
     return {
       customerId: this.form.customerId,
+      fullName: this.form.fullName,
 
       nationality: this.form.nationality,
       countryOfResidence: this.form.countryOfResidence,
@@ -520,6 +564,7 @@ export class BlockchainKycComponent implements OnInit {
       city: this.form.city,
       area: this.form.area,
       addressHash: this.form.addressHash,
+      proofOfAddressFileName: this.form.proofOfAddressFile?.name || null,
 
       sourceOfFunds: this.form.sourceOfFunds,
       occupation: this.form.occupation,
@@ -528,25 +573,92 @@ export class BlockchainKycComponent implements OnInit {
       expectedMonthlyTransactionVolume: this.form.expectedMonthlyTransactionVolume,
       expectedCashTransactions: this.form.expectedCashTransactions,
 
-      walletType: this.form.walletType,
-      partyTypeCode: this.form.partyTypeCode,
+      walletType: 'CUSTOMER',
+      partyTypeCode: 7,
       walletStatus: this.form.walletStatus,
       initialBalance: this.form.initialBalance,
       currencyCode: this.form.currencyCode,
       dailyTransferLimit: this.form.dailyTransferLimit,
       monthlyTransferLimit: this.form.monthlyTransferLimit,
       password: this.form.generatedPassword,
+      generatedPassword: this.form.generatedPassword,
 
       legalDocumentType: this.form.legalDocumentType,
       legalIdNumberHash: this.form.legalIdNumberHash,
+      documentFileName: this.form.documentFile?.name || null,
       documentExpiryDate: this.form.documentExpiryDate
     };
+  }
+
+  private handleSuccessfulWalletCreation(response: ApiResponse<any>): void {
+    const data = response?.data || {};
+    const walletResult = data?.walletResult || {};
+    const wallet = walletResult?.wallet || {};
+    const blockchain = walletResult?.blockchain || {};
+    const kycRequest = data?.kycRequest || {};
+
+    this.registrationResult = {
+      customerId:
+        wallet.customerId ||
+        kycRequest.customer_id ||
+        this.form.customerId,
+
+      walletAddress:
+        wallet.walletAddress ||
+        kycRequest.wallet_address ||
+        '',
+
+      organizationName:
+        wallet.organizationName ||
+        kycRequest.organization_name ||
+        this.form.organization,
+
+      initialBalance:
+        wallet.currentBalance ||
+        kycRequest.initial_balance ||
+        this.form.initialBalance ||
+        0,
+
+      currencyCode:
+        wallet.currencyCode ||
+        kycRequest.currency_code ||
+        this.form.currencyCode ||
+        'USD',
+
+      oneTimePassword:
+        walletResult.oneTimePassword ||
+        data.oneTimePassword ||
+        this.form.generatedPassword ||
+        'No one-time password returned from API',
+
+      recoveryPhrase:
+        walletResult.recoveryPhrase ||
+        data.recoveryPhrase ||
+        'No recovery phrase returned from API',
+
+      fabricTransactionId:
+        blockchain.fabricTransactionId ||
+        kycRequest.blockchain_tx_id ||
+        '',
+
+      channelName:
+        blockchain.channelName ||
+        '',
+
+      chaincodeName:
+        blockchain.chaincodeName ||
+        ''
+    };
+
+    this.showRegistrationComplete = true;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   submitKycWallet(): void {
     this.loading = true;
     this.successMessage = '';
     this.errorMessage = '';
+    this.showRegistrationComplete = false;
 
     const formData = new FormData();
     const payload = this.buildPayload();
@@ -577,7 +689,10 @@ export class BlockchainKycComponent implements OnInit {
       .subscribe({
         next: (response) => {
           this.successMessage =
-            response.message || 'Blockchain KYC wallet request created successfully.';
+            response.message ||
+            'Blockchain KYC customer wallet created successfully in enterprise tables, PostgreSQL wallet table, and Fabric ledger.';
+
+          this.handleSuccessfulWalletCreation(response);
 
           console.log('[BLOCKCHAIN_KYC_SUCCESS]', response);
         },
@@ -587,6 +702,7 @@ export class BlockchainKycComponent implements OnInit {
           this.errorMessage =
             error?.error?.message ||
             error?.error?.error?.message ||
+            error?.error?.error?.originalMessage ||
             'Failed to create Blockchain KYC wallet request.';
         }
       });

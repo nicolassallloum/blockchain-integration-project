@@ -2,10 +2,10 @@
   <div class="page-header">
     <div>
       <h1>Blockchain KYC</h1>
-      <p>Create a customer or organization wallet using KYC reference data.</p>
+      <p>Create a customer wallet under a selected organization using KYC reference data.</p>
     </div>
 
-    <div class="header-actions">
+    <div class="header-actions" *ngIf="!showRegistrationComplete">
       <button type="button" class="btn btn-light" (click)="fillSample()">
         Fill Sample
       </button>
@@ -20,11 +20,11 @@
     </div>
   </div>
 
-  <div *ngIf="referenceLoading" class="message success">
+  <div *ngIf="referenceLoading && !showRegistrationComplete" class="message success">
     Loading reference data from backend APIs...
   </div>
 
-  <div *ngIf="successMessage" class="message success">
+  <div *ngIf="successMessage && !showRegistrationComplete" class="message success">
     {{ successMessage }}
   </div>
 
@@ -32,7 +32,95 @@
     {{ errorMessage }}
   </div>
 
-  <form class="kyc-form" #kycForm="ngForm" (ngSubmit)="submitKycWallet()">
+  <section *ngIf="showRegistrationComplete" class="registration-complete-wrapper">
+    <div class="registration-complete-card">
+      <div class="success-icon">✓</div>
+
+      <h2>Registration Complete</h2>
+
+      <p class="success-subtitle">
+        The blockchain wallet identity has been successfully created.
+      </p>
+
+      <div class="result-group">
+        <label>Customer ID</label>
+        <div class="result-value highlight">
+          {{ registrationResult.customerId }}
+        </div>
+      </div>
+
+      <div class="result-group">
+        <label>Wallet Address</label>
+        <div class="result-box">
+          {{ registrationResult.walletAddress }}
+        </div>
+      </div>
+
+      <div class="result-group">
+        <label>Organization</label>
+        <div class="result-box">
+          {{ registrationResult.organizationName }}
+        </div>
+      </div>
+
+      <div class="result-group">
+        <label>Initial Balance</label>
+        <div class="result-value highlight">
+          {{ registrationResult.initialBalance }} {{ registrationResult.currencyCode }}
+        </div>
+      </div>
+
+      <div class="result-group">
+        <label>One-Time Password</label>
+        <div class="result-box secret">
+          {{ registrationResult.oneTimePassword }}
+        </div>
+        <small>Save this password immediately. It cannot be recovered.</small>
+      </div>
+
+      <div class="result-group">
+        <label>Recovery Phrase</label>
+        <div class="result-box recovery">
+          {{ registrationResult.recoveryPhrase }}
+        </div>
+        <small>Store this phrase offline and never share it.</small>
+      </div>
+
+      <div class="result-group" *ngIf="registrationResult.fabricTransactionId">
+        <label>Fabric Transaction ID</label>
+        <div class="result-box tx-id">
+          {{ registrationResult.fabricTransactionId }}
+        </div>
+      </div>
+
+      <div class="result-grid">
+        <div class="result-group" *ngIf="registrationResult.channelName">
+          <label>Channel</label>
+          <div class="result-box mini">
+            {{ registrationResult.channelName }}
+          </div>
+        </div>
+
+        <div class="result-group" *ngIf="registrationResult.chaincodeName">
+          <label>Chaincode</label>
+          <div class="result-box mini">
+            {{ registrationResult.chaincodeName }}
+          </div>
+        </div>
+      </div>
+
+      <button type="button" class="btn-create-another" (click)="createAnotherWallet()">
+        Create Another Wallet
+      </button>
+    </div>
+  </section>
+
+  <form
+    *ngIf="!showRegistrationComplete"
+    class="kyc-form"
+    #kycForm="ngForm"
+    (ngSubmit)="submitKycWallet()"
+  >
     <section class="form-card">
       <div class="section-title">
         <h2>1. Customer Identity</h2>
@@ -54,6 +142,17 @@
               Generate
             </button>
           </div>
+        </div>
+
+        <div class="form-group">
+          <label>Full Name <span>*</span></label>
+          <input
+            type="text"
+            name="fullName"
+            [(ngModel)]="form.fullName"
+            placeholder="Enter customer full name"
+            required
+          />
         </div>
 
         <div class="form-group">
@@ -288,7 +387,7 @@
     <section class="form-card">
       <div class="section-title">
         <h2>6. Wallet Details</h2>
-        <span>Wallet type controls Party Type Code: CUSTOMER = 7, ORGANIZATION = 8.</span>
+        <span>This KYC screen creates a CUSTOMER wallet. Party Type Code is fixed to 7.</span>
       </div>
 
       <div class="form-grid">
