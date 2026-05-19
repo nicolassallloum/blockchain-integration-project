@@ -2,6 +2,37 @@
 
 const transactionService = require('../services/transaction.service');
 const auditService = require('../services/audit.service');
+const amlService = require('../services/aml.service');
+
+
+const amlResult = await amlService.evaluateTransaction({
+  requestId,
+  fromWalletAddress,
+  toWalletAddress,
+  customerId,
+  amount,
+  currencyCode,
+  transactionType: 'WALLET_TO_WALLET'
+});
+
+if (amlResult.decision === 'BLOCK') {
+  return res.status(403).json({
+    success: false,
+    message: 'Transaction blocked by AML rules',
+    amlDecision: amlResult.decision,
+    matchedRules: amlResult.matchedRules
+  });
+}
+
+if (amlResult.decision === 'REVIEW') {
+  return res.status(202).json({
+    success: false,
+    message: 'Transaction requires AML review before processing',
+    amlDecision: amlResult.decision,
+    matchedRules: amlResult.matchedRules
+  });
+}
+
 
 const {
   AUDIT_EVENT_TYPES,
