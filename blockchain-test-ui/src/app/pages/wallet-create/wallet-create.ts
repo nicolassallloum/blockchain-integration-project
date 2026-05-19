@@ -357,8 +357,8 @@ export class WalletCreate implements OnInit {
       passwordHash: '',
       initialBalance: '1000',
       currencyCode: 'USD',
-      requestSource: 'ANGULAR_UI',
-      sourceSystem: 'BLOCKCHAIN_TEST_UI',
+      requestSource: 'BLOCKCHAIN_APPLICATION',
+      sourceSystem: 'BLOCKCHAIN_APPLICATION',
       createdBy: 'nix'
     };
 

@@ -28,6 +28,7 @@ const crypto = require('crypto');
 const { performance } = require('perf_hooks');
 const bcrypt = require('bcryptjs');
 const db = require('../config/database');
+const enterprisePersistenceRepository = require('../repositories/enterprise-persistence.repository');
 
 const DEFAULT_PASSWORD = process.env.GENERATED_WALLET_PASSWORD || 'Test@12345';
 const DEFAULT_CURRENCY = process.env.GENERATED_CURRENCY || 'USD';
@@ -338,14 +339,10 @@ async function resolveTransactionTable(client) {
 }
 
 async function resolveOrganizationTable(client) {
-  if (await tableExists(client, 'blockchain', 'blockchain_organization')) {
-    return 'blockchain_organization';
-  }
-
-  if (await tableExists(client, 'blockchain', 'organizations')) {
-    return 'organizations';
-  }
-
+  // Source of truth for organizations in this project is blockchain.blockchain_organization.
+  // Use blockchain.organizations only as a fallback for older database deployments.
+  if (await tableExists(client, 'blockchain', 'blockchain_organization')) return 'blockchain_organization';
+  if (await tableExists(client, 'blockchain', 'organizations')) return 'organizations';
   return null;
 }
 
@@ -457,70 +454,82 @@ async function insertDynamic(client, tableName, valuesByColumn) {
 async function generateWallets(client, count) {
   const phaseStartedAt = nowMs();
 
-  console.log(`[WALLET_GENERATION_START] count=${count}`);
+  console.log(`[WALLET_GENERATION_START] count=${count}, enterpriseSync=YES`);
 
-  const walletColumns = await getColumns(client, 'wallets');
   const organizations = await getOrganizations(client);
   const passwordHash = await bcrypt.hash(DEFAULT_PASSWORD, 10);
 
-  let nextCustomerId = await getNextCustomerId(client);
   let created = 0;
   let skipped = 0;
 
   for (let i = 0; i < count; i++) {
     const itemStartedAt = nowMs();
 
-    const customerId = String(nextCustomerId++);
+    const customerId = String(await enterprisePersistenceRepository.getNextCustomerId(client));
     const realFullName = getRealFullName(customerId);
     const realEmail = buildRealEmail(realFullName, customerId);
     const nationalIdHash = getRandomNationalIdHash();
     const organization = randomItem(organizations);
     const walletAddress = await generateUniqueWalletAddress(client);
     const balance = randomMoney(MIN_BALANCE, MAX_BALANCE);
+    const requestId = generateRequestId();
+    const fabricTxId = `GENERATED_WALLET_${crypto.randomBytes(16).toString('hex').toUpperCase()}`;
 
-    const existing = await client.query(
-      `
-      SELECT 1
-      FROM blockchain.wallets
-      WHERE customer_id = $1
-      LIMIT 1
-      `,
-      [customerId]
-    );
-
-    if (existing.rowCount > 0) {
-      skipped++;
-      continue;
-    }
-
-    const walletValues = {
-      wallet_id: crypto.randomUUID(),
-      wallet_address: walletAddress,
-      customer_id: customerId,
-      organization_id: organization.organization_id,
-      organization_code: organization.organization_code,
-      wallet_type: 'CUSTOMER',
-      full_name: realFullName,
-      national_id_hash: nationalIdHash,
-      ledger_doc_type: 'wallet',
-      ledger_key: walletAddress,
-      mobile_hash: `+961${Math.floor(70000000 + Math.random() * 9999999)}`,
-      email_hash: realEmail,
-      password_hash: passwordHash,
-      current_balance: balance,
-      currency_balance: balance,
-      balance: balance,
-      currency_code: DEFAULT_CURRENCY,
-      currency: DEFAULT_CURRENCY,
+    await enterprisePersistenceRepository.saveWalletEnterprise(client, {
+      walletAddress,
+      customerId,
+      organizationId: organization.organization_id,
+      organizationCode: organization.organization_code,
+      walletType: 'CUSTOMER',
+      fullName: realFullName,
+      nationalIdHash,
+      mobileHash: `+961${Math.floor(70000000 + Math.random() * 9999999)}`,
+      emailHash: realEmail,
+      passwordHash,
+      ledgerDocType: 'wallet',
+      currentBalance: balance,
+      currencyCode: DEFAULT_CURRENCY,
       status: 'ACTIVE',
-      request_source: 'DATA_GENERATOR',
-      source_system: 'BLOCKCHAIN_API_GENERATOR',
-      created_by: 'nix',
-      created_at: new Date(),
-      updated_at: new Date()
-    };
+      fabricTxId,
+      fabricChannelName: process.env.FABRIC_CHANNEL_NAME || 'kycchannelnix1',
+      chaincodeName: process.env.FABRIC_CHAINCODE_NAME || 'kyc-wallet-chaincode-js',
+      walletMetadata: {
+        source: 'DATA_GENERATOR',
+        generated: true,
+        walletType: 'CUSTOMER',
+        organizationId: organization.organization_id,
+        organizationCode: organization.organization_code
+      },
+      kycPayload: {
+        fullName: realFullName,
+        nationalIdHash,
+        emailHash: realEmail,
+        organizationId: organization.organization_id,
+        organizationCode: organization.organization_code
+      },
+      blockchainPayload: {
+        walletAddress,
+        customerId,
+        balance,
+        status: 'ACTIVE',
+        source: 'DATA_GENERATOR'
+      },
+      fabricResponse: {
+        generated: true,
+        fabricTxId,
+        note: 'Synthetic wallet generated directly in PostgreSQL for testing; no Fabric submit was executed.'
+      },
+      requestId,
+      requestSource: 'DATA_GENERATOR',
+      sourceSystem: 'BLOCKCHAIN_API_GENERATOR',
+      createdBy: 'nix',
+      updatedBy: 'nix',
+      originalPayload: {
+        generated: true,
+        generator: 'generate-wallets-transactions.js'
+      }
+    });
 
-    await insertDynamic(client, 'wallets', walletValues);
     created++;
 
     const itemDurationMs = roundDurationMs(nowMs() - itemStartedAt);
@@ -534,16 +543,17 @@ async function generateWallets(client, count) {
       });
     }
 
-    if (created % LOG_EVERY === 0 || created === count) {
+    if (created % LOG_EVERY === 0 || created + skipped >= count) {
       const elapsedMs = nowMs() - phaseStartedAt;
 
       logProfessionalProgress('WALLET_PROGRESS', {
         progressPercent: formatPercent(progressPercent(created, count)),
         created: formatNumber(created),
         skipped: formatNumber(skipped),
+        enterpriseSync: 'YES',
         elapsedSeconds: formatSeconds(seconds(elapsedMs)),
         etaSeconds: formatSeconds(estimateRemainingSeconds(created, count, elapsedMs)),
-        averageMsPerRecord: roundDurationMs(elapsedMs / created),
+        averageMsPerRecord: roundDurationMs(elapsedMs / Math.max(created, 1)),
         recordsPerSecond: ratePerSecond(created, elapsedMs)
       });
     }
@@ -554,6 +564,7 @@ async function generateWallets(client, count) {
   logProfessionalSummary('WALLET GENERATION SUMMARY', {
     'Wallets Created': formatNumber(created),
     'Wallets Skipped': formatNumber(skipped),
+    'Enterprise Sync': 'YES - blockchain.wallets + sdedba.ref_customer + sdedba.cfg_customer_def',
     'Processing Time': formatSeconds(seconds(phaseDurationMs)),
     'Processing Time MS': roundDurationMs(phaseDurationMs),
     'Average Per Wallet': `${created > 0 ? roundDurationMs(phaseDurationMs / created) : 0} ms`,
@@ -572,6 +583,8 @@ async function generateWallets(client, count) {
 
 async function getActiveWallets(client) {
   const columns = await getColumns(client, 'wallets');
+  const organizationTable = await resolveOrganizationTable(client);
+  const hasOrganizationTable = Boolean(organizationTable);
 
   const balanceColumn = pickColumn(columns, [
     'current_balance',
@@ -588,7 +601,15 @@ async function getActiveWallets(client) {
     SELECT
       wallet_address,
       customer_id,
-      organization_id,
+      CASE
+        WHEN ${hasOrganizationTable ? `EXISTS (
+          SELECT 1
+          FROM blockchain.${organizationTable} bo
+          WHERE bo.organization_id::text = wallets.organization_id::text
+        )` : 'FALSE'}
+        THEN wallets.organization_id
+        ELSE NULL
+      END AS organization_id,
       wallet_type,
       COALESCE(${balanceColumn}, 0)::numeric AS balance
     FROM blockchain.wallets
@@ -629,6 +650,63 @@ async function updateWalletBalance(client, balanceColumn, walletAddress, amountD
     `,
     [amountDelta, walletAddress]
   );
+}
+
+
+function toEnterpriseTransactionData(row) {
+  return {
+    transactionId: row.transaction_id || row.id,
+    businessTransactionId: row.transaction_id || row.id,
+    ledgerTransactionId: row.fabric_tx_id || row.fabric_transaction_id,
+    fabricTxId: row.fabric_tx_id || row.fabric_transaction_id,
+    ledgerKey: row.fabric_tx_id || row.fabric_transaction_id || row.transaction_id,
+    transactionType: row.transaction_type || row.type || 'TRANSFER',
+    transactionDirection: 'OUTGOING',
+    fromWalletAddress: row.from_wallet_address || row.sender_wallet_address,
+    toWalletAddress: row.to_wallet_address || row.receiver_wallet_address,
+    senderWalletAddress: row.sender_wallet_address || row.from_wallet_address,
+    receiverWalletAddress: row.receiver_wallet_address || row.to_wallet_address,
+    senderCustomerId: row.sender_customer_id || row.from_customer_id,
+    receiverCustomerId: row.receiver_customer_id || row.to_customer_id,
+    organizationId: row.sender_organization_id || row.from_organization_id || null,
+    organizationCode: row.sender_organization_code || row.from_organization_code || null,
+    amount: row.amount,
+    currencyCode: row.currency_code || row.currency || DEFAULT_CURRENCY,
+    currency: row.currency || row.currency_code || DEFAULT_CURRENCY,
+    transactionFee: row.transaction_fee || row.fee_amount || 0,
+    status: row.status || 'CONFIRMED',
+    transactionStatus: row.transaction_status || row.status || 'CONFIRMED',
+    fabricStatus: 'CONFIRMED',
+    riskLevel: 'LOW',
+    amlStatus: 'NOT_CHECKED',
+    requestReference: row.transaction_reference || row.request_id,
+    externalReference: row.transaction_reference || null,
+    idempotencyKey: row.request_id || row.transaction_id,
+    fabricChannelName: process.env.FABRIC_CHANNEL_NAME || 'kycchannelnix1',
+    chaincodeName: process.env.FABRIC_CHAINCODE_NAME || 'kyc-wallet-chaincode-js',
+    transactionPayload: row,
+    blockchainResponse: {
+      generated: true,
+      transactionReference: row.transaction_reference,
+      note: 'Synthetic transaction generated directly in PostgreSQL for testing; no Fabric submit was executed.'
+    },
+    fabricResponse: {
+      generated: true,
+      fabricTxId: row.fabric_tx_id || row.fabric_transaction_id
+    },
+    metadata: {
+      source: 'DATA_GENERATOR',
+      generated: true
+    },
+    transactionPurpose: row.transaction_purpose,
+    transactionDescription: row.transaction_description || row.description,
+    requestId: row.request_id,
+    sourceSystem: row.source_system || 'BLOCKCHAIN_API_GENERATOR',
+    requestSource: row.request_source || 'DATA_GENERATOR',
+    createdBy: row.created_by || 'nix',
+    updatedBy: row.created_by || 'nix',
+    originalPayload: row
+  };
 }
 
 async function generateTransactions(client, count) {
@@ -793,7 +871,10 @@ async function generateTransactions(client, count) {
       completed_at: new Date()
     };
 
-    await insertDynamic(client, transactionTable, transactionValues);
+    await enterprisePersistenceRepository.saveTransactionEnterprise(
+      client,
+      toEnterpriseTransactionData(transactionValues)
+    );
 
     await updateWalletBalance(client, balanceColumn, sender.wallet_address, -totalAmount);
     await updateWalletBalance(client, balanceColumn, receiver.wallet_address, amount);

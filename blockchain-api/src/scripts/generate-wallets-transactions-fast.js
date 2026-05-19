@@ -10,6 +10,7 @@ const crypto = require('crypto');
 const { performance } = require('perf_hooks');
 const bcrypt = require('bcryptjs');
 const db = require('../config/database');
+const enterprisePersistenceRepository = require('../repositories/enterprise-persistence.repository');
 
 const DEFAULT_PASSWORD = process.env.GENERATED_WALLET_PASSWORD || 'Test@12345';
 const DEFAULT_CURRENCY = process.env.GENERATED_CURRENCY || 'USD';
@@ -266,8 +267,10 @@ async function resolveTransactionTable(client) {
 }
 
 async function resolveOrganizationTable(client) {
+  // Source of truth for organizations in this project is blockchain.blockchain_organization.
+  // Use blockchain.organizations only as a fallback for older database deployments.
   if (await tableExists(client, 'blockchain', 'blockchain_organization')) return 'blockchain_organization';
-  if (await tableExists(client, 'blockchain', 'organizations')) return 'organizations';
+  // if (await tableExists(client, 'blockchain', 'organizations')) return 'organizations';
   return null;
 }
 
@@ -378,7 +381,7 @@ async function batchInsertDynamic(client, tableName, rows, options = {}) {
 async function generateWalletsFast(client, count) {
   const startedAt = nowMs();
 
-  console.log(`[WALLET_FAST_START] target=${formatNumber(count)}, batchSize=${formatNumber(BATCH_SIZE)}`);
+  console.log(`[WALLET_FAST_START] target=${formatNumber(count)}, enterpriseSync=YES`);
 
   if (count <= 0) {
     return {
@@ -393,77 +396,87 @@ async function generateWalletsFast(client, count) {
   const organizations = await getOrganizations(client);
   const passwordHash = await bcrypt.hash(DEFAULT_PASSWORD, 10);
 
-  let nextCustomerId = await getNextCustomerId(client);
   let created = 0;
   let skipped = 0;
-
   const generatedAddresses = new Set();
 
-  while (created < count) {
-    const batch = [];
-    const batchTarget = Math.min(BATCH_SIZE, count - created);
+  while (created + skipped < count) {
+    const customerId = String(await enterprisePersistenceRepository.getNextCustomerId(client));
+    const realFullName = getRealFullName(customerId);
+    const realEmail = buildRealEmail(realFullName, customerId);
+    const nationalIdHash = getRandomNationalIdHash();
+    const organization = randomItem(organizations);
 
-    for (let i = 0; i < batchTarget; i++) {
-      const customerId = String(nextCustomerId++);
-      const realFullName = getRealFullName(customerId);
-      const realEmail = buildRealEmail(realFullName, customerId);
-      const nationalIdHash = getRandomNationalIdHash();
-      const organization = randomItem(organizations);
+    let walletAddress = generateWalletAddress();
 
-      let walletAddress = generateWalletAddress();
-
-      while (generatedAddresses.has(walletAddress)) {
-        walletAddress = generateWalletAddress();
-      }
-
-      generatedAddresses.add(walletAddress);
-
-      const balance = randomMoney(MIN_BALANCE, MAX_BALANCE);
-
-      batch.push({
-        wallet_id: crypto.randomUUID(),
-        wallet_address: walletAddress,
-        customer_id: customerId,
-        organization_id: organization.organization_id,
-        organization_code: organization.organization_code,
-        wallet_type: 'CUSTOMER',
-        full_name: realFullName,
-        national_id_hash: nationalIdHash,
-        ledger_doc_type: 'wallet',
-        ledger_key: walletAddress,
-        mobile_hash: `+961${Math.floor(70000000 + Math.random() * 9999999)}`,
-        email_hash: realEmail,
-        password_hash: passwordHash,
-        current_balance: balance,
-        currency_balance: balance,
-        balance: balance,
-        currency_code: DEFAULT_CURRENCY,
-        currency: DEFAULT_CURRENCY,
-        status: 'ACTIVE',
-        request_source: 'DATA_GENERATOR_FAST',
-        source_system: 'BLOCKCHAIN_API_FAST_GENERATOR',
-        created_by: 'nix',
-        created_at: new Date(),
-        updated_at: new Date()
-      });
+    while (generatedAddresses.has(walletAddress)) {
+      walletAddress = generateWalletAddress();
     }
 
-    const inserted = await batchInsertDynamic(client, 'wallets', batch, {
-      onConflictDoNothing: true
+    generatedAddresses.add(walletAddress);
+
+    const balance = randomMoney(MIN_BALANCE, MAX_BALANCE);
+    const requestId = generateRequestId();
+    const fabricTxId = `GENERATED_WALLET_${crypto.randomBytes(16).toString('hex').toUpperCase()}`;
+
+    await enterprisePersistenceRepository.saveWalletEnterprise(client, {
+      walletAddress,
+      customerId,
+      organizationId: organization.organization_id,
+      organizationCode: organization.organization_code,
+      walletType: 'CUSTOMER',
+      fullName: realFullName,
+      nationalIdHash,
+      mobileHash: `+961${Math.floor(70000000 + Math.random() * 9999999)}`,
+      emailHash: realEmail,
+      passwordHash,
+      ledgerDocType: 'wallet',
+      currentBalance: balance,
+      currencyCode: DEFAULT_CURRENCY,
+      status: 'ACTIVE',
+      fabricTxId,
+      fabricChannelName: process.env.FABRIC_CHANNEL_NAME || 'kycchannelnix1',
+      chaincodeName: process.env.FABRIC_CHAINCODE_NAME || 'kyc-wallet-chaincode-js',
+      walletMetadata: {
+        source: 'DATA_GENERATOR_FAST',
+        generated: true,
+        walletType: 'CUSTOMER',
+        organizationId: organization.organization_id,
+        organizationCode: organization.organization_code
+      },
+      kycPayload: {
+        fullName: realFullName,
+        nationalIdHash,
+        emailHash: realEmail,
+        organizationId: organization.organization_id,
+        organizationCode: organization.organization_code
+      },
+      blockchainPayload: {
+        walletAddress,
+        customerId,
+        balance,
+        status: 'ACTIVE',
+        source: 'DATA_GENERATOR_FAST'
+      },
+      fabricResponse: {
+        generated: true,
+        fabricTxId,
+        note: 'Synthetic wallet generated directly in PostgreSQL for testing; no Fabric submit was executed.'
+      },
+      requestId,
+      requestSource: 'DATA_GENERATOR_FAST',
+      sourceSystem: 'BLOCKCHAIN_API_FAST_GENERATOR',
+      createdBy: 'nix',
+      updatedBy: 'nix',
+      originalPayload: {
+        generated: true,
+        generator: 'generate-wallets-transactions-fast.js'
+      }
     });
 
-    const duplicateOrConflictCount = batch.length - inserted.length;
+    created++;
 
-    created += inserted.length;
-    skipped += duplicateOrConflictCount;
-
-    if (duplicateOrConflictCount > 0) {
-      console.log(
-        `[WALLET_FAST_CONFLICT_SKIP] skipped=${formatNumber(duplicateOrConflictCount)} duplicate/conflicting wallet rows`
-      );
-    }
-
-    if (created % LOG_EVERY === 0 || created === count) {
+    if (created % LOG_EVERY === 0 || created + skipped >= count) {
       logProgress('WALLET_FAST_PROGRESS', created, count, skipped, startedAt);
     }
   }
@@ -473,6 +486,7 @@ async function generateWalletsFast(client, count) {
   logSummary('WALLET FAST GENERATION SUMMARY', {
     'Wallets Created': formatNumber(created),
     'Wallets Skipped': formatNumber(skipped),
+    'Enterprise Sync': 'YES - blockchain.wallets + sdedba.ref_customer + sdedba.cfg_customer_def',
     'Processing Time': `${seconds(durationMs)} sec`,
     'Average Per Wallet': `${roundMs(durationMs / Math.max(created, 1))} ms`,
     'Throughput': `${ratePerSecond(created, durationMs)} wallets/sec`
@@ -490,6 +504,16 @@ async function generateWalletsFast(client, count) {
 
 async function getActiveWallets(client) {
   const columns = await getColumns(client, 'wallets');
+  const organizationTable = await resolveOrganizationTable(client);
+  const hasOrganizationTable = Boolean(organizationTable);
+
+  const customerIdColumn = pickColumn(columns, ['customer_id']);
+  const organizationIdColumn = pickColumn(columns, ['organization_id']);
+  const walletTypeColumn = pickColumn(columns, ['wallet_type', 'type']);
+
+  if (!customerIdColumn) {
+    throw new Error('No customer_id column found in blockchain.wallets');
+  }
 
   const balanceColumn = pickColumn(columns, [
     'current_balance',
@@ -503,23 +527,54 @@ async function getActiveWallets(client) {
 
   const updatedAtColumn = pickColumn(columns, ['updated_at']);
 
+  /**
+   * IMPORTANT:
+   * findba.fin_transaction has FK constraints to sdedba.ref_customer.
+   * Therefore transaction generation must only use wallets whose customer_id
+   * already exists in sdedba.ref_customer.
+   *
+   * Also, organization_id must be validated against blockchain.blockchain_organization
+   * because this project uses blockchain.blockchain_organization as the organization
+   * source of truth, not blockchain.organizations.
+   */
+  const organizationJoinSql = hasOrganizationTable && organizationIdColumn
+    ? `
+    INNER JOIN blockchain.${organizationTable} bo
+      ON bo.organization_id::text = w.${organizationIdColumn}::text
+    `
+    : '';
+
+  const organizationSelectSql = hasOrganizationTable && organizationIdColumn
+    ? `w.${organizationIdColumn}::text AS organization_id`
+    : `NULL::text AS organization_id`;
+
+  const walletTypeSelectSql = walletTypeColumn
+    ? `w.${walletTypeColumn} AS wallet_type`
+    : `'CUSTOMER' AS wallet_type`;
+
   const result = await client.query(
     `
     SELECT
-      wallet_address,
-      customer_id,
-      organization_id,
-      wallet_type,
-      COALESCE(${balanceColumn}, 0)::numeric AS balance
-    FROM blockchain.wallets
-    WHERE COALESCE(status, 'ACTIVE') = 'ACTIVE'
-      AND wallet_address IS NOT NULL
-      AND wallet_address ~ '^[a-f0-9]{40}$'
-      AND COALESCE(${balanceColumn}, 0) > 0
-    ORDER BY created_at DESC NULLS LAST
+      w.wallet_address,
+      c.customer_id::text AS customer_id,
+      ${organizationSelectSql},
+      ${walletTypeSelectSql},
+      COALESCE(w.${balanceColumn}, 0)::numeric AS balance
+    FROM blockchain.wallets w
+    INNER JOIN sdedba.ref_customer c
+      ON c.customer_id::text = w.${customerIdColumn}::text
+    ${organizationJoinSql}
+    WHERE COALESCE(w.status, 'ACTIVE') = 'ACTIVE'
+      AND w.wallet_address IS NOT NULL
+      AND w.wallet_address ~ '^[a-f0-9]{40}$'
+      AND w.${customerIdColumn}::text ~ '^[0-9]+$'
+      AND COALESCE(w.${balanceColumn}, 0) > 0
+    ORDER BY w.created_at DESC NULLS LAST
     LIMIT 200000
     `
   );
+
+  console.log(`[TRANSACTION_FAST_WALLETS] eligibleWallets=${formatNumber(result.rows.length)} | customerSource=sdedba.ref_customer | organizationSource=${hasOrganizationTable ? `blockchain.${organizationTable}` : 'NONE'}`);
 
   return {
     balanceColumn,
@@ -560,6 +615,72 @@ async function batchUpdateWalletBalances(client, balanceColumn, updatedAtColumn,
     `,
     values
   );
+}
+
+
+function toEnterpriseTransactionData(row) {
+  return {
+    transactionId: row.transaction_id || row.id,
+    businessTransactionId: row.transaction_id || row.id,
+    ledgerTransactionId: row.fabric_tx_id || row.fabric_transaction_id,
+    fabricTxId: row.fabric_tx_id || row.fabric_transaction_id,
+    ledgerKey: row.fabric_tx_id || row.fabric_transaction_id || row.transaction_id,
+    transactionType: row.transaction_type || row.type || 'TRANSFER',
+    transactionDirection: 'OUTGOING',
+    fromWalletAddress: row.from_wallet_address || row.sender_wallet_address,
+    toWalletAddress: row.to_wallet_address || row.receiver_wallet_address,
+    senderWalletAddress: row.sender_wallet_address || row.from_wallet_address,
+    receiverWalletAddress: row.receiver_wallet_address || row.to_wallet_address,
+    senderCustomerId: row.sender_customer_id || row.from_customer_id,
+    receiverCustomerId: row.receiver_customer_id || row.to_customer_id,
+    organizationId: row.sender_organization_id || row.from_organization_id || null,
+    organizationCode: row.sender_organization_code || row.from_organization_code || null,
+    amount: row.amount,
+    currencyCode: row.currency_code || row.currency || DEFAULT_CURRENCY,
+    currency: row.currency || row.currency_code || DEFAULT_CURRENCY,
+    transactionFee: row.transaction_fee || row.fee_amount || 0,
+    status: row.status || 'CONFIRMED',
+    transactionStatus: row.transaction_status || row.status || 'CONFIRMED',
+    fabricStatus: 'CONFIRMED',
+    riskLevel: 'LOW',
+    amlStatus: 'NOT_CHECKED',
+    requestReference: row.transaction_reference || row.request_id,
+    externalReference: row.transaction_reference || null,
+    idempotencyKey: row.request_id || row.transaction_id,
+    fabricChannelName: process.env.FABRIC_CHANNEL_NAME || 'kycchannelnix1',
+    chaincodeName: process.env.FABRIC_CHAINCODE_NAME || 'kyc-wallet-chaincode-js',
+    transactionPayload: row,
+    blockchainResponse: {
+      generated: true,
+      transactionReference: row.transaction_reference,
+      note: 'Synthetic transaction generated directly in PostgreSQL for testing; no Fabric submit was executed.'
+    },
+    fabricResponse: {
+      generated: true,
+      fabricTxId: row.fabric_tx_id || row.fabric_transaction_id
+    },
+    metadata: {
+      source: 'DATA_GENERATOR_FAST',
+      generated: true
+    },
+    transactionPurpose: row.transaction_purpose,
+    transactionDescription: row.transaction_description || row.description,
+    requestId: row.request_id,
+    sourceSystem: row.source_system || 'BLOCKCHAIN_API_FAST_GENERATOR',
+    requestSource: row.request_source || 'DATA_GENERATOR_FAST',
+    createdBy: row.created_by || 'nix',
+    updatedBy: row.created_by || 'nix',
+    originalPayload: row
+  };
+}
+
+async function saveEnterpriseTransactionBatch(client, rows) {
+  for (const row of rows) {
+    await enterprisePersistenceRepository.saveTransactionEnterprise(
+      client,
+      toEnterpriseTransactionData(row)
+    );
+  }
 }
 
 async function generateTransactionsFast(client, count) {
@@ -736,7 +857,7 @@ async function generateTransactionsFast(client, count) {
     }
 
     if (batch.length > 0) {
-      await batchInsertDynamic(client, transactionTable, batch);
+      await saveEnterpriseTransactionBatch(client, batch);
       await batchUpdateWalletBalances(client, balanceColumn, updatedAtColumn, balanceDeltas);
 
       created += batch.length;
