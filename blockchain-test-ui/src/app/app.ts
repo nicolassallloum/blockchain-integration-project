@@ -51,6 +51,12 @@ export class App {
       group: 'Digital KYC'
     },
     {
+      label: 'BLOCKCHAIN Wallet Create',
+      route: '/digital-kyc/blockchain-kyc',
+      icon: '●',
+      group: 'BlockChain Digital KYC'
+    },   
+    {
       label: 'Wallet Login',
       route: '/digital-kyc/wallet-login',
       icon: '●',
