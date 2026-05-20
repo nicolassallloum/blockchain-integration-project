@@ -17,6 +17,7 @@ const routes = require('./routes');
 const referenceRoutes = require('./routes/reference.routes');
 const blockchainKycRoutes = require('./routes/blockchain-kyc.routes');
 const app = express();
+const governmentReferenceRoutes = require('./routes/government-blockchain/reference.routes');
 
 /**
  * ---------------------------------------------------------
@@ -92,6 +93,7 @@ app.use((req, res, next) => {
  * Normal CORS middleware for non-OPTIONS requests.
  */
 app.use(cors(corsOptions));
+app.use('/api/v1/government-blockchain/reference', governmentReferenceRoutes);
 /**
  * ---------------------------------------------------------
  * 3. SECURITY HEADERS

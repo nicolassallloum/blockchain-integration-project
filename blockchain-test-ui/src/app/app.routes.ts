@@ -30,6 +30,12 @@ export const routes: Routes = [
     component: BlockchainKycComponent
   },
   {
+    path: 'government-blockchain/create-ministry-account',
+    loadComponent: () =>
+      import('./pages/government-blockchain/create-ministry-account/create-ministry-account.component')
+        .then(m => m.CreateMinistryAccountComponent)
+  },
+  {
     path: 'digital-kyc/dashboard',
     component: DashboardComponent
   },

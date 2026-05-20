@@ -1,0 +1,436 @@
+<div class="create-ministry-page">
+  <section class="page-header">
+    <div>
+      <span class="eyebrow">Government Blockchain Services Platform</span>
+      <h1>Create Ministry Account</h1>
+      <p>
+        Register ministries, public administrations, and official institutions with
+        blockchain wallet readiness.
+      </p>
+    </div>
+
+    <div class="header-badge">
+      <span class="badge-dot"></span>
+      PostgreSQL Dropdowns Active
+    </div>
+  </section>
+
+  <form
+    class="ministry-form"
+    [formGroup]="ministryAccountForm"
+    (ngSubmit)="createMinistryAccount()"
+  >
+    <section class="form-card">
+      <div class="card-header">
+        <div>
+          <h2>Ministry Information</h2>
+          <p>Primary identity and official ministry registration details.</p>
+        </div>
+        <span class="section-number">01</span>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="ministryId">Ministry ID</label>
+          <input
+            id="ministryId"
+            type="text"
+            formControlName="ministryId"
+            placeholder="Example: MIN-001"
+          />
+          <small *ngIf="isInvalid('ministryId')">
+            {{ getErrorMessage('ministryId') }}
+          </small>
+        </div>
+
+        <div class="form-field">
+          <label for="ministryCode">Ministry Code</label>
+          <input
+            id="ministryCode"
+            type="text"
+            formControlName="ministryCode"
+            placeholder="Example: MOF"
+          />
+          <small *ngIf="isInvalid('ministryCode')">
+            {{ getErrorMessage('ministryCode') }}
+          </small>
+        </div>
+
+        <div class="form-field">
+          <label for="ministryName">Ministry Name</label>
+          <input
+            id="ministryName"
+            type="text"
+            formControlName="ministryName"
+            placeholder="Example: Ministry of Finance"
+          />
+          <small *ngIf="isInvalid('ministryName')">
+            {{ getErrorMessage('ministryName') }}
+          </small>
+        </div>
+
+        <div class="form-field">
+          <label for="arabicName">Arabic Name</label>
+          <input
+            id="arabicName"
+            type="text"
+            formControlName="arabicName"
+            placeholder="مثال: وزارة المالية"
+            dir="rtl"
+          />
+          <small *ngIf="isInvalid('arabicName')">
+            {{ getErrorMessage('arabicName') }}
+          </small>
+        </div>
+
+        <div class="form-field">
+          <label for="ministryType">Ministry Type</label>
+          <select id="ministryType" formControlName="ministryType">
+            <option value="">Select ministry type</option>
+            <option *ngFor="let type of ministryTypes" [value]="type">
+              {{ type }}
+            </option>
+          </select>
+          <small *ngIf="isInvalid('ministryType')">
+            {{ getErrorMessage('ministryType') }}
+          </small>
+        </div>
+
+        <div class="form-field">
+          <label for="parentMinistry">Parent Ministry</label>
+          <input
+            id="parentMinistry"
+            type="text"
+            formControlName="parentMinistry"
+            placeholder="Optional parent ministry"
+          />
+          <small *ngIf="isInvalid('parentMinistry')">
+            {{ getErrorMessage('parentMinistry') }}
+          </small>
+        </div>
+
+        <div class="form-field">
+          <label for="ministerName">Minister Name</label>
+          <input
+            id="ministerName"
+            type="text"
+            formControlName="ministerName"
+            placeholder="Enter minister name"
+          />
+          <small *ngIf="isInvalid('ministerName')">
+            {{ getErrorMessage('ministerName') }}
+          </small>
+        </div>
+
+        <div class="form-field">
+          <label for="institutionStatus">Institution Status</label>
+          <select id="institutionStatus" formControlName="institutionStatus">
+            <option
+              *ngFor="let status of institutionStatuses"
+              [value]="status"
+            >
+              {{ status }}
+            </option>
+          </select>
+          <small *ngIf="isInvalid('institutionStatus')">
+            {{ getErrorMessage('institutionStatus') }}
+          </small>
+        </div>
+      </div>
+    </section>
+
+    <section class="form-card">
+      <div class="card-header">
+        <div>
+          <h2>Contact & Location Details</h2>
+          <p>Official communication channels and geographical information.</p>
+        </div>
+        <span class="section-number">02</span>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="contactPerson">Contact Person</label>
+          <input
+            id="contactPerson"
+            type="text"
+            formControlName="contactPerson"
+            placeholder="Enter contact person name"
+          />
+          <small *ngIf="isInvalid('contactPerson')">
+            {{ getErrorMessage('contactPerson') }}
+          </small>
+        </div>
+
+        <div class="form-field">
+          <label for="contactEmail">Contact Email</label>
+          <input
+            id="contactEmail"
+            type="email"
+            formControlName="contactEmail"
+            placeholder="contact@ministry.gov.lb"
+          />
+          <small *ngIf="isInvalid('contactEmail')">
+            {{ getErrorMessage('contactEmail') }}
+          </small>
+        </div>
+
+        <div class="form-field">
+          <label for="contactMobile">Contact Mobile</label>
+          <input
+            id="contactMobile"
+            type="text"
+            formControlName="contactMobile"
+            placeholder="+961 00 000 000"
+          />
+          <small *ngIf="isInvalid('contactMobile')">
+            {{ getErrorMessage('contactMobile') }}
+          </small>
+        </div>
+
+        <div class="form-field">
+          <label for="website">Website</label>
+          <input
+            id="website"
+            type="text"
+            formControlName="website"
+            placeholder="https://www.ministry.gov.lb"
+          />
+          <small *ngIf="isInvalid('website')">
+            {{ getErrorMessage('website') }}
+          </small>
+        </div>
+
+        <div class="form-field full-width">
+          <label for="address">Address</label>
+          <textarea
+            id="address"
+            rows="3"
+            formControlName="address"
+            placeholder="Enter official address"
+          ></textarea>
+          <small *ngIf="isInvalid('address')">
+            {{ getErrorMessage('address') }}
+          </small>
+        </div>
+
+        <div class="form-field">
+          <label for="country">Country</label>
+          <select id="country" formControlName="country">
+            <option value="">
+              {{ isCountriesLoading ? 'Loading countries...' : 'Select country' }}
+            </option>
+            <option
+              *ngFor="let country of countries"
+              [value]="country.countryCode"
+            >
+              {{ country.countryName }}
+            </option>
+          </select>
+          <small *ngIf="isInvalid('country')">
+            {{ getErrorMessage('country') }}
+          </small>
+        </div>
+
+        <div class="form-field">
+          <label for="governorate">Governorate</label>
+          <select
+            id="governorate"
+            formControlName="governorate"
+            [disabled]="isGovernoratesLoading || governorates.length === 0"
+          >
+            <option value="">
+              {{ isGovernoratesLoading ? 'Loading governorates...' : 'Select governorate' }}
+            </option>
+            <option
+              *ngFor="let governorate of governorates"
+              [value]="governorate.governorateCode"
+            >
+              {{ governorate.governorateName }}
+            </option>
+          </select>
+          <small *ngIf="isInvalid('governorate')">
+            {{ getErrorMessage('governorate') }}
+          </small>
+        </div>
+      </div>
+    </section>
+
+    <section class="form-card wallet-card">
+      <div class="card-header">
+        <div>
+          <h2>Blockchain Wallet Section</h2>
+          <p>
+            Prepare the ministry wallet used for government transactions,
+            payments, digital stamps, and blockchain proofs.
+          </p>
+        </div>
+        <span class="section-number">03</span>
+      </div>
+
+      <div class="wallet-status-panel">
+        <div>
+          <span class="panel-label">Wallet Address</span>
+          <strong>
+            {{ ministryAccountForm.get('walletAddress')?.value || 'Not created yet' }}
+          </strong>
+        </div>
+
+        <div>
+          <span class="panel-label">Wallet Status</span>
+          <strong>
+            {{ ministryAccountForm.get('walletOperationalStatus')?.value }}
+          </strong>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-field full-width">
+          <label for="walletAddress">Wallet Address</label>
+          <input
+            id="walletAddress"
+            type="text"
+            formControlName="walletAddress"
+            placeholder="Generated after Create Wallet"
+            readonly
+          />
+          <small *ngIf="isInvalid('walletAddress')">
+            {{ getErrorMessage('walletAddress') }}
+          </small>
+        </div>
+
+        <div class="form-field">
+          <label for="walletCurrency">Wallet Currency</label>
+          <select id="walletCurrency" formControlName="walletCurrency">
+            <option *ngFor="let currency of walletCurrencies" [value]="currency">
+              {{ currency }}
+            </option>
+          </select>
+          <small *ngIf="isInvalid('walletCurrency')">
+            {{ getErrorMessage('walletCurrency') }}
+          </small>
+        </div>
+
+        <div class="form-field">
+          <label for="walletInitialBalance">Wallet Initial Balance</label>
+          <input
+            id="walletInitialBalance"
+            type="number"
+            formControlName="walletInitialBalance"
+            placeholder="0"
+          />
+          <small *ngIf="isInvalid('walletInitialBalance')">
+            {{ getErrorMessage('walletInitialBalance') }}
+          </small>
+        </div>
+
+        <div class="form-field">
+          <label for="walletType">Wallet Type</label>
+          <select
+            id="walletType"
+            formControlName="walletType"
+            [disabled]="isWalletTypesLoading || walletTypes.length === 0"
+          >
+            <option value="">
+              {{ isWalletTypesLoading ? 'Loading wallet types...' : 'Select wallet type' }}
+            </option>
+            <option
+              *ngFor="let type of walletTypes"
+              [value]="type.walletTypeCode"
+            >
+              {{ type.walletTypeName }}
+            </option>
+          </select>
+          <small *ngIf="isInvalid('walletType')">
+            {{ getErrorMessage('walletType') }}
+          </small>
+        </div>
+
+        <div class="form-field">
+          <label for="walletStatus">Wallet Status</label>
+          <select
+            id="walletStatus"
+            formControlName="walletStatus"
+            [disabled]="isWalletStatusesLoading || walletStatuses.length === 0"
+          >
+            <option value="">
+              {{ isWalletStatusesLoading ? 'Loading wallet statuses...' : 'Select wallet status' }}
+            </option>
+            <option
+              *ngFor="let status of walletStatuses"
+              [value]="status.walletStatusCode"
+            >
+              {{ status.walletStatusName }}
+            </option>
+          </select>
+          <small *ngIf="isInvalid('walletStatus')">
+            {{ getErrorMessage('walletStatus') }}
+          </small>
+        </div>
+
+        <div class="form-field">
+          <label for="walletOperationalStatus">Wallet Operational Status</label>
+          <select
+            id="walletOperationalStatus"
+            formControlName="walletOperationalStatus"
+            [disabled]="isWalletStatusesLoading || walletStatuses.length === 0"
+          >
+            <option value="">
+              {{ isWalletStatusesLoading ? 'Loading wallet statuses...' : 'Select operational status' }}
+            </option>
+            <option
+              *ngFor="let status of walletStatuses"
+              [value]="status.walletStatusCode"
+            >
+              {{ status.walletStatusName }}
+            </option>
+          </select>
+          <small *ngIf="isInvalid('walletOperationalStatus')">
+            {{ getErrorMessage('walletOperationalStatus') }}
+          </small>
+        </div>
+      </div>
+    </section>
+
+    <section class="action-bar">
+      <div class="action-info">
+        <strong>Backend reference APIs connected</strong>
+        <span>
+          Countries, governorates, wallet types, and wallet statuses are loaded from PostgreSQL.
+        </span>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="btn secondary" (click)="resetForm()">
+          Reset Form
+        </button>
+
+        <button
+          type="button"
+          class="btn draft"
+          (click)="saveDraft()"
+          [disabled]="isDraftSaving"
+        >
+          {{ isDraftSaving ? 'Saving...' : 'Save Draft' }}
+        </button>
+
+        <button
+          type="button"
+          class="btn wallet"
+          (click)="createWallet()"
+          [disabled]="isWalletCreating"
+        >
+          {{ isWalletCreating ? 'Creating Wallet...' : 'Create Wallet' }}
+        </button>
+
+        <button
+          type="submit"
+          class="btn primary"
+          [disabled]="isSubmitting"
+        >
+          {{ isSubmitting ? 'Creating Account...' : 'Create Ministry Account' }}
+        </button>
+      </div>
+    </section>
+  </form>
+</div>
