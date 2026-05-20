@@ -79,11 +79,22 @@ export const routes: Routes = [
   },
 
   /*
-   * New Blockchain Full KYC Routes
+   * Blockchain Full KYC Routes
+   *
+   * Parent route:
+   * /blockchain-full-kyc
+   *
+   * Child dashboard route:
+   * /blockchain-full-kyc/dashboard
    */
   {
     path: 'blockchain-full-kyc',
     children: [
+      {
+        path: '',
+        redirectTo: 'dashboard',
+        pathMatch: 'full'
+      },
       {
         path: 'dashboard',
         loadComponent: () =>
@@ -179,11 +190,6 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/blockchain-full-kyc/kyc-settings/kyc-settings.component')
             .then(m => m.KycSettingsComponent)
-      },
-      {
-        path: '',
-        redirectTo: 'dashboard',
-        pathMatch: 'full'
       }
     ]
   },

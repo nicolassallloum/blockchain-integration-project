@@ -1,0 +1,266 @@
+<div class="full-kyc-dashboard-page">
+  <section class="page-header">
+    <div>
+      <h1>Blockchain Full KYC Dashboard</h1>
+      <p>
+        State institution digital identity, compliance, and blockchain proof overview
+      </p>
+      <span class="last-refresh">
+        Last refreshed: {{ lastRefreshDate | date: 'yyyy-MM-dd HH:mm:ss' }}
+      </span>
+    </div>
+
+    <button type="button" class="refresh-btn" (click)="refreshDashboard()">
+      Refresh
+    </button>
+  </section>
+
+  <section class="kpi-grid">
+    <article class="kpi-card" *ngFor="let card of kpiCards">
+      <div class="kpi-top">
+        <div class="kpi-icon">{{ card.icon }}</div>
+
+        <span
+          class="kpi-trend"
+          [class.success]="card.trendType === 'success'"
+          [class.warning]="card.trendType === 'warning'"
+          [class.danger]="card.trendType === 'danger'"
+          [class.info]="card.trendType === 'info'"
+        >
+          {{ card.trend }}
+        </span>
+      </div>
+
+      <h3>{{ card.value }}</h3>
+      <h4>{{ card.title }}</h4>
+      <p>{{ card.subtitle }}</p>
+    </article>
+  </section>
+
+  <section class="charts-grid">
+    <article class="dashboard-card">
+      <div class="card-header">
+        <div>
+          <h2>KYC Status Distribution</h2>
+          <p>Citizen records by workflow status</p>
+        </div>
+      </div>
+
+      <div class="distribution-list">
+        <div class="distribution-item" *ngFor="let item of kycStatusDistribution">
+          <div class="distribution-row">
+            <span>{{ item.label }}</span>
+            <strong>{{ item.value | number }}</strong>
+          </div>
+
+          <div class="progress-track">
+            <div
+              class="progress-fill"
+              [class]="item.statusClass"
+              [style.width.%]="item.percentage"
+            ></div>
+          </div>
+
+          <small>{{ item.percentage }}%</small>
+        </div>
+      </div>
+    </article>
+
+    <article class="dashboard-card">
+      <div class="card-header">
+        <div>
+          <h2>Citizen KYC Growth</h2>
+          <p>Monthly growth of KYC profiles</p>
+        </div>
+      </div>
+
+      <div class="growth-chart">
+        <div class="growth-bar-wrapper" *ngFor="let item of citizenKycGrowth">
+          <div class="growth-value">{{ item.value | number }}</div>
+
+          <div class="growth-bar-track">
+            <div class="growth-bar" [style.height.%]="item.percentage"></div>
+          </div>
+
+          <div class="growth-month">{{ item.month }}</div>
+        </div>
+      </div>
+    </article>
+
+    <article class="dashboard-card">
+      <div class="card-header">
+        <div>
+          <h2>Risk / Fraud Distribution</h2>
+          <p>Compliance and suspicious activity summary</p>
+        </div>
+      </div>
+
+      <div class="risk-summary">
+        <div
+          class="risk-box"
+          *ngFor="let item of riskDistribution"
+          [class]="item.statusClass"
+        >
+          <span>{{ item.label }}</span>
+          <strong>{{ item.value | number }}</strong>
+          <small>{{ item.percentage }}% of profiles</small>
+        </div>
+      </div>
+    </article>
+
+    <article class="dashboard-card">
+      <div class="card-header">
+        <div>
+          <h2>Blockchain Submission Status</h2>
+          <p>KYC hash proof status on Fabric ledger</p>
+        </div>
+      </div>
+
+      <div class="distribution-list">
+        <div class="distribution-item" *ngFor="let item of blockchainSubmissionStatus">
+          <div class="distribution-row">
+            <span>{{ item.label }}</span>
+            <strong>{{ item.value | number }}</strong>
+          </div>
+
+          <div class="progress-track">
+            <div
+              class="progress-fill"
+              [class]="item.statusClass"
+              [style.width.%]="item.percentage"
+            ></div>
+          </div>
+
+          <small>{{ item.percentage }}%</small>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <section class="dashboard-card full-width-card">
+    <div class="card-header">
+      <div>
+        <h2>Institution KYC Summary</h2>
+        <p>State institution activity overview</p>
+      </div>
+    </div>
+
+    <div class="institution-grid">
+      <article class="institution-card" *ngFor="let institution of institutionSummary">
+        <div class="institution-title">
+          <div>
+            <h3>{{ institution.institutionName }}</h3>
+            <span>{{ institution.institutionType }}</span>
+          </div>
+
+          <strong>{{ institution.totalKyc | number }}</strong>
+        </div>
+
+        <div class="institution-stats">
+          <div>
+            <span>Approved</span>
+            <strong>{{ institution.approved | number }}</strong>
+          </div>
+
+          <div>
+            <span>Pending</span>
+            <strong>{{ institution.pending | number }}</strong>
+          </div>
+
+          <div>
+            <span>Rejected</span>
+            <strong>{{ institution.rejected | number }}</strong>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="dashboard-card full-width-card">
+    <div class="card-header">
+      <div>
+        <h2>Blockchain Health</h2>
+        <p>Fabric, CouchDB, PostgreSQL, and chaincode operational status</p>
+      </div>
+    </div>
+
+    <div class="health-grid">
+      <article class="health-card" *ngFor="let item of blockchainHealth">
+        <span>{{ item.label }}</span>
+        <strong>{{ item.value }}</strong>
+        <small
+          [class.online]="item.status === 'ONLINE'"
+          [class.active]="item.status === 'ACTIVE'"
+          [class.info]="item.status === 'INFO'"
+        >
+          {{ item.status }}
+        </small>
+      </article>
+    </div>
+  </section>
+
+  <section class="dashboard-card full-width-card">
+    <div class="card-header">
+      <div>
+        <h2>Recent KYC Activity</h2>
+        <p>Latest citizen KYC records submitted by state institutions</p>
+      </div>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>KYC ID</th>
+            <th>Citizen ID</th>
+            <th>Full Name</th>
+            <th>Institution</th>
+            <th>Status</th>
+            <th>Risk Category</th>
+            <th>Blockchain Status</th>
+            <th>Created At</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let activity of recentActivities">
+            <td class="strong-cell">{{ activity.kycId }}</td>
+            <td>{{ activity.citizenId }}</td>
+            <td>{{ activity.fullName }}</td>
+            <td>{{ activity.institution }}</td>
+
+            <td>
+              <span class="status-badge" [class]="getStatusClass(activity.status)">
+                {{ activity.status }}
+              </span>
+            </td>
+
+            <td>
+              <span class="risk-badge" [class]="getRiskClass(activity.riskCategory)">
+                {{ activity.riskCategory }}
+              </span>
+            </td>
+
+            <td>
+              <span
+                class="blockchain-badge"
+                [class]="getBlockchainClass(activity.blockchainStatus)"
+              >
+                {{ activity.blockchainStatus }}
+              </span>
+            </td>
+
+            <td>{{ activity.createdAt }}</td>
+
+            <td>
+              <button type="button" class="view-btn">
+                View
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
