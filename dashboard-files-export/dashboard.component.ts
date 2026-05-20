@@ -37,7 +37,7 @@ import { ProjectViewApiService } from '../../core/services/project-view-api.serv
 
         <div class="stat-card">
           <span>Total Balance</span>
-          <strong>{{ formatBalanceInBillions(walletSummary.totalBalance) }}</strong>
+          <strong>{{ walletSummary.totalBalance | number:'1.2-2' }}</strong>
           <p>{{ walletSummary.currencyCode || 'USD' }} active wallet balance</p>
         </div>
 
@@ -1377,23 +1377,6 @@ export class DashboardComponent implements OnInit {
 
         this.cdr.detectChanges();
       }
-    });
-  }
-
-  formatBalanceInBillions(value: number | string | null | undefined): string {
-    const amount = Number(value || 0);
-
-    if (amount >= 1_000_000_000) {
-      return `${(amount / 1_000_000_000).toFixed(2)} B`;
-    }
-
-    if (amount >= 1_000_000) {
-      return `${(amount / 1_000_000).toFixed(2)} M`;
-    }
-
-    return amount.toLocaleString('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
     });
   }
 
