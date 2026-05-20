@@ -21,6 +21,10 @@ export const routes: Routes = [
     redirectTo: 'digital-kyc/dashboard',
     pathMatch: 'full'
   },
+
+  /*
+   * Existing Digital KYC Routes
+   */
   {
     path: 'digital-kyc/blockchain-kyc',
     component: BlockchainKycComponent
@@ -74,6 +78,119 @@ export const routes: Routes = [
     component: FabricTestComponent
   },
 
+  /*
+   * New Blockchain Full KYC Routes
+   */
+  {
+    path: 'blockchain-full-kyc',
+    children: [
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./pages/blockchain-full-kyc/full-kyc-dashboard/full-kyc-dashboard.component')
+            .then(m => m.FullKycDashboardComponent)
+      },
+      {
+        path: 'create-citizen-kyc',
+        loadComponent: () =>
+          import('./pages/blockchain-full-kyc/create-citizen-kyc/create-citizen-kyc.component')
+            .then(m => m.CreateCitizenKycComponent)
+      },
+      {
+        path: 'citizen-kyc-list',
+        loadComponent: () =>
+          import('./pages/blockchain-full-kyc/citizen-kyc-list/citizen-kyc-list.component')
+            .then(m => m.CitizenKycListComponent)
+      },
+      {
+        path: 'citizen-kyc-details',
+        loadComponent: () =>
+          import('./pages/blockchain-full-kyc/citizen-kyc-details/citizen-kyc-details.component')
+            .then(m => m.CitizenKycDetailsComponent)
+      },
+      {
+        path: 'document-management',
+        loadComponent: () =>
+          import('./pages/blockchain-full-kyc/document-management/document-management.component')
+            .then(m => m.DocumentManagementComponent)
+      },
+      {
+        path: 'review-queue',
+        loadComponent: () =>
+          import('./pages/blockchain-full-kyc/kyc-review-queue/kyc-review-queue.component')
+            .then(m => m.KycReviewQueueComponent)
+      },
+      {
+        path: 'approval',
+        loadComponent: () =>
+          import('./pages/blockchain-full-kyc/kyc-approval/kyc-approval.component')
+            .then(m => m.KycApprovalComponent)
+      },
+      {
+        path: 'duplicate-check',
+        loadComponent: () =>
+          import('./pages/blockchain-full-kyc/duplicate-identity-check/duplicate-identity-check.component')
+            .then(m => m.DuplicateIdentityCheckComponent)
+      },
+      {
+        path: 'risk-fraud-screening',
+        loadComponent: () =>
+          import('./pages/blockchain-full-kyc/risk-fraud-screening/risk-fraud-screening.component')
+            .then(m => m.RiskFraudScreeningComponent)
+      },
+      {
+        path: 'blockchain-proof',
+        loadComponent: () =>
+          import('./pages/blockchain-full-kyc/blockchain-proof/blockchain-proof.component')
+            .then(m => m.BlockchainProofComponent)
+      },
+      {
+        path: 'hash-verification',
+        loadComponent: () =>
+          import('./pages/blockchain-full-kyc/hash-verification/hash-verification.component')
+            .then(m => m.HashVerificationComponent)
+      },
+      {
+        path: 'state-institutions',
+        loadComponent: () =>
+          import('./pages/blockchain-full-kyc/state-institutions/state-institutions.component')
+            .then(m => m.StateInstitutionsComponent)
+      },
+      {
+        path: 'reports',
+        loadComponent: () =>
+          import('./pages/blockchain-full-kyc/kyc-reports/kyc-reports.component')
+            .then(m => m.KycReportsComponent)
+      },
+      {
+        path: 'audit-logs',
+        loadComponent: () =>
+          import('./pages/blockchain-full-kyc/kyc-audit-logs/kyc-audit-logs.component')
+            .then(m => m.KycAuditLogsComponent)
+      },
+      {
+        path: 'users-roles',
+        loadComponent: () =>
+          import('./pages/blockchain-full-kyc/users-roles/users-roles.component')
+            .then(m => m.UsersRolesComponent)
+      },
+      {
+        path: 'settings',
+        loadComponent: () =>
+          import('./pages/blockchain-full-kyc/kyc-settings/kyc-settings.component')
+            .then(m => m.KycSettingsComponent)
+      },
+      {
+        path: '',
+        redirectTo: 'dashboard',
+        pathMatch: 'full'
+      }
+    ]
+  },
+
+  /*
+   * Old Shortcut Redirects
+   */
   {
     path: 'dashboard',
     redirectTo: 'digital-kyc/dashboard',
@@ -130,6 +247,9 @@ export const routes: Routes = [
     pathMatch: 'full'
   },
 
+  /*
+   * Wildcard Route Must Always Stay Last
+   */
   {
     path: '**',
     redirectTo: 'digital-kyc/dashboard'

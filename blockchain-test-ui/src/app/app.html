@@ -85,10 +85,12 @@
         <span class="nav-dot"></span>
         <span class="menu-text">Wallet Create</span>
       </a>
+
       <a routerLink="/digital-kyc/blockchain-kyc" routerLinkActive="active">
         <span class="nav-dot"></span>
         <span class="menu-text">BlockChain Wallet Create (FOR TEST)</span>
       </a>
+
       <a routerLink="/digital-kyc/wallet-login" routerLinkActive="active">
         <span class="nav-dot"></span>
         <span class="menu-text">Wallet Login</span>
@@ -129,6 +131,155 @@
         <span class="nav-dot"></span>
         <span class="menu-text">Data Generation Engine</span>
       </a>
+
+      <div class="menu-divider"></div>
+
+      <!-- New Blockchain Full KYC Parent Menu -->
+      <button
+        type="button"
+        class="sidebar-parent"
+        [class.open]="fullKycMenuOpen"
+        (click)="toggleFullKycMenu()"
+      >
+        <span class="sidebar-parent-left">
+          <span class="parent-icon">◆</span>
+          <span class="menu-text">Blockchain Full KYC</span>
+        </span>
+
+        <span class="parent-arrow menu-text">
+          {{ fullKycMenuOpen ? '▾' : '▸' }}
+        </span>
+      </button>
+
+      <div class="sidebar-submenu" *ngIf="fullKycMenuOpen">
+        <a
+          routerLink="/blockchain-full-kyc/dashboard"
+          routerLinkActive="active"
+        >
+          <span class="nav-dot"></span>
+          <span class="menu-text">Full KYC Dashboard</span>
+        </a>
+
+        <a
+          routerLink="/blockchain-full-kyc/create-citizen-kyc"
+          routerLinkActive="active"
+        >
+          <span class="nav-dot"></span>
+          <span class="menu-text">Create Citizen KYC</span>
+        </a>
+
+        <a
+          routerLink="/blockchain-full-kyc/citizen-kyc-list"
+          routerLinkActive="active"
+        >
+          <span class="nav-dot"></span>
+          <span class="menu-text">Citizen KYC List</span>
+        </a>
+
+        <a
+          routerLink="/blockchain-full-kyc/citizen-kyc-details"
+          routerLinkActive="active"
+        >
+          <span class="nav-dot"></span>
+          <span class="menu-text">Citizen KYC Details</span>
+        </a>
+
+        <a
+          routerLink="/blockchain-full-kyc/document-management"
+          routerLinkActive="active"
+        >
+          <span class="nav-dot"></span>
+          <span class="menu-text">Document Management</span>
+        </a>
+
+        <a
+          routerLink="/blockchain-full-kyc/review-queue"
+          routerLinkActive="active"
+        >
+          <span class="nav-dot"></span>
+          <span class="menu-text">KYC Review Queue</span>
+        </a>
+
+        <a
+          routerLink="/blockchain-full-kyc/approval"
+          routerLinkActive="active"
+        >
+          <span class="nav-dot"></span>
+          <span class="menu-text">KYC Approval</span>
+        </a>
+
+        <a
+          routerLink="/blockchain-full-kyc/duplicate-check"
+          routerLinkActive="active"
+        >
+          <span class="nav-dot"></span>
+          <span class="menu-text">Duplicate Identity Check</span>
+        </a>
+
+        <a
+          routerLink="/blockchain-full-kyc/risk-fraud-screening"
+          routerLinkActive="active"
+        >
+          <span class="nav-dot"></span>
+          <span class="menu-text">Risk / Fraud Screening</span>
+        </a>
+
+        <a
+          routerLink="/blockchain-full-kyc/blockchain-proof"
+          routerLinkActive="active"
+        >
+          <span class="nav-dot"></span>
+          <span class="menu-text">Blockchain Proof</span>
+        </a>
+
+        <a
+          routerLink="/blockchain-full-kyc/hash-verification"
+          routerLinkActive="active"
+        >
+          <span class="nav-dot"></span>
+          <span class="menu-text">Hash Verification</span>
+        </a>
+
+        <a
+          routerLink="/blockchain-full-kyc/state-institutions"
+          routerLinkActive="active"
+        >
+          <span class="nav-dot"></span>
+          <span class="menu-text">State Institutions</span>
+        </a>
+
+        <a
+          routerLink="/blockchain-full-kyc/reports"
+          routerLinkActive="active"
+        >
+          <span class="nav-dot"></span>
+          <span class="menu-text">Reports</span>
+        </a>
+
+        <a
+          routerLink="/blockchain-full-kyc/audit-logs"
+          routerLinkActive="active"
+        >
+          <span class="nav-dot"></span>
+          <span class="menu-text">Audit Logs</span>
+        </a>
+
+        <a
+          routerLink="/blockchain-full-kyc/users-roles"
+          routerLinkActive="active"
+        >
+          <span class="nav-dot"></span>
+          <span class="menu-text">Users & Roles</span>
+        </a>
+
+        <a
+          routerLink="/blockchain-full-kyc/settings"
+          routerLinkActive="active"
+        >
+          <span class="nav-dot"></span>
+          <span class="menu-text">Settings / Reference Data</span>
+        </a>
+      </div>
     </nav>
 
     <div class="sidebar-footer">

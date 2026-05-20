@@ -31,13 +31,19 @@ export class App {
   isSidebarCollapsed = false;
   sidebarSearchText = '';
 
+  fullKycMenuOpen = true;
+
   menuItems: SidebarMenuItem[] = [
     {
       label: 'Back',
-      externalUrl: 'https://vfds.dev.hq.com/kyc',
+      externalUrl: 'https://vfds.dev.hq.com/dashboard',
       icon: '↩',
       group: 'Navigation'
     },
+
+    /*
+     * Existing Digital KYC Menus
+     */
     {
       label: 'Dashboard',
       route: '/digital-kyc/dashboard',
@@ -55,7 +61,7 @@ export class App {
       route: '/digital-kyc/blockchain-kyc',
       icon: '●',
       group: 'BlockChain Digital KYC'
-    },   
+    },
     {
       label: 'Wallet Login',
       route: '/digital-kyc/wallet-login',
@@ -97,6 +103,106 @@ export class App {
       route: '/data-generation-engine',
       icon: '●',
       group: 'Tools'
+    },
+
+    /*
+     * New Blockchain Full KYC Menus
+     */
+    {
+      label: 'Full KYC Dashboard',
+      route: '/blockchain-full-kyc/dashboard',
+      icon: '●',
+      group: 'Blockchain Full KYC'
+    },
+    {
+      label: 'Create Citizen KYC',
+      route: '/blockchain-full-kyc/create-citizen-kyc',
+      icon: '●',
+      group: 'Blockchain Full KYC'
+    },
+    {
+      label: 'Citizen KYC List',
+      route: '/blockchain-full-kyc/citizen-kyc-list',
+      icon: '●',
+      group: 'Blockchain Full KYC'
+    },
+    {
+      label: 'Citizen KYC Details',
+      route: '/blockchain-full-kyc/citizen-kyc-details',
+      icon: '●',
+      group: 'Blockchain Full KYC'
+    },
+    {
+      label: 'Document Management',
+      route: '/blockchain-full-kyc/document-management',
+      icon: '●',
+      group: 'Blockchain Full KYC'
+    },
+    {
+      label: 'KYC Review Queue',
+      route: '/blockchain-full-kyc/review-queue',
+      icon: '●',
+      group: 'Blockchain Full KYC'
+    },
+    {
+      label: 'KYC Approval',
+      route: '/blockchain-full-kyc/approval',
+      icon: '●',
+      group: 'Blockchain Full KYC'
+    },
+    {
+      label: 'Duplicate Identity Check',
+      route: '/blockchain-full-kyc/duplicate-check',
+      icon: '●',
+      group: 'Blockchain Full KYC'
+    },
+    {
+      label: 'Risk / Fraud Screening',
+      route: '/blockchain-full-kyc/risk-fraud-screening',
+      icon: '●',
+      group: 'Blockchain Full KYC'
+    },
+    {
+      label: 'Blockchain Proof',
+      route: '/blockchain-full-kyc/blockchain-proof',
+      icon: '●',
+      group: 'Blockchain Full KYC'
+    },
+    {
+      label: 'Hash Verification',
+      route: '/blockchain-full-kyc/hash-verification',
+      icon: '●',
+      group: 'Blockchain Full KYC'
+    },
+    {
+      label: 'State Institutions',
+      route: '/blockchain-full-kyc/state-institutions',
+      icon: '●',
+      group: 'Blockchain Full KYC'
+    },
+    {
+      label: 'Reports',
+      route: '/blockchain-full-kyc/reports',
+      icon: '●',
+      group: 'Blockchain Full KYC'
+    },
+    {
+      label: 'Audit Logs',
+      route: '/blockchain-full-kyc/audit-logs',
+      icon: '●',
+      group: 'Blockchain Full KYC'
+    },
+    {
+      label: 'Users & Roles',
+      route: '/blockchain-full-kyc/users-roles',
+      icon: '●',
+      group: 'Blockchain Full KYC'
+    },
+    {
+      label: 'Settings / Reference Data',
+      route: '/blockchain-full-kyc/settings',
+      icon: '●',
+      group: 'Blockchain Full KYC'
     }
   ];
 
@@ -107,7 +213,18 @@ export class App {
 
     if (this.isSidebarCollapsed) {
       this.sidebarSearchText = '';
+      this.fullKycMenuOpen = false;
+    } else {
+      this.fullKycMenuOpen = true;
     }
+  }
+
+  toggleFullKycMenu(): void {
+    if (this.isSidebarCollapsed) {
+      this.isSidebarCollapsed = false;
+    }
+
+    this.fullKycMenuOpen = !this.fullKycMenuOpen;
   }
 
   get filteredSidebarItems(): SidebarMenuItem[] {

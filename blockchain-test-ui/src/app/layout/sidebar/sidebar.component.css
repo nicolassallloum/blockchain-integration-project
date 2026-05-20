@@ -212,3 +212,55 @@
 .brand-subtitle {
   display: none !important;
 }
+
+.sidebar-section {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid #eef2f7;
+}
+
+.sidebar-section-title {
+  padding: 10px 22px 8px;
+  font-size: 11px;
+  font-weight: 900;
+  color: #004b9b;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 42px;
+  padding: 0 22px;
+  color: #1f2933;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 800;
+  border-left: 4px solid transparent;
+  transition: 0.2s ease;
+}
+
+.sidebar-link:hover {
+  background: #f3f7fd;
+  color: #004b9b;
+}
+
+.sidebar-link.active {
+  background: #eef6ff;
+  color: #004b9b;
+  border-left-color: #004b9b;
+}
+
+.sidebar-link .dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: #263238;
+  flex: 0 0 auto;
+}
+
+.sidebar-link.active .dot {
+  background-color: #0b63c7;
+}
