@@ -322,83 +322,90 @@
 }
 
 /* =========================
-   Blockchain Full KYC Sidebar Menu
+   Blockchain Full KYC Menu
+   Same Style As Existing Sidebar
    ========================= */
 
-.sidebar-parent {
+.full-kyc-main-menu {
   width: 100%;
-  min-height: 46px;
-  border: none;
-  border-left: 4px solid transparent;
-  background: #f8fbff;
-  color: #004b9b;
-  padding: 9px 16px 9px 26px;
+  min-height: 42px;
+  padding: 8px 18px 8px 35px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  gap: 22px;
+  border: none;
+  background: transparent;
+  color: #263238;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.25;
   text-align: left;
   cursor: pointer;
-  font-size: 13px;
-  font-weight: 900;
-  line-height: 1.25;
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease, padding 0.25s ease, gap 0.25s ease;
 }
 
-.sidebar-parent:hover,
-.sidebar-parent.open {
+.full-kyc-main-menu:hover {
+  background: #f4f8fb;
+  color: #1f4f75;
+}
+
+.full-kyc-main-menu.active {
   background: #eef6ff;
-  color: #004b9b;
-  border-left-color: #004b9b;
+  color: #1f4f75;
 }
 
-.sidebar-parent-left {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
+.full-kyc-main-menu.active .nav-dot {
+  background: #2e86c1;
 }
 
-.parent-icon {
-  width: 16px;
-  min-width: 16px;
-  color: #004b9b;
-  font-size: 12px;
-  line-height: 1;
-}
-
-.parent-arrow {
-  color: #004b9b;
-  font-size: 14px;
+.menu-arrow {
+  margin-left: auto;
+  font-size: 11px;
   font-weight: 900;
+  color: inherit;
 }
 
-.sidebar-submenu {
-  padding: 5px 0 8px;
+.full-kyc-submenu {
+  display: flex;
+  flex-direction: column;
   background: #ffffff;
+  border-left: 3px solid #e5edf6;
 }
 
-.sidebar-submenu a {
+.full-kyc-submenu a {
   min-height: 38px;
-  padding: 7px 16px 7px 42px;
+  padding: 7px 18px 7px 47px;
+  display: flex;
+  align-items: center;
   gap: 14px;
-  font-size: 12.5px;
-  font-weight: 800;
+  color: #263238;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
-.sidebar-submenu .nav-dot {
+.full-kyc-submenu a:hover {
+  background: #f4f8fb;
+  color: #1f4f75;
+}
+
+.full-kyc-submenu a.active {
+  background: #eef6ff;
+  color: #1f4f75;
+}
+
+.full-kyc-submenu .nav-dot {
   width: 10px;
   height: 10px;
   min-width: 10px;
   background: #263238;
 }
 
-.sidebar-submenu a.active {
-  background: #eef6ff;
-  color: #004b9b;
-}
-
-.sidebar-submenu a.active .nav-dot {
+.full-kyc-submenu a.active .nav-dot {
   background: #2e86c1;
 }
 
@@ -569,21 +576,17 @@
   gap: 0;
 }
 
-.layout.sidebar-collapsed .sidebar-parent {
+.layout.sidebar-collapsed .full-kyc-main-menu {
   justify-content: center;
   padding: 12px 0;
-  border-left-color: transparent;
+  gap: 0;
 }
 
-.layout.sidebar-collapsed .sidebar-parent-left {
-  justify-content: center;
+.layout.sidebar-collapsed .full-kyc-submenu {
+  display: none;
 }
 
-.layout.sidebar-collapsed .parent-icon {
-  font-size: 13px;
-}
-
-.layout.sidebar-collapsed .sidebar-submenu {
+.layout.sidebar-collapsed .menu-arrow {
   display: none;
 }
 

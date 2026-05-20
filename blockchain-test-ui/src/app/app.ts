@@ -31,7 +31,7 @@ export class App {
   isSidebarCollapsed = false;
   sidebarSearchText = '';
 
-  fullKycMenuOpen = true;
+  fullKycMenuOpen = false;
 
   menuItems: SidebarMenuItem[] = [
     {
@@ -214,9 +214,7 @@ export class App {
     if (this.isSidebarCollapsed) {
       this.sidebarSearchText = '';
       this.fullKycMenuOpen = false;
-    } else {
-      this.fullKycMenuOpen = true;
-    }
+    } 
   }
 
   toggleFullKycMenu(): void {
@@ -225,6 +223,10 @@ export class App {
     }
 
     this.fullKycMenuOpen = !this.fullKycMenuOpen;
+
+    if (this.fullKycMenuOpen) {
+      this.router.navigate(['/blockchain-full-kyc/dashboard']);
+    }
   }
 
   get filteredSidebarItems(): SidebarMenuItem[] {

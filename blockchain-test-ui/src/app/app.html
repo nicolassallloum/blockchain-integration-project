@@ -134,24 +134,23 @@
 
       <div class="menu-divider"></div>
 
-      <!-- New Blockchain Full KYC Parent Menu -->
+      <!-- Blockchain Full KYC Main Menu -->
       <button
         type="button"
-        class="sidebar-parent"
-        [class.open]="fullKycMenuOpen"
+        class="full-kyc-main-menu"
+        [class.active]="fullKycMenuOpen"
         (click)="toggleFullKycMenu()"
       >
-        <span class="sidebar-parent-left">
-          <span class="parent-icon">◆</span>
-          <span class="menu-text">Blockchain Full KYC</span>
-        </span>
+        <span class="nav-dot"></span>
 
-        <span class="parent-arrow menu-text">
+        <span class="menu-text">Blockchain Full KYC</span>
+
+        <span class="menu-arrow menu-text">
           {{ fullKycMenuOpen ? '▾' : '▸' }}
         </span>
       </button>
 
-      <div class="sidebar-submenu" *ngIf="fullKycMenuOpen">
+      <div class="full-kyc-submenu" *ngIf="fullKycMenuOpen">
         <a
           routerLink="/blockchain-full-kyc/dashboard"
           routerLinkActive="active"
