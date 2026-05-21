@@ -55,9 +55,28 @@ export const routes: Routes = [
     path: 'digital-kyc/wallet-query',
     component: WalletQuery
   },
-  {
+  // {
+  //   path: 'government-blockchain/dashboard',
+  //   component: GovernmentBlockchainDashboardComponent
+  // },
+
+
+   {
     path: 'government-blockchain/dashboard',
-    component: GovernmentBlockchainDashboardComponent
+    loadComponent: () =>
+      import('./pages/government-blockchain/government-blockchain-dashboard/government-blockchain-dashboard.component')
+        .then(m => m.GovernmentBlockchainDashboardComponent),
+  },
+
+  {
+    path: '',
+    redirectTo: 'government-blockchain/dashboard',
+    pathMatch: 'full',
+  },
+
+  {
+    path: '**',
+    redirectTo: 'government-blockchain/dashboard',
   },
   {
     path: 'digital-kyc/wallet-information',
