@@ -589,11 +589,257 @@ async function getMinistryById(req, res, next) {
   }
 }
 
+async function bulkCreateMinistries(req, res, next) {
+  try {
+    const { ministries } = req.body;
+
+    if (!Array.isArray(ministries) || ministries.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'ministries array is required.',
+        errorCode: 'MINISTRIES_ARRAY_REQUIRED',
+        data: null
+      });
+    }
+
+    await db.query('BEGIN');
+
+    let insertedCount = 0;
+    let walletInsertedCount = 0;
+    const skipped = [];
+    const inserted = [];
+
+    for (const ministry of ministries) {
+      const ministryReferenceId =
+        ministry.ministryReferenceId ||
+        ministry.ministryId ||
+        null;
+
+      const ministryCode = ministry.ministryCode || null;
+
+      if (!ministryReferenceId || !ministryCode || !ministry.ministryName) {
+        skipped.push({
+          ministryReferenceId,
+          ministryCode,
+          reason: 'Missing ministryReferenceId, ministryCode, or ministryName'
+        });
+        continue;
+      }
+
+      const existing = await db.query(
+        `
+        SELECT ministry_id
+        FROM blockchain.government_ministries
+        WHERE ministry_reference_id = $1
+           OR ministry_code = $2
+        LIMIT 1;
+        `,
+        [ministryReferenceId, ministryCode]
+      );
+
+      if (existing.rowCount > 0) {
+        skipped.push({
+          ministryReferenceId,
+          ministryCode,
+          reason: 'Already exists'
+        });
+        continue;
+      }
+
+      const loginUsername = ministry.loginUsername || ministryCode;
+      const temporaryPassword = ministry.password || generateTemporaryPassword();
+      const passwordHash = await bcrypt.hash(temporaryPassword, 10);
+
+      const ministryResult = await db.query(
+        `
+        INSERT INTO blockchain.government_ministries (
+          ministry_reference_id,
+          ministry_code,
+          ministry_name,
+          arabic_name,
+          ministry_type,
+          parent_ministry,
+          minister_name,
+          contact_person,
+          contact_email,
+          contact_mobile,
+          address,
+          country_id,
+          country_code,
+          country_name,
+          governorate_id,
+          governorate_code,
+          governorate_name,
+          governorate_name_ar,
+          website,
+          wallet_status,
+          institution_status,
+          blockchain_status,
+          login_username,
+          password_hash,
+          password_set_at,
+          login_status,
+          created_by,
+          updated_by
+        )
+        VALUES (
+          $1, $2, $3, $4, $5,
+          $6, $7, $8, $9, $10,
+          $11, $12, $13, $14, $15,
+          $16, $17, $18, $19, $20,
+          $21, $22, $23, $24, CURRENT_TIMESTAMP,
+          $25, $26, $27
+        )
+        RETURNING
+          ministry_id,
+          ministry_reference_id,
+          ministry_code,
+          ministry_name,
+          arabic_name,
+          ministry_type,
+          country_code,
+          country_name,
+          governorate_code,
+          governorate_name,
+          wallet_status,
+          institution_status,
+          blockchain_status,
+          login_username,
+          created_at;
+        `,
+        [
+          ministryReferenceId,
+          ministryCode,
+          ministry.ministryName,
+          ministry.arabicName || null,
+          ministry.ministryType || 'Central Government Ministry',
+          ministry.parentMinistry || null,
+          ministry.ministerName || null,
+          ministry.contactPerson || null,
+          ministry.contactEmail || null,
+          ministry.contactMobile || null,
+          ministry.address || null,
+          ministry.countryId || null,
+          ministry.countryCode || null,
+          ministry.countryName || ministry.country || null,
+          ministry.governorateId || null,
+          ministry.governorateCode || null,
+          ministry.governorateName || ministry.governorate || null,
+          ministry.governorateNameAr || null,
+          ministry.website || null,
+          ministry.walletStatus || 'PENDING',
+          ministry.institutionStatus || 'PENDING_APPROVAL',
+          ministry.blockchainStatus || 'NOT_SUBMITTED',
+          loginUsername,
+          passwordHash,
+          'ACTIVE',
+          'system',
+          'system'
+        ]
+      );
+
+      const savedMinistry = ministryResult.rows[0];
+
+      const walletAddress =
+        ministry.walletAddress ||
+        generateWalletAddress(ministryCode);
+
+      const walletResult = await db.query(
+        `
+        INSERT INTO blockchain.government_ministry_wallets (
+          ministry_id,
+          wallet_address,
+          wallet_currency,
+          wallet_initial_balance,
+          wallet_current_balance,
+          wallet_type,
+          wallet_status,
+          blockchain_status
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        RETURNING
+          wallet_id,
+          wallet_address,
+          wallet_currency,
+          wallet_current_balance,
+          wallet_type,
+          wallet_status,
+          blockchain_status;
+        `,
+        [
+          savedMinistry.ministry_id,
+          walletAddress,
+          ministry.walletCurrency || 'LBP',
+          Number(ministry.walletInitialBalance || 0),
+          Number(ministry.walletInitialBalance || 0),
+          ministry.walletType || 'MINISTRY_WALLET',
+          ministry.walletStatus || 'ACTIVE',
+          ministry.blockchainStatus || 'NOT_SUBMITTED'
+        ]
+      );
+
+      const savedWallet = walletResult.rows[0];
+
+      await db.query(
+        `
+        UPDATE blockchain.government_ministries
+        SET wallet_status = $1,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE ministry_id = $2;
+        `,
+        [savedWallet.wallet_status || 'ACTIVE', savedMinistry.ministry_id]
+      );
+
+      insertedCount++;
+      walletInsertedCount++;
+
+      inserted.push({
+        ministryId: savedMinistry.ministry_id,
+        ministryReferenceId: savedMinistry.ministry_reference_id,
+        ministryCode: savedMinistry.ministry_code,
+        ministryName: savedMinistry.ministry_name,
+        walletAddress: savedWallet.wallet_address,
+        loginUsername,
+        temporaryPassword
+      });
+    }
+
+    await db.query('COMMIT');
+
+    return res.status(201).json({
+      success: true,
+      message: 'Bulk ministries uploaded successfully.',
+      insertedCount,
+      walletInsertedCount,
+      skippedCount: skipped.length,
+      skipped,
+      data: inserted
+    });
+  } catch (error) {
+    await db.query('ROLLBACK');
+
+    console.error('Bulk ministry upload error:', error);
+
+    if (error.code === '23505') {
+      return res.status(409).json({
+        success: false,
+        message: 'Duplicate ministry code, ministry reference ID, login username, or wallet address.',
+        errorCode: 'DUPLICATE_RECORD',
+        error: error.message,
+        data: null
+      });
+    }
+
+    return next(error);
+  }
+}
+
 module.exports = {
   createMinistryAccount,
   loginMinistry,
   saveMinistryDraft,
   createMinistryWallet,
   getMinistries,
-  getMinistryById
+  getMinistryById,
+  bulkCreateMinistries
 };

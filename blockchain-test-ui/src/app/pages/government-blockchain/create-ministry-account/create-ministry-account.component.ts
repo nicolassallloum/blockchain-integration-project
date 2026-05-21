@@ -1,4 +1,6 @@
 import { CommonModule } from '@angular/common';
+
+import { HttpClient } from '@angular/common/http';
 import { Component, ElementRef, ViewChild } from '@angular/core';
 import {
   AbstractControl,
@@ -104,42 +106,34 @@ export class CreateMinistryAccountComponent {
 
   chaincodes: string[] = ['kyc-wallet-chaincode-js', 'government-services-chaincode'];
 
-  constructor(private fb: FormBuilder) {
+    constructor(
+    private fb: FormBuilder,
+    private http: HttpClient
+    ) {
     this.ministryAccountForm = this.fb.group({
-      ministryId: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(50)]],
-      ministryCode: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(30)]],
-      ministryName: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(150)]],
-      arabicName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(150)]],
-      ministryType: ['', Validators.required],
-      parentMinistry: ['None'],
-      ministerName: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(120)]],
-
-      contactPerson: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(120)]],
-      contactEmail: ['', [Validators.required, Validators.email]],
-      contactMobile: [
-        '',
-        [
-          Validators.required,
-          Validators.pattern(/^(\+961|00961|961)?\s?[0-9\s-]{7,14}$/),
-        ],
-      ],
-
-      country: ['Lebanon', Validators.required],
-      governorate: ['', Validators.required],
-      address: ['', [Validators.required, Validators.minLength(5), Validators.maxLength(250)]],
-
-      walletAddress: [''],
-      walletCurrency: ['LBP', Validators.required],
-      walletStatus: ['PENDING_CREATION', Validators.required],
-
-      blockchainNetwork: ['Hyperledger Fabric', Validators.required],
-      blockchainChannel: ['kycchannelnix1', Validators.required],
-      chaincodeName: ['kyc-wallet-chaincode-js', Validators.required],
-      blockchainStatus: ['NOT_SUBMITTED', Validators.required],
-      blockchainProofHash: [''],
+        ministryId: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(50)]],
+        ministryCode: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(30)]],
+        ministryName: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(150)]],
+        arabicName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(150)]],
+        ministryType: ['', Validators.required],
+        parentMinistry: ['None'],
+        ministerName: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(120)]],
+        contactPerson: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(120)]],
+        contactEmail: ['', [Validators.required, Validators.email]],
+        contactMobile: ['', Validators.required],
+        country: ['Lebanon', Validators.required],
+        governorate: ['', Validators.required],
+        address: ['', Validators.required],
+        walletAddress: [''],
+        walletCurrency: ['LBP', Validators.required],
+        walletStatus: ['PENDING_CREATION', Validators.required],
+        blockchainNetwork: ['Hyperledger Fabric', Validators.required],
+        blockchainChannel: ['kycchannelnix1', Validators.required],
+        chaincodeName: ['kyc-wallet-chaincode-js', Validators.required],
+        blockchainStatus: ['NOT_SUBMITTED', Validators.required],
+        blockchainProofHash: [''],
     });
-  }
-
+    }
   createMinistry(): void {
     if (this.ministryAccountForm.invalid) {
       this.ministryAccountForm.markAllAsTouched();
@@ -224,10 +218,17 @@ export class CreateMinistryAccountComponent {
       Body: draftPayload
     */
 
-    setTimeout(() => {
-      this.isDraftSaving = false;
-      alert('Draft saved locally / payload prepared.');
-    }, 500);
+    this.http.post('/api/v1/government-blockchain/drafts/ministry', draftPayload).subscribe({
+      next: () => {
+        this.isDraftSaving = false;
+        alert('Draft saved locally / payload prepared.');
+      },
+      error: (error) => {
+        console.error('Error saving draft:', error);
+        this.isDraftSaving = false;
+        alert('Error occurred while saving draft.');
+      }
+    });
   }
 
   resetForm(): void {
@@ -355,64 +356,68 @@ export class CreateMinistryAccountComponent {
     this.validCsvRows = parsedRows.filter((row) => row.errors.length === 0);
     this.invalidCsvRows = parsedRows.filter((row) => row.errors.length > 0);
   }
-
+private readonly apiBaseUrl = 'http://172.31.13.90:3001/api/v1';
   uploadBulkMinistries(): void {
     if (this.validCsvRows.length === 0) {
-      alert('No valid CSV rows available for upload.');
-      return;
+        alert('No valid CSV rows available for upload.');
+        return;
     }
 
     this.isBulkUploading = true;
 
     const bulkPayload = {
-      source: 'CSV_UPLOAD',
-      uploadedAt: new Date().toISOString(),
-      totalRows: this.csvRows.length,
-      validRows: this.validCsvRows.length,
-      invalidRows: this.invalidCsvRows.length,
-      ministries: this.validCsvRows.map((row) => ({
-        ministry: {
-          ministryId: row.ministryId,
-          ministryCode: row.ministryCode,
-          ministryName: row.ministryName,
-          arabicName: row.arabicName,
-          ministryType: row.ministryType,
-          parentMinistry: row.parentMinistry,
-          ministerName: row.ministerName,
-          contactPerson: row.contactPerson,
-          contactEmail: row.contactEmail,
-          contactMobile: row.contactMobile,
-          country: row.country,
-          governorate: row.governorate,
-          address: row.address,
-        },
-        wallet: {
-          walletAddress: row.walletAddress,
-          walletCurrency: row.walletCurrency,
-          walletStatus: row.walletStatus,
-        },
-        blockchain: {
-          blockchainStatus: row.blockchainStatus,
-          blockchainNetwork: 'Hyperledger Fabric',
-          channelName: 'kycchannelnix1',
-          chaincodeName: 'kyc-wallet-chaincode-js',
-        },
-      })),
+        source: 'CSV_UPLOAD',
+        uploadedAt: new Date().toISOString(),
+        totalRows: this.csvRows.length,
+        validRows: this.validCsvRows.length,
+        invalidRows: this.invalidCsvRows.length,
+        ministries: this.validCsvRows.map((row) => ({
+        ministryReferenceId: row.ministryId,
+        ministryCode: row.ministryCode,
+        ministryName: row.ministryName,
+        arabicName: row.arabicName,
+        ministryType: row.ministryType,
+        parentMinistry: row.parentMinistry || null,
+        ministerName: row.ministerName,
+        contactPerson: row.contactPerson,
+        contactEmail: row.contactEmail,
+        contactMobile: row.contactMobile,
+        country: row.country,
+        governorate: row.governorate,
+        address: row.address,
+        walletAddress: row.walletAddress || null,
+        walletCurrency: row.walletCurrency || 'LBP',
+        walletStatus: row.walletStatus || 'PENDING_CREATION',
+        blockchainStatus: row.blockchainStatus || 'NOT_SUBMITTED',
+        })),
     };
 
-    console.log('BULK MINISTRIES CSV PAYLOAD READY FOR API:', bulkPayload);
+    this.http
+        .post<any>(
+            `${this.apiBaseUrl}/government-blockchain/ministries/bulk`,
+            bulkPayload
+        )
+        .subscribe({
+            next: (response) => {
+            console.log('Bulk upload response:', response);
+            this.isBulkUploading = false;
 
-    /*
-      TODO Backend API:
-      POST /api/v1/government-blockchain/ministries/bulk
-      Body: bulkPayload
-    */
+            alert(
+                `Bulk upload completed successfully.\nInserted: ${response.insertedCount || 0}\nSkipped: ${response.skippedCount || 0}`
+            );
+            },
+            error: (error) => {
+            console.error('Bulk upload failed:', error);
+            this.isBulkUploading = false;
 
-    setTimeout(() => {
-      this.isBulkUploading = false;
-      alert(`${this.validCsvRows.length} valid ministry records are ready for backend upload.`);
-    }, 800);
-  }
+            alert(
+                error?.error?.message ||
+                error?.message ||
+                'Bulk upload failed. Check backend logs.'
+            );
+            },
+        });
+    }
 
   downloadCsvTemplate(): void {
     const headers = [

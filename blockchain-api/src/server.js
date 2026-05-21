@@ -27,6 +27,8 @@ const app = express();
 const blockchainKycRoutes = require('./routes/blockchain-kyc.routes');
 const governmentBlockchainReferenceRoutes = require('./routes/government-blockchain/reference.routes');
 const governmentMinistryRoutes = require('./routes/government-blockchain/ministry.routes');
+const governmentBlockchainRoutes = require('./routes/government-blockchain/ministry.routes');
+
 /**
  * Optional packages.
  * Loaded safely so the API does not crash if a package is unavailable.
@@ -342,7 +344,9 @@ if (projectViewRoutes) {
 if (dashboardRoutes) {
   app.use('/api/v1/dashboard', dashboardRoutes);
 }
-
+if (governmentBlockchainRoutes) {
+  app.use('/api/v1/government-blockchain', governmentBlockchainRoutes);;
+}
 if (governmentBlockchainReferenceRoutes) {
   app.use(
     '/api/v1/government-blockchain/reference',
