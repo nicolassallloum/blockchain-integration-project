@@ -30,8 +30,7 @@ export class App {
 
   isSidebarCollapsed = false;
   sidebarSearchText = '';
-
-  fullKycMenuOpen = false;
+  governmentMenuOpen = false;
 
   menuItems: SidebarMenuItem[] = [
     {
@@ -40,10 +39,6 @@ export class App {
       icon: '↩',
       group: 'Navigation'
     },
-
-    /*
-     * Existing Digital KYC Menus
-     */
     {
       label: 'Dashboard',
       route: '/digital-kyc/dashboard',
@@ -104,105 +99,125 @@ export class App {
       icon: '●',
       group: 'Tools'
     },
-
-    /*
-     * New Blockchain Full KYC Menus
-     */
     {
-      label: 'Full KYC Dashboard',
-      route: '/blockchain-full-kyc/dashboard',
+      label: 'Government Dashboard',
+      route: '/government-blockchain/dashboard',
       icon: '●',
-      group: 'Blockchain Full KYC'
+      group: 'Government Blockchain Services'
     },
     {
-      label: 'Create Citizen KYC',
-      route: '/blockchain-full-kyc/create-citizen-kyc',
+      label: 'Create Ministry Account',
+      route: '/government-blockchain/create-ministry-account',
       icon: '●',
-      group: 'Blockchain Full KYC'
+      group: 'Government Blockchain Services'
     },
     {
-      label: 'Citizen KYC List',
-      route: '/blockchain-full-kyc/citizen-kyc-list',
+      label: 'Create Public Administration',
+      route: '/government-blockchain/create-public-administration-account',
       icon: '●',
-      group: 'Blockchain Full KYC'
+      group: 'Government Blockchain Services'
     },
     {
-      label: 'Citizen KYC Details',
-      route: '/blockchain-full-kyc/citizen-kyc-details',
+      label: 'Create Resident Account',
+      route: '/government-blockchain/create-resident-account',
       icon: '●',
-      group: 'Blockchain Full KYC'
+      group: 'Government Blockchain Services'
     },
     {
-      label: 'Document Management',
-      route: '/blockchain-full-kyc/document-management',
+      label: 'Resident Wallets',
+      route: '/government-blockchain/resident-wallets',
       icon: '●',
-      group: 'Blockchain Full KYC'
+      group: 'Government Blockchain Services'
     },
     {
-      label: 'KYC Review Queue',
-      route: '/blockchain-full-kyc/review-queue',
+      label: 'Government Services',
+      route: '/government-blockchain/government-services',
       icon: '●',
-      group: 'Blockchain Full KYC'
+      group: 'Government Blockchain Services'
     },
     {
-      label: 'KYC Approval',
-      route: '/blockchain-full-kyc/approval',
+      label: 'New Transaction',
+      route: '/government-blockchain/new-transaction',
       icon: '●',
-      group: 'Blockchain Full KYC'
+      group: 'Government Blockchain Services'
     },
     {
-      label: 'Duplicate Identity Check',
-      route: '/blockchain-full-kyc/duplicate-check',
+      label: 'Transaction List',
+      route: '/government-blockchain/transactions',
       icon: '●',
-      group: 'Blockchain Full KYC'
+      group: 'Government Blockchain Services'
     },
     {
-      label: 'Risk / Fraud Screening',
-      route: '/blockchain-full-kyc/risk-fraud-screening',
+      label: 'Approval Queue',
+      route: '/government-blockchain/approval-queue',
       icon: '●',
-      group: 'Blockchain Full KYC'
+      group: 'Government Blockchain Services'
+    },
+    {
+      label: 'Payments / Digital Stamps',
+      route: '/government-blockchain/payments-digital-stamps',
+      icon: '●',
+      group: 'Government Blockchain Services'
+    },
+    {
+      label: 'Documents & KYC',
+      route: '/government-blockchain/documents-kyc',
+      icon: '●',
+      group: 'Government Blockchain Services'
     },
     {
       label: 'Blockchain Proof',
-      route: '/blockchain-full-kyc/blockchain-proof',
+      route: '/government-blockchain/blockchain-proof',
       icon: '●',
-      group: 'Blockchain Full KYC'
+      group: 'Government Blockchain Services'
     },
     {
       label: 'Hash Verification',
-      route: '/blockchain-full-kyc/hash-verification',
+      route: '/government-blockchain/hash-verification',
       icon: '●',
-      group: 'Blockchain Full KYC'
+      group: 'Government Blockchain Services'
     },
     {
-      label: 'State Institutions',
-      route: '/blockchain-full-kyc/state-institutions',
+      label: 'Risk / Fraud Screening',
+      route: '/government-blockchain/risk-fraud-screening',
       icon: '●',
-      group: 'Blockchain Full KYC'
+      group: 'Government Blockchain Services'
+    },
+    {
+      label: 'AML Dashboard',
+      route: '/government-blockchain/aml/dashboard',
+      icon: '●',
+      group: 'Government Blockchain Services'
+    },
+    {
+      label: 'AML Alerts Queue',
+      route: '/government-blockchain/aml/alerts',
+      icon: '●',
+      group: 'Government Blockchain Services'
+    },
+    {
+      label: 'AML Case Management',
+      route: '/government-blockchain/aml/case-management',
+      icon: '●',
+      group: 'Government Blockchain Services'
     },
     {
       label: 'Reports',
-      route: '/blockchain-full-kyc/reports',
+      route: '/government-blockchain/reports',
       icon: '●',
-      group: 'Blockchain Full KYC'
+      group: 'Government Blockchain Services'
     },
     {
       label: 'Audit Logs',
-      route: '/blockchain-full-kyc/audit-logs',
+      route: '/government-blockchain/audit-logs',
       icon: '●',
-      group: 'Blockchain Full KYC'
+      group: 'Government Blockchain Services'
     },
     {
-      label: 'Users & Roles',
-      route: '/blockchain-full-kyc/users-roles',
+      label: 'Settings',
+      route: '/government-blockchain/settings',
       icon: '●',
-      group: 'Blockchain Full KYC'
-    },
-    {
-      label: 'Settings / Reference Data',
-      route: '/blockchain-full-kyc/settings',
-      icon: '●',
-      group: 'Blockchain Full KYC'
+      group: 'Government Blockchain Services'
     }
   ];
 
@@ -213,19 +228,19 @@ export class App {
 
     if (this.isSidebarCollapsed) {
       this.sidebarSearchText = '';
-      this.fullKycMenuOpen = false;
-    } 
+      this.governmentMenuOpen = false;
+    }
   }
 
-  toggleFullKycMenu(): void {
+  toggleGovernmentMenu(): void {
     if (this.isSidebarCollapsed) {
       this.isSidebarCollapsed = false;
     }
 
-    this.fullKycMenuOpen = !this.fullKycMenuOpen;
+    this.governmentMenuOpen = !this.governmentMenuOpen;
 
-    if (this.fullKycMenuOpen) {
-      this.router.navigate(['/blockchain-full-kyc/dashboard']);
+    if (this.governmentMenuOpen) {
+      this.router.navigate(['/government-blockchain/dashboard']);
     }
   }
 

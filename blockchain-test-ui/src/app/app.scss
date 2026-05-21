@@ -322,11 +322,11 @@
 }
 
 /* =========================
-   Blockchain Full KYC Menu
-   Same Style As Existing Sidebar
+   Government Blockchain Services Menu
+   Compact sidebar fit for the new screens
    ========================= */
 
-.full-kyc-main-menu {
+.government-main-menu {
   width: 100%;
   min-height: 42px;
   padding: 8px 18px 8px 35px;
@@ -345,17 +345,17 @@
   transition: background 0.15s ease, color 0.15s ease, padding 0.25s ease, gap 0.25s ease;
 }
 
-.full-kyc-main-menu:hover {
+.government-main-menu:hover {
   background: #f4f8fb;
   color: #1f4f75;
 }
 
-.full-kyc-main-menu.active {
+.government-main-menu.active {
   background: #eef6ff;
   color: #1f4f75;
 }
 
-.full-kyc-main-menu.active .nav-dot {
+.government-main-menu.active .nav-dot {
   background: #2e86c1;
 }
 
@@ -366,46 +366,46 @@
   color: inherit;
 }
 
-.full-kyc-submenu {
+.government-submenu {
   display: flex;
   flex-direction: column;
   background: #ffffff;
   border-left: 3px solid #e5edf6;
 }
 
-.full-kyc-submenu a {
-  min-height: 38px;
-  padding: 7px 18px 7px 47px;
+.government-submenu a {
+  min-height: 34px;
+  padding: 6px 12px 6px 42px;
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   color: #263238;
   text-decoration: none;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
-  line-height: 1.2;
+  line-height: 1.15;
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease;
 }
 
-.full-kyc-submenu a:hover {
+.government-submenu a:hover {
   background: #f4f8fb;
   color: #1f4f75;
 }
 
-.full-kyc-submenu a.active {
+.government-submenu a.active {
   background: #eef6ff;
   color: #1f4f75;
 }
 
-.full-kyc-submenu .nav-dot {
-  width: 10px;
-  height: 10px;
-  min-width: 10px;
+.government-submenu .nav-dot {
+  width: 9px;
+  height: 9px;
+  min-width: 9px;
   background: #263238;
 }
 
-.full-kyc-submenu a.active .nav-dot {
+.government-submenu a.active .nav-dot {
   background: #2e86c1;
 }
 
@@ -576,13 +576,13 @@
   gap: 0;
 }
 
-.layout.sidebar-collapsed .full-kyc-main-menu {
+.layout.sidebar-collapsed .government-main-menu {
   justify-content: center;
   padding: 12px 0;
   gap: 0;
 }
 
-.layout.sidebar-collapsed .full-kyc-submenu {
+.layout.sidebar-collapsed .government-submenu {
   display: none;
 }
 

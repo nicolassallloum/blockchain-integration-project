@@ -134,149 +134,119 @@
 
       <div class="menu-divider"></div>
 
-      <!-- Blockchain Full KYC Main Menu -->
+      <!-- Government Blockchain Services Main Menu -->
       <button
         type="button"
-        class="full-kyc-main-menu"
-        [class.active]="fullKycMenuOpen"
-        (click)="toggleFullKycMenu()"
+        class="government-main-menu"
+        [class.active]="governmentMenuOpen"
+        (click)="toggleGovernmentMenu()"
       >
         <span class="nav-dot"></span>
-
-        <span class="menu-text">Blockchain Full KYC</span>
-
+        <span class="menu-text">Government Blockchain</span>
         <span class="menu-arrow menu-text">
-          {{ fullKycMenuOpen ? '▾' : '▸' }}
+          {{ governmentMenuOpen ? '▾' : '▸' }}
         </span>
       </button>
 
-      <div class="full-kyc-submenu" *ngIf="fullKycMenuOpen">
-        <a
-          routerLink="/blockchain-full-kyc/dashboard"
-          routerLinkActive="active"
-        >
+      <div class="government-submenu" *ngIf="governmentMenuOpen">
+        <a routerLink="/government-blockchain/dashboard" routerLinkActive="active">
           <span class="nav-dot"></span>
-          <span class="menu-text">Full KYC Dashboard</span>
+          <span class="menu-text">Dashboard</span>
         </a>
 
-        <a
-          routerLink="/blockchain-full-kyc/create-citizen-kyc"
-          routerLinkActive="active"
-        >
+        <a routerLink="/government-blockchain/create-ministry-account" routerLinkActive="active">
           <span class="nav-dot"></span>
-          <span class="menu-text">Create Citizen KYC</span>
+          <span class="menu-text">Create Ministry Account</span>
         </a>
 
-        <a
-          routerLink="/blockchain-full-kyc/citizen-kyc-list"
-          routerLinkActive="active"
-        >
+        <a routerLink="/government-blockchain/create-public-administration-account" routerLinkActive="active">
           <span class="nav-dot"></span>
-          <span class="menu-text">Citizen KYC List</span>
+          <span class="menu-text">Create Public Administration</span>
         </a>
 
-        <a
-          routerLink="/blockchain-full-kyc/citizen-kyc-details"
-          routerLinkActive="active"
-        >
+        <a routerLink="/government-blockchain/create-resident-account" routerLinkActive="active">
           <span class="nav-dot"></span>
-          <span class="menu-text">Citizen KYC Details</span>
+          <span class="menu-text">Create Resident Account</span>
         </a>
 
-        <a
-          routerLink="/blockchain-full-kyc/document-management"
-          routerLinkActive="active"
-        >
+        <a routerLink="/government-blockchain/resident-wallets" routerLinkActive="active">
           <span class="nav-dot"></span>
-          <span class="menu-text">Document Management</span>
+          <span class="menu-text">Resident Wallets</span>
         </a>
 
-        <a
-          routerLink="/blockchain-full-kyc/review-queue"
-          routerLinkActive="active"
-        >
+        <a routerLink="/government-blockchain/government-services" routerLinkActive="active">
           <span class="nav-dot"></span>
-          <span class="menu-text">KYC Review Queue</span>
+          <span class="menu-text">Government Services</span>
         </a>
 
-        <a
-          routerLink="/blockchain-full-kyc/approval"
-          routerLinkActive="active"
-        >
+        <a routerLink="/government-blockchain/new-transaction" routerLinkActive="active">
           <span class="nav-dot"></span>
-          <span class="menu-text">KYC Approval</span>
+          <span class="menu-text">New Transaction</span>
         </a>
 
-        <a
-          routerLink="/blockchain-full-kyc/duplicate-check"
-          routerLinkActive="active"
-        >
+        <a routerLink="/government-blockchain/transactions" routerLinkActive="active">
           <span class="nav-dot"></span>
-          <span class="menu-text">Duplicate Identity Check</span>
+          <span class="menu-text">Transaction List</span>
         </a>
 
-        <a
-          routerLink="/blockchain-full-kyc/risk-fraud-screening"
-          routerLinkActive="active"
-        >
+        <a routerLink="/government-blockchain/approval-queue" routerLinkActive="active">
           <span class="nav-dot"></span>
-          <span class="menu-text">Risk / Fraud Screening</span>
+          <span class="menu-text">Approval Queue</span>
         </a>
 
-        <a
-          routerLink="/blockchain-full-kyc/blockchain-proof"
-          routerLinkActive="active"
-        >
+        <a routerLink="/government-blockchain/payments-digital-stamps" routerLinkActive="active">
+          <span class="nav-dot"></span>
+          <span class="menu-text">Payments / Digital Stamps</span>
+        </a>
+
+        <a routerLink="/government-blockchain/documents-kyc" routerLinkActive="active">
+          <span class="nav-dot"></span>
+          <span class="menu-text">Documents & KYC</span>
+        </a>
+
+        <a routerLink="/government-blockchain/blockchain-proof" routerLinkActive="active">
           <span class="nav-dot"></span>
           <span class="menu-text">Blockchain Proof</span>
         </a>
 
-        <a
-          routerLink="/blockchain-full-kyc/hash-verification"
-          routerLinkActive="active"
-        >
+        <a routerLink="/government-blockchain/hash-verification" routerLinkActive="active">
           <span class="nav-dot"></span>
           <span class="menu-text">Hash Verification</span>
         </a>
 
-        <a
-          routerLink="/blockchain-full-kyc/state-institutions"
-          routerLinkActive="active"
-        >
+        <a routerLink="/government-blockchain/risk-fraud-screening" routerLinkActive="active">
           <span class="nav-dot"></span>
-          <span class="menu-text">State Institutions</span>
+          <span class="menu-text">Risk / Fraud Screening</span>
         </a>
 
-        <a
-          routerLink="/blockchain-full-kyc/reports"
-          routerLinkActive="active"
-        >
+        <a routerLink="/government-blockchain/aml/dashboard" routerLinkActive="active">
+          <span class="nav-dot"></span>
+          <span class="menu-text">AML Dashboard</span>
+        </a>
+
+        <a routerLink="/government-blockchain/aml/alerts" routerLinkActive="active">
+          <span class="nav-dot"></span>
+          <span class="menu-text">AML Alerts Queue</span>
+        </a>
+
+        <a routerLink="/government-blockchain/aml/case-management" routerLinkActive="active">
+          <span class="nav-dot"></span>
+          <span class="menu-text">AML Case Management</span>
+        </a>
+
+        <a routerLink="/government-blockchain/reports" routerLinkActive="active">
           <span class="nav-dot"></span>
           <span class="menu-text">Reports</span>
         </a>
 
-        <a
-          routerLink="/blockchain-full-kyc/audit-logs"
-          routerLinkActive="active"
-        >
+        <a routerLink="/government-blockchain/audit-logs" routerLinkActive="active">
           <span class="nav-dot"></span>
           <span class="menu-text">Audit Logs</span>
         </a>
 
-        <a
-          routerLink="/blockchain-full-kyc/users-roles"
-          routerLinkActive="active"
-        >
+        <a routerLink="/government-blockchain/settings" routerLinkActive="active">
           <span class="nav-dot"></span>
-          <span class="menu-text">Users & Roles</span>
-        </a>
-
-        <a
-          routerLink="/blockchain-full-kyc/settings"
-          routerLinkActive="active"
-        >
-          <span class="nav-dot"></span>
-          <span class="menu-text">Settings / Reference Data</span>
+          <span class="menu-text">Settings</span>
         </a>
       </div>
     </nav>
@@ -290,7 +260,7 @@
   <main class="main">
     <header class="topbar">
       <div class="breadcrumb">
-        <span>TCR (The Crypto Road)</span>
+        <span>Government Blockchain Services</span>
         <span class="breadcrumb-separator">›</span>
         <span>Digital KYC</span>
       </div>
