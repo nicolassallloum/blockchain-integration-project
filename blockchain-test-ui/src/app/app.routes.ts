@@ -14,7 +14,7 @@ import { TransactionHistoryComponent } from './features/transactions/transaction
 import { BalanceQueryComponent } from './features/transactions/balance-query/balance-query.component';
 import { CreatePublicAdministrationAccountComponent } from './pages/government-blockchain/create-public-administration-account/create-public-administration-account.component';
 import { FabricTestComponent } from './features/fabric-test/fabric-test.component';
-
+import { CreateResidentAccountComponent } from './pages/government-blockchain/create-resident-account/create-resident-account.component';
 export const routes: Routes = [
   {
     path: '',
@@ -42,6 +42,11 @@ export const routes: Routes = [
   {
     path: 'digital-kyc/dashboard',
     component: DashboardComponent
+  },
+  {
+    path: 'government-blockchain/create-resident-account',
+    component: CreateResidentAccountComponent,
+    title: 'Create Resident Account'
   },
   {
     path: 'digital-kyc/wallet-create',

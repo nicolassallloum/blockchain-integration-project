@@ -1,0 +1,366 @@
+<div class="resident-page">
+  <div class="page-header">
+    <div>
+      <p class="eyebrow">Government Blockchain Services Platform</p>
+      <h1>{{ pageTitle }}</h1>
+      <p class="subtitle">
+        Register residents, complete KYC information, and prepare blockchain wallet creation.
+      </p>
+    </div>
+
+    <div class="header-actions">
+      <div class="completion-card">
+        <span>Form Completion</span>
+        <strong>{{ formCompletion() }}%</strong>
+      </div>
+      <button type="button" class="btn btn-secondary" (click)="resetForm()">
+        Reset
+      </button>
+    </div>
+  </div>
+
+  <div class="status-row" *ngIf="successMessage() || errorMessage()">
+    <div class="alert success" *ngIf="successMessage()">
+      {{ successMessage() }}
+    </div>
+
+    <div class="alert error" *ngIf="errorMessage()">
+      {{ errorMessage() }}
+    </div>
+  </div>
+
+  <form [formGroup]="residentForm" class="resident-form">
+    <section class="form-section">
+      <div class="section-header">
+        <div>
+          <h2>1. Personal Information</h2>
+          <p>Basic resident profile and demographic information.</p>
+        </div>
+        <span class="section-badge">Resident Profile</span>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-field">
+          <label>Resident ID <span>*</span></label>
+          <input type="text" formControlName="residentId" placeholder="RES-20260521-0001" />
+          <small *ngIf="hasFieldError('residentId')">{{ getFieldError('residentId') }}</small>
+        </div>
+
+        <div class="form-field">
+          <label>First Name <span>*</span></label>
+          <input type="text" formControlName="firstName" placeholder="First name" />
+          <small *ngIf="hasFieldError('firstName')">{{ getFieldError('firstName') }}</small>
+        </div>
+
+        <div class="form-field">
+          <label>Father Name <span>*</span></label>
+          <input type="text" formControlName="fatherName" placeholder="Father name" />
+          <small *ngIf="hasFieldError('fatherName')">{{ getFieldError('fatherName') }}</small>
+        </div>
+
+        <div class="form-field">
+          <label>Mother Name <span>*</span></label>
+          <input type="text" formControlName="motherName" placeholder="Mother name" />
+          <small *ngIf="hasFieldError('motherName')">{{ getFieldError('motherName') }}</small>
+        </div>
+
+        <div class="form-field">
+          <label>Last Name <span>*</span></label>
+          <input type="text" formControlName="lastName" placeholder="Last name" />
+          <small *ngIf="hasFieldError('lastName')">{{ getFieldError('lastName') }}</small>
+        </div>
+
+        <div class="form-field">
+          <label>Full Name <span>*</span></label>
+          <input type="text" formControlName="fullName" placeholder="Auto-generated full name" />
+          <small *ngIf="hasFieldError('fullName')">{{ getFieldError('fullName') }}</small>
+        </div>
+
+        <div class="form-field">
+          <label>Arabic Full Name <span>*</span></label>
+          <input type="text" formControlName="arabicFullName" placeholder="الاسم الكامل بالعربية" />
+          <small *ngIf="hasFieldError('arabicFullName')">{{ getFieldError('arabicFullName') }}</small>
+        </div>
+
+        <div class="form-field">
+          <label>Date of Birth <span>*</span></label>
+          <input type="date" formControlName="dateOfBirth" />
+          <small *ngIf="hasFieldError('dateOfBirth')">{{ getFieldError('dateOfBirth') }}</small>
+        </div>
+
+        <div class="form-field">
+          <label>Gender <span>*</span></label>
+          <select formControlName="gender">
+            <option value="">Select gender</option>
+            <option *ngFor="let item of genders" [value]="item.id">{{ item.name }}</option>
+          </select>
+          <small *ngIf="hasFieldError('gender')">{{ getFieldError('gender') }}</small>
+        </div>
+
+        <div class="form-field">
+          <label>Nationality <span>*</span></label>
+          <select formControlName="nationality">
+            <option value="">Select nationality</option>
+            <option *ngFor="let item of nationalities" [value]="item.id">{{ item.name }}</option>
+          </select>
+          <small *ngIf="hasFieldError('nationality')">{{ getFieldError('nationality') }}</small>
+        </div>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <div class="section-header">
+        <div>
+          <h2>2. Identity Information</h2>
+          <p>National ID, passport, residency, and tax identification details.</p>
+        </div>
+        <span class="section-badge">Identity</span>
+      </div>
+
+      <div class="identity-warning" *ngIf="hasIdentityDocumentError()">
+        At least one identity document is required: National ID, Passport Number, or Residency Permit Number.
+      </div>
+
+      <div class="form-grid">
+        <div class="form-field">
+          <label>National ID Number <span>*</span></label>
+          <input type="text" formControlName="nationalIdNumber" placeholder="National ID number" />
+          <small *ngIf="hasFieldError('nationalIdNumber')">
+            {{ getFieldError('nationalIdNumber') }}
+          </small>
+        </div>
+
+        <div class="form-field">
+          <label>Passport Number</label>
+          <input type="text" formControlName="passportNumber" placeholder="Passport number" />
+          <small *ngIf="hasFieldError('passportNumber')">{{ getFieldError('passportNumber') }}</small>
+        </div>
+
+        <div class="form-field">
+          <label>Residency Permit Number</label>
+          <input type="text" formControlName="residencyPermitNumber" placeholder="Residency permit number" />
+          <small *ngIf="hasFieldError('residencyPermitNumber')">
+            {{ getFieldError('residencyPermitNumber') }}
+          </small>
+        </div>
+
+        <div class="form-field">
+          <label>Tax Number</label>
+          <input type="text" formControlName="taxNumber" placeholder="Tax number" />
+          <small *ngIf="hasFieldError('taxNumber')">{{ getFieldError('taxNumber') }}</small>
+        </div>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <div class="section-header">
+        <div>
+          <h2>3. Contact Information</h2>
+          <p>Resident mobile, email, and address location details.</p>
+        </div>
+        <span class="section-badge">Contact</span>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-field">
+          <label>Mobile Number <span>*</span></label>
+          <input type="text" formControlName="mobileNumber" placeholder="+961 70 123 456" />
+          <small *ngIf="hasFieldError('mobileNumber')">{{ getFieldError('mobileNumber') }}</small>
+        </div>
+
+        <div class="form-field">
+          <label>Email <span>*</span></label>
+          <input type="email" formControlName="email" placeholder="resident@gov.lb" />
+          <small *ngIf="hasFieldError('email')">{{ getFieldError('email') }}</small>
+        </div>
+
+        <div class="form-field">
+          <label>Governorate <span>*</span></label>
+          <select formControlName="governorate">
+            <option value="">Select governorate</option>
+            <option *ngFor="let item of governorates" [value]="item.id">{{ item.name }}</option>
+          </select>
+          <small *ngIf="hasFieldError('governorate')">{{ getFieldError('governorate') }}</small>
+        </div>
+
+        <div class="form-field">
+          <label>District <span>*</span></label>
+          <select formControlName="district">
+            <option value="">Select district</option>
+            <option *ngFor="let item of districts" [value]="item.id">{{ item.name }}</option>
+          </select>
+          <small *ngIf="hasFieldError('district')">{{ getFieldError('district') }}</small>
+        </div>
+
+        <div class="form-field">
+          <label>Municipality <span>*</span></label>
+          <select formControlName="municipality">
+            <option value="">Select municipality</option>
+            <option *ngFor="let item of municipalities" [value]="item.id">{{ item.name }}</option>
+          </select>
+          <small *ngIf="hasFieldError('municipality')">{{ getFieldError('municipality') }}</small>
+        </div>
+
+        <div class="form-field full-width">
+          <label>Address <span>*</span></label>
+          <textarea rows="3" formControlName="address" placeholder="Resident address"></textarea>
+          <small *ngIf="hasFieldError('address')">{{ getFieldError('address') }}</small>
+        </div>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <div class="section-header">
+        <div>
+          <h2>4. Employment Information</h2>
+          <p>Employment, occupation, and income information for KYC risk assessment.</p>
+        </div>
+        <span class="section-badge">Employment</span>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-field">
+          <label>Employment Status <span>*</span></label>
+          <select formControlName="employmentStatus">
+            <option value="">Select employment status</option>
+            <option *ngFor="let item of employmentStatuses" [value]="item.id">{{ item.name }}</option>
+          </select>
+          <small *ngIf="hasFieldError('employmentStatus')">
+            {{ getFieldError('employmentStatus') }}
+          </small>
+        </div>
+
+        <div class="form-field">
+          <label>Occupation</label>
+          <input type="text" formControlName="occupation" placeholder="Occupation" />
+          <small *ngIf="hasFieldError('occupation')">{{ getFieldError('occupation') }}</small>
+        </div>
+
+        <div class="form-field">
+          <label>Monthly Income</label>
+          <input type="number" formControlName="monthlyIncome" placeholder="Monthly income" />
+          <small *ngIf="hasFieldError('monthlyIncome')">{{ getFieldError('monthlyIncome') }}</small>
+        </div>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <div class="section-header">
+        <div>
+          <h2>5. KYC Information</h2>
+          <p>KYC status and resident risk category for compliance review.</p>
+        </div>
+        <span class="section-badge">KYC</span>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-field">
+          <label>KYC Status <span>*</span></label>
+          <select formControlName="kycStatus">
+            <option *ngFor="let item of kycStatuses" [value]="item.id">{{ item.name }}</option>
+          </select>
+          <small *ngIf="hasFieldError('kycStatus')">{{ getFieldError('kycStatus') }}</small>
+        </div>
+
+        <div class="form-field">
+          <label>Risk Category <span>*</span></label>
+          <select formControlName="riskCategory">
+            <option *ngFor="let item of riskCategories" [value]="item.id">{{ item.name }}</option>
+          </select>
+          <small *ngIf="hasFieldError('riskCategory')">{{ getFieldError('riskCategory') }}</small>
+        </div>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <div class="section-header">
+        <div>
+          <h2>6. Wallet Information</h2>
+          <p>Create and manage the resident blockchain wallet.</p>
+        </div>
+        <span class="section-badge">Blockchain Wallet</span>
+      </div>
+
+      <div class="wallet-preview">
+        <div>
+          <span>Wallet Address</span>
+          <strong>
+            {{ residentForm.get('walletAddress')?.value || 'Wallet not created yet' }}
+          </strong>
+        </div>
+
+        <div>
+          <span>Wallet Status</span>
+          <strong>{{ residentForm.get('walletStatus')?.value }}</strong>
+        </div>
+
+        <div>
+          <span>Currency</span>
+          <strong>{{ residentForm.get('walletCurrency')?.value }}</strong>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-field full-width">
+          <label>Wallet Address</label>
+          <input type="text" formControlName="walletAddress" placeholder="Generated after wallet creation" />
+          <small *ngIf="hasFieldError('walletAddress')">{{ getFieldError('walletAddress') }}</small>
+        </div>
+
+        <div class="form-field">
+          <label>Wallet Currency <span>*</span></label>
+          <select formControlName="walletCurrency">
+            <option *ngFor="let item of walletCurrencies" [value]="item.id">{{ item.name }}</option>
+          </select>
+          <small *ngIf="hasFieldError('walletCurrency')">{{ getFieldError('walletCurrency') }}</small>
+        </div>
+
+        <div class="form-field">
+          <label>Wallet Status <span>*</span></label>
+          <select formControlName="walletStatus">
+            <option *ngFor="let item of walletStatuses" [value]="item.id">{{ item.name }}</option>
+          </select>
+          <small *ngIf="hasFieldError('walletStatus')">{{ getFieldError('walletStatus') }}</small>
+        </div>
+      </div>
+    </section>
+
+    <div class="form-actions">
+      <button
+        type="button"
+        class="btn btn-secondary"
+        (click)="saveDraft()"
+        [disabled]="isDraftSaving()"
+      >
+        {{ isDraftSaving() ? 'Saving Draft...' : 'Save Draft' }}
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-wallet"
+        (click)="createWallet()"
+        [disabled]="isWalletCreating()"
+      >
+        {{ isWalletCreating() ? 'Creating Wallet...' : 'Create Wallet' }}
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-kyc"
+        (click)="submitKyc()"
+        [disabled]="isKycSubmitting()"
+      >
+        {{ isKycSubmitting() ? 'Submitting KYC...' : 'Submit KYC' }}
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-primary"
+        (click)="createResident()"
+        [disabled]="isSubmitting()"
+      >
+        {{ isSubmitting() ? 'Creating Resident...' : 'Create Resident' }}
+      </button>
+    </div>
+  </form>
+</div>
