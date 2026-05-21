@@ -359,3 +359,28 @@
     flex-direction: column;
   }
 }
+
+.success-card {
+  border: 1px solid #b7ebc6;
+  background: linear-gradient(135deg, #f4fff7 0%, #ffffff 100%);
+
+  h2 {
+    color: #116329;
+  }
+
+  .success-mark {
+    background: #16a34a;
+    color: #ffffff;
+  }
+}
+
+.warning-note {
+  margin: 16px 0 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #facc15;
+  background: #fffbeb;
+  color: #92400e;
+  font-size: 13px;
+  font-weight: 600;
+}

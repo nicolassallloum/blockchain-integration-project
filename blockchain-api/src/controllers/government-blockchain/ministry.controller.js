@@ -1,4 +1,5 @@
 const db = require('../../config/database');
+const bcrypt = require('bcryptjs');
 
 function generateWalletAddress(ministryCode) {
   const cleanCode = String(ministryCode || 'MIN')
@@ -9,6 +10,12 @@ function generateWalletAddress(ministryCode) {
   const random = Math.random().toString(36).substring(2, 10).toUpperCase();
 
   return `GOV-${cleanCode}-${timestamp}-${random}`;
+}
+
+function generateTemporaryPassword() {
+  const timestamp = Date.now().toString(36).toUpperCase();
+  const random = Math.random().toString(36).substring(2, 8);
+  return `Gov@${timestamp}${random}`;
 }
 
 async function createMinistryAccount(req, res, next) {
@@ -22,6 +29,10 @@ async function createMinistryAccount(req, res, next) {
         data: null
       });
     }
+
+    const loginUsername = ministry.loginUsername || ministry.ministryCode;
+    const temporaryPassword = ministry.password || generateTemporaryPassword();
+    const passwordHash = await bcrypt.hash(temporaryPassword, 10);
 
     const ministryResult = await db.query(
       `
@@ -48,6 +59,10 @@ async function createMinistryAccount(req, res, next) {
         wallet_status,
         institution_status,
         blockchain_status,
+        login_username,
+        password_hash,
+        password_set_at,
+        login_status,
         created_by,
         updated_by
       )
@@ -56,9 +71,41 @@ async function createMinistryAccount(req, res, next) {
         $6, $7, $8, $9, $10,
         $11, $12, $13, $14, $15,
         $16, $17, $18, $19, $20,
-        $21, $22, $23, $24
+        $21, $22, $23, $24, CURRENT_TIMESTAMP,
+        $25, $26, $27
       )
-      RETURNING *;
+      RETURNING
+        ministry_id,
+        ministry_reference_id,
+        ministry_code,
+        ministry_name,
+        arabic_name,
+        ministry_type,
+        parent_ministry,
+        minister_name,
+        contact_person,
+        contact_email,
+        contact_mobile,
+        address,
+        country_id,
+        country_code,
+        country_name,
+        governorate_id,
+        governorate_code,
+        governorate_name,
+        governorate_name_ar,
+        website,
+        wallet_status,
+        institution_status,
+        blockchain_status,
+        login_username,
+        login_status,
+        ledger_reference,
+        tx_id,
+        created_by,
+        updated_by,
+        created_at,
+        updated_at;
       `,
       [
         ministry.ministryId,
@@ -83,6 +130,9 @@ async function createMinistryAccount(req, res, next) {
         ministry.walletStatus || 'PENDING',
         ministry.institutionStatus || 'PENDING_APPROVAL',
         'NOT_SUBMITTED',
+        loginUsername,
+        passwordHash,
+        'ACTIVE',
         'system',
         'system'
       ]
@@ -124,6 +174,18 @@ async function createMinistryAccount(req, res, next) {
       );
 
       savedWallet = walletResult.rows[0];
+
+      await db.query(
+        `
+        UPDATE blockchain.government_ministries
+        SET wallet_status = $1,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE ministry_id = $2;
+        `,
+        [savedWallet.wallet_status || 'ACTIVE', savedMinistry.ministry_id]
+      );
+
+      savedMinistry.wallet_status = savedWallet.wallet_status || 'ACTIVE';
     }
 
     return res.status(201).json({
@@ -131,7 +193,12 @@ async function createMinistryAccount(req, res, next) {
       message: 'Ministry account created successfully.',
       data: {
         ministry: savedMinistry,
-        wallet: savedWallet
+        wallet: savedWallet,
+        login: {
+          username: loginUsername,
+          temporaryPassword,
+          note: 'Show this password once and ask the ministry user to change it later.'
+        }
       }
     });
   } catch (error) {
@@ -140,12 +207,139 @@ async function createMinistryAccount(req, res, next) {
     if (error.code === '23505') {
       return res.status(409).json({
         success: false,
-        message: 'Duplicate ministry code, ministry reference ID, or wallet address.',
+        message: 'Duplicate ministry code, ministry reference ID, login username, or wallet address.',
         errorCode: 'DUPLICATE_RECORD',
         data: null
       });
     }
 
+    next(error);
+  }
+}
+
+async function loginMinistry(req, res, next) {
+  try {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Username and password are required.',
+        errorCode: 'LOGIN_FIELDS_REQUIRED',
+        data: null
+      });
+    }
+
+    const result = await db.query(
+      `
+      SELECT
+        m.ministry_id,
+        m.ministry_reference_id,
+        m.ministry_code,
+        m.ministry_name,
+        m.arabic_name,
+        m.contact_email,
+        m.country_code,
+        m.country_name,
+        m.governorate_code,
+        m.governorate_name,
+        m.wallet_status,
+        m.institution_status,
+        m.blockchain_status,
+        m.login_username,
+        m.password_hash,
+        m.login_status,
+        w.wallet_id,
+        w.wallet_address,
+        w.wallet_currency,
+        w.wallet_current_balance,
+        w.wallet_type,
+        w.wallet_status AS ministry_wallet_status
+      FROM blockchain.government_ministries m
+      LEFT JOIN blockchain.government_ministry_wallets w
+        ON w.ministry_id = m.ministry_id
+      WHERE m.login_username = $1
+         OR m.ministry_code = $1
+         OR m.ministry_reference_id = $1
+      ORDER BY w.created_at DESC NULLS LAST
+      LIMIT 1;
+      `,
+      [username]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid username or password.',
+        errorCode: 'INVALID_LOGIN',
+        data: null
+      });
+    }
+
+    const ministry = result.rows[0];
+
+    if (ministry.login_status !== 'ACTIVE') {
+      return res.status(403).json({
+        success: false,
+        message: 'Ministry login account is not active.',
+        errorCode: 'LOGIN_NOT_ACTIVE',
+        data: null
+      });
+    }
+
+    const passwordMatches = await bcrypt.compare(
+      password,
+      ministry.password_hash || ''
+    );
+
+    if (!passwordMatches) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid username or password.',
+        errorCode: 'INVALID_LOGIN',
+        data: null
+      });
+    }
+
+    await db.query(
+      `
+      UPDATE blockchain.government_ministries
+      SET last_login_at = CURRENT_TIMESTAMP,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE ministry_id = $1;
+      `,
+      [ministry.ministry_id]
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: 'Ministry login successful.',
+      data: {
+        ministryId: ministry.ministry_id,
+        ministryReferenceId: ministry.ministry_reference_id,
+        ministryCode: ministry.ministry_code,
+        ministryName: ministry.ministry_name,
+        arabicName: ministry.arabic_name,
+        contactEmail: ministry.contact_email,
+        countryCode: ministry.country_code,
+        countryName: ministry.country_name,
+        governorateCode: ministry.governorate_code,
+        governorateName: ministry.governorate_name,
+        institutionStatus: ministry.institution_status,
+        blockchainStatus: ministry.blockchain_status,
+        loginUsername: ministry.login_username,
+        wallet: {
+          walletId: ministry.wallet_id,
+          walletAddress: ministry.wallet_address,
+          walletCurrency: ministry.wallet_currency,
+          walletCurrentBalance: ministry.wallet_current_balance,
+          walletType: ministry.wallet_type,
+          walletStatus: ministry.ministry_wallet_status
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Ministry login error:', error);
     next(error);
   }
 }
@@ -283,22 +477,29 @@ async function getMinistries(req, res, next) {
     const result = await db.query(
       `
       SELECT
-        ministry_id AS "ministryId",
-        ministry_reference_id AS "ministryReferenceId",
-        ministry_code AS "ministryCode",
-        ministry_name AS "ministryName",
-        arabic_name AS "arabicName",
-        ministry_type AS "ministryType",
-        country_code AS "countryCode",
-        country_name AS "countryName",
-        governorate_code AS "governorateCode",
-        governorate_name AS "governorateName",
-        wallet_status AS "walletStatus",
-        institution_status AS "institutionStatus",
-        blockchain_status AS "blockchainStatus",
-        created_at AS "createdAt"
-      FROM blockchain.government_ministries
-      ORDER BY created_at DESC
+        m.ministry_id AS "ministryId",
+        m.ministry_reference_id AS "ministryReferenceId",
+        m.ministry_code AS "ministryCode",
+        m.ministry_name AS "ministryName",
+        m.arabic_name AS "arabicName",
+        m.ministry_type AS "ministryType",
+        m.country_code AS "countryCode",
+        m.country_name AS "countryName",
+        m.governorate_code AS "governorateCode",
+        m.governorate_name AS "governorateName",
+        m.wallet_status AS "walletStatus",
+        m.institution_status AS "institutionStatus",
+        m.blockchain_status AS "blockchainStatus",
+        m.login_username AS "loginUsername",
+        w.wallet_address AS "walletAddress",
+        w.wallet_currency AS "walletCurrency",
+        w.wallet_current_balance AS "walletCurrentBalance",
+        w.wallet_status AS "ministryWalletStatus",
+        m.created_at AS "createdAt"
+      FROM blockchain.government_ministries m
+      LEFT JOIN blockchain.government_ministry_wallets w
+        ON w.ministry_id = m.ministry_id
+      ORDER BY m.created_at DESC
       LIMIT 100;
       `
     );
@@ -321,7 +522,38 @@ async function getMinistryById(req, res, next) {
     const result = await db.query(
       `
       SELECT
-        m.*,
+        m.ministry_id,
+        m.ministry_reference_id,
+        m.ministry_code,
+        m.ministry_name,
+        m.arabic_name,
+        m.ministry_type,
+        m.parent_ministry,
+        m.minister_name,
+        m.contact_person,
+        m.contact_email,
+        m.contact_mobile,
+        m.address,
+        m.country_id,
+        m.country_code,
+        m.country_name,
+        m.governorate_id,
+        m.governorate_code,
+        m.governorate_name,
+        m.governorate_name_ar,
+        m.website,
+        m.wallet_status,
+        m.institution_status,
+        m.blockchain_status,
+        m.login_username,
+        m.login_status,
+        m.last_login_at,
+        m.ledger_reference,
+        m.tx_id,
+        m.created_by,
+        m.updated_by,
+        m.created_at,
+        m.updated_at,
         COALESCE(
           json_agg(w.*) FILTER (WHERE w.wallet_id IS NOT NULL),
           '[]'
@@ -331,6 +563,7 @@ async function getMinistryById(req, res, next) {
         ON w.ministry_id = m.ministry_id
       WHERE m.ministry_reference_id = $1
          OR m.ministry_id::text = $1
+         OR m.ministry_code = $1
       GROUP BY m.ministry_id
       LIMIT 1;
       `,
@@ -358,6 +591,7 @@ async function getMinistryById(req, res, next) {
 
 module.exports = {
   createMinistryAccount,
+  loginMinistry,
   saveMinistryDraft,
   createMinistryWallet,
   getMinistries,

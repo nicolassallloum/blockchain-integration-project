@@ -17,6 +17,12 @@ import {
   WalletType
 } from '../../../services/government-blockchain-reference-api.service';
 
+import {
+  GovernmentMinistryApiService,
+  CreateMinistryAccountPayload,
+  CreateMinistryWalletPayload
+} from '../../../services/government-ministry-api.service';
+
 @Component({
   selector: 'app-create-ministry-account',
   standalone: true,
@@ -27,6 +33,7 @@ import {
 export class CreateMinistryAccountComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly referenceApi = inject(GovernmentBlockchainReferenceApiService);
+  private readonly ministryApi = inject(GovernmentMinistryApiService);
 
   ministryAccountForm!: FormGroup;
 
@@ -43,6 +50,16 @@ export class CreateMinistryAccountComponent implements OnInit {
   governorates: GovernmentGovernorate[] = [];
   walletTypes: WalletType[] = [];
   walletStatuses: WalletStatus[] = [];
+
+  lastCreatedMinistryId: string | null = null;
+  lastCreatedMinistryReferenceId: string | null = null;
+  lastCreatedWalletAddress: string | null = null;
+
+  createdLoginUsername: string | null = null;
+  createdTemporaryPassword: string | null = null;
+  createdWalletAddress: string | null = null;
+  createdWalletCurrency: string | null = null;
+  createdWalletBalance: string | null = null;
 
   ministryTypes = [
     'Central Government Ministry',
@@ -67,6 +84,7 @@ export class CreateMinistryAccountComponent implements OnInit {
     this.buildForm();
     this.loadReferenceData();
     this.listenForCountryChanges();
+    this.listenForMinistryCodeChanges();
   }
 
   private buildForm(): void {
@@ -104,14 +122,29 @@ export class CreateMinistryAccountComponent implements OnInit {
       walletStatus: ['PENDING', Validators.required],
       institutionStatus: ['PENDING_APPROVAL', Validators.required],
 
-      walletAddress: ['', Validators.maxLength(120)],
-      walletCurrency: ['LBP', Validators.required],
-      walletInitialBalance: [
-        0,
-        [Validators.required, Validators.min(0)]
+      loginUsername: ['', [Validators.required, Validators.maxLength(100)]],
+      password: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(8),
+          Validators.maxLength(100)
+        ]
       ],
+      confirmPassword: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(8),
+          Validators.maxLength(100)
+        ]
+      ],
+
+      walletAddress: ['', Validators.maxLength(150)],
+      walletCurrency: ['LBP', Validators.required],
+      walletInitialBalance: [0, [Validators.required, Validators.min(0)]],
       walletType: ['MINISTRY_WALLET', Validators.required],
-      walletOperationalStatus: ['PENDING', Validators.required]
+      walletOperationalStatus: ['ACTIVE', Validators.required]
     });
   }
 
@@ -202,6 +235,21 @@ export class CreateMinistryAccountComponent implements OnInit {
     });
   }
 
+  private listenForMinistryCodeChanges(): void {
+    this.ministryAccountForm.get('ministryCode')?.valueChanges.subscribe((ministryCode: string) => {
+      const currentLoginUsername = this.ministryAccountForm.get('loginUsername')?.value;
+
+      if (!currentLoginUsername && ministryCode) {
+        this.ministryAccountForm.patchValue(
+          {
+            loginUsername: String(ministryCode).toUpperCase()
+          },
+          { emitEvent: false }
+        );
+      }
+    });
+  }
+
   get f() {
     return this.ministryAccountForm.controls;
   }
@@ -230,6 +278,10 @@ export class CreateMinistryAccountComponent implements OnInit {
       return `Maximum allowed characters: ${control.errors['maxlength'].requiredLength}.`;
     }
 
+    if (control.errors['minlength']) {
+      return `Minimum required characters: ${control.errors['minlength'].requiredLength}.`;
+    }
+
     if (control.errors['min']) {
       return 'Value cannot be negative.';
     }
@@ -245,6 +297,15 @@ export class CreateMinistryAccountComponent implements OnInit {
     this.ministryAccountForm.markAllAsTouched();
 
     if (this.ministryAccountForm.invalid) {
+      alert('Please fill all required fields correctly.');
+      return;
+    }
+
+    const password = this.ministryAccountForm.get('password')?.value;
+    const confirmPassword = this.ministryAccountForm.get('confirmPassword')?.value;
+
+    if (password !== confirmPassword) {
+      alert('Password and Confirm Password do not match.');
       return;
     }
 
@@ -252,41 +313,81 @@ export class CreateMinistryAccountComponent implements OnInit {
 
     const payload = this.buildPayload();
 
-    console.log('Create Ministry Account Payload:', payload);
+    console.log('Sending Create Ministry Account Payload:', payload);
 
-    /*
-      Backend integration example:
+    this.ministryApi.createMinistryAccount(payload).subscribe({
+      next: (response) => {
+        this.isSubmitting = false;
 
-      this.governmentBlockchainApiService
-        .createMinistryAccount(payload)
-        .subscribe({
-          next: () => {
-            this.isSubmitting = false;
-          },
-          error: () => {
-            this.isSubmitting = false;
-          }
-        });
-    */
+        const savedMinistry = response.data?.ministry;
+        const savedWallet = response.data?.wallet;
+        const login = response.data?.login;
 
-    setTimeout(() => {
-      this.isSubmitting = false;
-      alert('Ministry account created successfully.');
-    }, 700);
+        this.createdLoginUsername =
+          login?.username ||
+          savedMinistry?.login_username ||
+          payload.ministry.loginUsername ||
+          null;
+
+        this.createdTemporaryPassword =
+          login?.temporaryPassword ||
+          this.ministryAccountForm.get('password')?.value ||
+          null;
+
+        this.createdWalletAddress = savedWallet?.wallet_address || null;
+        this.createdWalletCurrency = savedWallet?.wallet_currency || null;
+        this.createdWalletBalance = savedWallet?.wallet_current_balance || null;
+
+        this.lastCreatedMinistryId = savedMinistry?.ministry_id || null;
+        this.lastCreatedMinistryReferenceId =
+          savedMinistry?.ministry_reference_id || payload.ministry.ministryId;
+
+        this.lastCreatedWalletAddress = savedWallet?.wallet_address || null;
+
+        if (savedWallet?.wallet_address) {
+          this.ministryAccountForm.patchValue({
+            walletAddress: savedWallet.wallet_address,
+            walletStatus: savedWallet.wallet_status || 'ACTIVE',
+            walletOperationalStatus: savedWallet.wallet_status || 'ACTIVE'
+          });
+        }
+
+        alert(response.message || 'Ministry account created successfully.');
+      },
+      error: (error) => {
+        this.isSubmitting = false;
+
+        console.error('Create ministry account failed:', error);
+
+        const message =
+          error?.error?.message ||
+          'Failed to create ministry account. Please check backend logs.';
+
+        alert(message);
+      }
+    });
   }
 
   createWallet(): void {
-    this.ministryAccountForm.markAllAsTouched();
+    const ministryReferenceId =
+      this.lastCreatedMinistryReferenceId ||
+      this.ministryAccountForm.get('ministryId')?.value;
+
+    if (!ministryReferenceId) {
+      alert('Please enter Ministry ID first.');
+      return;
+    }
 
     const requiredWalletFields = [
-      'ministryId',
-      'ministryCode',
-      'ministryName',
       'walletCurrency',
       'walletInitialBalance',
       'walletType',
       'walletOperationalStatus'
     ];
+
+    requiredWalletFields.forEach((field) => {
+      this.ministryAccountForm.get(field)?.markAsTouched();
+    });
 
     const hasInvalidWalletData = requiredWalletFields.some((field) => {
       const control = this.ministryAccountForm.get(field);
@@ -294,36 +395,57 @@ export class CreateMinistryAccountComponent implements OnInit {
     });
 
     if (hasInvalidWalletData) {
+      alert('Please complete wallet fields correctly.');
       return;
     }
 
     this.isWalletCreating = true;
 
-    const generatedWalletAddress = this.generateWalletAddress();
-
-    this.ministryAccountForm.patchValue({
-      walletAddress: generatedWalletAddress,
-      walletStatus: 'ACTIVE',
-      walletOperationalStatus: 'ACTIVE'
-    });
-
-    const walletPayload = {
-      ministryId: this.f['ministryId'].value,
-      ministryCode: this.f['ministryCode'].value,
-      ministryName: this.f['ministryName'].value,
-      walletAddress: generatedWalletAddress,
-      walletCurrency: this.f['walletCurrency'].value,
-      walletInitialBalance: this.f['walletInitialBalance'].value,
-      walletType: this.f['walletType'].value,
-      walletStatus: 'ACTIVE'
+    const walletPayload: CreateMinistryWalletPayload = {
+      walletAddress: this.ministryAccountForm.get('walletAddress')?.value || null,
+      walletCurrency: this.ministryAccountForm.get('walletCurrency')?.value,
+      walletInitialBalance: Number(
+        this.ministryAccountForm.get('walletInitialBalance')?.value || 0
+      ),
+      walletType: this.ministryAccountForm.get('walletType')?.value,
+      walletStatus:
+        this.ministryAccountForm.get('walletOperationalStatus')?.value || 'ACTIVE'
     };
 
-    console.log('Create Ministry Wallet Payload:', walletPayload);
+    console.log('Sending Create Ministry Wallet Payload:', walletPayload);
 
-    setTimeout(() => {
-      this.isWalletCreating = false;
-      alert('Wallet created successfully.');
-    }, 700);
+    this.ministryApi.createMinistryWallet(ministryReferenceId, walletPayload).subscribe({
+      next: (response) => {
+        this.isWalletCreating = false;
+
+        const savedWallet = response.data;
+
+        this.lastCreatedWalletAddress = savedWallet?.wallet_address || null;
+
+        this.createdWalletAddress = savedWallet?.wallet_address || null;
+        this.createdWalletCurrency = savedWallet?.wallet_currency || null;
+        this.createdWalletBalance = savedWallet?.wallet_current_balance || null;
+
+        this.ministryAccountForm.patchValue({
+          walletAddress: savedWallet?.wallet_address || walletPayload.walletAddress,
+          walletStatus: savedWallet?.wallet_status || 'ACTIVE',
+          walletOperationalStatus: savedWallet?.wallet_status || 'ACTIVE'
+        });
+
+        alert(response.message || 'Ministry wallet created successfully.');
+      },
+      error: (error) => {
+        this.isWalletCreating = false;
+
+        console.error('Create ministry wallet failed:', error);
+
+        const message =
+          error?.error?.message ||
+          'Failed to create wallet. Make sure the ministry account is already saved.';
+
+        alert(message);
+      }
+    });
   }
 
   saveDraft(): void {
@@ -334,12 +456,25 @@ export class CreateMinistryAccountComponent implements OnInit {
       data: this.ministryAccountForm.getRawValue()
     };
 
-    console.log('Save Ministry Draft Payload:', draftPayload);
+    console.log('Sending Save Ministry Draft Payload:', draftPayload);
 
-    setTimeout(() => {
-      this.isDraftSaving = false;
-      alert('Draft saved successfully.');
-    }, 500);
+    this.ministryApi.saveDraft(draftPayload).subscribe({
+      next: (response) => {
+        this.isDraftSaving = false;
+        alert(response.message || 'Draft saved successfully.');
+      },
+      error: (error) => {
+        this.isDraftSaving = false;
+
+        console.error('Save ministry draft failed:', error);
+
+        const message =
+          error?.error?.message ||
+          'Failed to save draft. Please check backend logs.';
+
+        alert(message);
+      }
+    });
   }
 
   resetForm(): void {
@@ -350,14 +485,27 @@ export class CreateMinistryAccountComponent implements OnInit {
       walletInitialBalance: 0,
       walletType: 'MINISTRY_WALLET',
       walletStatus: 'PENDING',
-      walletOperationalStatus: 'PENDING',
-      institutionStatus: 'PENDING_APPROVAL'
+      walletOperationalStatus: 'ACTIVE',
+      institutionStatus: 'PENDING_APPROVAL',
+      loginUsername: '',
+      password: '',
+      confirmPassword: ''
     });
+
+    this.lastCreatedMinistryId = null;
+    this.lastCreatedMinistryReferenceId = null;
+    this.lastCreatedWalletAddress = null;
+
+    this.createdLoginUsername = null;
+    this.createdTemporaryPassword = null;
+    this.createdWalletAddress = null;
+    this.createdWalletCurrency = null;
+    this.createdWalletBalance = null;
 
     this.loadGovernorates('LB');
   }
 
-  private buildPayload() {
+  private buildPayload(): CreateMinistryAccountPayload {
     const raw = this.ministryAccountForm.getRawValue();
 
     const selectedCountry = this.countries.find(
@@ -375,7 +523,7 @@ export class CreateMinistryAccountComponent implements OnInit {
         ministryName: raw.ministryName,
         arabicName: raw.arabicName,
         ministryType: raw.ministryType,
-        parentMinistry: raw.parentMinistry,
+        parentMinistry: raw.parentMinistry || null,
         ministerName: raw.ministerName,
         contactPerson: raw.contactPerson,
         contactEmail: raw.contactEmail,
@@ -391,14 +539,17 @@ export class CreateMinistryAccountComponent implements OnInit {
         governorateName: selectedGovernorate?.governorateName || null,
         governorateNameAr: selectedGovernorate?.governorateNameAr || null,
 
-        website: raw.website,
+        website: raw.website || null,
         walletStatus: raw.walletStatus,
-        institutionStatus: raw.institutionStatus
+        institutionStatus: raw.institutionStatus,
+
+        loginUsername: raw.loginUsername || raw.ministryCode,
+        password: raw.password
       },
       wallet: {
-        walletAddress: raw.walletAddress,
+        walletAddress: raw.walletAddress || null,
         walletCurrency: raw.walletCurrency,
-        walletInitialBalance: Number(raw.walletInitialBalance),
+        walletInitialBalance: Number(raw.walletInitialBalance || 0),
         walletType: raw.walletType,
         walletStatus: raw.walletOperationalStatus
       },
@@ -409,13 +560,5 @@ export class CreateMinistryAccountComponent implements OnInit {
         preparedForFabricSubmission: true
       }
     };
-  }
-
-  private generateWalletAddress(): string {
-    const prefix = 'GOV-MIN';
-    const timestamp = Date.now().toString(36).toUpperCase();
-    const random = Math.random().toString(36).substring(2, 10).toUpperCase();
-
-    return `${prefix}-${timestamp}-${random}`;
   }
 }

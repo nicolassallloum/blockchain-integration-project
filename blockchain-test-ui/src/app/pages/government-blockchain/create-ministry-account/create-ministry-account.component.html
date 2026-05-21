@@ -4,14 +4,14 @@
       <span class="eyebrow">Government Blockchain Services Platform</span>
       <h1>Create Ministry Account</h1>
       <p>
-        Register ministries, public administrations, and official institutions with
-        blockchain wallet readiness.
+        Register ministries, public administrations, and official institutions
+        with blockchain wallet readiness and login credentials.
       </p>
     </div>
 
     <div class="header-badge">
       <span class="badge-dot"></span>
-      PostgreSQL Dropdowns Active
+      PostgreSQL APIs Active
     </div>
   </section>
 
@@ -142,10 +142,64 @@
     <section class="form-card">
       <div class="card-header">
         <div>
+          <h2>Ministry Login Credentials</h2>
+          <p>
+            Create the username and password used by the ministry to access the
+            government blockchain platform.
+          </p>
+        </div>
+        <span class="section-number">02</span>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="loginUsername">Login Username</label>
+          <input
+            id="loginUsername"
+            type="text"
+            formControlName="loginUsername"
+            placeholder="Example: MOF"
+          />
+          <small *ngIf="isInvalid('loginUsername')">
+            {{ getErrorMessage('loginUsername') }}
+          </small>
+        </div>
+
+        <div class="form-field">
+          <label for="password">Password</label>
+          <input
+            id="password"
+            type="password"
+            formControlName="password"
+            placeholder="Enter login password"
+          />
+          <small *ngIf="isInvalid('password')">
+            {{ getErrorMessage('password') }}
+          </small>
+        </div>
+
+        <div class="form-field">
+          <label for="confirmPassword">Confirm Password</label>
+          <input
+            id="confirmPassword"
+            type="password"
+            formControlName="confirmPassword"
+            placeholder="Confirm login password"
+          />
+          <small *ngIf="isInvalid('confirmPassword')">
+            {{ getErrorMessage('confirmPassword') }}
+          </small>
+        </div>
+      </div>
+    </section>
+
+    <section class="form-card">
+      <div class="card-header">
+        <div>
           <h2>Contact & Location Details</h2>
           <p>Official communication channels and geographical information.</p>
         </div>
-        <span class="section-number">02</span>
+        <span class="section-number">03</span>
       </div>
 
       <div class="form-grid">
@@ -265,14 +319,14 @@
             payments, digital stamps, and blockchain proofs.
           </p>
         </div>
-        <span class="section-number">03</span>
+        <span class="section-number">04</span>
       </div>
 
       <div class="wallet-status-panel">
         <div>
           <span class="panel-label">Wallet Address</span>
           <strong>
-            {{ ministryAccountForm.get('walletAddress')?.value || 'Not created yet' }}
+            {{ ministryAccountForm.get('walletAddress')?.value || 'Generated after creation' }}
           </strong>
         </div>
 
@@ -291,7 +345,7 @@
             id="walletAddress"
             type="text"
             formControlName="walletAddress"
-            placeholder="Generated after Create Wallet"
+            placeholder="Auto-generated if empty"
             readonly
           />
           <small *ngIf="isInvalid('walletAddress')">
@@ -392,11 +446,55 @@
       </div>
     </section>
 
+    <section
+      class="form-card success-card"
+      *ngIf="createdLoginUsername || createdWalletAddress"
+    >
+      <div class="card-header">
+        <div>
+          <h2>Account Created Successfully</h2>
+          <p>Use these credentials for ministry login.</p>
+        </div>
+        <span class="section-number success-mark">✓</span>
+      </div>
+
+      <div class="wallet-status-panel">
+        <div>
+          <span class="panel-label">Login Username</span>
+          <strong>{{ createdLoginUsername || '-' }}</strong>
+        </div>
+
+        <div>
+          <span class="panel-label">Temporary Password</span>
+          <strong>{{ createdTemporaryPassword || '-' }}</strong>
+        </div>
+
+        <div>
+          <span class="panel-label">Wallet Address</span>
+          <strong>{{ createdWalletAddress || '-' }}</strong>
+        </div>
+
+        <div>
+          <span class="panel-label">Wallet Balance</span>
+          <strong>
+            {{ createdWalletBalance || '0.0000' }}
+            {{ createdWalletCurrency || '' }}
+          </strong>
+        </div>
+      </div>
+
+      <p class="warning-note">
+        Important: The temporary password is shown only after creation. Ask the
+        ministry user to change it later.
+      </p>
+    </section>
+
     <section class="action-bar">
       <div class="action-info">
-        <strong>Backend reference APIs connected</strong>
+        <strong>Backend APIs connected</strong>
         <span>
-          Countries, governorates, wallet types, and wallet statuses are loaded from PostgreSQL.
+          Countries, governorates, wallet types, wallet statuses, ministry save,
+          draft save, wallet creation, and login credentials are connected.
         </span>
       </div>
 
