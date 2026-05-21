@@ -22,6 +22,7 @@ const express = require('express');
 const cors = require('cors');
 const crypto = require('crypto');
 const os = require('os');
+const routes = require('./routes');
 
 const app = express();
 const blockchainKycRoutes = require('./routes/blockchain-kyc.routes');
@@ -369,7 +370,9 @@ if (governmentMinistryRoutes) {
 if (apiRoutes) {
   app.use('/api/v1', apiRoutes);
 }
-
+if (routes) {
+  app.use('/api/v1', routes);
+}
 /**
  * Root endpoint.
  */

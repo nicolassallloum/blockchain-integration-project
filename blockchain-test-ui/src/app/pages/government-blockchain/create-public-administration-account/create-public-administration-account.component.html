@@ -1,0 +1,309 @@
+<section class="page">
+  <div class="page-header">
+    <div>
+      <p class="eyebrow">Government Blockchain Services Platform</p>
+      <h1>Create Public Administration Account</h1>
+      <p class="subtitle">
+        Register public administrations and create blockchain wallets with PostgreSQL synchronization.
+      </p>
+    </div>
+
+    <div class="status-pill">
+      <span class="dot"></span>
+      Blockchain + PostgreSQL Ready
+    </div>
+  </div>
+
+  <div class="mode-switch">
+    <button
+      type="button"
+      [class.active]="activeMode() === 'manual'"
+      (click)="setMode('manual')"
+    >
+      Manual Entry
+    </button>
+
+    <button
+      type="button"
+      [class.active]="activeMode() === 'csv'"
+      (click)="setMode('csv')"
+    >
+      Upload CSV
+    </button>
+  </div>
+
+  <div *ngIf="message()" class="alert success">
+    {{ message() }}
+  </div>
+
+  <div *ngIf="error()" class="alert error">
+    {{ error() }}
+  </div>
+
+  <form
+    *ngIf="activeMode() === 'manual'"
+    [formGroup]="administrationForm"
+    class="enterprise-card"
+  >
+    <div class="section-title">
+      <h2>Administration Information</h2>
+      <p>Basic public administration identity and classification.</p>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-control">
+        <label>Administration ID</label>
+        <input formControlName="administrationId" placeholder="ADM-001" />
+        <small *ngIf="isInvalid('administrationId')">Administration ID is required.</small>
+      </div>
+
+      <div class="form-control">
+        <label>Administration Code</label>
+        <input formControlName="administrationCode" placeholder="ADM-MOI-001" />
+        <small *ngIf="isInvalid('administrationCode')">Administration code is required.</small>
+      </div>
+
+      <div class="form-control">
+        <label>Administration Name</label>
+        <input formControlName="administrationName" placeholder="General Directorate of Personal Status" />
+        <small *ngIf="isInvalid('administrationName')">Administration name is required.</small>
+      </div>
+
+      <div class="form-control">
+        <label>Arabic Name</label>
+        <input formControlName="arabicName" placeholder="المديرية العامة للأحوال الشخصية" dir="rtl" />
+        <small *ngIf="isInvalid('arabicName')">Arabic name is required.</small>
+      </div>
+
+      <div class="form-control">
+        <label>Parent Ministry</label>
+        <select formControlName="parentMinistry">
+          <option value="">Select Ministry</option>
+          <option *ngFor="let ministry of ministries" [value]="ministry">
+            {{ ministry }}
+          </option>
+        </select>
+        <small *ngIf="isInvalid('parentMinistry')">Parent ministry is required.</small>
+      </div>
+
+      <div class="form-control">
+        <label>Administration Type</label>
+        <select formControlName="administrationType">
+          <option *ngFor="let type of administrationTypes" [value]="type">
+            {{ type }}
+          </option>
+        </select>
+      </div>
+
+      <div class="form-control">
+        <label>Director Name</label>
+        <input formControlName="directorName" placeholder="Director Name" />
+        <small *ngIf="isInvalid('directorName')">Director name is required.</small>
+      </div>
+    </div>
+
+    <div class="section-title">
+      <h2>Contact Information</h2>
+      <p>Official contact details used for workflow notifications.</p>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-control">
+        <label>Contact Person</label>
+        <input formControlName="contactPerson" placeholder="Contact Person" />
+        <small *ngIf="isInvalid('contactPerson')">Contact person is required.</small>
+      </div>
+
+      <div class="form-control">
+        <label>Contact Email</label>
+        <input formControlName="contactEmail" placeholder="admin@gov.lb" />
+        <small *ngIf="isInvalid('contactEmail')">Valid contact email is required.</small>
+      </div>
+
+      <div class="form-control">
+        <label>Contact Mobile</label>
+        <input formControlName="contactMobile" placeholder="+96170123456" />
+        <small *ngIf="isInvalid('contactMobile')">Contact mobile is required.</small>
+      </div>
+    </div>
+
+    <div class="section-title">
+      <h2>Address Information</h2>
+      <p>Geographical and administrative location.</p>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-control">
+        <label>Country</label>
+        <select formControlName="country">
+          <option *ngFor="let country of countries" [value]="country">
+            {{ country }}
+          </option>
+        </select>
+      </div>
+
+      <div class="form-control">
+        <label>Governorate</label>
+        <select formControlName="governorate">
+          <option value="">Select Governorate</option>
+          <option *ngFor="let governorate of governorates" [value]="governorate">
+            {{ governorate }}
+          </option>
+        </select>
+        <small *ngIf="isInvalid('governorate')">Governorate is required.</small>
+      </div>
+
+      <div class="form-control">
+        <label>Municipality</label>
+        <select formControlName="municipality">
+          <option value="">Select Municipality</option>
+          <option *ngFor="let municipality of municipalities" [value]="municipality">
+            {{ municipality }}
+          </option>
+        </select>
+        <small *ngIf="isInvalid('municipality')">Municipality is required.</small>
+      </div>
+
+      <div class="form-control wide">
+        <label>Address</label>
+        <textarea formControlName="address" rows="3" placeholder="Full official address"></textarea>
+        <small *ngIf="isInvalid('address')">Address is required.</small>
+      </div>
+    </div>
+
+    <div class="section-title">
+      <h2>Wallet Information</h2>
+      <p>Blockchain wallet data for public administration transactions.</p>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-control">
+        <label>Wallet Address</label>
+        <input formControlName="walletAddress" placeholder="WALLET-ADM-001" />
+        <small *ngIf="isInvalid('walletAddress')">Wallet address is required.</small>
+      </div>
+
+      <div class="form-control">
+        <label>Wallet Currency</label>
+        <select formControlName="walletCurrency">
+          <option *ngFor="let currency of walletCurrencies" [value]="currency">
+            {{ currency }}
+          </option>
+        </select>
+      </div>
+
+      <div class="form-control">
+        <label>Wallet Status</label>
+        <select formControlName="walletStatus">
+          <option *ngFor="let status of walletStatuses" [value]="status">
+            {{ status }}
+          </option>
+        </select>
+      </div>
+    </div>
+
+    <div class="integration-box">
+      <div>
+        <strong>Persistence Target</strong>
+        <p>Both manual creation and wallet creation are prepared to save to Blockchain and PostgreSQL.</p>
+      </div>
+
+      <div class="badges">
+        <span>Hyperledger Fabric</span>
+        <span>PostgreSQL</span>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button type="button" class="primary" (click)="createAdministration()" [disabled]="isSubmitting()">
+        {{ isSubmitting() ? 'Saving...' : 'Create Administration' }}
+      </button>
+
+      <button type="button" class="secondary" (click)="createWallet()" [disabled]="isSubmitting()">
+        Create Wallet
+      </button>
+
+      <button type="button" class="ghost" (click)="saveDraft()">
+        Save Draft
+      </button>
+
+      <button type="button" class="danger" (click)="resetForm()">
+        Reset
+      </button>
+    </div>
+  </form>
+
+  <div *ngIf="activeMode() === 'csv'" class="enterprise-card">
+    <div class="section-title">
+      <h2>Bulk Upload Public Administrations</h2>
+      <p>
+        Upload a CSV file containing all public administration data. Records will be sent to the backend for Blockchain and PostgreSQL persistence.
+      </p>
+    </div>
+
+    <div class="upload-panel">
+      <div class="upload-icon">CSV</div>
+
+      <div>
+        <h3>Upload CSV File</h3>
+        <p>
+          Use the official template to avoid missing fields or invalid column names.
+        </p>
+
+        <div class="upload-actions">
+          <label class="file-button">
+            Choose CSV
+            <input type="file" accept=".csv" (change)="onCsvSelected($event)" hidden />
+          </label>
+
+          <button type="button" class="secondary" (click)="downloadCsvTemplate()">
+            Download Template
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="csv-summary" *ngIf="csvRowCount() > 0">
+      <div>
+        <span class="number">{{ csvRowCount() }}</span>
+        <span>Records loaded</span>
+      </div>
+
+      <button type="button" class="primary" (click)="uploadCsvData()" [disabled]="isUploading()">
+        {{ isUploading() ? 'Uploading...' : 'Upload & Save to Blockchain + PostgreSQL' }}
+      </button>
+    </div>
+
+    <div class="table-wrapper" *ngIf="csvRowCount() > 0">
+      <table>
+        <thead>
+          <tr>
+            <th>Administration ID</th>
+            <th>Code</th>
+            <th>Name</th>
+            <th>Parent Ministry</th>
+            <th>Governorate</th>
+            <th>Municipality</th>
+            <th>Wallet</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let row of csvRows()">
+            <td>{{ row.administrationId }}</td>
+            <td>{{ row.administrationCode }}</td>
+            <td>{{ row.administrationName }}</td>
+            <td>{{ row.parentMinistry }}</td>
+            <td>{{ row.governorate }}</td>
+            <td>{{ row.municipality }}</td>
+            <td>{{ row.walletAddress }}</td>
+            <td>
+              <span class="status">{{ row.walletStatus }}</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>

@@ -4,36 +4,6 @@ const transactionService = require('../services/transaction.service');
 const auditService = require('../services/audit.service');
 const amlService = require('../services/aml.service');
 
-
-const amlResult = await amlService.evaluateTransaction({
-  requestId,
-  fromWalletAddress,
-  toWalletAddress,
-  customerId,
-  amount,
-  currencyCode,
-  transactionType: 'WALLET_TO_WALLET'
-});
-
-if (amlResult.decision === 'BLOCK') {
-  return res.status(403).json({
-    success: false,
-    message: 'Transaction blocked by AML rules',
-    amlDecision: amlResult.decision,
-    matchedRules: amlResult.matchedRules
-  });
-}
-
-if (amlResult.decision === 'REVIEW') {
-  return res.status(202).json({
-    success: false,
-    message: 'Transaction requires AML review before processing',
-    amlDecision: amlResult.decision,
-    matchedRules: amlResult.matchedRules
-  });
-}
-
-
 const {
   AUDIT_EVENT_TYPES,
   AUDIT_EVENT_STATUS,
@@ -54,6 +24,84 @@ function resolveServiceMethod(service, methodNames = []) {
   return null;
 }
 
+function getTransferAmount(body) {
+  return Number(body.amount || body.transferAmount || body.transactionAmount || 0);
+}
+
+function getCurrencyCode(body) {
+  return body.currencyCode || body.currency || 'LBP';
+}
+
+function getSenderWallet(body) {
+  return body.senderWalletAddress || body.fromWalletAddress || body.walletAddress || null;
+}
+
+function getReceiverWallet(body) {
+  return body.receiverWalletAddress || body.toWalletAddress || body.destinationWalletAddress || null;
+}
+
+function getCustomerId(body) {
+  return body.customerId || body.senderCustomerId || body.fromCustomerId || null;
+}
+
+async function evaluateAml(req, transactionType) {
+  const body = req.body || {};
+
+  if (!amlService || typeof amlService.evaluateTransaction !== 'function') {
+    return {
+      decision: 'ALLOW',
+      matchedRules: [],
+      message: 'AML service not available. Transaction allowed by fallback.'
+    };
+  }
+
+  return amlService.evaluateTransaction({
+    requestId: req.requestId,
+    correlationId: req.correlationId,
+    fromWalletAddress: getSenderWallet(body),
+    toWalletAddress: getReceiverWallet(body),
+    organizationId: body.organizationId || null,
+    organizationCode: body.organizationCode || null,
+    customerId: getCustomerId(body),
+    amount: getTransferAmount(body),
+    currencyCode: getCurrencyCode(body),
+    transactionType,
+    metadata: body
+  });
+}
+
+function handleAmlDecision(res, amlResult) {
+  if (!amlResult) {
+    return false;
+  }
+
+  if (amlResult.decision === 'BLOCK') {
+    res.status(403).json({
+      success: false,
+      message: 'Transaction blocked by AML rules',
+      amlDecision: amlResult.decision,
+      matchedRules: amlResult.matchedRules || [],
+      amlResult
+    });
+
+    return true;
+  }
+
+  if (amlResult.decision === 'REVIEW') {
+    res.status(202).json({
+      success: false,
+      message: 'Transaction requires AML review before processing',
+      amlDecision: amlResult.decision,
+      matchedRules: amlResult.matchedRules || [],
+      amlResult
+    });
+
+    return true;
+  }
+
+  return false;
+}
+
 class TransactionController {
   async walletTransfer(req, res, next) {
     const context = getRequestContext(req);
@@ -64,10 +112,7 @@ class TransactionController {
         eventType: AUDIT_EVENT_TYPES.TRANSACTION_REQUEST,
         eventCategory: AUDIT_EVENT_CATEGORY.TRANSACTION,
         eventStatus: AUDIT_EVENT_STATUS.PENDING,
-        walletAddress:
-          req.body.senderWalletAddress ||
-          req.body.fromWalletAddress ||
-          null,
+        walletAddress: getSenderWallet(req.body),
         requestPayload: req.body,
         controllerName: 'transaction.controller',
         serviceName: 'transaction.service',
@@ -75,6 +120,12 @@ class TransactionController {
           transactionType: 'WALLET_TO_WALLET'
         }
       });
+
+      const amlResult = await evaluateAml(req, 'WALLET_TO_WALLET');
+
+      if (handleAmlDecision(res, amlResult)) {
+        return;
+      }
 
       const walletTransferMethod = resolveServiceMethod(transactionService, [
         'walletTransfer',
@@ -96,7 +147,8 @@ class TransactionController {
         correlationId: req.correlationId,
         sourceSystem: req.sourceSystem,
         requestSource: req.requestSource,
-        createdBy: req.body.createdBy || 'system'
+        createdBy: req.body.createdBy || 'system',
+        amlResult
       });
 
       await auditService.log({
@@ -113,20 +165,20 @@ class TransactionController {
           result?.fabricTxId ||
           result?.txId ||
           null,
-        walletAddress:
-          req.body.senderWalletAddress ||
-          req.body.fromWalletAddress ||
-          null,
+        walletAddress: getSenderWallet(req.body),
         responsePayload: result,
         controllerName: 'transaction.controller',
         serviceName: 'transaction.service',
         metadata: {
-          transactionType: 'WALLET_TO_WALLET'
+          transactionType: 'WALLET_TO_WALLET',
+          amlDecision: amlResult?.decision || null
         }
       });
 
       return res.status(200).json({
         ...result,
+        amlDecision: amlResult?.decision || null,
+        amlResult,
         requestId: req.requestId,
         correlationId: req.correlationId
       });
@@ -136,10 +188,7 @@ class TransactionController {
         eventType: AUDIT_EVENT_TYPES.TRANSACTION_FAILED,
         eventCategory: AUDIT_EVENT_CATEGORY.TRANSACTION,
         eventStatus: AUDIT_EVENT_STATUS.FAILED,
-        walletAddress:
-          req.body.senderWalletAddress ||
-          req.body.fromWalletAddress ||
-          null,
+        walletAddress: getSenderWallet(req.body),
         errorCode: error.code || 'WALLET_TRANSFER_ERROR',
         errorMessage: error.message,
         errorStack: error.stack,
@@ -164,10 +213,7 @@ class TransactionController {
         eventType: AUDIT_EVENT_TYPES.TRANSACTION_REQUEST,
         eventCategory: AUDIT_EVENT_CATEGORY.TRANSACTION,
         eventStatus: AUDIT_EVENT_STATUS.PENDING,
-        walletAddress:
-          req.body.senderWalletAddress ||
-          req.body.fromWalletAddress ||
-          null,
+        walletAddress: getSenderWallet(req.body),
         organizationId: req.body.organizationId || null,
         organizationCode: req.body.organizationCode || null,
         requestPayload: req.body,
@@ -177,6 +223,12 @@ class TransactionController {
           transactionType: 'WALLET_TO_ORGANIZATION'
         }
       });
+
+      const amlResult = await evaluateAml(req, 'WALLET_TO_ORGANIZATION');
+
+      if (handleAmlDecision(res, amlResult)) {
+        return;
+      }
 
       const organizationTransferMethod = resolveServiceMethod(transactionService, [
         'organizationTransfer',
@@ -198,7 +250,8 @@ class TransactionController {
         correlationId: req.correlationId,
         sourceSystem: req.sourceSystem,
         requestSource: req.requestSource,
-        createdBy: req.body.createdBy || 'system'
+        createdBy: req.body.createdBy || 'system',
+        amlResult
       });
 
       await auditService.log({
@@ -215,22 +268,22 @@ class TransactionController {
           result?.fabricTxId ||
           result?.txId ||
           null,
-        walletAddress:
-          req.body.senderWalletAddress ||
-          req.body.fromWalletAddress ||
-          null,
+        walletAddress: getSenderWallet(req.body),
         organizationId: req.body.organizationId || null,
         organizationCode: req.body.organizationCode || null,
         responsePayload: result,
         controllerName: 'transaction.controller',
         serviceName: 'transaction.service',
         metadata: {
-          transactionType: 'WALLET_TO_ORGANIZATION'
+          transactionType: 'WALLET_TO_ORGANIZATION',
+          amlDecision: amlResult?.decision || null
         }
       });
 
       return res.status(200).json({
         ...result,
+        amlDecision: amlResult?.decision || null,
+        amlResult,
         requestId: req.requestId,
         correlationId: req.correlationId
       });
@@ -240,10 +293,7 @@ class TransactionController {
         eventType: AUDIT_EVENT_TYPES.TRANSACTION_FAILED,
         eventCategory: AUDIT_EVENT_CATEGORY.TRANSACTION,
         eventStatus: AUDIT_EVENT_STATUS.FAILED,
-        walletAddress:
-          req.body.senderWalletAddress ||
-          req.body.fromWalletAddress ||
-          null,
+        walletAddress: getSenderWallet(req.body),
         organizationId: req.body.organizationId || null,
         organizationCode: req.body.organizationCode || null,
         errorCode: error.code || 'ORGANIZATION_TRANSFER_ERROR',

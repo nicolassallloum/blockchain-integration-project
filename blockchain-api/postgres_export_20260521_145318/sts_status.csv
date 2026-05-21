@@ -1,0 +1,196 @@
+status_id,status_name,creation_date,created_by,updated_by,update_date,is_deleted,status_name_ml,status_color,status_code
+76,Needs Approval,2014-09-30,-777,,,0,,,
+77,Approved,2014-09-30,-777,,,0,,,
+78,Pending,2014-09-30,-777,,,0,,,
+79,Activated,2014-09-30,-777,,,0,,,
+80,Suspended,2014-09-30,-777,,,0,,,
+81,Deactivated,2014-09-30,-777,,,0,,,
+27,FAILED,2014-09-01,-53,,,0,,,
+105,Termination Letter,2015-02-02,-777,,,0,,,
+112,FISCAL PURCHASED,2015-02-13,-777,,,0,,,
+113,FISCAL DELIVERED,2015-02-13,-777,,,0,,,
+104,Error,2015-01-08,-777,,,0,,,
+108,To Be Removed,2015-02-06,-777,,,0,,,
+109,Defected,2015-02-06,-777,,,0,,,
+115,Under process,2015-03-13,-53,,,0,,,
+117,Expired,2016-04-15,-777,,,0,,,
+106,Visited/Measures Taken,2015-02-06,-777,,,0,,,
+116,Agreement Signed,2015-03-19,-53,,,0,,,
+107,Signs Installed,2015-02-06,-777,,,0,,,
+110,Signs Removed (added to stock),2015-02-06,-777,,,0,,,
+111,Signs Removed (not added to stock),2015-02-06,-777,,,0,,,
+118,Available,2019-04-24,-1,,,0,,,
+119,Used,2019-04-24,-1,,,0,,,
+120,Disabled,2019-04-24,-1,,,0,,,
+1162,Default,2022-12-21,-1995,,,0,,,0
+2,Active,2023-01-11,-1995,,,0,<lib><l id='35'><![CDATA[????????? ??????????]]></l></lib>,#07C446,A-ACCOUNT
+4,Sent for Approval,2023-01-11,-1995,,,0,,#75A4F7,APPROVAL
+5,Prospect Accepted,2023-01-11,-1995,,,0,,,ACCEPTED
+6,Deleted,2023-01-11,-1995,,,0,"<lib><l id=""35""><![CDATA[?????????]]></l><l id=""19""><![CDATA[Supprimé]]></l><l id='13'><![CDATA[Deleted]]></l></lib>",#F85523,DELETED
+7,OTP Declined,2023-01-11,-1995,,,0,,,DECLINED
+8,Published Internet,2023-01-11,-1995,,,0,,,PUBLISHED
+9,OTP Accepted,2023-01-11,-1995,,,0,,,OTP-ACCEPTED
+10,Canceled,2023-01-11,-1995,,,0,,,CANCELED
+11,Prospect Declined,2023-01-11,-1995,,,0,,,PRO-DECLINED
+13,Account Opened,2023-01-11,-1995,,,0,,,OPENED
+14,No Contact Details,2023-01-11,-1995,,,0,,,NO-CONTACT-DETAILS
+15,Meeting Not Yet Scheduled,2023-01-11,-1995,,,0,,,NOT-YET-SCHEDULED
+16,Under Negotiation,2023-01-11,-1995,,,0,,,UDER-NEGOTIATION
+17,Closed,2023-01-11,-1995,,,0,,#C0C0C0,CLOSED
+18,Pending BCO Approval,2023-01-11,-1995,,,0,,,PEND-BCO-APPROVAL
+19,BCO Rejected,2023-01-11,-1995,,,0,,,BCO-REJECTED
+20,BCO Approved,2023-01-11,-1995,,,0,,,BCO_APPROVAL
+23,Traceable,2023-01-11,-1995,,,0,,,TRACEABLE
+24,Completed,2023-01-11,-1995,,,0,,,COMPLETED
+25,Suspicious,2023-01-11,-1995,,,0,,,SUSPICIOUS
+26,Under Review,2023-01-11,-1995,,,0,,,UDER-REVIEW
+1144,Blocked,2022-12-20,-1995,,,0,,,1
+1145,Cancelled,2022-12-20,-1995,,,0,,,2
+1218,Completed,2022-12-29,-7,,,0,,,
+1407,Unemployed,2023-01-11,-1995,,,0,,,1
+1408,Retired,2023-01-11,-1995,,,0,,,2
+1409,Employee,2023-01-11,-1995,,,0,,,3
+1410,Self Employed,2023-01-11,-1995,,,0,,,4
+1411,Student,2023-01-11,-1995,,,0,,,5
+1149,Active ,2022-12-20,-1995,,,0,,,A
+1151,Stopped,2022-12-21,-1995,,,0,,,S
+1152,Inactive ,2022-12-21,-1995,,,0,,,I
+1160,Active,2022-12-21,-1995,,,0,,,1
+1161,Inactive ,2022-12-21,-1995,,,0,,,2
+1412,Related to shareholder,2023-01-11,-1995,,,0,,,20
+1413,Related to board of directors,2023-01-11,-1995,,,0,,,21
+1414,Related to senior management,2023-01-11,-1995,,,0,,,22
+1415,Other,2023-01-11,-1995,,,0,,,99
+1470,Active,2023-04-26,-1995,,,0,,,001
+1471,Arrested,2023-04-26,-1995,,,0,,,002
+1472,Deceased,2023-04-26,-1995,,,0,,,003
+1473,Disappeared,2023-04-26,-1995,,,0,,,004
+1474,Missing,2023-04-26,-1995,,,0,,,005
+1475,Other,2023-04-26,-1995,,,0,,,006
+1416,Active,2023-01-11,-1995,,,0,,,
+1417,Deleted,2022-12-28,-1995,,,0,,,
+1438,Untouched,2023-03-27,-1995,,,0,,,1
+1439,Start Negotiation,2023-03-27,-1995,,,0,,,2
+1440,Several Meeting,2023-03-27,-1995,,,0,,,3
+1441,Solution Insight,2023-03-27,-1995,,,0,,,4
+1442,Resolved By Scheduling,2023-03-27,-1995,,,0,,,5
+1443,Scheduling,2023-03-27,-1995,,,0,,,5A
+1444,Cash+Scheduling,2023-03-27,-1995,,,0,,,5B
+1445,Cash+Partial Acquis.+Schedul.,2023-03-27,-1995,,,0,,,5C
+1446,Partial Acquis.+Schedul.,2023-03-27,-1995,,,0,,,5D
+1447,Totally Resolved,2023-03-27,-1995,,,0,,,6
+1448,Cash,2023-03-27,-1995,,,0,,,6A
+1449,Cash + Acquisition,2023-03-27,-1995,,,0,,,6B
+1450,Acquisition,2023-03-27,-1995,,,0,,,6C
+1451,Unabided Customer,2023-03-27,-1995,,,0,,,7
+223,Opened,2023-06-08,-77,,,0,,,
+917,Closed With Case,2023-06-08,-77,,,0,,,
+918,Pending Approval,2023-06-08,-77,,,0,,,
+919,Reopened,2023-06-08,-77,,,0,,,
+103,New,2023-06-09,-77,,,0,,,
+936,Under Investigation,2023-06-09,-77,,,0,,,
+937,Case Closed Justified,2023-06-09,-77,,,0,,,
+1202,Opened,2022-12-28,-1995,,,0,,,O
+1203,Deleted,2022-12-28,-1995,,,0,,,D
+792,Warning,2023-06-01,-8,,,0,,,
+793,Blocking,2023-06-01,-8,,,0,,,
+794,Informative,2023-06-01,-8,,,0,,,
+1,In Process Of Creation,2022-12-29,-1995,,,0,,,
+1193,Draft,2022-12-28,-1995,,,0,,,
+1194,Pending MID Approval,2022-12-28,-1995,,,0,,,
+1195,Pending Compliance Approval,2022-12-28,-1995,,,0,,,
+114,Rejected1,2015-03-13,-53,,,0,,,
+12,Inactive,2023-01-11,-1995,,,0,<lib><l id='35'><![CDATA[??????????]]></l></lib>,#F6D251,
+1196,Pending Legal Approval,2022-12-28,-1995,,,0,,,
+1197,Returned for CSO,2022-12-28,-1995,,,0,,,
+1199,CSO Enrichment,2022-12-28,-1995,,,0,,,
+1200,Pending BM Approval,2022-12-28,-1995,,,0,,,
+1201,Created,2022-12-28,-1995,,,0,,,
+1477,InComplete,2023-09-04,,,,0,,,
+1476,Complete,2023-09-04,,,,0,,,
+1500,Reserved,2024-09-04,-1995,,,0,,,
+1501,Sent,2024-09-04,1,,,0,,,006
+1502,Paid,2024-09-04,1,,,0,,,006
+1503,Will Accept,2025-02-07,-1995,,,0,,,
+1504,BoB Declined,2025-02-07,-1995,,,0,,,
+1505,BoB Accepted,2025-02-07,-1995,,,0,,,
+1507,Pre-Recovery,2024-02-19,,,,0,,,
+1508,Recovery,2024-02-19,,,,0,,,
+1509,Site Visited,2024-02-19,,,,0,,,
+1510,Missing Signs Removed,2024-02-19,,,,0,,,
+1511,Remove Signs,2024-02-19,,,,0,,,
+1506,Account Opened_,2025-02-07,-1995,,,0,,,
+1512,Creation,2014-09-30,-777,,,0,,,
+1513,On Hold,2014-09-30,-777,,,0,,,
+873,To Be Reviewed,2018-02-08,,,,0,,,
+913,Rejected,2018-05-10,-911,,,0,,,
+914,Opened,2018-07-09,,-8,2020-01-21,0,,,3
+96,Modified,2007-07-03,624,,2014-07-24,0,"<lib><l id=""35""><![CDATA[Измененный]]></l><l id='13'><![CDATA[Modified]]></l></lib>",#08C5B6,
+916,Closed With Case,2018-07-09,,,,0,,,
+920,Case Closed Justified,2018-07-09,,,,0,,,
+921,Escalate Case,2018-07-09,,,,0,,,
+893,Pending OD Manager Approval,2018-04-27,-911,,,0,,,
+894,OD Manager Approved,2018-04-27,-911,,,0,,,
+895,Pending CA Manager Approval,2018-04-27,-911,,,0,,,
+896,CA Manager Approved,2018-04-27,-911,,,0,,,
+967,Rejected By First Validator,2019-12-06,-1,,,0,,,
+945,BM Approved,2019-07-25,-911,,,0,,,
+969,Lost,2019-11-20,-8,-8,2020-01-21,0,,,4
+970,Stolen,2019-11-20,-8,-8,2020-01-21,0,,,5
+971,Restricted,2019-11-20,-8,-8,2020-01-21,0,,,6
+972,VIP,2019-11-20,-8,-8,2020-01-21,0,,,7
+973,Internal,2019-11-20,-8,-8,2020-01-21,0,,,8
+974,Compromised,2019-11-20,-8,-8,2020-01-21,0,,,9
+975,Damaged,2019-11-20,-8,-8,2020-01-21,0,,,11
+976,Declared,2019-11-20,-8,-8,2020-01-21,0,,,12
+977,Expired,2019-11-20,-8,-8,2020-01-21,0,,,13
+978,VIP Status,2019-11-20,-8,-8,2020-01-21,0,,,14
+979,Warm card,2019-11-20,-8,-8,2020-01-21,0,,,15
+980,Deny/Opt to Cap,2019-11-20,-8,-8,2020-01-21,0,,,16
+981,Deny/Return CRD,2019-11-20,-8,-8,2020-01-21,0,,,17
+982,Cancelled,2019-11-20,-8,-8,2020-01-21,0,,,19
+983,Matured and Fully Paid,2019-11-20,-8,-8,2020-01-21,0,,,20
+984,Overdue but Matured,2019-11-20,-8,-8,2020-01-21,0,,,21
+985,Reserved,2019-11-20,-8,-8,2020-01-21,0,,,22
+986,Unavailable,2019-11-20,-8,-8,2020-01-21,0,,,23
+987,Inactive - Expired,2020-10-02,-53,,,0,,,
+988,Inactive – Cancelled,2020-10-02,-53,,,0,,,
+922,Accepted,2019-03-05,7767,,,0,,,
+942,Dormant,2019-03-08,7767,,,0,,,
+943,Pending COU Approval,2019-07-08,-911,,,0,,,
+944,COU Approved,2019-07-08,-911,,,0,,,
+966,Accepted By First Validator,2019-12-05,-1,,,0,,,
+208,Executed,2019-09-24,-1,,,0,,#30FC74,
+220,Blocked,2019-09-24,-1,-8,2020-01-21,0,,#F23E0A,25
+744,Accepted,2019-09-24,-1,,,0,,,
+1010,replaced,2022-08-22,-8,,,0,,,26
+993,Pending Next Approval,2021-08-02,-7,,,0,,,
+1009,Approved,2021-08-05,-70,,,0,,,
+22,Reverse Pay,2023-01-11,-1995,,,0,,,BM-REJECTED
+230,ISSUED,2025-10-24,,,,0,,,
+231,Requested,2025-10-24,,,,0,,,
+232,CONFIRMED,2025-10-24,,,,0,,,
+233,SUCCESS,2025-10-24,,,,0,,,
+234,Approved,2025-10-24,,,,0,,,
+235,Not Paid,2025-10-24,,,,0,,,
+1529,Liscensed,2025-11-03,-1995,1,2025-11-03,N,,#00FF00,LIC
+1530,Verified,2025-11-03,1,1,2025-11-03,N,,#00FF00,LIC
+1531,Under Creation,2026-02-20,-121,,,N,,,
+1532,Unqualified,2026-02-20,-121,,,N,,,
+1533,Partially Suspended,2026-02-20,-121,,,N,,,
+1534,Permanently Suspended,2026-02-20,-121,,,N,,,
+1146,Open,2022-12-20,-1995,,,0,,,3
+1150,In progress,2022-12-21,-1995,,,0,,,C
+915,under investigation,2018-07-09,,-8,2020-01-21,0,,,10
+32,under review,2014-09-30,-777,,,0,,,
+31,Resolved,2014-09-30,-777,,,0,,,
+322,Murder,2014-09-30,-777,,,0,,,
+314,Espionage,2014-09-30,-777,,,0,,,
+327,Cybercrime,2014-09-30,-777,,,0,,,
+319,Fraud,2014-09-30,-777,,,0,,,
+311,Missing Person,2014-09-30,-777,,,0,,,
+3,Assault,2023-01-11,-1995,,,0,,#07C446,11
+2000,identified,2026-03-04,-777,,,0,,,
+2001,undervision,2026-03-04,-777,,,0,,,
+2002,captured,2026-03-04,-777,,,0,,,
+2003,not identified,2026-03-04,-777,,,0,,,

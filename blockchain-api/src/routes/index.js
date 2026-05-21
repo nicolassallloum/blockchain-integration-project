@@ -22,7 +22,8 @@ const transactionRoutes = require('./transaction.routes');
 const fabricRoutes = require('./fabric.routes');
 const referenceRoutes = require('./reference.routes');
 const dashboardRoutes = safeLoadRoute("dashboard", "./dashboard.routes");
-
+const publicAdministrationRoutes = require('./publicAdministration.routes');
+// router.use('/government-blockchain/public-administrations', publicAdministrationRoutes);
 
 const healthRoutes = safeLoadRoute("health", "./health.routes");
 const blockchainRoutes = safeLoadRoute("blockchain", "./blockchain.routes");
@@ -41,7 +42,9 @@ if (blockchainRoutes) {
 if (fabricRoutes) {
   router.use("/fabric", fabricRoutes);
 }
-
+if (publicAdministrationRoutes) {
+  router.use('/government-blockchain/public-administrations', publicAdministrationRoutes);
+}
 if (walletRoutes) {
   router.use("/wallets", walletRoutes);
 }
@@ -58,5 +61,11 @@ if (dashboardRoutes) {
   router.use("/dashboard", dashboardRoutes);
 }
 
-
+router.get('/health', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Blockchain API Middleware is running',
+    timestamp: new Date().toISOString()
+  });
+});
 module.exports = router;

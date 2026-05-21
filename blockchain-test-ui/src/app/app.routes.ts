@@ -12,7 +12,7 @@ import { WalletTransferComponent } from './features/transactions/wallet-transfer
 import { OrganizationTransferComponent } from './features/transactions/organization-transfer/organization-transfer.component';
 import { TransactionHistoryComponent } from './features/transactions/transaction-history/transaction-history.component';
 import { BalanceQueryComponent } from './features/transactions/balance-query/balance-query.component';
-
+import { CreatePublicAdministrationAccountComponent } from './pages/government-blockchain/create-public-administration-account/create-public-administration-account.component';
 import { FabricTestComponent } from './features/fabric-test/fabric-test.component';
 
 export const routes: Routes = [
@@ -28,6 +28,10 @@ export const routes: Routes = [
   {
     path: 'digital-kyc/blockchain-kyc',
     component: BlockchainKycComponent
+  },
+  {
+    path: 'government-blockchain/create-public-administration-account',
+    component: CreatePublicAdministrationAccountComponent
   },
   {
     path: 'government-blockchain/create-ministry-account',

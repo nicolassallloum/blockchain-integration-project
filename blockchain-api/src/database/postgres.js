@@ -1,7 +1,7 @@
 "use strict";
 
 const { Pool } = require("pg");
-const config = require("../../config/config");
+const config = require("../../config");
 
 const pool = new Pool({
   host: config.postgres.host,
