@@ -1,257 +1,481 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, ElementRef, ViewChild } from '@angular/core';
 import {
+  AbstractControl,
   FormBuilder,
   FormGroup,
   ReactiveFormsModule,
-  Validators
+  ValidationErrors,
+  Validators,
 } from '@angular/forms';
-import { RouterModule } from '@angular/router';
-import { HttpClientModule } from '@angular/common/http';
 
-import {
-  GovernmentBlockchainReferenceApiService,
-  GovernmentCountry,
-  GovernmentGovernorate,
-  WalletStatus,
-  WalletType
-} from '../../../services/government-blockchain-reference-api.service';
-
-import {
-  GovernmentMinistryApiService,
-  CreateMinistryAccountPayload,
-  CreateMinistryWalletPayload
-} from '../../../services/government-ministry-api.service';
+interface CsvMinistryRow {
+  rowNumber: number;
+  ministryId: string;
+  ministryCode: string;
+  ministryName: string;
+  arabicName: string;
+  ministryType: string;
+  parentMinistry: string;
+  ministerName: string;
+  contactPerson: string;
+  contactEmail: string;
+  contactMobile: string;
+  country: string;
+  governorate: string;
+  address: string;
+  walletAddress: string;
+  walletCurrency: string;
+  walletStatus: string;
+  blockchainStatus: string;
+  errors: string[];
+}
 
 @Component({
   selector: 'app-create-ministry-account',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule, HttpClientModule],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './create-ministry-account.component.html',
-  styleUrls: ['./create-ministry-account.component.scss']
+  styleUrl: './create-ministry-account.component.scss',
 })
-export class CreateMinistryAccountComponent implements OnInit {
-  private readonly fb = inject(FormBuilder);
-  private readonly referenceApi = inject(GovernmentBlockchainReferenceApiService);
-  private readonly ministryApi = inject(GovernmentMinistryApiService);
+export class CreateMinistryAccountComponent {
+  @ViewChild('csvFileInput') csvFileInput?: ElementRef<HTMLInputElement>;
 
-  ministryAccountForm!: FormGroup;
+  ministryAccountForm: FormGroup;
 
   isSubmitting = false;
-  isWalletCreating = false;
   isDraftSaving = false;
+  isWalletCreating = false;
+  isBulkUploading = false;
 
-  isCountriesLoading = false;
-  isGovernoratesLoading = false;
-  isWalletTypesLoading = false;
-  isWalletStatusesLoading = false;
+  selectedCsvFileName = '';
+  csvRows: CsvMinistryRow[] = [];
+  validCsvRows: CsvMinistryRow[] = [];
+  invalidCsvRows: CsvMinistryRow[] = [];
 
-  countries: GovernmentCountry[] = [];
-  governorates: GovernmentGovernorate[] = [];
-  walletTypes: WalletType[] = [];
-  walletStatuses: WalletStatus[] = [];
+  createdMinistryId = '';
+  createdWalletAddress = '';
+  createdBlockchainStatus = '';
+  createdWalletCurrency = '';
 
-  lastCreatedMinistryId: string | null = null;
-  lastCreatedMinistryReferenceId: string | null = null;
-  lastCreatedWalletAddress: string | null = null;
-
-  createdLoginUsername: string | null = null;
-  createdTemporaryPassword: string | null = null;
-  createdWalletAddress: string | null = null;
-  createdWalletCurrency: string | null = null;
-  createdWalletBalance: string | null = null;
-
-  ministryTypes = [
+  ministryTypes: string[] = [
     'Central Government Ministry',
     'Public Administration',
-    'Government Authority',
-    'Regulatory Body',
-    'Public Institution',
+    'Independent Authority',
+    'Government Agency',
     'Municipality',
-    'Independent Agency'
+    'Governorate Office',
+    'Public Institution',
   ];
 
-  institutionStatuses = [
-    'ACTIVE',
-    'INACTIVE',
-    'PENDING_APPROVAL',
-    'SUSPENDED'
+  parentMinistries: string[] = [
+    'None',
+    'Prime Minister Office',
+    'Ministry of Finance',
+    'Ministry of Interior and Municipalities',
+    'Ministry of Justice',
+    'Ministry of Public Health',
+    'Ministry of Education',
+    'Ministry of Economy and Trade',
   ];
 
-  walletCurrencies = ['LBP', 'USD', 'EUR'];
+  countries: string[] = ['Lebanon', 'United Arab Emirates', 'Saudi Arabia', 'Qatar', 'Kuwait', 'Jordan'];
 
-  ngOnInit(): void {
-    this.buildForm();
-    this.loadReferenceData();
-    this.listenForCountryChanges();
-    this.listenForMinistryCodeChanges();
-  }
+  governorates: string[] = [
+    'Beirut',
+    'Mount Lebanon',
+    'North Lebanon',
+    'Akkar',
+    'Baalbek-Hermel',
+    'Bekaa',
+    'Nabatieh',
+    'South Lebanon',
+  ];
 
-  private buildForm(): void {
+  walletCurrencies: string[] = ['LBP', 'USD', 'GOV'];
+
+  walletStatuses: string[] = ['PENDING_CREATION', 'ACTIVE', 'SUSPENDED', 'BLOCKED', 'CLOSED'];
+
+  blockchainStatuses: string[] = ['NOT_SUBMITTED', 'PENDING', 'SUBMITTED', 'CONFIRMED', 'FAILED'];
+
+  blockchainNetworks: string[] = ['Hyperledger Fabric'];
+
+  fabricChannels: string[] = ['kycchannelnix1', 'government-channel'];
+
+  chaincodes: string[] = ['kyc-wallet-chaincode-js', 'government-services-chaincode'];
+
+  constructor(private fb: FormBuilder) {
     this.ministryAccountForm = this.fb.group({
-      ministryId: ['', [Validators.required, Validators.maxLength(50)]],
-      ministryCode: ['', [Validators.required, Validators.maxLength(30)]],
-      ministryName: ['', [Validators.required, Validators.maxLength(150)]],
-      arabicName: ['', [Validators.required, Validators.maxLength(150)]],
+      ministryId: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(50)]],
+      ministryCode: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(30)]],
+      ministryName: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(150)]],
+      arabicName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(150)]],
       ministryType: ['', Validators.required],
-      parentMinistry: ['', Validators.maxLength(150)],
-      ministerName: ['', [Validators.required, Validators.maxLength(120)]],
-      contactPerson: ['', [Validators.required, Validators.maxLength(120)]],
-      contactEmail: [
-        '',
-        [Validators.required, Validators.email, Validators.maxLength(150)]
-      ],
+      parentMinistry: ['None'],
+      ministerName: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(120)]],
+
+      contactPerson: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(120)]],
+      contactEmail: ['', [Validators.required, Validators.email]],
       contactMobile: [
         '',
         [
           Validators.required,
-          Validators.pattern(/^[+0-9\s-]{8,20}$/)
-        ]
+          Validators.pattern(/^(\+961|00961|961)?\s?[0-9\s-]{7,14}$/),
+        ],
       ],
-      address: ['', [Validators.required, Validators.maxLength(250)]],
-      country: ['LB', Validators.required],
+
+      country: ['Lebanon', Validators.required],
       governorate: ['', Validators.required],
-      website: [
-        '',
-        [
-          Validators.pattern(
-            /^(https?:\/\/)?([\w-]+\.)+[\w-]{2,}(\/[\w\-._~:/?#[\]@!$&'()*+,;=]*)?$/
-          )
-        ]
-      ],
-      walletStatus: ['PENDING', Validators.required],
-      institutionStatus: ['PENDING_APPROVAL', Validators.required],
+      address: ['', [Validators.required, Validators.minLength(5), Validators.maxLength(250)]],
 
-      loginUsername: ['', [Validators.required, Validators.maxLength(100)]],
-      password: [
-        '',
-        [
-          Validators.required,
-          Validators.minLength(8),
-          Validators.maxLength(100)
-        ]
-      ],
-      confirmPassword: [
-        '',
-        [
-          Validators.required,
-          Validators.minLength(8),
-          Validators.maxLength(100)
-        ]
-      ],
-
-      walletAddress: ['', Validators.maxLength(150)],
+      walletAddress: [''],
       walletCurrency: ['LBP', Validators.required],
-      walletInitialBalance: [0, [Validators.required, Validators.min(0)]],
-      walletType: ['MINISTRY_WALLET', Validators.required],
-      walletOperationalStatus: ['ACTIVE', Validators.required]
+      walletStatus: ['PENDING_CREATION', Validators.required],
+
+      blockchainNetwork: ['Hyperledger Fabric', Validators.required],
+      blockchainChannel: ['kycchannelnix1', Validators.required],
+      chaincodeName: ['kyc-wallet-chaincode-js', Validators.required],
+      blockchainStatus: ['NOT_SUBMITTED', Validators.required],
+      blockchainProofHash: [''],
     });
   }
 
-  private loadReferenceData(): void {
-    this.loadCountries();
-    this.loadGovernorates('LB');
-    this.loadWalletTypes();
-    this.loadWalletStatuses();
-  }
-
-  private loadCountries(): void {
-    this.isCountriesLoading = true;
-
-    this.referenceApi.getCountries().subscribe({
-      next: (response) => {
-        this.countries = response.data || [];
-        this.isCountriesLoading = false;
-      },
-      error: (error) => {
-        console.error('Failed to load countries:', error);
-        this.countries = [];
-        this.isCountriesLoading = false;
-      }
-    });
-  }
-
-  private loadGovernorates(countryCode: string): void {
-    if (!countryCode) {
-      this.governorates = [];
+  createMinistry(): void {
+    if (this.ministryAccountForm.invalid) {
+      this.ministryAccountForm.markAllAsTouched();
       return;
     }
 
-    this.isGovernoratesLoading = true;
+    this.isSubmitting = true;
 
-    this.referenceApi.getGovernorates(countryCode).subscribe({
-      next: (response) => {
-        this.governorates = response.data || [];
-        this.isGovernoratesLoading = false;
-      },
-      error: (error) => {
-        console.error('Failed to load governorates:', error);
-        this.governorates = [];
-        this.isGovernoratesLoading = false;
+    const payload = this.buildMinistryPayload();
+
+    console.log('CREATE MINISTRY PAYLOAD READY FOR API:', payload);
+
+    /*
+      TODO Backend API:
+      POST /api/v1/government-blockchain/ministries
+      Body: payload
+    */
+
+    setTimeout(() => {
+      this.createdMinistryId = payload.ministry.ministryId;
+      this.createdWalletCurrency = payload.wallet.walletCurrency;
+      this.createdBlockchainStatus = payload.blockchain.blockchainStatus;
+      this.isSubmitting = false;
+      alert('Ministry account payload prepared successfully.');
+    }, 600);
+  }
+
+  createWallet(): void {
+    const ministryId = this.ministryAccountForm.get('ministryId')?.value;
+    const ministryCode = this.ministryAccountForm.get('ministryCode')?.value;
+
+    if (!ministryId || !ministryCode) {
+      this.ministryAccountForm.get('ministryId')?.markAsTouched();
+      this.ministryAccountForm.get('ministryCode')?.markAsTouched();
+      alert('Please enter Ministry ID and Ministry Code before creating wallet.');
+      return;
+    }
+
+    this.isWalletCreating = true;
+
+    const walletAddress = `GOV-MIN-${ministryCode}-${Date.now()}`.toUpperCase();
+
+    /*
+      TODO Backend API:
+      POST /api/v1/government-blockchain/wallets/ministry
+      Body:
+      {
+        ministryId,
+        ministryCode,
+        walletCurrency,
+        walletStatus
       }
-    });
+    */
+
+    setTimeout(() => {
+      this.ministryAccountForm.patchValue({
+        walletAddress,
+        walletStatus: 'ACTIVE',
+        blockchainStatus: 'PENDING',
+      });
+
+      this.createdWalletAddress = walletAddress;
+      this.createdWalletCurrency = this.ministryAccountForm.get('walletCurrency')?.value;
+      this.isWalletCreating = false;
+    }, 600);
   }
 
-  private loadWalletTypes(): void {
-    this.isWalletTypesLoading = true;
+  saveDraft(): void {
+    this.isDraftSaving = true;
 
-    this.referenceApi.getWalletTypes().subscribe({
-      next: (response) => {
-        this.walletTypes = response.data || [];
-        this.isWalletTypesLoading = false;
-      },
-      error: (error) => {
-        console.error('Failed to load wallet types:', error);
-        this.walletTypes = [];
-        this.isWalletTypesLoading = false;
-      }
-    });
+    const draftPayload = {
+      draftType: 'CREATE_MINISTRY_ACCOUNT',
+      savedAt: new Date().toISOString(),
+      formData: this.ministryAccountForm.getRawValue(),
+    };
+
+    console.log('SAVE DRAFT PAYLOAD READY FOR API:', draftPayload);
+
+    /*
+      TODO Backend API:
+      POST /api/v1/government-blockchain/drafts/ministry
+      Body: draftPayload
+    */
+
+    setTimeout(() => {
+      this.isDraftSaving = false;
+      alert('Draft saved locally / payload prepared.');
+    }, 500);
   }
 
-  private loadWalletStatuses(): void {
-    this.isWalletStatusesLoading = true;
-
-    this.referenceApi.getWalletStatuses().subscribe({
-      next: (response) => {
-        this.walletStatuses = response.data || [];
-        this.isWalletStatusesLoading = false;
-      },
-      error: (error) => {
-        console.error('Failed to load wallet statuses:', error);
-        this.walletStatuses = [];
-        this.isWalletStatusesLoading = false;
-      }
+  resetForm(): void {
+    this.ministryAccountForm.reset({
+      parentMinistry: 'None',
+      country: 'Lebanon',
+      walletCurrency: 'LBP',
+      walletStatus: 'PENDING_CREATION',
+      blockchainNetwork: 'Hyperledger Fabric',
+      blockchainChannel: 'kycchannelnix1',
+      chaincodeName: 'kyc-wallet-chaincode-js',
+      blockchainStatus: 'NOT_SUBMITTED',
     });
+
+    this.createdMinistryId = '';
+    this.createdWalletAddress = '';
+    this.createdBlockchainStatus = '';
+    this.createdWalletCurrency = '';
   }
 
-  private listenForCountryChanges(): void {
-    this.ministryAccountForm.get('country')?.valueChanges.subscribe((countryCode: string) => {
-      this.ministryAccountForm.patchValue(
-        { governorate: '' },
-        { emitEvent: false }
-      );
+  onCsvFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
 
-      this.loadGovernorates(countryCode);
-    });
+    if (!file) {
+      return;
+    }
+
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+      alert('Please upload a valid CSV file.');
+      this.clearCsvFile();
+      return;
+    }
+
+    this.selectedCsvFileName = file.name;
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const csvText = String(reader.result || '');
+      this.parseCsv(csvText);
+    };
+
+    reader.readAsText(file);
   }
 
-  private listenForMinistryCodeChanges(): void {
-    this.ministryAccountForm.get('ministryCode')?.valueChanges.subscribe((ministryCode: string) => {
-      const currentLoginUsername = this.ministryAccountForm.get('loginUsername')?.value;
+  parseCsv(csvText: string): void {
+    const lines = csvText
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
 
-      if (!currentLoginUsername && ministryCode) {
-        this.ministryAccountForm.patchValue(
-          {
-            loginUsername: String(ministryCode).toUpperCase()
-          },
-          { emitEvent: false }
-        );
-      }
+    if (lines.length < 2) {
+      alert('CSV file must include a header row and at least one data row.');
+      this.clearCsvFile();
+      return;
+    }
+
+    const headers = this.splitCsvLine(lines[0]).map((h) => h.trim());
+
+    const requiredHeaders = [
+      'ministryId',
+      'ministryCode',
+      'ministryName',
+      'arabicName',
+      'ministryType',
+      'parentMinistry',
+      'ministerName',
+      'contactPerson',
+      'contactEmail',
+      'contactMobile',
+      'country',
+      'governorate',
+      'address',
+      'walletAddress',
+      'walletCurrency',
+      'walletStatus',
+      'blockchainStatus',
+    ];
+
+    const missingHeaders = requiredHeaders.filter((header) => !headers.includes(header));
+
+    if (missingHeaders.length > 0) {
+      alert(`CSV is missing required columns: ${missingHeaders.join(', ')}`);
+      this.clearCsvFile();
+      return;
+    }
+
+    const parsedRows: CsvMinistryRow[] = lines.slice(1).map((line, index) => {
+      const values = this.splitCsvLine(line);
+      const rowObject: Record<string, string> = {};
+
+      headers.forEach((header, headerIndex) => {
+        rowObject[header] = values[headerIndex]?.trim() || '';
+      });
+
+      const row: CsvMinistryRow = {
+        rowNumber: index + 2,
+        ministryId: rowObject['ministryId'],
+        ministryCode: rowObject['ministryCode'],
+        ministryName: rowObject['ministryName'],
+        arabicName: rowObject['arabicName'],
+        ministryType: rowObject['ministryType'],
+        parentMinistry: rowObject['parentMinistry'] || 'None',
+        ministerName: rowObject['ministerName'],
+        contactPerson: rowObject['contactPerson'],
+        contactEmail: rowObject['contactEmail'],
+        contactMobile: rowObject['contactMobile'],
+        country: rowObject['country'],
+        governorate: rowObject['governorate'],
+        address: rowObject['address'],
+        walletAddress: rowObject['walletAddress'],
+        walletCurrency: rowObject['walletCurrency'] || 'LBP',
+        walletStatus: rowObject['walletStatus'] || 'PENDING_CREATION',
+        blockchainStatus: rowObject['blockchainStatus'] || 'NOT_SUBMITTED',
+        errors: [],
+      };
+
+      row.errors = this.validateCsvRow(row);
+
+      return row;
     });
+
+    this.csvRows = parsedRows;
+    this.validCsvRows = parsedRows.filter((row) => row.errors.length === 0);
+    this.invalidCsvRows = parsedRows.filter((row) => row.errors.length > 0);
   }
 
-  get f() {
-    return this.ministryAccountForm.controls;
+  uploadBulkMinistries(): void {
+    if (this.validCsvRows.length === 0) {
+      alert('No valid CSV rows available for upload.');
+      return;
+    }
+
+    this.isBulkUploading = true;
+
+    const bulkPayload = {
+      source: 'CSV_UPLOAD',
+      uploadedAt: new Date().toISOString(),
+      totalRows: this.csvRows.length,
+      validRows: this.validCsvRows.length,
+      invalidRows: this.invalidCsvRows.length,
+      ministries: this.validCsvRows.map((row) => ({
+        ministry: {
+          ministryId: row.ministryId,
+          ministryCode: row.ministryCode,
+          ministryName: row.ministryName,
+          arabicName: row.arabicName,
+          ministryType: row.ministryType,
+          parentMinistry: row.parentMinistry,
+          ministerName: row.ministerName,
+          contactPerson: row.contactPerson,
+          contactEmail: row.contactEmail,
+          contactMobile: row.contactMobile,
+          country: row.country,
+          governorate: row.governorate,
+          address: row.address,
+        },
+        wallet: {
+          walletAddress: row.walletAddress,
+          walletCurrency: row.walletCurrency,
+          walletStatus: row.walletStatus,
+        },
+        blockchain: {
+          blockchainStatus: row.blockchainStatus,
+          blockchainNetwork: 'Hyperledger Fabric',
+          channelName: 'kycchannelnix1',
+          chaincodeName: 'kyc-wallet-chaincode-js',
+        },
+      })),
+    };
+
+    console.log('BULK MINISTRIES CSV PAYLOAD READY FOR API:', bulkPayload);
+
+    /*
+      TODO Backend API:
+      POST /api/v1/government-blockchain/ministries/bulk
+      Body: bulkPayload
+    */
+
+    setTimeout(() => {
+      this.isBulkUploading = false;
+      alert(`${this.validCsvRows.length} valid ministry records are ready for backend upload.`);
+    }, 800);
+  }
+
+  downloadCsvTemplate(): void {
+    const headers = [
+      'ministryId',
+      'ministryCode',
+      'ministryName',
+      'arabicName',
+      'ministryType',
+      'parentMinistry',
+      'ministerName',
+      'contactPerson',
+      'contactEmail',
+      'contactMobile',
+      'country',
+      'governorate',
+      'address',
+      'walletAddress',
+      'walletCurrency',
+      'walletStatus',
+      'blockchainStatus',
+    ];
+
+    const sampleRow = [
+      'MIN-001',
+      'MOF',
+      'Ministry of Finance',
+      'وزارة المالية',
+      'Central Government Ministry',
+      'None',
+      'Minister Name',
+      'Nix Admin',
+      'contact@finance.gov.lb',
+      '+961 70 123 456',
+      'Lebanon',
+      'Beirut',
+      'Beirut Central District',
+      '',
+      'LBP',
+      'PENDING_CREATION',
+      'NOT_SUBMITTED',
+    ];
+
+    const csvContent = `${headers.join(',')}\n${sampleRow.map((value) => `"${value}"`).join(',')}`;
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = 'ministry-bulk-upload-template.csv';
+    anchor.click();
+
+    window.URL.revokeObjectURL(url);
+  }
+
+  clearCsvFile(): void {
+    this.selectedCsvFileName = '';
+    this.csvRows = [];
+    this.validCsvRows = [];
+    this.invalidCsvRows = [];
+
+    if (this.csvFileInput?.nativeElement) {
+      this.csvFileInput.nativeElement.value = '';
+    }
   }
 
   isInvalid(controlName: string): boolean {
@@ -274,16 +498,12 @@ export class CreateMinistryAccountComponent implements OnInit {
       return 'Please enter a valid email address.';
     }
 
-    if (control.errors['maxlength']) {
-      return `Maximum allowed characters: ${control.errors['maxlength'].requiredLength}.`;
-    }
-
     if (control.errors['minlength']) {
-      return `Minimum required characters: ${control.errors['minlength'].requiredLength}.`;
+      return `Minimum length is ${control.errors['minlength'].requiredLength} characters.`;
     }
 
-    if (control.errors['min']) {
-      return 'Value cannot be negative.';
+    if (control.errors['maxlength']) {
+      return `Maximum length is ${control.errors['maxlength'].requiredLength} characters.`;
     }
 
     if (control.errors['pattern']) {
@@ -293,272 +513,99 @@ export class CreateMinistryAccountComponent implements OnInit {
     return 'Invalid value.';
   }
 
-  createMinistryAccount(): void {
-    this.ministryAccountForm.markAllAsTouched();
-
-    if (this.ministryAccountForm.invalid) {
-      alert('Please fill all required fields correctly.');
-      return;
-    }
-
-    const password = this.ministryAccountForm.get('password')?.value;
-    const confirmPassword = this.ministryAccountForm.get('confirmPassword')?.value;
-
-    if (password !== confirmPassword) {
-      alert('Password and Confirm Password do not match.');
-      return;
-    }
-
-    this.isSubmitting = true;
-
-    const payload = this.buildPayload();
-
-    console.log('Sending Create Ministry Account Payload:', payload);
-
-    this.ministryApi.createMinistryAccount(payload).subscribe({
-      next: (response) => {
-        this.isSubmitting = false;
-
-        const savedMinistry = response.data?.ministry;
-        const savedWallet = response.data?.wallet;
-        const login = response.data?.login;
-
-        this.createdLoginUsername =
-          login?.username ||
-          savedMinistry?.login_username ||
-          payload.ministry.loginUsername ||
-          null;
-
-        this.createdTemporaryPassword =
-          login?.temporaryPassword ||
-          this.ministryAccountForm.get('password')?.value ||
-          null;
-
-        this.createdWalletAddress = savedWallet?.wallet_address || null;
-        this.createdWalletCurrency = savedWallet?.wallet_currency || null;
-        this.createdWalletBalance = savedWallet?.wallet_current_balance || null;
-
-        this.lastCreatedMinistryId = savedMinistry?.ministry_id || null;
-        this.lastCreatedMinistryReferenceId =
-          savedMinistry?.ministry_reference_id || payload.ministry.ministryId;
-
-        this.lastCreatedWalletAddress = savedWallet?.wallet_address || null;
-
-        if (savedWallet?.wallet_address) {
-          this.ministryAccountForm.patchValue({
-            walletAddress: savedWallet.wallet_address,
-            walletStatus: savedWallet.wallet_status || 'ACTIVE',
-            walletOperationalStatus: savedWallet.wallet_status || 'ACTIVE'
-          });
-        }
-
-        alert(response.message || 'Ministry account created successfully.');
-      },
-      error: (error) => {
-        this.isSubmitting = false;
-
-        console.error('Create ministry account failed:', error);
-
-        const message =
-          error?.error?.message ||
-          'Failed to create ministry account. Please check backend logs.';
-
-        alert(message);
-      }
-    });
-  }
-
-  createWallet(): void {
-    const ministryReferenceId =
-      this.lastCreatedMinistryReferenceId ||
-      this.ministryAccountForm.get('ministryId')?.value;
-
-    if (!ministryReferenceId) {
-      alert('Please enter Ministry ID first.');
-      return;
-    }
-
-    const requiredWalletFields = [
-      'walletCurrency',
-      'walletInitialBalance',
-      'walletType',
-      'walletOperationalStatus'
-    ];
-
-    requiredWalletFields.forEach((field) => {
-      this.ministryAccountForm.get(field)?.markAsTouched();
-    });
-
-    const hasInvalidWalletData = requiredWalletFields.some((field) => {
-      const control = this.ministryAccountForm.get(field);
-      return control?.invalid;
-    });
-
-    if (hasInvalidWalletData) {
-      alert('Please complete wallet fields correctly.');
-      return;
-    }
-
-    this.isWalletCreating = true;
-
-    const walletPayload: CreateMinistryWalletPayload = {
-      walletAddress: this.ministryAccountForm.get('walletAddress')?.value || null,
-      walletCurrency: this.ministryAccountForm.get('walletCurrency')?.value,
-      walletInitialBalance: Number(
-        this.ministryAccountForm.get('walletInitialBalance')?.value || 0
-      ),
-      walletType: this.ministryAccountForm.get('walletType')?.value,
-      walletStatus:
-        this.ministryAccountForm.get('walletOperationalStatus')?.value || 'ACTIVE'
-    };
-
-    console.log('Sending Create Ministry Wallet Payload:', walletPayload);
-
-    this.ministryApi.createMinistryWallet(ministryReferenceId, walletPayload).subscribe({
-      next: (response) => {
-        this.isWalletCreating = false;
-
-        const savedWallet = response.data;
-
-        this.lastCreatedWalletAddress = savedWallet?.wallet_address || null;
-
-        this.createdWalletAddress = savedWallet?.wallet_address || null;
-        this.createdWalletCurrency = savedWallet?.wallet_currency || null;
-        this.createdWalletBalance = savedWallet?.wallet_current_balance || null;
-
-        this.ministryAccountForm.patchValue({
-          walletAddress: savedWallet?.wallet_address || walletPayload.walletAddress,
-          walletStatus: savedWallet?.wallet_status || 'ACTIVE',
-          walletOperationalStatus: savedWallet?.wallet_status || 'ACTIVE'
-        });
-
-        alert(response.message || 'Ministry wallet created successfully.');
-      },
-      error: (error) => {
-        this.isWalletCreating = false;
-
-        console.error('Create ministry wallet failed:', error);
-
-        const message =
-          error?.error?.message ||
-          'Failed to create wallet. Make sure the ministry account is already saved.';
-
-        alert(message);
-      }
-    });
-  }
-
-  saveDraft(): void {
-    this.isDraftSaving = true;
-
-    const draftPayload = {
-      draftStatus: 'DRAFT',
-      data: this.ministryAccountForm.getRawValue()
-    };
-
-    console.log('Sending Save Ministry Draft Payload:', draftPayload);
-
-    this.ministryApi.saveDraft(draftPayload).subscribe({
-      next: (response) => {
-        this.isDraftSaving = false;
-        alert(response.message || 'Draft saved successfully.');
-      },
-      error: (error) => {
-        this.isDraftSaving = false;
-
-        console.error('Save ministry draft failed:', error);
-
-        const message =
-          error?.error?.message ||
-          'Failed to save draft. Please check backend logs.';
-
-        alert(message);
-      }
-    });
-  }
-
-  resetForm(): void {
-    this.ministryAccountForm.reset({
-      country: 'LB',
-      governorate: '',
-      walletCurrency: 'LBP',
-      walletInitialBalance: 0,
-      walletType: 'MINISTRY_WALLET',
-      walletStatus: 'PENDING',
-      walletOperationalStatus: 'ACTIVE',
-      institutionStatus: 'PENDING_APPROVAL',
-      loginUsername: '',
-      password: '',
-      confirmPassword: ''
-    });
-
-    this.lastCreatedMinistryId = null;
-    this.lastCreatedMinistryReferenceId = null;
-    this.lastCreatedWalletAddress = null;
-
-    this.createdLoginUsername = null;
-    this.createdTemporaryPassword = null;
-    this.createdWalletAddress = null;
-    this.createdWalletCurrency = null;
-    this.createdWalletBalance = null;
-
-    this.loadGovernorates('LB');
-  }
-
-  private buildPayload(): CreateMinistryAccountPayload {
-    const raw = this.ministryAccountForm.getRawValue();
-
-    const selectedCountry = this.countries.find(
-      (country) => country.countryCode === raw.country
-    );
-
-    const selectedGovernorate = this.governorates.find(
-      (governorate) => governorate.governorateCode === raw.governorate
-    );
+  private buildMinistryPayload(): any {
+    const formValue = this.ministryAccountForm.getRawValue();
 
     return {
       ministry: {
-        ministryId: raw.ministryId,
-        ministryCode: raw.ministryCode,
-        ministryName: raw.ministryName,
-        arabicName: raw.arabicName,
-        ministryType: raw.ministryType,
-        parentMinistry: raw.parentMinistry || null,
-        ministerName: raw.ministerName,
-        contactPerson: raw.contactPerson,
-        contactEmail: raw.contactEmail,
-        contactMobile: raw.contactMobile,
-        address: raw.address,
-
-        countryCode: raw.country,
-        countryId: selectedCountry?.countryId || null,
-        countryName: selectedCountry?.countryName || null,
-
-        governorateCode: raw.governorate,
-        governorateId: selectedGovernorate?.governorateId || null,
-        governorateName: selectedGovernorate?.governorateName || null,
-        governorateNameAr: selectedGovernorate?.governorateNameAr || null,
-
-        website: raw.website || null,
-        walletStatus: raw.walletStatus,
-        institutionStatus: raw.institutionStatus,
-
-        loginUsername: raw.loginUsername || raw.ministryCode,
-        password: raw.password
+        ministryId: formValue.ministryId,
+        ministryCode: formValue.ministryCode,
+        ministryName: formValue.ministryName,
+        arabicName: formValue.arabicName,
+        ministryType: formValue.ministryType,
+        parentMinistry: formValue.parentMinistry,
+        ministerName: formValue.ministerName,
+        contactPerson: formValue.contactPerson,
+        contactEmail: formValue.contactEmail,
+        contactMobile: formValue.contactMobile,
+        country: formValue.country,
+        governorate: formValue.governorate,
+        address: formValue.address,
       },
       wallet: {
-        walletAddress: raw.walletAddress || null,
-        walletCurrency: raw.walletCurrency,
-        walletInitialBalance: Number(raw.walletInitialBalance || 0),
-        walletType: raw.walletType,
-        walletStatus: raw.walletOperationalStatus
+        walletAddress: formValue.walletAddress,
+        walletCurrency: formValue.walletCurrency,
+        walletStatus: formValue.walletStatus,
       },
       blockchain: {
-        sourceSystem: 'GOVERNMENT_BLOCKCHAIN_SERVICES_PLATFORM',
-        module: 'CREATE_MINISTRY_ACCOUNT',
-        ledgerAction: 'CREATE_MINISTRY_ACCOUNT_AND_WALLET',
-        preparedForFabricSubmission: true
-      }
+        blockchainNetwork: formValue.blockchainNetwork,
+        blockchainChannel: formValue.blockchainChannel,
+        chaincodeName: formValue.chaincodeName,
+        blockchainStatus: formValue.blockchainStatus,
+        blockchainProofHash: formValue.blockchainProofHash,
+      },
     };
+  }
+
+  private validateCsvRow(row: CsvMinistryRow): string[] {
+    const errors: string[] = [];
+
+    if (!row.ministryId) errors.push('Ministry ID is required');
+    if (!row.ministryCode) errors.push('Ministry Code is required');
+    if (!row.ministryName) errors.push('Ministry Name is required');
+    if (!row.arabicName) errors.push('Arabic Name is required');
+    if (!row.ministryType) errors.push('Ministry Type is required');
+    if (!row.ministerName) errors.push('Minister Name is required');
+    if (!row.contactPerson) errors.push('Contact Person is required');
+    if (!row.contactEmail) errors.push('Contact Email is required');
+    if (!row.contactMobile) errors.push('Contact Mobile is required');
+    if (!row.country) errors.push('Country is required');
+    if (!row.governorate) errors.push('Governorate is required');
+    if (!row.address) errors.push('Address is required');
+
+    if (row.contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.contactEmail)) {
+      errors.push('Invalid email format');
+    }
+
+    if (row.walletCurrency && !this.walletCurrencies.includes(row.walletCurrency)) {
+      errors.push(`Invalid wallet currency: ${row.walletCurrency}`);
+    }
+
+    if (row.walletStatus && !this.walletStatuses.includes(row.walletStatus)) {
+      errors.push(`Invalid wallet status: ${row.walletStatus}`);
+    }
+
+    if (row.blockchainStatus && !this.blockchainStatuses.includes(row.blockchainStatus)) {
+      errors.push(`Invalid blockchain status: ${row.blockchainStatus}`);
+    }
+
+    return errors;
+  }
+
+  private splitCsvLine(line: string): string[] {
+    const result: string[] = [];
+    let current = '';
+    let insideQuotes = false;
+
+    for (let index = 0; index < line.length; index++) {
+      const char = line[index];
+      const nextChar = line[index + 1];
+
+      if (char === '"' && insideQuotes && nextChar === '"') {
+        current += '"';
+        index++;
+      } else if (char === '"') {
+        insideQuotes = !insideQuotes;
+      } else if (char === ',' && !insideQuotes) {
+        result.push(current);
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+
+    result.push(current);
+
+    return result;
   }
 }

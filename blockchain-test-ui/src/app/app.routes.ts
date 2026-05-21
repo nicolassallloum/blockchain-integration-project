@@ -33,7 +33,7 @@ export const routes: Routes = [
     path: 'government-blockchain/create-ministry-account',
     loadComponent: () =>
       import('./pages/government-blockchain/create-ministry-account/create-ministry-account.component')
-        .then(m => m.CreateMinistryAccountComponent)
+        .then((m) => m.CreateMinistryAccountComponent),
   },
   {
     path: 'digital-kyc/dashboard',
