@@ -1,0 +1,185 @@
+<div class="government-services-page">
+  <div class="page-header">
+    <div>
+      <p class="breadcrumb">Government Blockchain / Services Catalog</p>
+      <h1>Government Services</h1>
+      <p class="subtitle">
+        Manage government service definitions, fees, required documents, digital stamp rules,
+        and service availability.
+      </p>
+    </div>
+
+    <button class="primary-btn" type="button" (click)="createService()">
+      + Create Service
+    </button>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <span>Total Services</span>
+      <strong>{{ totalServices }}</strong>
+      <small>Catalog records</small>
+    </div>
+
+    <div class="kpi-card active">
+      <span>Active Services</span>
+      <strong>{{ activeServices }}</strong>
+      <small>Available for residents</small>
+    </div>
+
+    <div class="kpi-card inactive">
+      <span>Inactive Services</span>
+      <strong>{{ inactiveServices }}</strong>
+      <small>Currently disabled</small>
+    </div>
+
+    <div class="kpi-card draft">
+      <span>Draft Services</span>
+      <strong>{{ draftServices }}</strong>
+      <small>Pending configuration</small>
+    </div>
+  </div>
+
+  <div class="filters-card">
+    <div class="filters-header">
+      <h2>Search & Filters</h2>
+      <button class="secondary-btn" type="button" (click)="clearFilters()">
+        Clear Filters
+      </button>
+    </div>
+
+    <div class="filters-grid">
+      <div class="form-group">
+        <label>Search</label>
+        <input
+          type="text"
+          placeholder="Search by ID, code, service name, ministry..."
+          [(ngModel)]="searchText"
+        />
+      </div>
+
+      <div class="form-group">
+        <label>Ministry</label>
+        <select [(ngModel)]="selectedMinistry">
+          <option value="">All Ministries</option>
+          <option value="Ministry of Finance">Ministry of Finance</option>
+          <option value="Ministry of Interior">Ministry of Interior</option>
+          <option value="Ministry of Public Health">Ministry of Public Health</option>
+          <option value="Ministry of Transport">Ministry of Transport</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Service Category</label>
+        <select [(ngModel)]="selectedCategory">
+          <option value="">All Categories</option>
+          <option value="Finance">Finance</option>
+          <option value="Civil Affairs">Civil Affairs</option>
+          <option value="Health">Health</option>
+          <option value="Transport">Transport</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Service Status</label>
+        <select [(ngModel)]="selectedStatus">
+          <option value="">All Statuses</option>
+          <option value="Active">Active</option>
+          <option value="Inactive">Inactive</option>
+          <option value="Draft">Draft</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <div class="table-header">
+      <div>
+        <h2>Services Catalog</h2>
+        <p>{{ filteredServices.length }} records found</p>
+      </div>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Service ID</th>
+            <th>Service Code</th>
+            <th>Service Name</th>
+            <th>Arabic Name</th>
+            <th>Ministry</th>
+            <th>Administration</th>
+            <th>Category</th>
+            <th>Fee Amount</th>
+            <th>Required Documents</th>
+            <th>Digital Stamp</th>
+            <th>Processing Time</th>
+            <th>Status</th>
+            <th class="actions-col">Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let service of filteredServices">
+            <td class="strong">{{ service.serviceId }}</td>
+            <td>{{ service.serviceCode }}</td>
+            <td>{{ service.serviceName }}</td>
+            <td class="arabic">{{ service.arabicName }}</td>
+            <td>{{ service.ministry }}</td>
+            <td>{{ service.administration }}</td>
+            <td>{{ service.serviceCategory }}</td>
+            <td>{{ service.feeAmount | number }} {{ service.currency }}</td>
+            <td class="documents-cell">{{ service.requiredDocuments }}</td>
+            <td>
+              <span class="stamp-badge" [ngClass]="getStampClass(service.digitalStampRequired)">
+                {{ service.digitalStampRequired }}
+              </span>
+            </td>
+            <td>{{ service.processingTime }}</td>
+            <td>
+              <span class="status-badge" [ngClass]="getStatusClass(service.serviceStatus)">
+                {{ service.serviceStatus }}
+              </span>
+            </td>
+            <td>
+              <div class="actions">
+                <button type="button" class="action-btn view" (click)="viewTransactions(service)">
+                  Transactions
+                </button>
+
+                <button type="button" class="action-btn edit" (click)="editService(service)">
+                  Edit
+                </button>
+
+                <button
+                  *ngIf="service.serviceStatus !== 'Active'"
+                  type="button"
+                  class="action-btn activate"
+                  (click)="activateService(service)"
+                >
+                  Activate
+                </button>
+
+                <button
+                  *ngIf="service.serviceStatus === 'Active'"
+                  type="button"
+                  class="action-btn deactivate"
+                  (click)="deactivateService(service)"
+                >
+                  Deactivate
+                </button>
+              </div>
+            </td>
+          </tr>
+
+          <tr *ngIf="filteredServices.length === 0">
+            <td colspan="13" class="empty-state">
+              No government services found for the selected filters.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

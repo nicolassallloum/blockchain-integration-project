@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { BlockchainKycComponent } from './pages/blockchain-kyc/blockchain-kyc.component';
 import { DashboardComponent } from './features/dashboard/dashboard.component';
 import { GovernmentBlockchainDashboardComponent } from './pages/government-blockchain/government-blockchain-dashboard/government-blockchain-dashboard.component';
+import { GovernmentServicesComponent } from './pages/government-blockchain/government-services/government-services.component';
 import { WalletCreate } from './pages/wallet-create/wallet-create';
 import { OrganizationWalletCreate } from './pages/organization-wallet-create/organization-wallet-create';
 import { WalletLogin } from './pages/wallet-login/wallet-login';
@@ -38,6 +39,10 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./government-blockchain/resident-wallets/resident-wallets.component')
         .then(m => m.ResidentWalletsComponent)
+  },
+  {
+    path: 'government-blockchain/government-services',
+    component: GovernmentServicesComponent,
   },
   {
     path: 'government-blockchain/create-ministry-account',
