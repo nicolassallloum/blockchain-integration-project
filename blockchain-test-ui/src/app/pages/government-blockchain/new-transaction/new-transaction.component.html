@@ -1,0 +1,287 @@
+<div class="transaction-page">
+  <div class="page-header">
+    <div>
+      <p class="eyebrow">Government Blockchain Services Platform</p>
+      <h1>New Government Transaction</h1>
+      <p class="subtitle">
+        Create and submit resident service transactions with wallet payment, digital stamp validation,
+        document upload, and blockchain hash preparation.
+      </p>
+    </div>
+
+    <div class="header-actions">
+      <button type="button" class="btn secondary" (click)="saveDraft()">
+        Save Draft
+      </button>
+
+      <button type="button" class="btn primary" (click)="submitTransaction()">
+        Submit Transaction
+      </button>
+    </div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <span>Total Fee</span>
+      <strong>
+        {{ transactionForm.get('feeAmount')?.value || 0 | number }}
+        {{ transactionForm.get('currency')?.value || 'LBP' }}
+      </strong>
+    </div>
+
+    <div class="kpi-card">
+      <span>Transaction Status</span>
+      <strong>
+        <span class="status-pill" [ngClass]="getStatusClass(transactionForm.get('transactionStatus')?.value)">
+          {{ transactionForm.get('transactionStatus')?.value }}
+        </span>
+      </strong>
+    </div>
+
+    <div class="kpi-card">
+      <span>Digital Stamp</span>
+      <strong>
+        {{ transactionForm.get('digitalStampRequired')?.value ? 'Required' : 'Not Required' }}
+      </strong>
+    </div>
+
+    <div class="kpi-card">
+      <span>Uploaded Documents</span>
+      <strong>{{ uploadedDocuments().length }}</strong>
+    </div>
+  </div>
+
+  <form [formGroup]="transactionForm" class="transaction-form">
+    <section class="form-card">
+      <div class="section-header">
+        <div>
+          <h2>1. Resident Information</h2>
+          <p>Select the resident account and verify wallet information.</p>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Resident ID</label>
+          <select formControlName="residentId" (change)="onResidentChange()">
+            <option value="">Select Resident</option>
+            <option *ngFor="let resident of residents" [value]="resident.residentId">
+              {{ resident.residentId }} — {{ resident.residentName }}
+            </option>
+          </select>
+          <small *ngIf="isInvalid('residentId')">Resident ID is required.</small>
+        </div>
+
+        <div class="form-group">
+          <label>Resident Name</label>
+          <input type="text" formControlName="residentName" placeholder="Resident Name" readonly />
+          <small *ngIf="isInvalid('residentName')">Resident name is required.</small>
+        </div>
+
+        <div class="form-group full">
+          <label>Wallet Address</label>
+          <input type="text" formControlName="walletAddress" placeholder="Wallet Address" readonly />
+          <small *ngIf="isInvalid('walletAddress')">Wallet address is required.</small>
+        </div>
+      </div>
+    </section>
+
+    <section class="form-card">
+      <div class="section-header">
+        <div>
+          <h2>2. Service Information</h2>
+          <p>Select the ministry and government service requested by the resident.</p>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Ministry</label>
+          <select formControlName="ministry" (change)="onMinistryChange()">
+            <option value="">Select Ministry</option>
+            <option *ngFor="let ministry of ministries" [value]="ministry.ministryCode">
+              {{ ministry.ministryName }}
+            </option>
+          </select>
+          <small *ngIf="isInvalid('ministry')">Ministry is required.</small>
+        </div>
+
+        <div class="form-group">
+          <label>Service</label>
+          <select formControlName="service" (change)="onServiceChange()">
+            <option value="">Select Service</option>
+            <option *ngFor="let service of filteredServices()" [value]="service.serviceCode">
+              {{ service.serviceName }}
+            </option>
+          </select>
+          <small *ngIf="isInvalid('service')">Service is required.</small>
+        </div>
+      </div>
+
+      <div class="service-summary" *ngIf="selectedServiceDetails() as service">
+        <div>
+          <span>Service Code</span>
+          <strong>{{ service.serviceCode }}</strong>
+        </div>
+
+        <div>
+          <span>Processing Time</span>
+          <strong>{{ service.processingTime }}</strong>
+        </div>
+
+        <div>
+          <span>Digital Stamp</span>
+          <strong>{{ service.digitalStampRequired ? 'Required' : 'Not Required' }}</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="form-card">
+      <div class="section-header">
+        <div>
+          <h2>3. Transaction Information</h2>
+          <p>Define the transaction reference, status, and operational notes.</p>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Transaction ID</label>
+          <input type="text" formControlName="transactionId" readonly />
+          <small *ngIf="isInvalid('transactionId')">Transaction ID is required.</small>
+        </div>
+
+        <div class="form-group">
+          <label>Transaction Status</label>
+          <select formControlName="transactionStatus">
+            <option *ngFor="let status of transactionStatuses" [value]="status">
+              {{ status }}
+            </option>
+          </select>
+          <small *ngIf="isInvalid('transactionStatus')">Transaction status is required.</small>
+        </div>
+
+        <div class="form-group full">
+          <label>Notes</label>
+          <textarea
+            rows="4"
+            formControlName="notes"
+            placeholder="Enter internal transaction notes or resident request details">
+          </textarea>
+        </div>
+      </div>
+    </section>
+
+    <section class="form-card">
+      <div class="section-header">
+        <div>
+          <h2>4. Payment Information</h2>
+          <p>Review service fees and select the transaction payment method.</p>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Fee Amount</label>
+          <input type="number" formControlName="feeAmount" placeholder="Fee Amount" />
+          <small *ngIf="isInvalid('feeAmount')">Valid fee amount is required.</small>
+        </div>
+
+        <div class="form-group">
+          <label>Currency</label>
+          <select formControlName="currency">
+            <option value="LBP">LBP</option>
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+          </select>
+          <small *ngIf="isInvalid('currency')">Currency is required.</small>
+        </div>
+
+        <div class="form-group">
+          <label>Payment Method</label>
+          <select formControlName="paymentMethod">
+            <option value="">Select Payment Method</option>
+            <option *ngFor="let method of paymentMethods" [value]="method">
+              {{ method }}
+            </option>
+          </select>
+          <small *ngIf="isInvalid('paymentMethod')">Payment method is required.</small>
+        </div>
+
+        <div class="form-group checkbox-group">
+          <label class="checkbox-label">
+            <input type="checkbox" formControlName="digitalStampRequired" />
+            <span>Digital Stamp Required</span>
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <section class="form-card">
+      <div class="section-header">
+        <div>
+          <h2>5. Document Upload</h2>
+          <p>Upload transaction documents and generate blockchain-ready document hashes.</p>
+        </div>
+
+        <div class="section-actions">
+          <button type="button" class="btn secondary" (click)="uploadDocuments()">
+            Upload Documents
+          </button>
+
+          <button type="button" class="btn dark" (click)="generateHash()">
+            Generate Hash
+          </button>
+        </div>
+      </div>
+
+      <div class="documents-table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Document ID</th>
+              <th>File Name</th>
+              <th>Document Type</th>
+              <th>Size</th>
+              <th>Hash</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr *ngFor="let document of uploadedDocuments()">
+              <td>{{ document.id }}</td>
+              <td>{{ document.fileName }}</td>
+              <td>{{ document.documentType }}</td>
+              <td>{{ document.size }}</td>
+              <td class="hash-cell">{{ document.hash }}</td>
+              <td>
+                <span class="status-pill" [ngClass]="getDocumentStatusClass(document.status)">
+                  {{ document.status }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="bottom-actions">
+      <button type="button" class="btn secondary" (click)="saveDraft()">
+        Save Draft
+      </button>
+
+      <button type="button" class="btn dark" (click)="uploadDocuments()">
+        Upload Documents
+      </button>
+
+      <button type="button" class="btn dark" (click)="generateHash()">
+        Generate Hash
+      </button>
+
+      <button type="button" class="btn primary" (click)="submitTransaction()">
+        Submit Transaction
+      </button>
+    </div>
+  </form>
+</div>

@@ -16,6 +16,7 @@ import { BalanceQueryComponent } from './features/transactions/balance-query/bal
 import { CreatePublicAdministrationAccountComponent } from './pages/government-blockchain/create-public-administration-account/create-public-administration-account.component';
 import { FabricTestComponent } from './features/fabric-test/fabric-test.component';
 import { CreateResidentAccountComponent } from './pages/government-blockchain/create-resident-account/create-resident-account.component';
+import { NewTransactionComponent } from './pages/government-blockchain/new-transaction/new-transaction.component';
 export const routes: Routes = [
   {
     path: '',
@@ -33,6 +34,10 @@ export const routes: Routes = [
   {
     path: 'government-blockchain/create-public-administration-account',
     component: CreatePublicAdministrationAccountComponent
+  },
+  {
+    path: 'government-blockchain/new-transaction',
+    component: NewTransactionComponent
   },
   {
     path: 'government-blockchain/resident-wallets',
