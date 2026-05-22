@@ -13,7 +13,10 @@ interface LookupItem {
   id: string;
   name: string;
 }
-
+import {
+  GovernmentBlockchainResidentApiService,
+  CreateResidentPayload,
+} from '../../../services/government-blockchain-resident-api.service';
 interface ResidentDraft {
   residentId: string;
   firstName: string;
@@ -163,7 +166,10 @@ export class CreateResidentAccountComponent implements OnInit {
     return Math.round((filledControls.length / controls.length) * 100);
   });
 
-  constructor(private fb: FormBuilder) {}
+  constructor(
+    private fb: FormBuilder,
+    private residentApi: GovernmentBlockchainResidentApiService
+  ) {}
 
   ngOnInit(): void {
     this.buildForm();
@@ -283,25 +289,33 @@ export class CreateResidentAccountComponent implements OnInit {
 
     const payload = this.preparePayload();
 
-    console.log('[Create Resident] Payload prepared for API:', payload);
+    this.residentApi.createResident(payload).subscribe({
+      next: (response) => {
+        this.isSubmitting.set(false);
 
-    /**
-     * API Integration Later:
-     *
-     * this.residentApi.createResident(payload).subscribe({
-     *   next: (response) => {},
-     *   error: (error) => {},
-     * });
-     */
-
-    setTimeout(() => {
-      this.isSubmitting.set(false);
-      this.successMessage.set('Resident account created successfully using static sample flow.');
-    }, 700);
+        if (response?.success) {
+          this.successMessage.set('Resident account saved successfully to PostgreSQL.');
+        } else {
+          this.errorMessage.set(response?.message || 'Resident save failed.');
+        }
+      },
+      error: (error) => {
+        this.isSubmitting.set(false);
+        this.errorMessage.set(error?.error?.message || 'Resident save failed.');
+        console.error('[Create Resident API Error]', error);
+      },
+    });
   }
 
   createWallet(): void {
     this.clearMessages();
+
+    const residentId = this.residentForm.get('residentId')?.value;
+
+    if (!residentId) {
+      this.errorMessage.set('Resident ID is required before wallet creation.');
+      return;
+    }
 
     const requiredFields = [
       'residentId',
@@ -325,33 +339,59 @@ export class CreateResidentAccountComponent implements OnInit {
 
     this.isWalletCreating.set(true);
 
-    const walletAddress = this.generateWalletAddress();
+    const payload = {
+      walletCurrency: this.residentForm.get('walletCurrency')?.value || 'LBP',
+    };
 
-    setTimeout(() => {
-      this.residentForm.patchValue({
-        walletAddress,
-        walletStatus: 'Active',
-      });
+    this.residentApi.createWallet(residentId, payload).subscribe({
+      next: (response) => {
+        this.isWalletCreating.set(false);
 
-      this.isWalletCreating.set(false);
-      this.successMessage.set('Blockchain wallet created successfully for this resident.');
-    }, 700);
+        if (response?.success) {
+          const walletAddress =
+            response?.data?.wallet?.wallet_address ||
+            response?.data?.resident?.wallet_address;
+
+          this.residentForm.patchValue({
+            walletAddress,
+            walletStatus: 'Active',
+          });
+
+          this.successMessage.set('Resident wallet saved successfully to PostgreSQL.');
+        } else {
+          this.errorMessage.set(response?.message || 'Wallet creation failed.');
+        }
+      },
+      error: (error) => {
+        this.isWalletCreating.set(false);
+        this.errorMessage.set(error?.error?.message || 'Wallet creation failed.');
+        console.error('[Create Wallet API Error]', error);
+      },
+    });
   }
 
   saveDraft(): void {
     this.clearMessages();
     this.isDraftSaving.set(true);
 
-    const draftPayload = this.preparePayload();
+    const payload = this.preparePayload();
 
-    console.log('[Save Draft] Draft prepared for local/API persistence:', draftPayload);
+    this.residentApi.saveDraft(payload).subscribe({
+      next: (response) => {
+        this.isDraftSaving.set(false);
 
-    setTimeout(() => {
-      localStorage.setItem('resident-account-draft', JSON.stringify(draftPayload));
-      this.residentForm.patchValue({ kycStatus: 'Draft' });
-      this.isDraftSaving.set(false);
-      this.successMessage.set('Resident registration draft saved successfully.');
-    }, 500);
+        if (response?.success) {
+          this.successMessage.set('Resident draft saved successfully to PostgreSQL.');
+        } else {
+          this.errorMessage.set(response?.message || 'Draft save failed.');
+        }
+      },
+      error: (error) => {
+        this.isDraftSaving.set(false);
+        this.errorMessage.set(error?.error?.message || 'Draft save failed.');
+        console.error('[Save Draft API Error]', error);
+      },
+    });
   }
 
   submitKyc(): void {
@@ -364,26 +404,40 @@ export class CreateResidentAccountComponent implements OnInit {
       return;
     }
 
-    if (!this.residentForm.get('walletAddress')?.value) {
-      this.errorMessage.set('Please create a wallet before submitting KYC.');
+    const residentId = this.residentForm.get('residentId')?.value;
+
+    if (!residentId) {
+      this.errorMessage.set('Resident ID is required before submitting KYC.');
       return;
     }
 
     this.isKycSubmitting.set(true);
 
     const payload = {
-      ...this.preparePayload(),
       kycStatus: 'Pending Review',
-      submittedAt: new Date().toISOString(),
+      riskCategory: this.residentForm.get('riskCategory')?.value || 'Low',
     };
 
-    console.log('[Submit KYC] Payload prepared for API:', payload);
+    this.residentApi.submitKyc(residentId, payload).subscribe({
+      next: (response) => {
+        this.isKycSubmitting.set(false);
 
-    setTimeout(() => {
-      this.residentForm.patchValue({ kycStatus: 'Pending Review' });
-      this.isKycSubmitting.set(false);
-      this.successMessage.set('Resident KYC submitted successfully for compliance review.');
-    }, 800);
+        if (response?.success) {
+          this.residentForm.patchValue({
+            kycStatus: 'Pending Review',
+          });
+
+          this.successMessage.set('Resident KYC submitted successfully to PostgreSQL.');
+        } else {
+          this.errorMessage.set(response?.message || 'KYC submission failed.');
+        }
+      },
+      error: (error) => {
+        this.isKycSubmitting.set(false);
+        this.errorMessage.set(error?.error?.message || 'KYC submission failed.');
+        console.error('[Submit KYC API Error]', error);
+      },
+    });
   }
 
   resetForm(): void {

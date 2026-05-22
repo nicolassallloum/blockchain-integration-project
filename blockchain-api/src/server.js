@@ -263,7 +263,7 @@ const referenceRoutes = safeRoute('./routes/reference.routes', 'reference.routes
 const organizationRoutes = safeRoute('./routes/organization.routes', 'organization.routes');
 const projectViewRoutes = safeRoute('./routes/project-view.routes', 'project-view.routes');
 const dashboardRoutes = safeRoute('./routes/dashboard.routes', 'dashboard.routes');
-
+const residentRoutes = require('./routes/resident.routes');
 /**
  * Optional root API routes aggregator.
  * Keep it optional because some versions of the project may not have src/routes/index.js.
@@ -355,10 +355,8 @@ if (governmentBlockchainReferenceRoutes) {
   );
 }
 if (governmentMinistryRoutes) {
-  app.use(
-    '/api/v1/government-blockchain/ministries',
-    governmentMinistryRoutes
-  );
+  app.use('/api/v1/government-blockchain/residents', residentRoutes);
+    console.log('[ROUTES] resident route loaded');
 }
 
 
@@ -370,6 +368,12 @@ if (governmentMinistryRoutes) {
 if (apiRoutes) {
   app.use('/api/v1', apiRoutes);
 }
+if (residentRoutes) {
+  app.use('/api/v1', residentRoutes);
+}
+
+
+residentRoutes
 if (routes) {
   app.use('/api/v1', routes);
 }
