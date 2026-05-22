@@ -34,6 +34,12 @@ export const routes: Routes = [
     component: CreatePublicAdministrationAccountComponent
   },
   {
+    path: 'government-blockchain/resident-wallets',
+    loadComponent: () =>
+      import('./government-blockchain/resident-wallets/resident-wallets.component')
+        .then(m => m.ResidentWalletsComponent)
+  },
+  {
     path: 'government-blockchain/create-ministry-account',
     loadComponent: () =>
       import('./pages/government-blockchain/create-ministry-account/create-ministry-account.component')

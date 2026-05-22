@@ -1,0 +1,151 @@
+<div class="resident-wallets-page">
+  <section class="page-header">
+    <div>
+      <p class="eyebrow">Government Blockchain Services Platform</p>
+      <h1>Resident Wallets</h1>
+      <p class="subtitle">
+        Manage resident blockchain wallets, wallet status, balances, transactions, and blockchain proof records.
+      </p>
+    </div>
+
+    <div class="header-actions">
+      <button class="btn btn-secondary" type="button">Export</button>
+      <button class="btn btn-primary" type="button">Refresh Wallets</button>
+    </div>
+  </section>
+
+  <section class="kpi-grid">
+    <div class="kpi-card">
+      <span>Total Wallets</span>
+      <strong>{{ totalWallets }}</strong>
+    </div>
+
+    <div class="kpi-card">
+      <span>Active Wallets</span>
+      <strong>{{ activeWallets }}</strong>
+    </div>
+
+    <div class="kpi-card">
+      <span>Suspended Wallets</span>
+      <strong>{{ suspendedWallets }}</strong>
+    </div>
+
+    <div class="kpi-card">
+      <span>Blocked Wallets</span>
+      <strong>{{ blockedWallets }}</strong>
+    </div>
+
+    <div class="kpi-card">
+      <span>Blockchain Synced</span>
+      <strong>{{ syncedWallets }}</strong>
+    </div>
+  </section>
+
+  <section class="filters-card">
+    <div class="section-title">
+      <div>
+        <h2>Wallet Filters</h2>
+        <p>Filter resident wallets by wallet address, resident identity, wallet status, and blockchain status.</p>
+      </div>
+
+      <button class="btn btn-light" type="button" (click)="resetFilters()">Reset Filters</button>
+    </div>
+
+    <div class="filters-grid">
+      <div class="form-group">
+        <label>Wallet Address</label>
+        <input type="text" placeholder="Search wallet address" [(ngModel)]="filters.walletAddress" />
+      </div>
+
+      <div class="form-group">
+        <label>Resident ID</label>
+        <input type="text" placeholder="Search resident ID" [(ngModel)]="filters.residentId" />
+      </div>
+
+      <div class="form-group">
+        <label>Resident Name</label>
+        <input type="text" placeholder="Search resident name" [(ngModel)]="filters.residentName" />
+      </div>
+
+      <div class="form-group">
+        <label>Wallet Status</label>
+        <select [(ngModel)]="filters.walletStatus">
+          <option value="">All Wallet Statuses</option>
+          <option *ngFor="let status of walletStatuses" [value]="status">{{ status }}</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Blockchain Status</label>
+        <select [(ngModel)]="filters.blockchainStatus">
+          <option value="">All Blockchain Statuses</option>
+          <option *ngFor="let status of blockchainStatuses" [value]="status">{{ status }}</option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <section class="table-card">
+    <div class="section-title">
+      <div>
+        <h2>Resident Wallet List</h2>
+        <p>Showing {{ filteredWallets.length }} of {{ wallets.length }} wallets.</p>
+      </div>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Wallet Address</th>
+            <th>Resident ID</th>
+            <th>Resident Name</th>
+            <th>Currency</th>
+            <th>Current Balance</th>
+            <th>Wallet Status</th>
+            <th>Blockchain Status</th>
+            <th>Created At</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let wallet of filteredWallets">
+            <td class="wallet-address">{{ wallet.walletAddress }}</td>
+            <td>{{ wallet.residentId }}</td>
+            <td><strong>{{ wallet.residentName }}</strong></td>
+            <td>{{ wallet.currency }}</td>
+            <td>{{ formatBalance(wallet.currentBalance) }}</td>
+
+            <td>
+              <span class="status-badge" [ngClass]="getWalletStatusClass(wallet.walletStatus)">
+                {{ wallet.walletStatus }}
+              </span>
+            </td>
+
+            <td>
+              <span class="status-badge" [ngClass]="getBlockchainStatusClass(wallet.blockchainStatus)">
+                {{ wallet.blockchainStatus }}
+              </span>
+            </td>
+
+            <td>{{ wallet.createdAt }}</td>
+
+            <td class="actions-cell">
+              <button class="action-btn view" type="button" (click)="viewWallet(wallet)">View Wallet</button>
+              <button class="action-btn activate" type="button" (click)="activateWallet(wallet)">Activate</button>
+              <button class="action-btn suspend" type="button" (click)="suspendWallet(wallet)">Suspend</button>
+              <button class="action-btn block" type="button" (click)="blockWallet(wallet)">Block</button>
+              <button class="action-btn transactions" type="button" (click)="viewTransactions(wallet)">Transactions</button>
+              <button class="action-btn proof" type="button" (click)="viewBlockchainProof(wallet)">Proof</button>
+            </td>
+          </tr>
+
+          <tr *ngIf="filteredWallets.length === 0">
+            <td colspan="9" class="empty-state">No resident wallets found.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
