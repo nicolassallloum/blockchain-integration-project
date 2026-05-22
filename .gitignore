@@ -24,3 +24,7 @@ logs/
 *.bak.*
 coverage/
 .DS_Store
+
+# Generated PostgreSQL export files
+blockchain-api/postgres_export_*/
+*.csv
