@@ -8,9 +8,19 @@
       </p>
     </div>
 
-    <button class="primary-btn" type="button" (click)="refresh()">
-      Refresh Data
-    </button>
+    <div class="header-actions">
+      <button class="export-btn" type="button" (click)="exportCsv()">
+        Export CSV
+      </button>
+
+      <button class="export-btn" type="button" (click)="exportJson()">
+        Export JSON
+      </button>
+
+      <button class="primary-btn" type="button" (click)="refresh()">
+        Refresh Data
+      </button>
+    </div>
   </div>
 
   <div class="kpi-grid">
@@ -43,6 +53,32 @@
     </div>
   </div>
 
+  <div class="summary-grid">
+    <div class="summary-card wallet-card">
+      <span>Wallet Records</span>
+      <strong>{{ getWalletRecordsCount() }}</strong>
+      <small>Total wallet documents on ledger</small>
+    </div>
+
+    <div class="summary-card transaction-card">
+      <span>Transaction Records</span>
+      <strong>{{ getTransactionRecordsCount() }}</strong>
+      <small>Total transaction documents on ledger</small>
+    </div>
+
+    <div class="summary-card active-card">
+      <span>Active Records</span>
+      <strong>{{ getActiveRecordsCount() }}</strong>
+      <small>Total active ledger documents</small>
+    </div>
+
+    <div class="summary-card success-card">
+      <span>Successful Transactions</span>
+      <strong>{{ getSuccessfulTransactionsCount() }}</strong>
+      <small>Total successful transaction records</small>
+    </div>
+  </div>
+
   <div class="database-summary-card">
     <div class="section-title">
       <div>
@@ -67,6 +103,64 @@
   </div>
 
   <div class="main-card">
+    <div class="quick-filter-section">
+      <div>
+        <h2>Quick Filters</h2>
+        <p>Use these buttons for fast demo and validation.</p>
+      </div>
+
+      <div class="quick-filter-buttons">
+        <button
+          type="button"
+          class="quick-filter-btn"
+          [class.active]="activeQuickFilter === 'ALL'"
+          (click)="applyQuickFilter('ALL')"
+        >
+          All Records
+        </button>
+
+        <button
+          type="button"
+          class="quick-filter-btn"
+          [class.active]="activeQuickFilter === 'WALLETS'"
+          (click)="applyQuickFilter('WALLETS')"
+        >
+          Wallets
+          <span>{{ getWalletRecordsCount() }}</span>
+        </button>
+
+        <button
+          type="button"
+          class="quick-filter-btn"
+          [class.active]="activeQuickFilter === 'TRANSACTIONS'"
+          (click)="applyQuickFilter('TRANSACTIONS')"
+        >
+          Transactions
+          <span>{{ getTransactionRecordsCount() }}</span>
+        </button>
+
+        <button
+          type="button"
+          class="quick-filter-btn"
+          [class.active]="activeQuickFilter === 'ORGANIZATIONS'"
+          (click)="applyQuickFilter('ORGANIZATIONS')"
+        >
+          Organizations
+          <span>{{ getOrganizationRecordsCount() }}</span>
+        </button>
+
+        <button
+          type="button"
+          class="quick-filter-btn danger"
+          [class.active]="activeQuickFilter === 'UNKNOWN'"
+          (click)="applyQuickFilter('UNKNOWN')"
+        >
+          Unknown Records
+          <span>{{ getUnknownRecordsCount() }}</span>
+        </button>
+      </div>
+    </div>
+
     <div class="filters-row">
       <div class="field">
         <label>Database</label>
@@ -190,6 +284,16 @@
         <p>
           Showing {{ returned }} records from {{ totalRows }} total records.
         </p>
+      </div>
+
+      <div class="table-export-actions">
+        <button class="export-btn light" type="button" (click)="exportCsv()">
+          Export Current Page CSV
+        </button>
+
+        <button class="export-btn light" type="button" (click)="exportJson()">
+          Export Current Page JSON
+        </button>
       </div>
     </div>
 

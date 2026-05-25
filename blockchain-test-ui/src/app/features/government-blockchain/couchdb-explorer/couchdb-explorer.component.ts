@@ -40,8 +40,10 @@ export class CouchDbExplorerComponent implements OnInit {
   documentType = '';
   status = '';
 
-  limit = 50;
+  limit = 25;
   skip = 0;
+
+  activeQuickFilter = 'ALL';
 
   constructor(private couchDbService: CouchDbExplorerService) {}
 
@@ -79,7 +81,12 @@ export class CouchDbExplorerComponent implements OnInit {
         this.databases = response.data || [];
 
         if (this.databases.length > 0 && !this.selectedDatabase) {
-          this.selectedDatabase = this.databases[0];
+          const mainLedgerDb = this.databases.find((db) =>
+            db.includes('kyc-wallet-chaincode-js')
+          );
+
+          this.selectedDatabase = mainLedgerDb || this.databases[0];
+
           this.loadRecords();
           this.loadCounts();
         }
@@ -112,6 +119,10 @@ export class CouchDbExplorerComponent implements OnInit {
     this.selectedRecord = null;
     this.totalRows = 0;
     this.returned = 0;
+    this.activeQuickFilter = 'ALL';
+    this.searchText = '';
+    this.documentType = '';
+    this.status = '';
 
     this.loadRecords();
     this.loadCounts();
@@ -170,6 +181,7 @@ export class CouchDbExplorerComponent implements OnInit {
 
   applyFilters(): void {
     this.skip = 0;
+    this.activeQuickFilter = 'CUSTOM';
     this.loadRecords();
   }
 
@@ -178,6 +190,38 @@ export class CouchDbExplorerComponent implements OnInit {
     this.documentType = '';
     this.status = '';
     this.skip = 0;
+    this.activeQuickFilter = 'ALL';
+    this.loadRecords();
+  }
+
+  applyQuickFilter(filter: string): void {
+    this.activeQuickFilter = filter;
+    this.searchText = '';
+    this.documentType = '';
+    this.status = '';
+    this.skip = 0;
+
+    if (filter === 'ALL') {
+      this.documentType = '';
+      this.status = '';
+    }
+
+    if (filter === 'WALLETS') {
+      this.documentType = 'wallet';
+    }
+
+    if (filter === 'TRANSACTIONS') {
+      this.documentType = 'transaction';
+    }
+
+    if (filter === 'ORGANIZATIONS') {
+      this.documentType = 'organization';
+    }
+
+    if (filter === 'UNKNOWN') {
+      this.documentType = 'UNKNOWN';
+    }
+
     this.loadRecords();
   }
 
@@ -223,7 +267,7 @@ export class CouchDbExplorerComponent implements OnInit {
       record?.recordType ||
       record?.documentType ||
       record?.assetType ||
-      'Not Defined'
+      'UNKNOWN'
     );
   }
 
@@ -236,7 +280,7 @@ export class CouchDbExplorerComponent implements OnInit {
       record?.walletStatus ||
       record?.institutionStatus ||
       record?.approvalStatus ||
-      'Not Defined'
+      'UNKNOWN'
     );
   }
 
@@ -274,11 +318,159 @@ export class CouchDbExplorerComponent implements OnInit {
     return found?.documentCount || 0;
   }
 
+  getDocTypeCount(type: string): number {
+    return this.counts?.byDocType?.[type] || 0;
+  }
+
+  getStatusCount(status: string): number {
+    return this.counts?.byStatus?.[status] || 0;
+  }
+
+  getWalletRecordsCount(): number {
+    return this.getDocTypeCount('wallet');
+  }
+
+  getTransactionRecordsCount(): number {
+    return this.getDocTypeCount('transaction');
+  }
+
+  getOrganizationRecordsCount(): number {
+    return this.getDocTypeCount('organization');
+  }
+
+  getUnknownRecordsCount(): number {
+    return this.getDocTypeCount('UNKNOWN');
+  }
+
+  getActiveRecordsCount(): number {
+    return this.getStatusCount('ACTIVE');
+  }
+
+  getSuccessfulTransactionsCount(): number {
+    return this.getStatusCount('SUCCESS');
+  }
+
   copyJson(): void {
     if (!this.selectedRecord) {
       return;
     }
 
     navigator.clipboard.writeText(this.getJson(this.selectedRecord));
+  }
+
+  exportJson(): void {
+    if (!this.records || this.records.length === 0) {
+      alert('No records available to export.');
+      return;
+    }
+
+    const exportPayload = {
+      database: this.selectedDatabase,
+      exportedAt: new Date().toISOString(),
+      totalRows: this.totalRows,
+      displayedRecords: this.records.length,
+      activeQuickFilter: this.activeQuickFilter,
+      filters: {
+        searchText: this.searchText,
+        documentType: this.documentType,
+        status: this.status,
+        limit: this.limit,
+        skip: this.skip,
+      },
+      records: this.records,
+    };
+
+    const jsonContent = JSON.stringify(exportPayload, null, 2);
+    const blob = new Blob([jsonContent], {
+      type: 'application/json;charset=utf-8;',
+    });
+
+    this.downloadFile(
+      blob,
+      `couchdb-export-${this.selectedDatabase}-${this.getExportTimestamp()}.json`
+    );
+  }
+
+  exportCsv(): void {
+    if (!this.records || this.records.length === 0) {
+      alert('No records available to export.');
+      return;
+    }
+
+    const headers = [
+      'Document ID',
+      'Document Type',
+      'Status',
+      'Created At',
+      'Revision',
+      'Transaction ID',
+      'Wallet Address',
+      'Customer ID',
+      'Organization ID',
+      'Amount',
+      'Currency',
+      'Transaction Type',
+    ];
+
+    const rows = this.records.map((record) => {
+      return [
+        this.getRecordId(record),
+        this.getRecordType(record),
+        this.getRecordStatus(record),
+        this.getCreatedAt(record),
+        this.getRevision(record),
+        record?.transactionId || '',
+        record?.walletAddress || record?.toWalletAddress || record?.fromWalletAddress || '',
+        record?.customerId || '',
+        record?.organizationId || '',
+        record?.amount ?? '',
+        record?.currency || '',
+        record?.transactionType || '',
+      ];
+    });
+
+    const csvContent = [
+      headers,
+      ...rows,
+    ]
+      .map((row) => row.map((value) => this.escapeCsvValue(value)).join(','))
+      .join('\n');
+
+    const blob = new Blob([csvContent], {
+      type: 'text/csv;charset=utf-8;',
+    });
+
+    this.downloadFile(
+      blob,
+      `couchdb-export-${this.selectedDatabase}-${this.getExportTimestamp()}.csv`
+    );
+  }
+
+  private escapeCsvValue(value: unknown): string {
+    if (value === null || value === undefined) {
+      return '';
+    }
+
+    const stringValue = String(value).replace(/"/g, '""');
+
+    return `"${stringValue}"`;
+  }
+
+  private downloadFile(blob: Blob, filename: string): void {
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    link.href = downloadUrl;
+    link.download = filename;
+    link.click();
+
+    window.URL.revokeObjectURL(downloadUrl);
+  }
+
+  private getExportTimestamp(): string {
+    return new Date()
+      .toISOString()
+      .replace(/:/g, '-')
+      .replace(/\./g, '-');
   }
 }
