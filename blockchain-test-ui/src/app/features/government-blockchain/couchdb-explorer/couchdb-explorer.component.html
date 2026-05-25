@@ -1,0 +1,298 @@
+<div class="couchdb-page">
+  <div class="page-header">
+    <div>
+      <p class="eyebrow">Government Blockchain Platform</p>
+      <h1>CouchDB Records Explorer</h1>
+      <p class="subtitle">
+        Retrieve CouchDB ledger records, inspect blockchain state data, and validate document counts.
+      </p>
+    </div>
+
+    <button class="primary-btn" type="button" (click)="refresh()">
+      Refresh Data
+    </button>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <span class="kpi-label">CouchDB Status</span>
+      <strong [class.online]="couchStatus" [class.offline]="!couchStatus">
+        {{ couchStatus ? 'ONLINE' : 'OFFLINE' }}
+      </strong>
+      <small>
+        {{ couchStatus?.version ? 'Version ' + couchStatus?.version : 'Connection status' }}
+      </small>
+    </div>
+
+    <div class="kpi-card">
+      <span class="kpi-label">Databases</span>
+      <strong>{{ databases.length }}</strong>
+      <small>Total available CouchDB databases</small>
+    </div>
+
+    <div class="kpi-card">
+      <span class="kpi-label">Selected Database Records</span>
+      <strong>{{ counts?.totalRecords || 0 }}</strong>
+      <small>Total records in selected database</small>
+    </div>
+
+    <div class="kpi-card">
+      <span class="kpi-label">Displayed Records</span>
+      <strong>{{ returned }}</strong>
+      <small>Records displayed in current page</small>
+    </div>
+  </div>
+
+  <div class="database-summary-card">
+    <div class="section-title">
+      <div>
+        <h2>CouchDB Database Summary</h2>
+        <p>Quick overview of all CouchDB databases and document counts.</p>
+      </div>
+    </div>
+
+    <div class="database-grid">
+      <button
+        class="database-card"
+        type="button"
+        *ngFor="let db of databases"
+        [class.selected]="db === selectedDatabase"
+        (click)="selectedDatabase = db; onDatabaseChange()"
+      >
+        <span>{{ db }}</span>
+        <strong>{{ getDatabaseDocumentCount(db) }}</strong>
+        <small>documents</small>
+      </button>
+    </div>
+  </div>
+
+  <div class="main-card">
+    <div class="filters-row">
+      <div class="field">
+        <label>Database</label>
+        <select [(ngModel)]="selectedDatabase" (change)="onDatabaseChange()">
+          <option value="">Select Database</option>
+          <option *ngFor="let db of databases" [value]="db">
+            {{ db }}
+          </option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Search</label>
+        <input
+          type="text"
+          [(ngModel)]="searchText"
+          placeholder="Search by document ID, wallet, resident, transaction..."
+        />
+      </div>
+
+      <div class="field">
+        <label>Document Type</label>
+        <input
+          type="text"
+          [(ngModel)]="documentType"
+          placeholder="Wallet, Transaction, Ministry..."
+        />
+      </div>
+
+      <div class="field">
+        <label>Status</label>
+        <input
+          type="text"
+          [(ngModel)]="status"
+          placeholder="ACTIVE, PENDING, APPROVED..."
+        />
+      </div>
+
+      <div class="field small-field">
+        <label>Limit</label>
+        <select [(ngModel)]="limit" (change)="applyFilters()">
+          <option [ngValue]="25">25</option>
+          <option [ngValue]="50">50</option>
+          <option [ngValue]="100">100</option>
+          <option [ngValue]="200">200</option>
+        </select>
+      </div>
+
+      <div class="filter-actions">
+        <button class="secondary-btn" type="button" (click)="applyFilters()">
+          Apply
+        </button>
+
+        <button class="ghost-btn" type="button" (click)="resetFilters()">
+          Reset
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="errorMessage" class="error-box">
+      {{ errorMessage }}
+    </div>
+
+    <div *ngIf="loading" class="loading-box">
+      Loading CouchDB records...
+    </div>
+
+    <div class="counts-section" *ngIf="counts">
+      <div class="count-panel">
+        <h3>Counts by Document Type</h3>
+
+        <div
+          class="count-row"
+          *ngFor="let key of getObjectKeys(counts.byDocType)"
+        >
+          <span>{{ key }}</span>
+          <strong>{{ counts.byDocType[key] }}</strong>
+        </div>
+
+        <div class="empty-count" *ngIf="getObjectKeys(counts.byDocType).length === 0">
+          No document type counts available.
+        </div>
+      </div>
+
+      <div class="count-panel">
+        <h3>Counts by Status</h3>
+
+        <div
+          class="count-row"
+          *ngFor="let key of getObjectKeys(counts.byStatus)"
+        >
+          <span>{{ key }}</span>
+          <strong>{{ counts.byStatus[key] }}</strong>
+        </div>
+
+        <div class="empty-count" *ngIf="getObjectKeys(counts.byStatus).length === 0">
+          No status counts available.
+        </div>
+      </div>
+
+      <div class="count-panel">
+        <h3>Counts by Created Date</h3>
+
+        <div
+          class="count-row"
+          *ngFor="let key of getObjectKeys(counts.byCreatedDate)"
+        >
+          <span>{{ key }}</span>
+          <strong>{{ counts.byCreatedDate[key] }}</strong>
+        </div>
+
+        <div class="empty-count" *ngIf="getObjectKeys(counts.byCreatedDate).length === 0">
+          No created date counts available.
+        </div>
+      </div>
+    </div>
+
+    <div class="table-header">
+      <div>
+        <h2>Ledger Documents</h2>
+        <p>
+          Showing {{ returned }} records from {{ totalRows }} total records.
+        </p>
+      </div>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Document ID</th>
+            <th>Document Type</th>
+            <th>Status</th>
+            <th>Created At</th>
+            <th>Revision</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let record of records">
+            <td class="mono id-cell">{{ getRecordId(record) }}</td>
+
+            <td>
+              <span class="badge type-badge">
+                {{ getRecordType(record) }}
+              </span>
+            </td>
+
+            <td>
+              <span class="badge status-badge">
+                {{ getRecordStatus(record) }}
+              </span>
+            </td>
+
+            <td>{{ getCreatedAt(record) }}</td>
+
+            <td class="mono rev-cell">
+              {{ getRevision(record) }}
+            </td>
+
+            <td>
+              <button
+                class="table-btn"
+                type="button"
+                (click)="viewRecord(record)"
+              >
+                View JSON
+              </button>
+            </td>
+          </tr>
+
+          <tr *ngIf="!loading && records.length === 0">
+            <td colspan="6" class="empty-state">
+              No CouchDB records found.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination-row">
+      <button
+        class="ghost-btn"
+        type="button"
+        (click)="previousPage()"
+        [disabled]="skip === 0"
+      >
+        Previous
+      </button>
+
+      <span>
+        Skip: {{ skip }} | Limit: {{ limit }} | Total: {{ totalRows }}
+      </span>
+
+      <button
+        class="ghost-btn"
+        type="button"
+        (click)="nextPage()"
+        [disabled]="skip + limit >= totalRows"
+      >
+        Next
+      </button>
+    </div>
+  </div>
+
+  <div class="json-modal" *ngIf="selectedRecord">
+    <div class="json-modal-content">
+      <div class="json-modal-header">
+        <div>
+          <h2>Record JSON Details</h2>
+          <p>{{ getRecordId(selectedRecord) }}</p>
+        </div>
+
+        <div class="modal-actions">
+          <button class="copy-btn" type="button" (click)="copyJson()">
+            Copy JSON
+          </button>
+
+          <button class="close-btn" type="button" (click)="closeRecord()">
+            ×
+          </button>
+        </div>
+      </div>
+
+      <pre>{{ getJson(selectedRecord) }}</pre>
+    </div>
+  </div>
+</div>

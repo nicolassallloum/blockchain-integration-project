@@ -92,13 +92,24 @@ const defaultAllowedOrigins = [
   'http://127.0.0.1:5173',
   'http://localhost:5173'
 ];
+const allowedOrigins = [
+  'http://localhost:4200',
+  'http://127.0.0.1:4200',
 
+  // Old server IP
+  'http://172.31.13.90:4200',
+  'http://172.31.13.90:8080',
+
+  // Current server IP
+  'http://172.31.3.90:4200',
+  'http://172.31.3.90:8080',
+];
 const envAllowedOrigins = String(process.env.CORS_ALLOWED_ORIGINS || process.env.CORS_ORIGIN || '')
   .split(',')
   .map((origin) => origin.trim())
   .filter(Boolean);
 
-const allowedOrigins = Array.from(new Set([...defaultAllowedOrigins, ...envAllowedOrigins]));
+// const allowedOrigins = Array.from(new Set([...defaultAllowedOrigins, ...envAllowedOrigins]));
 
 const allowedHeaders = [
   'Accept',

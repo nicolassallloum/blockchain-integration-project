@@ -1,7 +1,7 @@
 'use strict';
 
 const express = require("express");
-
+const couchdbRoutes = require('./couchdb.routes');
 const router = express.Router();
 
 function safeLoadRoute(routeName, routePath) {
@@ -52,7 +52,9 @@ if (walletRoutes) {
 if (transactionRoutes) {
   router.use("/transactions", transactionRoutes);
 }
-
+if (couchdbRoutes) {
+  router.use("/couchdb", couchdbRoutes);
+}
 if (referenceRoutes) {
   router.use("/reference", referenceRoutes);
 }

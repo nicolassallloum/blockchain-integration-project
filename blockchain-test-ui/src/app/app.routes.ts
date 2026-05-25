@@ -3,6 +3,7 @@ import { BlockchainKycComponent } from './pages/blockchain-kyc/blockchain-kyc.co
 import { DashboardComponent } from './features/dashboard/dashboard.component';
 import { GovernmentBlockchainDashboardComponent } from './pages/government-blockchain/government-blockchain-dashboard/government-blockchain-dashboard.component';
 import { GovernmentServicesComponent } from './pages/government-blockchain/government-services/government-services.component';
+import { CouchDbExplorerComponent } from './features/government-blockchain/couchdb-explorer/couchdb-explorer.component';
 import { WalletCreate } from './pages/wallet-create/wallet-create';
 import { OrganizationWalletCreate } from './pages/organization-wallet-create/organization-wallet-create';
 import { WalletLogin } from './pages/wallet-login/wallet-login';
@@ -34,6 +35,11 @@ export const routes: Routes = [
   {
     path: 'government-blockchain/create-public-administration-account',
     component: CreatePublicAdministrationAccountComponent
+  },
+
+  {
+    path: 'government-blockchain/couchdb-explorer',
+    component: CouchDbExplorerComponent,
   },
   {
     path: 'government-blockchain/new-transaction',
