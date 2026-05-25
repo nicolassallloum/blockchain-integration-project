@@ -1,18 +1,41 @@
-const express = require('express');
-const residentController = require('../controllers/resident.controller');
+'use strict';
 
+const express = require('express');
 const router = express.Router();
 
-router.post('/', residentController.createResident);
+const residentController = require('../controllers/resident.controller');
 
-router.post('/drafts', residentController.saveDraft);
+function requireHandler(name) {
+  const handler = residentController[name];
 
-router.get('/', residentController.searchResidents);
+  if (typeof handler !== 'function') {
+    throw new Error(
+      `resident.controller.js is missing exported function: ${name}. ` +
+      `Available exports: ${Object.keys(residentController).join(', ')}`
+    );
+  }
 
-router.get('/:residentId', residentController.getResidentById);
+  return handler;
+}
 
-router.post('/:residentId/wallet', residentController.createWallet);
+/*
+|--------------------------------------------------------------------------
+| Resident Routes
+|--------------------------------------------------------------------------
+*/
 
-router.post('/:residentId/kyc/submit', residentController.submitKyc);
+router.post('/', requireHandler('createResident'));
+
+router.post('/draft', requireHandler('saveDraft'));
+
+router.get('/search', requireHandler('searchResidents'));
+
+router.get('/:residentId', requireHandler('getResidentById'));
+
+router.post('/:residentId/wallet', requireHandler('createWallet'));
+
+router.post('/:residentId/submit-kyc', requireHandler('submitKyc'));
+
+router.post('/:residentId/sync-blockchain', requireHandler('syncResidentToBlockchain'));
 
 module.exports = router;

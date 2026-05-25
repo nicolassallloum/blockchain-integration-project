@@ -1,6 +1,14 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+
+export interface ApiResponse<T = any> {
+  success: boolean;
+  message: string;
+  data?: T;
+  error?: any;
+  timestamp?: string;
+}
 
 export interface CreateResidentPayload {
   residentId: string;
@@ -37,39 +45,62 @@ export interface CreateResidentPayload {
   providedIn: 'root',
 })
 export class GovernmentBlockchainResidentApiService {
-  private readonly baseUrl = '/api/v1/government-blockchain/residents';
+  private readonly apiBaseUrl =
+    'http://172.31.13.90:3001/api/v1/government-blockchain/residents';
 
   constructor(private http: HttpClient) {}
 
-  createResident(payload: CreateResidentPayload): Observable<any> {
-    return this.http.post<any>(this.baseUrl, payload);
+  createResident(payload: CreateResidentPayload): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      this.apiBaseUrl,
+      payload
+    );
   }
 
-  createWallet(residentId: string, payload: any): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/${residentId}/wallet`, payload);
+  saveDraft(payload: CreateResidentPayload): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${this.apiBaseUrl}/draft`,
+      payload
+    );
   }
 
-  saveDraft(payload: CreateResidentPayload): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/drafts`, payload);
+  createWallet(
+    residentId: string,
+    payload: { walletCurrency?: string }
+  ): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${this.apiBaseUrl}/${encodeURIComponent(residentId)}/wallet`,
+      payload || {}
+    );
   }
 
-  submitKyc(residentId: string, payload: any): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/${residentId}/kyc/submit`, payload);
+  submitKyc(
+    residentId: string,
+    payload: { kycStatus?: string; riskCategory?: string }
+  ): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${this.apiBaseUrl}/${encodeURIComponent(residentId)}/submit-kyc`,
+      payload || {}
+    );
   }
 
-  getResidentById(residentId: string): Observable<any> {
-    return this.http.get<any>(`${this.baseUrl}/${residentId}`);
+  getResidentById(residentId: string): Observable<ApiResponse<any>> {
+    return this.http.get<ApiResponse<any>>(
+      `${this.apiBaseUrl}/${encodeURIComponent(residentId)}`
+    );
   }
 
-  searchResidents(filters: Record<string, any>): Observable<any> {
-    let params = new HttpParams();
+  searchResidents(params?: Record<string, string>): Observable<ApiResponse<any>> {
+    return this.http.get<ApiResponse<any>>(
+      `${this.apiBaseUrl}/search`,
+      { params: params || {} }
+    );
+  }
 
-    Object.keys(filters || {}).forEach((key) => {
-      if (filters[key] !== null && filters[key] !== undefined && filters[key] !== '') {
-        params = params.set(key, filters[key]);
-      }
-    });
-
-    return this.http.get<any>(this.baseUrl, { params });
+  syncResidentToBlockchain(residentId: string): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${this.apiBaseUrl}/${encodeURIComponent(residentId)}/sync-blockchain`,
+      {}
+    );
   }
 }

@@ -3,6 +3,7 @@
 const express = require("express");
 const couchdbRoutes = require('./couchdb.routes');
 const router = express.Router();
+const residentRoutes = require('./resident.routes');
 // const publicAdministrationRoutes = require('./publicAdministration.routes');
 function safeLoadRoute(routeName, routePath) {
   try {
@@ -57,6 +58,10 @@ if (transactionRoutes) {
 if (couchdbRoutes) {
   router.use("/couchdb", couchdbRoutes);
 }
+if (residentRoutes) {
+  router.use("/government-blockchain/residents", residentRoutes);
+}
+// router.use('/government-blockchain/residents', residentRoutes);
 if (referenceRoutes) {
   router.use("/reference", referenceRoutes);
 }

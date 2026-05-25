@@ -118,7 +118,140 @@ class KycWalletContract extends Contract {
             transaction
         });
     }
+    async CreateResident(ctx, residentJson) {
+        const resident = JSON.parse(residentJson);
 
+        if (!resident.residentId) {
+            throw new Error('residentId is required');
+        }
+
+        const key = `RESIDENT_${resident.residentId}`;
+        const exists = await ctx.stub.getState(key);
+
+        if (exists && exists.length > 0) {
+            throw new Error(`Resident already exists on blockchain: ${resident.residentId}`);
+        }
+
+        const blockchainResident = {
+            docType: 'resident',
+            residentId: resident.residentId,
+            firstName: resident.firstName,
+            fatherName: resident.fatherName,
+            motherName: resident.motherName,
+            lastName: resident.lastName,
+            fullName: resident.fullName,
+            arabicFullName: resident.arabicFullName,
+            dateOfBirth: resident.dateOfBirth,
+            gender: resident.gender,
+            nationality: resident.nationality,
+
+            nationalIdNumber: resident.nationalIdNumber,
+            passportNumber: resident.passportNumber || '',
+            residencyPermitNumber: resident.residencyPermitNumber || '',
+            taxNumber: resident.taxNumber || '',
+
+            mobileNumber: resident.mobileNumber || '',
+            email: resident.email || '',
+            governorate: resident.governorate || '',
+            district: resident.district || '',
+            municipality: resident.municipality || '',
+            address: resident.address || '',
+
+            employmentStatus: resident.employmentStatus || '',
+            occupation: resident.occupation || '',
+            monthlyIncome: resident.monthlyIncome || 0,
+
+            kycStatus: resident.kycStatus || 'Draft',
+            riskCategory: resident.riskCategory || 'Low Risk',
+
+            walletAddress: resident.walletAddress || '',
+            walletCurrency: resident.walletCurrency || 'LBP',
+            walletStatus: resident.walletStatus || 'Not Created',
+
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+
+        await ctx.stub.putState(key, Buffer.from(JSON.stringify(blockchainResident)));
+
+        return JSON.stringify(blockchainResident);
+    }
+
+    async GetResident(ctx, residentId) {
+        const key = `RESIDENT_${residentId}`;
+        const data = await ctx.stub.getState(key);
+
+        if (!data || data.length === 0) {
+            throw new Error(`Resident not found on blockchain: ${residentId}`);
+        }
+
+        return data.toString();
+    }
+
+    async CreateResidentWallet(ctx, residentId, walletCurrency) {
+        const residentKey = `RESIDENT_${residentId}`;
+        const residentBytes = await ctx.stub.getState(residentKey);
+
+        if (!residentBytes || residentBytes.length === 0) {
+            throw new Error(`Resident not found on blockchain: ${residentId}`);
+        }
+
+        const resident = JSON.parse(residentBytes.toString());
+
+        const walletAddress = `WALLET-${residentId}-${Date.now()}`;
+        const walletKey = `RESIDENT_WALLET_${residentId}`;
+
+        const wallet = {
+            docType: 'residentWallet',
+            residentId,
+            walletAddress,
+            walletCurrency: walletCurrency || 'LBP',
+            walletStatus: 'Created',
+            blockchainStatus: 'Committed',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+
+        resident.walletAddress = walletAddress;
+        resident.walletCurrency = wallet.walletCurrency;
+        resident.walletStatus = 'Created';
+        resident.updatedAt = new Date().toISOString();
+
+        await ctx.stub.putState(walletKey, Buffer.from(JSON.stringify(wallet)));
+        await ctx.stub.putState(residentKey, Buffer.from(JSON.stringify(resident)));
+
+        return JSON.stringify(wallet);
+    }
+
+    async GetResidentWallet(ctx, residentId) {
+        const walletKey = `RESIDENT_WALLET_${residentId}`;
+        const data = await ctx.stub.getState(walletKey);
+
+        if (!data || data.length === 0) {
+            throw new Error(`Resident wallet not found on blockchain: ${residentId}`);
+        }
+
+        return data.toString();
+    }
+
+    async SubmitResidentKYC(ctx, residentId, riskCategory) {
+        const key = `RESIDENT_${residentId}`;
+        const data = await ctx.stub.getState(key);
+
+        if (!data || data.length === 0) {
+            throw new Error(`Resident not found on blockchain: ${residentId}`);
+        }
+
+        const resident = JSON.parse(data.toString());
+
+        resident.kycStatus = 'Submitted';
+        resident.riskCategory = riskCategory || resident.riskCategory || 'Low Risk';
+        resident.updatedAt = new Date().toISOString();
+
+        await ctx.stub.putState(key, Buffer.from(JSON.stringify(resident)));
+
+        return JSON.stringify(resident);
+    }
     async CreateMinistry(ctx, ministryJson) {
         if (!ministryJson) {
             throw new Error('ministryJson is required');

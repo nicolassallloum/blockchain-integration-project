@@ -5,7 +5,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
   providedIn: 'root'
 })
 export class WalletService {
-  private readonly apiBaseUrl = 'http://127.0.0.1:3001/api/v1';
+  private readonly apiBaseUrl = 'http://172.31.13.90:3001/api/v1';
 
   constructor(private http: HttpClient) {}
 
