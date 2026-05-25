@@ -24,12 +24,16 @@ const crypto = require('crypto');
 const os = require('os');
 const routes = require('./routes');
 
+
+
 const app = express();
 const blockchainKycRoutes = require('./routes/blockchain-kyc.routes');
 const governmentBlockchainReferenceRoutes = require('./routes/government-blockchain/reference.routes');
 const governmentMinistryRoutes = require('./routes/government-blockchain/ministry.routes');
 const governmentBlockchainRoutes = require('./routes/government-blockchain/ministry.routes');
-
+const ministryRoutes = require('./routes/government-blockchain/ministry.routes');
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 /**
  * Optional packages.
  * Loaded safely so the API does not crash if a package is unavailable.
@@ -186,7 +190,7 @@ app.use((req, res, next) => {
  * Normal CORS middleware.
  */
 app.use(cors(corsOptions));
-
+app.use('/api/v1/government-blockchain/ministries', ministryRoutes);
 /**
  * Security headers.
  */

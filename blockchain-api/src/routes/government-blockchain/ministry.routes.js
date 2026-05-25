@@ -12,11 +12,6 @@ const {
 
 const router = express.Router();
 
-/**
- * IMPORTANT:
- * Put fixed routes BEFORE dynamic routes like /:ministryId
- */
-
 router.post('/login', loginMinistry);
 router.post('/draft', saveMinistryDraft);
 router.post('/bulk', bulkCreateMinistries);
