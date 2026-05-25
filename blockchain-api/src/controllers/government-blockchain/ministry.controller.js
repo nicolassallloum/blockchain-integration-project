@@ -269,15 +269,19 @@ async function createMinistryAccount(req, res, next) {
       if (savedWallet) {
         await db.query(
           `
-          UPDATE blockchain.government_ministry_wallets
-          SET blockchain_status = $1,
-              updated_at = CURRENT_TIMESTAMP
-          WHERE wallet_id = $2;
-          `,
-          ['CONFIRMED', savedWallet.wallet_id]
+        UPDATE blockchain.government_ministry_wallets
+        SET blockchain_status = $1,
+            ledger_reference = $2,
+            tx_id = $3,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE wallet_id = $4;
+        `,
+        ['CONFIRMED', ledgerReference, txId, savedWallet.wallet_id]
         );
 
         savedWallet.blockchain_status = 'CONFIRMED';
+        savedWallet.ledger_reference = ledgerReference;
+        savedWallet.tx_id = txId;
       }
 
       savedMinistry.blockchain_status = 'CONFIRMED';
@@ -349,7 +353,20 @@ async function createMinistryAccount(req, res, next) {
           status: 'CONFIRMED',
           ledgerReference,
           txId,
-          fabricResult,
+          channelName: fabricResult?.channelName || process.env.FABRIC_CHANNEL_NAME || 'kycchannelnix1',
+          chaincodeName:
+            fabricResult?.chaincodeName ||
+            process.env.CHAINCODE_NAME ||
+            process.env.FABRIC_CHAINCODE_NAME ||
+            'kyc-wallet-chaincode-js',
+          functionName: fabricResult?.functionName || 'CreateMinistry',
+          commitStatus: fabricResult?.commitStatus
+            ? {
+                successful: fabricResult.commitStatus.successful,
+                code: fabricResult.commitStatus.code,
+                transactionId: fabricResult.commitStatus.transactionId
+              }
+            : null,
           documentKey: ledgerReference,
           couchDbDatabase:
             process.env.CHAINCODE_NAME ||
