@@ -100,10 +100,19 @@ export class CreatePublicAdministrationAccountComponent {
       governorate: ['', Validators.required],
       municipality: ['', Validators.required],
       address: ['', [Validators.required, Validators.maxLength(250)]],
-      walletAddress: ['', [Validators.required, Validators.maxLength(120)]],
+      walletAddress: [
+        '',
+        [
+          Validators.required,
+          Validators.maxLength(120),
+          Validators.pattern(/^WALLET-[A-Z0-9-_]+$/)
+        ]
+      ],
       walletCurrency: ['LBP', Validators.required],
       walletStatus: ['PENDING', Validators.required]
     });
+
+    this.setupWalletAutoGeneration();
   }
 
   setMode(mode: 'manual' | 'csv'): void {
@@ -113,10 +122,13 @@ export class CreatePublicAdministrationAccountComponent {
 
   createAdministration(): void {
     this.clearMessages();
+    this.ensureWalletAddress();
 
     if (this.administrationForm.invalid) {
       this.administrationForm.markAllAsTouched();
-      this.error.set('Please fill all required fields before creating the administration.');
+      this.error.set(
+        'Please fill all required fields. Wallet Address must start with WALLET-, example: WALLET-TEST1.'
+      );
       return;
     }
 
@@ -125,27 +137,30 @@ export class CreatePublicAdministrationAccountComponent {
     this.api.createAdministration(this.buildPayload()).subscribe({
       next: (response) => {
         this.isSubmitting.set(false);
+
         this.message.set(
           response.message ||
-            'Public administration saved successfully on Blockchain and PostgreSQL.'
+            'Public administration saved successfully in Blockchain and PostgreSQL.'
         );
       },
       error: (err) => {
         this.isSubmitting.set(false);
-        this.error.set(
-          err?.error?.message ||
-            'Failed to save public administration on Blockchain and PostgreSQL.'
-        );
+        console.error('[CREATE_PUBLIC_ADMINISTRATION_ERROR]', err);
+
+        this.error.set(this.extractBackendError(err));
       }
     });
   }
 
   createWallet(): void {
     this.clearMessages();
+    this.ensureWalletAddress();
 
     if (this.administrationForm.invalid) {
       this.administrationForm.markAllAsTouched();
-      this.error.set('Please complete the administration form before creating the wallet.');
+      this.error.set(
+        'Please complete the administration form before creating the wallet. Wallet Address must start with WALLET-.'
+      );
       return;
     }
 
@@ -154,36 +169,32 @@ export class CreatePublicAdministrationAccountComponent {
     this.api.createAdministrationWallet(this.buildPayload()).subscribe({
       next: (response) => {
         this.isSubmitting.set(false);
+
         this.message.set(
           response.message ||
-            'Administration wallet created successfully on Blockchain and PostgreSQL.'
+            'Administration wallet created successfully in Blockchain and PostgreSQL.'
         );
       },
       error: (err) => {
         this.isSubmitting.set(false);
-        this.error.set(
-          err?.error?.message ||
-            'Failed to create administration wallet on Blockchain and PostgreSQL.'
-        );
+        console.error('[CREATE_ADMINISTRATION_WALLET_ERROR]', err);
+
+        this.error.set(this.extractBackendError(err));
       }
     });
   }
 
   saveDraft(): void {
     this.clearMessages();
+    this.ensureWalletAddress();
 
     const payload = this.buildPayload();
 
     localStorage.setItem('publicAdministrationDraft', JSON.stringify(payload));
 
-    this.message.set('Draft saved locally. API draft endpoint is also prepared for backend integration.');
-
-    /*
-    this.api.saveDraft(payload).subscribe({
-      next: () => this.message.set('Draft saved successfully.'),
-      error: () => this.error.set('Failed to save draft.')
-    });
-    */
+    this.message.set(
+      'Draft saved locally. API draft endpoint is also prepared for backend integration.'
+    );
   }
 
   resetForm(): void {
@@ -248,17 +259,31 @@ export class CreatePublicAdministrationAccountComponent {
     this.api.bulkUploadAdministrations(this.csvRows()).subscribe({
       next: (response) => {
         this.isUploading.set(false);
+
+        const successCount = (response as any).successCount || this.csvRows().length;
+        const failedCount = (response as any).failedCount || 0;
+        const failedRows = (response as any).data?.failedRows || [];
+
+        if (failedCount > 0) {
+          console.table(failedRows);
+
+          this.error.set(
+            `${successCount} record(s) saved. ${failedCount} record(s) failed. Check browser console for failed rows.`
+          );
+
+          return;
+        }
+
         this.message.set(
           response.message ||
-            `${this.csvRows().length} public administration record(s) saved successfully on Blockchain and PostgreSQL.`
+            `${successCount} public administration record(s) saved successfully in Blockchain and PostgreSQL.`
         );
       },
       error: (err) => {
         this.isUploading.set(false);
-        this.error.set(
-          err?.error?.message ||
-            'Failed to upload CSV data to Blockchain and PostgreSQL.'
-        );
+        console.error('[UPLOAD_PUBLIC_ADMINISTRATION_CSV_ERROR]', err);
+
+        this.error.set(this.extractBackendError(err));
       }
     });
   }
@@ -298,7 +323,7 @@ export class CreatePublicAdministrationAccountComponent {
       'Lebanon',
       'Beirut',
       'Beirut Municipality',
-      'Beirut, Lebanon',
+      '"Beirut, Lebanon"',
       'WALLET-ADM-001',
       'LBP',
       'PENDING'
@@ -323,27 +348,71 @@ export class CreatePublicAdministrationAccountComponent {
     return !!control && control.invalid && (control.dirty || control.touched);
   }
 
+  private setupWalletAutoGeneration(): void {
+    const administrationIdControl = this.administrationForm.get('administrationId');
+    const walletAddressControl = this.administrationForm.get('walletAddress');
+
+    if (!administrationIdControl || !walletAddressControl) {
+      return;
+    }
+
+    administrationIdControl.valueChanges.subscribe((value) => {
+      const currentWalletAddress = String(walletAddressControl.value || '').trim();
+
+      if (!currentWalletAddress || !currentWalletAddress.startsWith('WALLET-')) {
+        walletAddressControl.setValue(this.generateWalletAddress(value), {
+          emitEvent: false
+        });
+      }
+    });
+  }
+
+  private ensureWalletAddress(): void {
+    const administrationId = this.administrationForm.get('administrationId')?.value;
+    const walletAddressControl = this.administrationForm.get('walletAddress');
+    const currentWalletAddress = String(walletAddressControl?.value || '').trim();
+
+    if (
+      !currentWalletAddress ||
+      !currentWalletAddress.startsWith('WALLET-') ||
+      currentWalletAddress.includes('Street') ||
+      currentWalletAddress.includes('Center') ||
+      currentWalletAddress.includes('Road')
+    ) {
+      walletAddressControl?.setValue(this.generateWalletAddress(administrationId));
+    }
+  }
+
+  private generateWalletAddress(administrationId: string): string {
+    const cleanAdministrationId = String(administrationId || 'PUBLIC-ADMIN')
+      .trim()
+      .toUpperCase()
+      .replace(/[^A-Z0-9-_]/g, '-');
+
+    return `WALLET-${cleanAdministrationId}`;
+  }
+
   private buildPayload(): PublicAdministrationPayload {
     const value = this.administrationForm.getRawValue();
 
     return {
-      administrationId: value.administrationId,
-      administrationCode: value.administrationCode,
-      administrationName: value.administrationName,
-      arabicName: value.arabicName,
-      parentMinistry: value.parentMinistry,
-      administrationType: value.administrationType,
-      directorName: value.directorName,
-      contactPerson: value.contactPerson,
-      contactEmail: value.contactEmail,
-      contactMobile: value.contactMobile,
-      country: value.country,
-      governorate: value.governorate,
-      municipality: value.municipality,
-      address: value.address,
-      walletAddress: value.walletAddress,
-      walletCurrency: value.walletCurrency,
-      walletStatus: value.walletStatus,
+      administrationId: this.clean(value.administrationId),
+      administrationCode: this.clean(value.administrationCode),
+      administrationName: this.clean(value.administrationName),
+      arabicName: this.clean(value.arabicName),
+      parentMinistry: this.clean(value.parentMinistry),
+      administrationType: this.clean(value.administrationType) as AdministrationType,
+      directorName: this.clean(value.directorName),
+      contactPerson: this.clean(value.contactPerson),
+      contactEmail: this.clean(value.contactEmail),
+      contactMobile: this.clean(value.contactMobile),
+      country: this.clean(value.country),
+      governorate: this.clean(value.governorate),
+      municipality: this.clean(value.municipality),
+      address: this.clean(value.address),
+      walletAddress: this.clean(value.walletAddress),
+      walletCurrency: this.clean(value.walletCurrency) as WalletCurrency,
+      walletStatus: this.clean(value.walletStatus) as WalletStatus,
       saveToBlockchain: true,
       saveToPostgresql: true
     };
@@ -359,33 +428,39 @@ export class CreatePublicAdministrationAccountComponent {
       return [];
     }
 
-    const headers = this.splitCsvLine(lines[0]);
+    const headers = this.splitCsvLine(lines[0]).map((header) =>
+      header.replace(/^\uFEFF/, '').trim()
+    );
 
     return lines.slice(1).map((line) => {
       const values = this.splitCsvLine(line);
+
       const row = headers.reduce((acc, header, index) => {
         acc[header as keyof PublicAdministrationCsvRow] = values[index] || '';
         return acc;
       }, {} as PublicAdministrationCsvRow);
 
+      const administrationId = this.clean(row.administrationId);
+
       return {
-        administrationId: row.administrationId,
-        administrationCode: row.administrationCode,
-        administrationName: row.administrationName,
-        arabicName: row.arabicName,
-        parentMinistry: row.parentMinistry,
-        administrationType: row.administrationType as AdministrationType,
-        directorName: row.directorName,
-        contactPerson: row.contactPerson,
-        contactEmail: row.contactEmail,
-        contactMobile: row.contactMobile,
-        country: row.country,
-        governorate: row.governorate,
-        municipality: row.municipality,
-        address: row.address,
-        walletAddress: row.walletAddress,
-        walletCurrency: row.walletCurrency as WalletCurrency,
-        walletStatus: row.walletStatus as WalletStatus,
+        administrationId,
+        administrationCode: this.clean(row.administrationCode),
+        administrationName: this.clean(row.administrationName),
+        arabicName: this.clean(row.arabicName),
+        parentMinistry: this.clean(row.parentMinistry),
+        administrationType: this.clean(row.administrationType) as AdministrationType,
+        directorName: this.clean(row.directorName),
+        contactPerson: this.clean(row.contactPerson),
+        contactEmail: this.clean(row.contactEmail),
+        contactMobile: this.clean(row.contactMobile),
+        country: this.clean(row.country),
+        governorate: this.clean(row.governorate),
+        municipality: this.clean(row.municipality),
+        address: this.clean(row.address),
+        walletAddress:
+          this.clean(row.walletAddress) || this.generateWalletAddress(administrationId),
+        walletCurrency: (this.clean(row.walletCurrency) || 'LBP') as WalletCurrency,
+        walletStatus: (this.clean(row.walletStatus) || 'PENDING') as WalletStatus,
         saveToBlockchain: true,
         saveToPostgresql: true
       };
@@ -399,6 +474,13 @@ export class CreatePublicAdministrationAccountComponent {
 
     for (let i = 0; i < line.length; i++) {
       const char = line[i];
+      const nextChar = line[i + 1];
+
+      if (char === '"' && insideQuotes && nextChar === '"') {
+        current += '"';
+        i++;
+        continue;
+      }
 
       if (char === '"') {
         insideQuotes = !insideQuotes;
@@ -417,6 +499,19 @@ export class CreatePublicAdministrationAccountComponent {
     result.push(current.trim());
 
     return result;
+  }
+
+  private clean(value: unknown): string {
+    return String(value ?? '').trim();
+  }
+
+  private extractBackendError(err: any): string {
+    return (
+      err?.error?.error ||
+      err?.error?.message ||
+      err?.message ||
+      'Failed to save public administration on Blockchain and PostgreSQL.'
+    );
   }
 
   private clearMessages(): void {

@@ -98,7 +98,7 @@ class FabricService {
         process.env.FABRIC_ENDORSING_ORGS ||
         process.env.FABRIC_ENDORSING_ORGANIZATIONS ||
         process.env.FABRIC_MSP_ID ||
-        'Org1MSP'
+        ''
       )
         .split(',')
         .map((item) => item.trim())
@@ -258,7 +258,17 @@ class FabricService {
         'system'
     };
   }
+  normalizeArgs(args = []) {
+    if (args === undefined || args === null) {
+      return [];
+    }
 
+    if (Array.isArray(args)) {
+      return args.map((arg) => String(arg));
+    }
+
+    return [String(args)];
+  }
   async submitTransaction(functionName, args = [], context = {}) {
       const startedAt = Date.now();
       const config = this.getConfig();
@@ -293,7 +303,7 @@ class FabricService {
     config.endorsingOrganizations.length > 0
   ) {
     const proposal = connection.contract.newProposal(functionName, {
-      arguments: args.map((arg) => String(arg)),
+      arguments: this.normalizeArgs(args),
       endorsingOrganizations: config.endorsingOrganizations
     });
 
@@ -313,7 +323,7 @@ class FabricService {
   } else {
     resultBuffer = await connection.contract.submitTransaction(
       functionName,
-      ...args.map((arg) => String(arg))
+      ...this.normalizeArgs(args)
     );
   }
 
@@ -396,7 +406,7 @@ class FabricService {
 
       const resultBuffer = await connection.contract.evaluateTransaction(
         functionName,
-        ...args.map((arg) => String(arg))
+        ...this.normalizeArgs(args)
       );
 
       const parsedResult = this.parseBufferResult(resultBuffer);
@@ -449,7 +459,29 @@ class FabricService {
       throw error;
     }
   }
+async createPublicAdministration(payload, context = {}) {
+    return this.submitTransaction(
+      'CreatePublicAdministration',
+      [JSON.stringify(payload)],
+      context
+    );
+  }
 
+  async getPublicAdministration(administrationId, context = {}) {
+    return this.evaluateTransaction(
+      'GetPublicAdministration',
+      [administrationId],
+      context
+    );
+  }
+
+  async publicAdministrationExists(administrationId, context = {}) {
+    return this.evaluateTransaction(
+      'PublicAdministrationExists',
+      [administrationId],
+      context
+    );
+  }
   async disconnect() {
     try {
       if (this.gateway) {

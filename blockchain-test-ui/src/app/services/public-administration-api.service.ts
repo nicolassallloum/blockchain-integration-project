@@ -1,6 +1,5 @@
-import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Injectable } from '@angular/core';
 import {
   PublicAdministrationApiResponse,
   PublicAdministrationPayload
@@ -10,60 +9,34 @@ import {
   providedIn: 'root'
 })
 export class PublicAdministrationApiService {
-  private readonly baseUrl = '/api/v1/government-blockchain/public-administrations';
+  private readonly baseUrl =
+    'http://172.31.13.90:3001/api/v1/government-blockchain/public-administrations';
 
   constructor(private readonly http: HttpClient) {}
 
-  createAdministration(
-    payload: PublicAdministrationPayload
-  ): Observable<PublicAdministrationApiResponse> {
+  createAdministration(payload: PublicAdministrationPayload) {
     return this.http.post<PublicAdministrationApiResponse>(this.baseUrl, {
-      administration: payload,
-      persistence: {
-        blockchain: true,
-        postgresql: true
-      }
+      administration: payload
     });
   }
 
-  createAdministrationWallet(
-    payload: PublicAdministrationPayload
-  ): Observable<PublicAdministrationApiResponse> {
+  createAdministrationWallet(payload: PublicAdministrationPayload) {
     return this.http.post<PublicAdministrationApiResponse>(
       `${this.baseUrl}/${payload.administrationId}/wallet`,
-      {
-        wallet: {
-          administrationId: payload.administrationId,
-          administrationCode: payload.administrationCode,
-          administrationName: payload.administrationName,
-          walletAddress: payload.walletAddress,
-          walletCurrency: payload.walletCurrency,
-          walletStatus: payload.walletStatus
-        },
-        persistence: {
-          blockchain: true,
-          postgresql: true
-        }
-      }
+      payload
     );
   }
 
-  bulkUploadAdministrations(
-    rows: PublicAdministrationPayload[]
-  ): Observable<PublicAdministrationApiResponse> {
+  bulkUploadAdministrations(administrations: PublicAdministrationPayload[]) {
     return this.http.post<PublicAdministrationApiResponse>(
       `${this.baseUrl}/bulk-upload`,
       {
-        administrations: rows,
-        persistence: {
-          blockchain: true,
-          postgresql: true
-        }
+        administrations
       }
     );
   }
 
-  saveDraft(payload: PublicAdministrationPayload): Observable<PublicAdministrationApiResponse> {
+  saveDraft(payload: PublicAdministrationPayload) {
     return this.http.post<PublicAdministrationApiResponse>(
       `${this.baseUrl}/drafts`,
       {

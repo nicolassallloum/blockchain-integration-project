@@ -217,7 +217,139 @@ class KycWalletContract extends Contract {
 
         return data.toString();
     }
+    async CreatePublicAdministration(ctx, administrationJson) {
+        if (!administrationJson) {
+            throw new Error('administrationJson is required');
+        }
 
+        let administration;
+
+        try {
+            administration = JSON.parse(administrationJson);
+        } catch (error) {
+            throw new Error(`Invalid public administration JSON: ${error.message}`);
+        }
+
+        this._required(administration.administrationId, 'administrationId');
+        this._required(administration.administrationCode, 'administrationCode');
+        this._required(administration.administrationName, 'administrationName');
+
+        const ledgerReference =
+            administration.ledgerReference ||
+            `PUBLIC_ADMINISTRATION_${administration.administrationId}`;
+
+        const existingAdministration = await ctx.stub.getState(ledgerReference);
+
+        if (existingAdministration && existingAdministration.length > 0) {
+            throw new Error(
+                `Public Administration already exists on blockchain: ${ledgerReference}`
+            );
+        }
+
+        const txId = ctx.stub.getTxID();
+        const createdAt = administration.createdAt || this._getTxTimestamp(ctx);
+
+        const blockchainRecord = {
+            docType: 'PUBLIC_ADMINISTRATION',
+            ledgerReference,
+            administrationId: administration.administrationId,
+            administrationCode: administration.administrationCode,
+            administrationName: administration.administrationName,
+            arabicName: administration.arabicName || null,
+            parentMinistry: administration.parentMinistry || null,
+            administrationType: administration.administrationType || null,
+            directorName: administration.directorName || null,
+            contactPerson: administration.contactPerson || null,
+            contactEmail: administration.contactEmail || null,
+            contactMobile: administration.contactMobile || null,
+            country: administration.country || null,
+            governorate: administration.governorate || null,
+            municipality: administration.municipality || null,
+            address: administration.address || null,
+            walletAddress: administration.walletAddress || null,
+            walletCurrency: administration.walletCurrency || 'LBP',
+            walletStatus: administration.walletStatus || 'PENDING',
+            status: administration.status || 'ACTIVE',
+            blockchainStatus: 'CONFIRMED',
+            createdAt,
+            updatedAt: createdAt,
+            createdTxId: txId,
+            updatedTxId: txId
+        };
+
+        await ctx.stub.putState(
+            ledgerReference,
+            Buffer.from(JSON.stringify(blockchainRecord))
+        );
+
+        return this._successResponse(
+            'Public Administration created on blockchain successfully',
+            {
+                ledgerReference,
+                docType: 'PUBLIC_ADMINISTRATION',
+                administrationId: blockchainRecord.administrationId,
+                administrationCode: blockchainRecord.administrationCode,
+                administrationName: blockchainRecord.administrationName,
+                walletAddress: blockchainRecord.walletAddress,
+                txId,
+                record: blockchainRecord
+            }
+        );
+    }
+
+    async GetPublicAdministration(ctx, administrationId) {
+        this._required(administrationId, 'administrationId');
+
+        const ledgerReference = `PUBLIC_ADMINISTRATION_${administrationId}`;
+        const data = await ctx.stub.getState(ledgerReference);
+
+        if (!data || data.length === 0) {
+            throw new Error(
+                `Public Administration not found on blockchain: ${administrationId}`
+            );
+        }
+
+        return data.toString();
+    }
+
+    async PublicAdministrationExists(ctx, administrationId) {
+        this._required(administrationId, 'administrationId');
+
+        const ledgerReference = `PUBLIC_ADMINISTRATION_${administrationId}`;
+        const data = await ctx.stub.getState(ledgerReference);
+
+        return data && data.length > 0;
+    }
+
+    async QueryPublicAdministrationByCode(ctx, administrationCode) {
+        this._required(administrationCode, 'administrationCode');
+
+        const query = {
+            selector: {
+                docType: 'PUBLIC_ADMINISTRATION',
+                administrationCode
+            }
+        };
+
+        const results = await this._queryLedgerWithKeys(ctx, query);
+
+        return JSON.stringify(results);
+    }
+
+    async QueryPublicAdministrationsByParentMinistry(ctx, parentMinistry) {
+        this._required(parentMinistry, 'parentMinistry');
+
+        const query = {
+            selector: {
+                docType: 'PUBLIC_ADMINISTRATION',
+                parentMinistry
+            }
+        };
+
+        const results = await this._queryLedgerWithKeys(ctx, query);
+
+        return JSON.stringify(results);
+    }
     async TransferBetweenWallets(
         ctx,
         fromWalletAddress,

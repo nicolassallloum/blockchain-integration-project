@@ -2,7 +2,7 @@
 
 const crypto = require('crypto');
 const pool = require('../config/database');
-
+const fabricService = require('../services/fabric.service');
 function generateTxId(prefix) {
   return `${prefix}-${Date.now()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
 }
@@ -138,7 +138,14 @@ async function saveAdministrationToPostgres(payload, blockchainTxId) {
   const result = await pool.query(query, values);
   return result.rows[0];
 }
+async function saveAdministrationToBlockchain(payload, context = {}) {
+  const blockchainPayload = {
+    ...payload,
+    ledgerReference: `PUBLIC_ADMINISTRATION_${payload.administrationId}`
+  };
 
+  return fabricService.createPublicAdministration(blockchainPayload, context);
+}
 async function createPublicAdministration(req, res) {
   try {
     const payload = normalizeAdministrationPayload(req.body);
@@ -152,8 +159,19 @@ async function createPublicAdministration(req, res) {
       });
     }
 
-    const blockchainTxId = generateTxId('PA-CREATE');
+    const blockchainResult = await saveAdministrationToBlockchain(payload, {
+      requestId: req.requestId,
+      correlationId: req.correlationId,
+      sourceSystem: req.sourceSystem,
+      requestSource: req.requestSource,
+      createdBy: req.body.createdBy || 'system'
+    });
 
+    const blockchainTxId =
+      blockchainResult?.txId ||
+      blockchainResult?.transactionId ||
+      blockchainResult?.data?.data?.txId ||
+      generateTxId('PA-CREATE');
     /*
       TODO NEXT:
       Replace generated blockchainTxId with real Fabric submitTransaction result.
@@ -188,58 +206,45 @@ async function createPublicAdministration(req, res) {
 async function createPublicAdministrationWallet(req, res) {
   try {
     const administrationId = req.params.administrationId;
-    const wallet = req.body.wallet || req.body;
+    const payload = normalizeAdministrationPayload(req.body.administration || req.body);
 
     if (!administrationId) {
       return res.status(400).json({
         success: false,
-        message: 'Administration ID is required.'
+        message: 'administrationId is required.'
       });
     }
 
-    if (!wallet.walletAddress || !wallet.walletCurrency) {
-      return res.status(400).json({
-        success: false,
-        message: 'Wallet address and wallet currency are required.'
-      });
-    }
+    const walletAddress =
+      payload.walletAddress || `WALLET-${String(administrationId).toUpperCase()}`;
 
-    const blockchainTxId = generateTxId('PA-WALLET');
+    const walletCurrency = payload.walletCurrency || 'LBP';
+    const walletStatus = payload.walletStatus || 'ACTIVE';
 
     const result = await pool.query(
       `
       UPDATE blockchain.public_administrations
       SET
-        wallet_address = $2,
-        wallet_currency = $3,
-        wallet_status = $4,
-        blockchain_tx_id = $5,
-        blockchain_status = 'WALLET_CREATED',
+        wallet_address = $1,
+        wallet_currency = $2,
+        wallet_status = $3,
         updated_at = CURRENT_TIMESTAMP
-      WHERE administration_id = $1
-      RETURNING *;
+      WHERE administration_id = $4
+      RETURNING *
       `,
-      [
-        administrationId,
-        wallet.walletAddress,
-        wallet.walletCurrency,
-        wallet.walletStatus || 'ACTIVE',
-        blockchainTxId
-      ]
+      [walletAddress, walletCurrency, walletStatus, administrationId]
     );
 
-    if (result.rowCount === 0) {
+    if (!result.rows.length) {
       return res.status(404).json({
         success: false,
-        message: 'Public administration not found.'
+        message: `Public administration not found in PostgreSQL: ${administrationId}`
       });
     }
 
-    return res.status(201).json({
+    return res.status(200).json({
       success: true,
-      message: 'Public administration wallet saved successfully in PostgreSQL. Blockchain integration is prepared.',
-      blockchainTxId,
-      postgresRecordId: result.rows[0].id,
+      message: 'Public administration wallet updated successfully in PostgreSQL.',
       data: result.rows[0]
     });
   } catch (error) {
@@ -283,7 +288,19 @@ async function bulkUploadPublicAdministrations(req, res) {
       }
 
       try {
-        const blockchainTxId = generateTxId('PA-BULK');
+        const blockchainResult = await saveAdministrationToBlockchain(payload, {
+          requestId: req.requestId,
+          correlationId: req.correlationId,
+          sourceSystem: req.sourceSystem,
+          requestSource: req.requestSource,
+          createdBy: req.body.createdBy || 'system'
+        });
+
+        const blockchainTxId =
+          blockchainResult?.txId ||
+          blockchainResult?.transactionId ||
+          blockchainResult?.data?.data?.txId ||
+          generateTxId('PA-BULK');
 
         const postgresRecord = await saveAdministrationToPostgres(
           payload,

@@ -1,6 +1,7 @@
-// src/routes/publicAdministration.routes.js
+'use strict';
 
 const express = require('express');
+const router = express.Router();
 
 const {
   createPublicAdministration,
@@ -9,14 +10,9 @@ const {
   savePublicAdministrationDraft
 } = require('../controllers/publicAdministration.controller');
 
-const router = express.Router();
-
 router.post('/', createPublicAdministration);
-
 router.post('/bulk-upload', bulkUploadPublicAdministrations);
-
 router.post('/drafts', savePublicAdministrationDraft);
-
 router.post('/:administrationId/wallet', createPublicAdministrationWallet);
 
 module.exports = router;
