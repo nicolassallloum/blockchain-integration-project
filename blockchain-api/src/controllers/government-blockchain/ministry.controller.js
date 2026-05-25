@@ -1,6 +1,6 @@
 const db = require('../../config/database');
 const bcrypt = require('bcryptjs');
-
+const fabricService = require('../../services/fabric.service');
 function generateWalletAddress(ministryCode) {
   const cleanCode = String(ministryCode || 'MIN')
     .replace(/[^A-Z0-9]/gi, '')
@@ -17,10 +17,40 @@ function generateTemporaryPassword() {
   const random = Math.random().toString(36).substring(2, 8);
   return `Gov@${timestamp}${random}`;
 }
+function buildMinistryBlockchainDocument(savedMinistry, savedWallet) {
+  const ledgerReference = `MINISTRY_${savedMinistry.ministry_reference_id}`;
 
+  return {
+    docType: 'MINISTRY',
+    ledgerReference,
+    ministryId: savedMinistry.ministry_id,
+    ministryReferenceId: savedMinistry.ministry_reference_id,
+    ministryCode: savedMinistry.ministry_code,
+    ministryName: savedMinistry.ministry_name,
+    arabicName: savedMinistry.arabic_name,
+    ministryType: savedMinistry.ministry_type,
+    parentMinistry: savedMinistry.parent_ministry,
+    ministerName: savedMinistry.minister_name,
+    contactPerson: savedMinistry.contact_person,
+    contactEmail: savedMinistry.contact_email,
+    contactMobile: savedMinistry.contact_mobile,
+    countryCode: savedMinistry.country_code,
+    countryName: savedMinistry.country_name,
+    governorateCode: savedMinistry.governorate_code,
+    governorateName: savedMinistry.governorate_name,
+    address: savedMinistry.address,
+    walletAddress: savedWallet ? savedWallet.wallet_address : null,
+    walletCurrency: savedWallet ? savedWallet.wallet_currency : null,
+    walletStatus: savedWallet ? savedWallet.wallet_status : savedMinistry.wallet_status,
+    institutionStatus: savedMinistry.institution_status,
+    blockchainStatus: 'CONFIRMED',
+    status: 'ACTIVE',
+    createdAt: new Date().toISOString()
+  };
+}
 async function createMinistryAccount(req, res, next) {
   try {
-    const { ministry, wallet } = req.body;
+    const { ministry, wallet } = req.body || {};
 
     if (!ministry) {
       return res.status(400).json({
@@ -29,6 +59,8 @@ async function createMinistryAccount(req, res, next) {
         data: null
       });
     }
+
+    await db.query('BEGIN');
 
     const loginUsername = ministry.loginUsername || ministry.ministryCode;
     const temporaryPassword = ministry.password || generateTemporaryPassword();
@@ -129,7 +161,7 @@ async function createMinistryAccount(req, res, next) {
         ministry.website || null,
         ministry.walletStatus || 'PENDING',
         ministry.institutionStatus || 'PENDING_APPROVAL',
-        'NOT_SUBMITTED',
+        'PENDING',
         loginUsername,
         passwordHash,
         'ACTIVE',
@@ -168,8 +200,8 @@ async function createMinistryAccount(req, res, next) {
           Number(wallet.walletInitialBalance || 0),
           Number(wallet.walletInitialBalance || 0),
           wallet.walletType || 'MINISTRY_WALLET',
-          wallet.walletStatus || 'PENDING',
-          'NOT_SUBMITTED'
+          wallet.walletStatus || 'ACTIVE',
+          'PENDING'
         ]
       );
 
@@ -188,12 +220,142 @@ async function createMinistryAccount(req, res, next) {
       savedMinistry.wallet_status = savedWallet.wallet_status || 'ACTIVE';
     }
 
+    const blockchainDocument = buildMinistryBlockchainDocument(
+      savedMinistry,
+      savedWallet
+    );
+
+    let fabricResult = null;
+    let txId = null;
+    let ledgerReference = blockchainDocument.ledgerReference;
+
+    try {
+      fabricResult = await fabricService.submitTransaction(
+        'CreateMinistry',
+        [JSON.stringify(blockchainDocument)],
+        {
+          requestId: req.requestId,
+          correlationId: req.correlationId,
+          sourceSystem: req.sourceSystem || 'BLOCKCHAIN_API',
+          requestSource: req.requestSource || 'CREATE_MINISTRY_ACCOUNT',
+          createdBy: 'system'
+        }
+      );
+
+      txId =
+        fabricResult?.transactionId ||
+        fabricResult?.txId ||
+        fabricResult?.data?.transactionId ||
+        fabricResult?.data?.txId ||
+        null;
+
+      await db.query(
+        `
+        UPDATE blockchain.government_ministries
+        SET blockchain_status = $1,
+            ledger_reference = $2,
+            tx_id = $3,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE ministry_id = $4;
+        `,
+        [
+          'CONFIRMED',
+          ledgerReference,
+          txId,
+          savedMinistry.ministry_id
+        ]
+      );
+
+      if (savedWallet) {
+        await db.query(
+          `
+          UPDATE blockchain.government_ministry_wallets
+          SET blockchain_status = $1,
+              updated_at = CURRENT_TIMESTAMP
+          WHERE wallet_id = $2;
+          `,
+          ['CONFIRMED', savedWallet.wallet_id]
+        );
+
+        savedWallet.blockchain_status = 'CONFIRMED';
+      }
+
+      savedMinistry.blockchain_status = 'CONFIRMED';
+      savedMinistry.ledger_reference = ledgerReference;
+      savedMinistry.tx_id = txId;
+    } catch (fabricError) {
+      console.error('Create ministry blockchain submit error:', {
+        message: fabricError.message,
+        stack: fabricError.stack
+      });
+
+      await db.query(
+        `
+        UPDATE blockchain.government_ministries
+        SET blockchain_status = $1,
+            ledger_reference = $2,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE ministry_id = $3;
+        `,
+        [
+          'FAILED',
+          ledgerReference,
+          savedMinistry.ministry_id
+        ]
+      );
+
+      if (savedWallet) {
+        await db.query(
+          `
+          UPDATE blockchain.government_ministry_wallets
+          SET blockchain_status = $1,
+              updated_at = CURRENT_TIMESTAMP
+          WHERE wallet_id = $2;
+          `,
+          ['FAILED', savedWallet.wallet_id]
+        );
+
+        savedWallet.blockchain_status = 'FAILED';
+      }
+
+      await db.query('COMMIT');
+
+      return res.status(502).json({
+        success: false,
+        message: 'Ministry saved in PostgreSQL, but blockchain submission failed.',
+        errorCode: 'BLOCKCHAIN_SUBMIT_FAILED',
+        error: fabricError.message,
+        data: {
+          ministry: {
+            ...savedMinistry,
+            blockchain_status: 'FAILED',
+            ledger_reference: ledgerReference
+          },
+          wallet: savedWallet,
+          blockchainPayload: blockchainDocument
+        }
+      });
+    }
+
+    await db.query('COMMIT');
+
     return res.status(201).json({
       success: true,
-      message: 'Ministry account created successfully.',
+      message: 'Ministry account created and saved to blockchain successfully.',
       data: {
         ministry: savedMinistry,
         wallet: savedWallet,
+        blockchain: {
+          status: 'CONFIRMED',
+          ledgerReference,
+          txId,
+          fabricResult,
+          documentKey: ledgerReference,
+          couchDbDatabase:
+            process.env.CHAINCODE_NAME ||
+            process.env.FABRIC_CHAINCODE_NAME ||
+            'kyc-wallet-chaincode-js'
+        },
         login: {
           username: loginUsername,
           temporaryPassword,
@@ -202,18 +364,29 @@ async function createMinistryAccount(req, res, next) {
       }
     });
   } catch (error) {
-    console.error('Create ministry account error:', error);
+    await db.query('ROLLBACK');
+
+    console.error('Create ministry account error:', {
+      message: error.message,
+      code: error.code,
+      detail: error.detail,
+      constraint: error.constraint,
+      table: error.table,
+      column: error.column,
+      stack: error.stack
+    });
 
     if (error.code === '23505') {
       return res.status(409).json({
         success: false,
         message: 'Duplicate ministry code, ministry reference ID, login username, or wallet address.',
         errorCode: 'DUPLICATE_RECORD',
+        error: error.detail || error.message,
         data: null
       });
     }
 
-    next(error);
+    return next(error);
   }
 }
 

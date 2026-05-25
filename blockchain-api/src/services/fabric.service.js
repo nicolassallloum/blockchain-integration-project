@@ -260,59 +260,62 @@ class FabricService {
   }
 
   async submitTransaction(functionName, args = [], context = {}) {
-    const startedAt = Date.now();
-    const config = this.getConfig();
-    const auditContext = this.normalizeContext(context);
+      const startedAt = Date.now();
+      const config = this.getConfig();
+      const auditContext = this.normalizeContext(context);
 
-    try {
-      await auditService.log({
-        ...auditContext,
-        eventType: AUDIT_EVENT_TYPES.BLOCKCHAIN_SUBMIT_REQUEST,
-        eventCategory: AUDIT_EVENT_CATEGORY.BLOCKCHAIN,
-        eventStatus: AUDIT_EVENT_STATUS.PENDING,
-        blockchainFunction: functionName,
-        chaincodeName: config.chaincodeName,
-        channelName: config.channelName,
-        requestPayload: {
-          functionName,
-          args
-        },
-        serviceName: 'fabric.service'
-      });
-
-      const connection = await this.connect();
-
-      let resultBuffer;
-
-      if (
-        connection.contract &&
-        typeof connection.contract.newProposal === 'function' &&
-        config.endorsingOrganizations &&
-        config.endorsingOrganizations.length > 0
-      ) {
-        const proposal = connection.contract.newProposal(functionName, {
-          arguments: args.map((arg) => String(arg)),
-          endorsingOrganizations: config.endorsingOrganizations
+      try {
+        await auditService.log({
+          ...auditContext,
+          eventType: AUDIT_EVENT_TYPES.BLOCKCHAIN_SUBMIT_REQUEST,
+          eventCategory: AUDIT_EVENT_CATEGORY.BLOCKCHAIN,
+          eventStatus: AUDIT_EVENT_STATUS.PENDING,
+          blockchainFunction: functionName,
+          chaincodeName: config.chaincodeName,
+          channelName: config.channelName,
+          requestPayload: {
+            functionName,
+            args
+          },
+          serviceName: 'fabric.service'
         });
 
-        const endorsedProposal = await proposal.endorse();
-        const submittedTransaction = await endorsedProposal.submit();
+        const connection = await this.connect();
 
-        resultBuffer = endorsedProposal.getResult();
+        let resultBuffer;
+  let transactionId = null;
+  let commitStatus = null;
 
-        const commitStatus = await submittedTransaction.getStatus();
+  if (
+    connection.contract &&
+    typeof connection.contract.newProposal === 'function' &&
+    config.endorsingOrganizations &&
+    config.endorsingOrganizations.length > 0
+  ) {
+    const proposal = connection.contract.newProposal(functionName, {
+      arguments: args.map((arg) => String(arg)),
+      endorsingOrganizations: config.endorsingOrganizations
+    });
 
-        if (!commitStatus.successful) {
-          throw new Error(
-            `Transaction commit failed with code ${commitStatus.code} for transaction ${commitStatus.transactionId}`
-          );
-        }
-      } else {
-        resultBuffer = await connection.contract.submitTransaction(
-          functionName,
-          ...args.map((arg) => String(arg))
-        );
-      }
+    const endorsedProposal = await proposal.endorse();
+    const submittedTransaction = await endorsedProposal.submit();
+
+    resultBuffer = endorsedProposal.getResult();
+
+    commitStatus = await submittedTransaction.getStatus();
+    transactionId = commitStatus.transactionId || null;
+
+    if (!commitStatus.successful) {
+      throw new Error(
+        `Transaction commit failed with code ${commitStatus.code} for transaction ${commitStatus.transactionId}`
+      );
+    }
+  } else {
+    resultBuffer = await connection.contract.submitTransaction(
+      functionName,
+      ...args.map((arg) => String(arg))
+    );
+  }
 
       const parsedResult = this.parseBufferResult(resultBuffer);
 
@@ -323,6 +326,9 @@ class FabricService {
         chaincodeName: config.chaincodeName,
         functionName,
         args,
+        transactionId,
+        txId: transactionId,
+        commitStatus,
         data: parsedResult,
         durationMs: Date.now() - startedAt
       };

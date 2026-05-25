@@ -18,24 +18,43 @@ class KycWalletContract extends Contract {
             initializedByTxId: ctx.stub.getTxID()
         };
 
-        await ctx.stub.putState('CHAINCODE_METADATA', Buffer.from(JSON.stringify(metadata)));
+        await ctx.stub.putState(
+            'CHAINCODE_METADATA',
+            Buffer.from(JSON.stringify(metadata))
+        );
 
         return this._successResponse('Ledger initialized successfully', metadata);
     }
 
-    async CreateWallet(ctx, customerId, organizationId, fullName, nationalIdHash, mobileHash, emailHash, passwordHash, initialBalance) {
+    async CreateWallet(
+        ctx,
+        customerId,
+        organizationId,
+        fullName,
+        nationalIdHash,
+        mobileHash,
+        emailHash,
+        passwordHash,
+        initialBalance
+    ) {
         this._required(customerId, 'customerId');
         this._required(organizationId, 'organizationId');
         this._required(fullName, 'fullName');
         this._required(passwordHash, 'passwordHash');
 
-        const parsedInitialBalance = this._parseAmount(initialBalance || '0', 'initialBalance');
+        const parsedInitialBalance = this._parseAmount(
+            initialBalance || '0',
+            'initialBalance'
+        );
 
         if (parsedInitialBalance < 0) {
             throw new Error('Initial balance cannot be negative');
         }
 
-        const existingWalletByCustomer = await this._getWalletByCustomerId(ctx, customerId);
+        const existingWalletByCustomer = await this._getWalletByCustomerId(
+            ctx,
+            customerId
+        );
 
         if (existingWalletByCustomer) {
             throw new Error(`Wallet already exists for customerId: ${customerId}`);
@@ -43,7 +62,11 @@ class KycWalletContract extends Contract {
 
         const txId = ctx.stub.getTxID();
         const createdAt = this._getTxTimestamp(ctx);
-        const walletAddress = this._generateWalletAddress(customerId, organizationId, txId);
+        const walletAddress = this._generateWalletAddress(
+            customerId,
+            organizationId,
+            txId
+        );
 
         const wallet = {
             docType: 'wallet',
@@ -64,7 +87,10 @@ class KycWalletContract extends Contract {
             updatedTxId: txId
         };
 
-        await ctx.stub.putState(this._walletKey(walletAddress), Buffer.from(JSON.stringify(wallet)));
+        await ctx.stub.putState(
+            this._walletKey(walletAddress),
+            Buffer.from(JSON.stringify(wallet))
+        );
 
         const transaction = {
             docType: 'transaction',
@@ -82,7 +108,10 @@ class KycWalletContract extends Contract {
             createdTxId: txId
         };
 
-        await ctx.stub.putState(this._transactionKey(txId), Buffer.from(JSON.stringify(transaction)));
+        await ctx.stub.putState(
+            this._transactionKey(txId),
+            Buffer.from(JSON.stringify(transaction))
+        );
 
         return this._successResponse('Wallet created successfully', {
             wallet: this._removeSensitiveWalletFields(wallet),
@@ -90,47 +119,112 @@ class KycWalletContract extends Contract {
         });
     }
 
-    async LoginWallet(ctx, walletAddress, passwordHash) {
-        this._required(walletAddress, 'walletAddress');
-        this._required(passwordHash, 'passwordHash');
-
-        const wallet = await this._getWalletByAddress(ctx, walletAddress);
-
-        if (!wallet) {
-            throw new Error(`Wallet not found: ${walletAddress}`);
+    async CreateMinistry(ctx, ministryJson) {
+        if (!ministryJson) {
+            throw new Error('ministryJson is required');
         }
 
-        if (wallet.status !== 'ACTIVE') {
-            throw new Error(`Wallet is not active. Current status: ${wallet.status}`);
+        let ministry;
+
+        try {
+            ministry = JSON.parse(ministryJson);
+        } catch (error) {
+            throw new Error(`Invalid ministry JSON: ${error.message}`);
         }
 
-        if (wallet.passwordHash !== passwordHash) {
-            throw new Error('Invalid wallet credentials');
+        const ledgerReference =
+            ministry.ledgerReference ||
+            `MINISTRY_${ministry.ministryReferenceId || ministry.ministryCode}`;
+
+        if (!ledgerReference) {
+            throw new Error(
+                'ledgerReference, ministryReferenceId, or ministryCode is required'
+            );
         }
 
-        const authId = ctx.stub.getTxID();
-        const createdAt = this._getTxTimestamp(ctx);
+        const existingMinistry = await ctx.stub.getState(ledgerReference);
 
-        const loginAudit = {
-            docType: 'authAudit',
-            authId,
-            walletAddress,
-            customerId: wallet.customerId,
-            organizationId: wallet.organizationId,
-            loginStatus: 'SUCCESS',
+        if (existingMinistry && existingMinistry.length > 0) {
+            throw new Error(
+                `Ministry already exists on blockchain: ${ledgerReference}`
+            );
+        }
+
+        const txId = ctx.stub.getTxID();
+        const createdAt = ministry.createdAt || this._getTxTimestamp(ctx);
+
+        const blockchainRecord = {
+            docType: 'MINISTRY',
+            ledgerReference,
+            ministryId: ministry.ministryId || null,
+            ministryReferenceId: ministry.ministryReferenceId || null,
+            ministryCode: ministry.ministryCode || null,
+            ministryName: ministry.ministryName || null,
+            arabicName: ministry.arabicName || null,
+            ministryType: ministry.ministryType || null,
+            parentMinistry: ministry.parentMinistry || null,
+            ministerName: ministry.ministerName || null,
+            contactPerson: ministry.contactPerson || null,
+            contactEmail: ministry.contactEmail || null,
+            contactMobile: ministry.contactMobile || null,
+            countryCode: ministry.countryCode || null,
+            countryName: ministry.countryName || null,
+            governorateCode: ministry.governorateCode || null,
+            governorateName: ministry.governorateName || null,
+            address: ministry.address || null,
+            walletAddress: ministry.walletAddress || null,
+            walletCurrency: ministry.walletCurrency || null,
+            walletStatus: ministry.walletStatus || 'ACTIVE',
+            institutionStatus:
+                ministry.institutionStatus || 'PENDING_APPROVAL',
+            status: ministry.status || 'ACTIVE',
+            blockchainStatus: 'CONFIRMED',
             createdAt,
-            createdTxId: authId
+            updatedAt: createdAt,
+            createdTxId: txId,
+            updatedTxId: txId
         };
 
-        await ctx.stub.putState(this._authAuditKey(authId), Buffer.from(JSON.stringify(loginAudit)));
+        await ctx.stub.putState(
+            ledgerReference,
+            Buffer.from(JSON.stringify(blockchainRecord))
+        );
 
-        return this._successResponse('Wallet login successful', {
-            wallet: this._removeSensitiveWalletFields(wallet),
-            authAudit: loginAudit
-        });
+        return this._successResponse(
+            'Ministry created on blockchain successfully',
+            {
+                ledgerReference,
+                docType: 'MINISTRY',
+                ministryReferenceId: blockchainRecord.ministryReferenceId,
+                ministryCode: blockchainRecord.ministryCode,
+                ministryName: blockchainRecord.ministryName,
+                txId,
+                record: blockchainRecord
+            }
+        );
     }
 
-    async TransferBetweenWallets(ctx, fromWalletAddress, toWalletAddress, amount, description) {
+    async GetMinistry(ctx, ledgerReference) {
+        this._required(ledgerReference, 'ledgerReference');
+
+        const data = await ctx.stub.getState(ledgerReference);
+
+        if (!data || data.length === 0) {
+            throw new Error(
+                `Ministry not found on blockchain: ${ledgerReference}`
+            );
+        }
+
+        return data.toString();
+    }
+
+    async TransferBetweenWallets(
+        ctx,
+        fromWalletAddress,
+        toWalletAddress,
+        amount,
+        description
+    ) {
         this._required(fromWalletAddress, 'fromWalletAddress');
         this._required(toWalletAddress, 'toWalletAddress');
 
@@ -191,18 +285,38 @@ class KycWalletContract extends Contract {
             createdTxId: txId
         };
 
-        await ctx.stub.putState(this._walletKey(fromWalletAddress), Buffer.from(JSON.stringify(fromWallet)));
-        await ctx.stub.putState(this._walletKey(toWalletAddress), Buffer.from(JSON.stringify(toWallet)));
-        await ctx.stub.putState(this._transactionKey(txId), Buffer.from(JSON.stringify(transaction)));
+        await ctx.stub.putState(
+            this._walletKey(fromWalletAddress),
+            Buffer.from(JSON.stringify(fromWallet))
+        );
 
-        return this._successResponse('Wallet-to-wallet transfer completed successfully', {
-            transaction,
-            fromWalletBalance: fromWallet.balance,
-            toWalletBalance: toWallet.balance
-        });
+        await ctx.stub.putState(
+            this._walletKey(toWalletAddress),
+            Buffer.from(JSON.stringify(toWallet))
+        );
+
+        await ctx.stub.putState(
+            this._transactionKey(txId),
+            Buffer.from(JSON.stringify(transaction))
+        );
+
+        return this._successResponse(
+            'Wallet-to-wallet transfer completed successfully',
+            {
+                transaction,
+                fromWalletBalance: fromWallet.balance,
+                toWalletBalance: toWallet.balance
+            }
+        );
     }
 
-    async TransferToOrganization(ctx, fromWalletAddress, organizationId, amount, description) {
+    async TransferToOrganization(
+        ctx,
+        fromWalletAddress,
+        organizationId,
+        amount,
+        description
+    ) {
         this._required(fromWalletAddress, 'fromWalletAddress');
         this._required(organizationId, 'organizationId');
 
@@ -232,7 +346,9 @@ class KycWalletContract extends Contract {
         fromWallet.updatedTxId = txId;
 
         const organizationLedgerKey = this._organizationBalanceKey(organizationId);
-        const organizationBalanceBytes = await ctx.stub.getState(organizationLedgerKey);
+        const organizationBalanceBytes = await ctx.stub.getState(
+            organizationLedgerKey
+        );
 
         let organizationBalance;
 
@@ -249,10 +365,14 @@ class KycWalletContract extends Contract {
                 updatedTxId: txId
             };
         } else {
-            organizationBalance = JSON.parse(organizationBalanceBytes.toString());
+            organizationBalance = JSON.parse(
+                organizationBalanceBytes.toString()
+            );
         }
 
-        organizationBalance.balance = this._roundAmount(organizationBalance.balance + parsedAmount);
+        organizationBalance.balance = this._roundAmount(
+            organizationBalance.balance + parsedAmount
+        );
         organizationBalance.updatedAt = createdAt;
         organizationBalance.updatedTxId = txId;
 
@@ -274,15 +394,29 @@ class KycWalletContract extends Contract {
             createdTxId: txId
         };
 
-        await ctx.stub.putState(this._walletKey(fromWalletAddress), Buffer.from(JSON.stringify(fromWallet)));
-        await ctx.stub.putState(organizationLedgerKey, Buffer.from(JSON.stringify(organizationBalance)));
-        await ctx.stub.putState(this._transactionKey(txId), Buffer.from(JSON.stringify(transaction)));
+        await ctx.stub.putState(
+            this._walletKey(fromWalletAddress),
+            Buffer.from(JSON.stringify(fromWallet))
+        );
 
-        return this._successResponse('Wallet-to-organization transfer completed successfully', {
-            transaction,
-            walletBalance: fromWallet.balance,
-            organizationBalance: organizationBalance.balance
-        });
+        await ctx.stub.putState(
+            organizationLedgerKey,
+            Buffer.from(JSON.stringify(organizationBalance))
+        );
+
+        await ctx.stub.putState(
+            this._transactionKey(txId),
+            Buffer.from(JSON.stringify(transaction))
+        );
+
+        return this._successResponse(
+            'Wallet-to-organization transfer completed successfully',
+            {
+                transaction,
+                walletBalance: fromWallet.balance,
+                organizationBalance: organizationBalance.balance
+            }
+        );
     }
 
     async GetWalletBalance(ctx, walletAddress) {
@@ -317,7 +451,7 @@ class KycWalletContract extends Contract {
         const outgoingQuery = {
             selector: {
                 docType: 'transaction',
-                fromWalletAddress
+                fromWalletAddress: walletAddress
             },
             use_index: [
                 'indexTransactionByFromWalletDoc',
@@ -349,11 +483,14 @@ class KycWalletContract extends Contract {
             return String(b.createdAt).localeCompare(String(a.createdAt));
         });
 
-        return this._successResponse('Transaction history retrieved successfully', {
-            walletAddress,
-            totalTransactions: transactions.length,
-            transactions
-        });
+        return this._successResponse(
+            'Transaction history retrieved successfully',
+            {
+                walletAddress,
+                totalTransactions: transactions.length,
+                transactions
+            }
+        );
     }
 
     async GetWalletByCustomerId(ctx, customerId) {
@@ -373,14 +510,19 @@ class KycWalletContract extends Contract {
     async GetOrganizationBalance(ctx, organizationId) {
         this._required(organizationId, 'organizationId');
 
-        const organizationBalanceBytes = await ctx.stub.getState(this._organizationBalanceKey(organizationId));
+        const organizationBalanceBytes = await ctx.stub.getState(
+            this._organizationBalanceKey(organizationId)
+        );
 
         if (!organizationBalanceBytes || organizationBalanceBytes.length === 0) {
-            return this._successResponse('Organization balance retrieved successfully', {
-                organizationId,
-                balance: 0,
-                currency: 'TOKEN'
-            });
+            return this._successResponse(
+                'Organization balance retrieved successfully',
+                {
+                    organizationId,
+                    balance: 0,
+                    currency: 'TOKEN'
+                }
+            );
         }
 
         return this._successResponse(
@@ -392,7 +534,9 @@ class KycWalletContract extends Contract {
     async GetTransactionById(ctx, transactionId) {
         this._required(transactionId, 'transactionId');
 
-        const transactionBytes = await ctx.stub.getState(this._transactionKey(transactionId));
+        const transactionBytes = await ctx.stub.getState(
+            this._transactionKey(transactionId)
+        );
 
         if (!transactionBytes || transactionBytes.length === 0) {
             throw new Error(`Transaction not found: ${transactionId}`);
@@ -593,8 +737,15 @@ class KycWalletContract extends Contract {
             ]
         };
 
-        const outgoingResults = await this._queryLedgerWithKeys(ctx, outgoingQuery);
-        const incomingResults = await this._queryLedgerWithKeys(ctx, incomingQuery);
+        const outgoingResults = await this._queryLedgerWithKeys(
+            ctx,
+            outgoingQuery
+        );
+
+        const incomingResults = await this._queryLedgerWithKeys(
+            ctx,
+            incomingQuery
+        );
 
         const mergedMap = new Map();
 
@@ -603,8 +754,40 @@ class KycWalletContract extends Contract {
         }
 
         const results = Array.from(mergedMap.values()).sort((a, b) => {
-            return String(b.record.createdAt).localeCompare(String(a.record.createdAt));
+            return String(b.record.createdAt).localeCompare(
+                String(a.record.createdAt)
+            );
         });
+
+        return JSON.stringify(results);
+    }
+
+    async QueryMinistryByCode(ctx, ministryCode) {
+        this._required(ministryCode, 'ministryCode');
+
+        const query = {
+            selector: {
+                docType: 'MINISTRY',
+                ministryCode
+            }
+        };
+
+        const results = await this._queryLedgerWithKeys(ctx, query);
+
+        return JSON.stringify(results);
+    }
+
+    async QueryMinistryByReferenceId(ctx, ministryReferenceId) {
+        this._required(ministryReferenceId, 'ministryReferenceId');
+
+        const query = {
+            selector: {
+                docType: 'MINISTRY',
+                ministryReferenceId
+            }
+        };
+
+        const results = await this._queryLedgerWithKeys(ctx, query);
 
         return JSON.stringify(results);
     }
@@ -626,7 +809,11 @@ class KycWalletContract extends Contract {
     }
 
     _required(value, fieldName) {
-        if (value === undefined || value === null || String(value).trim() === '') {
+        if (
+            value === undefined ||
+            value === null ||
+            String(value).trim() === ''
+        ) {
             throw new Error(`${fieldName} is required`);
         }
     }
@@ -653,7 +840,9 @@ class KycWalletContract extends Contract {
         }
 
         if (wallet.status !== 'ACTIVE') {
-            throw new Error(`${label} is not active. Current status: ${wallet.status}`);
+            throw new Error(
+                `${label} is not active. Current status: ${wallet.status}`
+            );
         }
     }
 
@@ -683,7 +872,10 @@ class KycWalletContract extends Contract {
 
         let seconds;
 
-        if (timestamp.seconds && typeof timestamp.seconds.toNumber === 'function') {
+        if (
+            timestamp.seconds &&
+            typeof timestamp.seconds.toNumber === 'function'
+        ) {
             seconds = timestamp.seconds.toNumber();
         } else if (timestamp.seconds && timestamp.seconds.low !== undefined) {
             seconds = timestamp.seconds.low;
@@ -691,7 +883,8 @@ class KycWalletContract extends Contract {
             seconds = Number(timestamp.seconds || 0);
         }
 
-        const milliseconds = seconds * 1000 + Math.floor(timestamp.nanos / 1000000);
+        const milliseconds =
+            seconds * 1000 + Math.floor(timestamp.nanos / 1000000);
 
         return new Date(milliseconds).toISOString();
     }
@@ -737,7 +930,10 @@ class KycWalletContract extends Contract {
                 const result = await iterator.next();
 
                 if (result.value && result.value.value.toString()) {
-                    const record = JSON.parse(result.value.value.toString('utf8'));
+                    const record = JSON.parse(
+                        result.value.value.toString('utf8')
+                    );
+
                     results.push(record);
                 }
 
@@ -761,7 +957,9 @@ class KycWalletContract extends Contract {
                 const result = await iterator.next();
 
                 if (result.value && result.value.value.toString()) {
-                    const record = JSON.parse(result.value.value.toString('utf8'));
+                    const record = JSON.parse(
+                        result.value.value.toString('utf8')
+                    );
 
                     results.push({
                         key: result.value.key,
