@@ -1,0 +1,109 @@
+<div class="login-page">
+  <section class="login-card">
+    <div class="login-header">
+      <p class="eyebrow">Government Blockchain Services</p>
+      <h1>Resident Wallet Login</h1>
+      <p>Login using Resident ID or Wallet Address to view resident wallet and KYC information.</p>
+    </div>
+
+    <div class="alert success" *ngIf="successMessage()">
+      {{ successMessage() }}
+    </div>
+
+    <div class="alert error" *ngIf="errorMessage()">
+      {{ errorMessage() }}
+    </div>
+
+    <form [formGroup]="loginForm" class="login-form">
+      <div class="form-field">
+        <label>Resident ID or Wallet Address</label>
+        <input
+          type="text"
+          formControlName="loginId"
+          placeholder="RES-20260525-1705 or WALLET-..."
+        />
+        <small *ngIf="hasError('loginId')">Resident ID or Wallet Address is required.</small>
+      </div>
+
+      <div class="form-field">
+        <label>Wallet Password</label>
+        <input
+          type="password"
+          formControlName="walletPassword"
+          placeholder="Wallet password"
+          autocomplete="current-password"
+        />
+        <small *ngIf="hasError('walletPassword')">Password must be at least 8 characters.</small>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="btn btn-secondary" (click)="reset()">
+          Reset
+        </button>
+
+        <button type="button" class="btn btn-primary" (click)="login()" [disabled]="isLoggingIn()">
+          {{ isLoggingIn() ? 'Logging in...' : 'Login' }}
+        </button>
+      </div>
+    </form>
+  </section>
+
+  <section class="info-card" *ngIf="residentInfo() as resident">
+    <div class="section-header">
+      <h2>Resident Information</h2>
+      <span>{{ resident.kyc_status }}</span>
+    </div>
+
+    <div class="info-grid">
+      <div>
+        <label>Resident ID</label>
+        <strong>{{ resident.resident_id }}</strong>
+      </div>
+
+      <div>
+        <label>Full Name</label>
+        <strong>{{ resident.full_name }}</strong>
+      </div>
+
+      <div>
+        <label>Arabic Full Name</label>
+        <strong>{{ resident.arabic_full_name }}</strong>
+      </div>
+
+      <div>
+        <label>Mobile</label>
+        <strong>{{ resident.mobile_number }}</strong>
+      </div>
+
+      <div>
+        <label>Email</label>
+        <strong>{{ resident.email }}</strong>
+      </div>
+
+      <div>
+        <label>Risk Category</label>
+        <strong>{{ resident.risk_category }}</strong>
+      </div>
+
+      <div>
+        <label>Wallet Address</label>
+        <strong>{{ resident.wallet_address }}</strong>
+      </div>
+
+      <div>
+        <label>Wallet Currency</label>
+        <strong>{{ resident.wallet_currency }}</strong>
+      </div>
+
+      <div>
+        <label>Wallet Status</label>
+        <strong>{{ resident.wallet_status }}</strong>
+      </div>
+
+      <div>
+        <label>Blockchain Status</label>
+        <strong>{{ resident.blockchain_status }}</strong>
+      </div>
+    </div>
+  </section>
+</div>

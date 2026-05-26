@@ -71,6 +71,14 @@ export const routes: Routes = [
     title: 'Create Resident Account'
   },
   {
+    path: 'government-blockchain/resident-wallet-login',
+    loadComponent: () =>
+      import('./pages/government-blockchain/resident-wallet-login/resident-wallet-login.component')
+        .then(m => m.ResidentWalletLoginComponent),
+    title: 'Resident Wallet Login'
+  },
+
+  {
     path: 'digital-kyc/wallet-create',
     component: WalletCreate
   },

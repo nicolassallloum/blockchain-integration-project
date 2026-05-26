@@ -46,6 +46,8 @@ interface ResidentDraft {
   walletAddress: string;
   walletCurrency: string;
   walletStatus: string;
+  walletPassword?: string;
+  confirmWalletPassword?: string;
 }
 
 @Component({
@@ -215,9 +217,11 @@ export class CreateResidentAccountComponent implements OnInit {
         walletAddress: [{ value: '', disabled: false }, [Validators.maxLength(150)]],
         walletCurrency: ['LBP', Validators.required],
         walletStatus: ['Not Created', Validators.required],
+        walletPassword: ['', [Validators.required, Validators.minLength(8)]],
+        confirmWalletPassword: ['', [Validators.required, Validators.minLength(8)]],
       },
       {
-        validators: [this.identityDocumentValidator],
+        validators: [this.identityDocumentValidator, this.walletPasswordMatchValidator],
       }
     );
   }
@@ -254,6 +258,8 @@ export class CreateResidentAccountComponent implements OnInit {
       walletAddress: '',
       walletCurrency: 'LBP',
       walletStatus: 'Not Created',
+      walletPassword: '',
+      confirmWalletPassword: '',
     });
   }
 
@@ -324,6 +330,8 @@ export class CreateResidentAccountComponent implements OnInit {
       'mobileNumber',
       'email',
       'walletCurrency',
+      'walletPassword',
+      'confirmWalletPassword',
     ];
 
     const hasMissingRequiredWalletData = requiredFields.some((field) => {
@@ -341,6 +349,7 @@ export class CreateResidentAccountComponent implements OnInit {
 
     const payload = {
       walletCurrency: this.residentForm.get('walletCurrency')?.value || 'LBP',
+      walletPassword: this.residentForm.get('walletPassword')?.value,
     };
 
     this.residentApi.createWallet(residentId, payload).subscribe({
@@ -450,6 +459,8 @@ export class CreateResidentAccountComponent implements OnInit {
       riskCategory: 'Low',
       walletCurrency: 'LBP',
       walletStatus: 'Not Created',
+      walletPassword: 'Wallet@123',
+      confirmWalletPassword: 'Wallet@123',
     });
   }
 
@@ -472,6 +483,14 @@ export class CreateResidentAccountComponent implements OnInit {
     if (control.errors['min']) return 'Value cannot be negative.';
     if (control.errors['max']) return 'Value is too large.';
     if (control.errors['minimumAge']) return 'Resident must be at least 18 years old.';
+
+    if (
+      fieldName === 'confirmWalletPassword' &&
+      this.residentForm?.errors?.['passwordMismatch']
+    ) {
+      return 'Wallet passwords do not match.';
+    }
+    if (control.errors['passwordMismatch']) return 'Wallet passwords do not match.';
 
     return 'Invalid value.';
   }
@@ -523,6 +542,8 @@ export class CreateResidentAccountComponent implements OnInit {
       walletAddress: rawValue.walletAddress,
       walletCurrency: rawValue.walletCurrency,
       walletStatus: rawValue.walletStatus,
+      walletPassword: rawValue.walletPassword,
+      confirmWalletPassword: rawValue.confirmWalletPassword,
     };
   }
 
@@ -563,6 +584,21 @@ export class CreateResidentAccountComponent implements OnInit {
 
       return age >= minAge ? null : { minimumAge: true };
     };
+  }
+
+  private walletPasswordMatchValidator(group: AbstractControl): ValidationErrors | null {
+    const walletPassword = group.get('walletPassword')?.value;
+    const confirmWalletPassword = group.get('confirmWalletPassword')?.value;
+
+    if (!walletPassword && !confirmWalletPassword) {
+      return null;
+    }
+
+    if (walletPassword !== confirmWalletPassword) {
+      return { passwordMismatch: true };
+    }
+
+    return null;
   }
 
   private identityDocumentValidator(group: AbstractControl): ValidationErrors | null {

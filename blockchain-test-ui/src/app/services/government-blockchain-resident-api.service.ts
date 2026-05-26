@@ -66,7 +66,7 @@ export class GovernmentBlockchainResidentApiService {
 
   createWallet(
     residentId: string,
-    payload: { walletCurrency?: string }
+    payload: { walletCurrency?: string; walletPassword?: string }
   ): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
       `${this.apiBaseUrl}/${encodeURIComponent(residentId)}/wallet`,
@@ -81,6 +81,14 @@ export class GovernmentBlockchainResidentApiService {
     return this.http.post<ApiResponse<any>>(
       `${this.apiBaseUrl}/${encodeURIComponent(residentId)}/submit-kyc`,
       payload || {}
+    );
+  }
+
+
+  walletLogin(payload: { loginId: string; walletPassword: string }): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${this.apiBaseUrl}/wallet-login`,
+      payload
     );
   }
 

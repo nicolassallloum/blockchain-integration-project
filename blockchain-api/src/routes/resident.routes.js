@@ -30,6 +30,14 @@ router.post('/draft', requireHandler('saveDraft'));
 
 router.get('/search', requireHandler('searchResidents'));
 
+/*
+|--------------------------------------------------------------------------
+| IMPORTANT:
+| Static routes must come before /:residentId routes.
+|--------------------------------------------------------------------------
+*/
+router.post('/wallet-login', requireHandler('walletLogin'));
+
 router.get('/:residentId', requireHandler('getResidentById'));
 
 router.post('/:residentId/wallet', requireHandler('createWallet'));

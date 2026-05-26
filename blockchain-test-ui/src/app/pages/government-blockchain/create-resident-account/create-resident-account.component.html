@@ -322,6 +322,28 @@
           </select>
           <small *ngIf="hasFieldError('walletStatus')">{{ getFieldError('walletStatus') }}</small>
         </div>
+
+        <div class="form-field">
+          <label>Wallet Password <span>*</span></label>
+          <input
+            type="password"
+            formControlName="walletPassword"
+            placeholder="Minimum 8 characters"
+            autocomplete="new-password"
+          />
+          <small *ngIf="hasFieldError('walletPassword')">{{ getFieldError('walletPassword') }}</small>
+        </div>
+
+        <div class="form-field">
+          <label>Confirm Wallet Password <span>*</span></label>
+          <input
+            type="password"
+            formControlName="confirmWalletPassword"
+            placeholder="Confirm wallet password"
+            autocomplete="new-password"
+          />
+          <small *ngIf="hasFieldError('confirmWalletPassword')">{{ getFieldError('confirmWalletPassword') }}</small>
+        </div>
       </div>
     </section>
 

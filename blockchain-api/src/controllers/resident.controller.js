@@ -1,6 +1,7 @@
 const residentService = require('../services/resident.service');
 const pool = require('../db/postgres');
 const fabricService = require('../services/fabric.service');
+const crypto = require('crypto');
 function sendSuccess(res, message, data, statusCode = 200) {
   return res.status(statusCode).json({
     success: true,
@@ -8,6 +9,13 @@ function sendSuccess(res, message, data, statusCode = 200) {
     data,
     timestamp: new Date().toISOString(),
   });
+}
+function normalizeJson(value) {
+  return JSON.parse(
+    JSON.stringify(value, (_, item) =>
+      typeof item === 'bigint' ? item.toString() : item
+    )
+  );
 }
 function buildResidentPayload(body) {
     return {
@@ -490,19 +498,45 @@ async function saveDraft(req, res) {
 async function createWallet(req, res) {
   try {
     const { residentId } = req.params;
+    const payload = req.body || {};
 
-    const result = await residentService.createWallet(residentId, req.body || {});
+    const result = await residentService.createWallet(residentId, payload);
+
+    const temporaryPassword = generateTemporaryWalletPassword();
+    const passwordData = hashWalletPassword(temporaryPassword);
+
+    await pool.query(
+      `
+      UPDATE blockchain.resident_wallets
+      SET wallet_password_hash = $2,
+          wallet_password_salt = $3,
+          wallet_password_updated_at = CURRENT_TIMESTAMP,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE resident_id = $1
+      `,
+      [
+        residentId,
+        passwordData.hash,
+        passwordData.salt
+      ]
+    );
 
     return sendSuccess(
       res,
-      'Resident wallet created successfully.',
-      result,
+      'Resident wallet created successfully. Temporary password generated.',
+      {
+        ...result,
+        temporaryPassword,
+        passwordNotice: 'This password is shown only once. Please save it securely.'
+      },
       201
     );
   } catch (error) {
     return sendError(res, error);
   }
 }
+
+
 
 async function submitKyc(req, res) {
   try {
@@ -775,11 +809,11 @@ async function syncResidentToBlockchain(req, res) {
     return res.json({
       success: true,
       message: 'Resident synced to blockchain successfully.',
-      data: {
+      data: normalizeJson({
         resident: residentFabricResult,
         wallet: walletFabricResult,
         kyc: kycFabricResult
-      }
+      })
     });
   } catch (error) {
     await client.query('ROLLBACK');
@@ -795,3 +829,145 @@ async function syncResidentToBlockchain(req, res) {
 }
 
 module.exports.syncResidentToBlockchain = syncResidentToBlockchain;
+
+
+
+
+function generateTemporaryWalletPassword() {
+  const partOne = crypto.randomBytes(4).toString('hex').toUpperCase();
+  const partTwo = crypto.randomBytes(3).toString('hex').toUpperCase();
+
+  return `WALLET-${partOne}-${partTwo}`;
+}
+
+function hashWalletPassword(password) {
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = crypto
+    .pbkdf2Sync(password, salt, 120000, 64, 'sha512')
+    .toString('hex');
+
+  return { salt, hash };
+}
+
+function verifyWalletPassword(password, salt, expectedHash) {
+  const hash = crypto
+    .pbkdf2Sync(password, salt, 120000, 64, 'sha512')
+    .toString('hex');
+
+  return crypto.timingSafeEqual(
+    Buffer.from(hash, 'hex'),
+    Buffer.from(expectedHash, 'hex')
+  );
+}
+
+async function walletLogin(req, res) {
+  try {
+    const { loginId, walletPassword } = req.body || {};
+
+    if (!loginId || !walletPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'loginId and walletPassword are required.'
+      });
+    }
+
+    const result = await pool.query(
+      `
+      SELECT
+          r.id,
+          r.resident_id,
+          r.first_name,
+          r.father_name,
+          r.mother_name,
+          r.last_name,
+          r.full_name,
+          r.arabic_full_name,
+          r.date_of_birth,
+          r.gender,
+          r.nationality,
+          r.national_id_number,
+          r.mobile_number,
+          r.email,
+          r.governorate,
+          r.district,
+          r.municipality,
+          r.address,
+          r.employment_status,
+          r.occupation,
+          r.monthly_income,
+          r.kyc_status,
+          r.risk_category,
+          r.record_status,
+          rw.wallet_address,
+          rw.wallet_currency,
+          rw.wallet_status,
+          rw.blockchain_status,
+          rw.fabric_tx_id,
+          rw.wallet_password_hash,
+          rw.wallet_password_salt
+      FROM blockchain.residents r
+      JOIN blockchain.resident_wallets rw
+        ON rw.resident_id = r.resident_id
+      WHERE r.resident_id = $1
+         OR rw.wallet_address = $1
+      LIMIT 1
+      `,
+      [loginId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid resident wallet login.'
+      });
+    }
+
+    const row = result.rows[0];
+
+    if (!row.wallet_password_hash || !row.wallet_password_salt) {
+      return res.status(401).json({
+        success: false,
+        message: 'Wallet password is not configured for this resident.'
+      });
+    }
+
+    const isValid = verifyWalletPassword(
+      walletPassword,
+      row.wallet_password_salt,
+      row.wallet_password_hash
+    );
+
+    if (!isValid) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid resident wallet login.'
+      });
+    }
+
+    await pool.query(
+      `
+      UPDATE blockchain.resident_wallets
+      SET last_login_at = CURRENT_TIMESTAMP,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE resident_id = $1
+      `,
+      [row.resident_id]
+    );
+
+    delete row.wallet_password_hash;
+    delete row.wallet_password_salt;
+
+    return res.json({
+      success: true,
+      message: 'Resident wallet login successful.',
+      data: {
+        resident: row
+      },
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    return sendError(res, error);
+  }
+}
+
+module.exports.walletLogin = walletLogin;

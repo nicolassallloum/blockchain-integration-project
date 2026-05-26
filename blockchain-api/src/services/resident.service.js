@@ -83,7 +83,10 @@ async function saveDraft(payload) {
 
 async function createWallet(residentId, payload) {
   const resident = await residentRepository.findResidentById(residentId);
-
+  const crypto = require('crypto');
+  function generateTemporaryWalletPassword() {
+    return `WALLET-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
+  }
   if (!resident) {
     const error = new Error(`Resident not found with ID: ${residentId}`);
     error.statusCode = 404;
