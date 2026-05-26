@@ -49,15 +49,24 @@ export class CreateMinistryAccountComponent {
   isWalletCreating = false;
   isBulkUploading = false;
 
+  showCreationPopup = false;
+
   selectedCsvFileName = '';
   csvRows: CsvMinistryRow[] = [];
   validCsvRows: CsvMinistryRow[] = [];
   invalidCsvRows: CsvMinistryRow[] = [];
 
   createdMinistryId = '';
+  createdMinistryCode = '';
+  createdMinistryName = '';
   createdWalletAddress = '';
   createdBlockchainStatus = '';
   createdWalletCurrency = '';
+  createdWalletBalance = '';
+  createdLoginUsername = '';
+  createdTemporaryPassword = '';
+  createdLedgerReference = '';
+  createdTxId = '';
 
   ministryTypes: string[] = [
     'Central Government Ministry',
@@ -230,11 +239,23 @@ export class CreateMinistryAccountComponent {
 
           const ministry = response?.data?.ministry;
           const wallet = response?.data?.wallet;
+          const blockchain = response?.data?.blockchain;
+          const login = response?.data?.login;
 
           this.createdMinistryId =
             ministry?.ministry_reference_id ||
             ministry?.ministryReferenceId ||
             formValue.ministryId;
+
+          this.createdMinistryCode =
+            ministry?.ministry_code ||
+            ministry?.ministryCode ||
+            formValue.ministryCode;
+
+          this.createdMinistryName =
+            ministry?.ministry_name ||
+            ministry?.ministryName ||
+            formValue.ministryName;
 
           this.createdWalletAddress =
             wallet?.wallet_address ||
@@ -248,10 +269,43 @@ export class CreateMinistryAccountComponent {
             formValue.walletCurrency ||
             'LBP';
 
+          this.createdWalletBalance =
+            wallet?.wallet_current_balance ||
+            wallet?.walletCurrentBalance ||
+            wallet?.wallet_initial_balance ||
+            wallet?.walletInitialBalance ||
+            '0.0000';
+
           this.createdBlockchainStatus =
             wallet?.blockchain_status ||
             ministry?.blockchain_status ||
-            'NOT_SUBMITTED';
+            blockchain?.status ||
+            'CONFIRMED';
+
+          this.createdLoginUsername =
+            login?.username ||
+            ministry?.login_username ||
+            ministry?.loginUsername ||
+            formValue.ministryCode;
+
+          this.createdTemporaryPassword =
+            login?.temporaryPassword ||
+            login?.temporary_password ||
+            '';
+
+          this.createdLedgerReference =
+            blockchain?.ledgerReference ||
+            ministry?.ledger_reference ||
+            ministry?.ledgerReference ||
+            '';
+
+          this.createdTxId =
+            blockchain?.txId ||
+            ministry?.tx_id ||
+            ministry?.txId ||
+            wallet?.tx_id ||
+            wallet?.txId ||
+            '';
 
           this.ministryAccountForm.patchValue({
             walletAddress: this.createdWalletAddress,
@@ -261,11 +315,11 @@ export class CreateMinistryAccountComponent {
               wallet?.walletStatus ||
               'ACTIVE',
             blockchainStatus: this.createdBlockchainStatus,
+            blockchainProofHash: this.createdTxId || this.createdLedgerReference,
           });
 
           this.isSubmitting = false;
-
-          alert('Ministry account inserted successfully.');
+          this.showCreationPopup = true;
         },
         error: (error) => {
           console.error('CREATE MINISTRY API ERROR:', error);
@@ -279,6 +333,25 @@ export class CreateMinistryAccountComponent {
           );
         },
       });
+  }
+
+  closeCreationPopup(): void {
+    this.showCreationPopup = false;
+  }
+
+  copyToClipboard(value: string | null | undefined): void {
+    if (!value) {
+      return;
+    }
+
+    navigator.clipboard.writeText(value).then(
+      () => {
+        alert('Copied successfully.');
+      },
+      () => {
+        alert('Unable to copy. Please copy manually.');
+      }
+    );
   }
 
   createWallet(): void {
@@ -306,9 +379,11 @@ export class CreateMinistryAccountComponent {
       });
 
       this.createdMinistryId = ministryId;
+      this.createdMinistryCode = ministryCode;
       this.createdWalletAddress = walletAddress;
       this.createdWalletCurrency =
         this.ministryAccountForm.get('walletCurrency')?.value;
+      this.createdWalletBalance = '0.0000';
       this.createdBlockchainStatus = 'PENDING';
 
       this.isWalletCreating = false;
@@ -362,10 +437,19 @@ export class CreateMinistryAccountComponent {
       blockchainStatus: 'NOT_SUBMITTED',
     });
 
+    this.showCreationPopup = false;
+
     this.createdMinistryId = '';
+    this.createdMinistryCode = '';
+    this.createdMinistryName = '';
     this.createdWalletAddress = '';
     this.createdBlockchainStatus = '';
     this.createdWalletCurrency = '';
+    this.createdWalletBalance = '';
+    this.createdLoginUsername = '';
+    this.createdTemporaryPassword = '';
+    this.createdLedgerReference = '';
+    this.createdTxId = '';
 
     this.clearCsvFile();
   }

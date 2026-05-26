@@ -343,7 +343,7 @@
       <div class="card-header">
         <div>
           <h2>Ministry Account Prepared Successfully</h2>
-          <p>The ministry account and wallet data are ready for backend API submission.</p>
+          <p>The ministry account, wallet, and blockchain proof are available below.</p>
         </div>
         <span class="section-number success-mark">✓</span>
       </div>
@@ -367,6 +367,16 @@
         <div>
           <span class="panel-label">Blockchain Status</span>
           <strong>{{ createdBlockchainStatus || '-' }}</strong>
+        </div>
+
+        <div>
+          <span class="panel-label">Login Username</span>
+          <strong>{{ createdLoginUsername || '-' }}</strong>
+        </div>
+
+        <div>
+          <span class="panel-label">Generated Password</span>
+          <strong>{{ createdTemporaryPassword || '-' }}</strong>
         </div>
       </div>
     </section>
@@ -398,4 +408,123 @@
       </div>
     </section>
   </form>
+
+  <div
+    class="creation-popup-backdrop"
+    *ngIf="showCreationPopup"
+    role="dialog"
+    aria-modal="true"
+  >
+    <div class="creation-popup">
+      <div class="popup-header">
+        <div>
+          <span class="popup-eyebrow">Blockchain Confirmation</span>
+          <h2>Ministry Created Successfully</h2>
+          <p>
+            The ministry account, blockchain wallet, login credentials, and proof
+            were generated successfully.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          class="popup-close"
+          (click)="closeCreationPopup()"
+          aria-label="Close popup"
+        >
+          ×
+        </button>
+      </div>
+
+      <div class="popup-success-icon">✓</div>
+
+      <div class="popup-details">
+        <div class="popup-detail-item">
+          <span>Ministry Code</span>
+          <strong>{{ createdMinistryCode || '-' }}</strong>
+        </div>
+
+        <div class="popup-detail-item">
+          <span>Ministry ID</span>
+          <strong>{{ createdMinistryId || '-' }}</strong>
+        </div>
+
+        <div class="popup-detail-item">
+          <span>Login Username</span>
+          <strong>{{ createdLoginUsername || '-' }}</strong>
+          <button type="button" (click)="copyToClipboard(createdLoginUsername)">
+            Copy
+          </button>
+        </div>
+
+        <div class="popup-detail-item password-item">
+          <span>Generated Password</span>
+          <strong>{{ createdTemporaryPassword || '-' }}</strong>
+          <button type="button" (click)="copyToClipboard(createdTemporaryPassword)">
+            Copy
+          </button>
+        </div>
+
+        <div class="popup-detail-item full">
+          <span>Wallet Address</span>
+          <strong>{{ createdWalletAddress || '-' }}</strong>
+          <button type="button" (click)="copyToClipboard(createdWalletAddress)">
+            Copy
+          </button>
+        </div>
+
+        <div class="popup-detail-item">
+          <span>Wallet Currency</span>
+          <strong>{{ createdWalletCurrency || '-' }}</strong>
+        </div>
+
+        <div class="popup-detail-item">
+          <span>Wallet Balance</span>
+          <strong>
+            {{ createdWalletBalance || '0.0000' }}
+            {{ createdWalletCurrency || '' }}
+          </strong>
+        </div>
+
+        <div class="popup-detail-item full">
+          <span>Ledger Reference</span>
+          <strong>{{ createdLedgerReference || '-' }}</strong>
+          <button type="button" (click)="copyToClipboard(createdLedgerReference)">
+            Copy
+          </button>
+        </div>
+
+        <div class="popup-detail-item full">
+          <span>Blockchain TX ID</span>
+          <strong>{{ createdTxId || '-' }}</strong>
+          <button type="button" (click)="copyToClipboard(createdTxId)">
+            Copy
+          </button>
+        </div>
+      </div>
+
+      <div class="popup-warning">
+        Important: Save the generated password now. It is returned once by the
+        backend and should be changed by the ministry user after first login.
+      </div>
+
+      <div class="popup-actions">
+        <button
+          type="button"
+          class="btn secondary"
+          (click)="closeCreationPopup()"
+        >
+          Close
+        </button>
+
+        <button
+          type="button"
+          class="btn primary"
+          (click)="resetForm(); closeCreationPopup()"
+        >
+          Create Another Ministry
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
