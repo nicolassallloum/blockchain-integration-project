@@ -17,6 +17,32 @@ function generateTemporaryPassword() {
   const random = Math.random().toString(36).substring(2, 8);
   return `Gov@${timestamp}${random}`;
 }
+async function getNextMinistryId(req, res, next) {
+  try {
+    const result = await db.query(`
+      SELECT nextval('ssdx_kyc.ministry_id') AS sequence_number;
+    `);
+
+    const sequenceNumber = Number(result.rows[0].sequence_number);
+    const ministryId = `MIN-BLOCKCHAIN-${sequenceNumber}`;
+
+    return res.status(200).json({
+      success: true,
+      message: 'Next ministry ID generated successfully.',
+      data: {
+        sequenceNumber,
+        ministryId
+      }
+    });
+  } catch (error) {
+    console.error('Generate next ministry ID error:', {
+      message: error.message,
+      stack: error.stack
+    });
+
+    return next(error);
+  }
+}
 function buildMinistryBlockchainDocument(savedMinistry, savedWallet) {
   const ledgerReference = `MINISTRY_${savedMinistry.ministry_reference_id}`;
 
@@ -1031,5 +1057,6 @@ module.exports = {
   createMinistryWallet,
   getMinistries,
   getMinistryById,
-  bulkCreateMinistries
+  bulkCreateMinistries,
+  getNextMinistryId
 };

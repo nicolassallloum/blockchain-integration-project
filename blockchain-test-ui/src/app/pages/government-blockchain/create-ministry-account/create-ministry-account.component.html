@@ -32,7 +32,24 @@
       <div class="form-grid">
         <div class="form-field">
           <label for="ministryId">Ministry ID</label>
-          <input id="ministryId" type="text" formControlName="ministryId" placeholder="MIN-001" />
+          <div class="generated-id-field">
+        <input
+          id="ministryId"
+          type="text"
+          formControlName="ministryId"
+          placeholder="Auto-generated"
+          readonly
+        />
+
+        <button
+          type="button"
+          class="generate-id-btn"
+          (click)="generateNextMinistryId()"
+          [disabled]="isMinistryIdGenerating"
+        >
+          {{ isMinistryIdGenerating ? 'Generating...' : 'Generate' }}
+        </button>
+      </div>
           <small *ngIf="isInvalid('ministryId')">{{ getErrorMessage('ministryId') }}</small>
         </div>
 

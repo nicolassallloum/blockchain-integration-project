@@ -1,6 +1,7 @@
 const express = require('express');
 
 const {
+  getNextMinistryId,
   createMinistryAccount,
   loginMinistry,
   saveMinistryDraft,
@@ -15,7 +16,7 @@ const router = express.Router();
 router.post('/login', loginMinistry);
 router.post('/draft', saveMinistryDraft);
 router.post('/bulk', bulkCreateMinistries);
-
+router.get('/reference/next-ministry-id', getNextMinistryId);
 router.post('/', createMinistryAccount);
 router.get('/', getMinistries);
 

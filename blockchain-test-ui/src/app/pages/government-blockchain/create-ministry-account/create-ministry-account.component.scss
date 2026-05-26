@@ -722,3 +722,44 @@
     }
   }
 }
+
+.generated-id-field {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+
+  input {
+    width: 100%;
+  }
+}
+
+.generate-id-btn {
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid #cfe7ff;
+  background: #eaf5ff;
+  color: #0057b8;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: #dff0ff;
+  }
+
+  &:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+  }
+}
+
+@media (max-width: 768px) {
+  .generated-id-field {
+    grid-template-columns: 1fr;
+  }
+
+  .generate-id-btn {
+    width: 100%;
+  }
+}

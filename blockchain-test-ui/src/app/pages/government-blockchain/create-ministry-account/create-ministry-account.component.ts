@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
-import { Component, ElementRef, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnInit,ViewChild } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -37,9 +37,9 @@ interface CsvMinistryRow {
   templateUrl: './create-ministry-account.component.html',
   styleUrl: './create-ministry-account.component.scss',
 })
-export class CreateMinistryAccountComponent {
+export class CreateMinistryAccountComponent implements OnInit {
   @ViewChild('csvFileInput') csvFileInput?: ElementRef<HTMLInputElement>;
-
+  isMinistryIdGenerating = false;
   private readonly apiBaseUrl = 'http://172.31.13.90:3001/api/v1';
 
   ministryAccountForm: FormGroup;
@@ -167,6 +167,43 @@ export class CreateMinistryAccountComponent {
       blockchainStatus: ['NOT_SUBMITTED', Validators.required],
       blockchainProofHash: [''],
     });
+  }
+
+  ngOnInit(): void {
+    this.generateNextMinistryId();
+  }
+
+  generateNextMinistryId(): void {
+    this.isMinistryIdGenerating = true;
+
+    this.http
+      .get<any>(
+        `${this.apiBaseUrl}/government-blockchain/ministries/reference/next-ministry-id`
+      )
+      .subscribe({
+        next: (response) => {
+          const ministryId = response?.data?.ministryId || '';
+
+          if (ministryId) {
+            this.ministryAccountForm.patchValue({
+              ministryId
+            });
+          }
+
+          this.isMinistryIdGenerating = false;
+        },
+        error: (error) => {
+          console.error('GENERATE MINISTRY ID ERROR:', error);
+
+          this.isMinistryIdGenerating = false;
+
+          alert(
+            error?.error?.message ||
+              error?.message ||
+              'Failed to generate Ministry ID.'
+          );
+        },
+      });
   }
 
   createMinistry(): void {
@@ -452,6 +489,7 @@ export class CreateMinistryAccountComponent {
     this.createdTxId = '';
 
     this.clearCsvFile();
+    this.generateNextMinistryId();
   }
 
   onCsvFileSelected(event: Event): void {
