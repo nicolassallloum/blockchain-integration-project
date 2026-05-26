@@ -1,36 +1,45 @@
 'use strict';
 
 const express = require('express');
+
+const {
+  getOrganizationTypes,
+  getNextCustomerId,
+  getSourceOfFunds,
+  getOccupations,
+  getEconomicSectors,
+  getOrganizations,
+  getCountries,
+  getMinistryDropdowns,
+  getGovernoratesByCountry
+} = require('../controllers/reference.controller');
+
 const router = express.Router();
 
-const referenceController = require('../controllers/reference.controller');
+/*
+|--------------------------------------------------------------------------
+| Existing Reference APIs
+|--------------------------------------------------------------------------
+*/
 
-/**
- * Existing routes
- */
-router.get('/countries', referenceController.getCountries);
-router.get('/debug-test', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Reference route file is loaded'
-  });
-});
-/**
- * Organization reference routes
- * Add aliases to support both old and new frontend names.
- */
-router.get('/organization-types', referenceController.getOrganizationTypes);
-router.get('/blockchain-organization-types', referenceController.getOrganizationTypes);
+router.get('/organization-types', getOrganizationTypes);
+router.get('/next-customer-id', getNextCustomerId);
+router.get('/source-of-funds', getSourceOfFunds);
+router.get('/occupations', getOccupations);
+router.get('/economic-sectors', getEconomicSectors);
+router.get('/organizations', getOrganizations);
+router.get('/countries', getCountries);
 
-router.get('/organizations', referenceController.getOrganizations);
-router.get('/blockchain-organizations', referenceController.getOrganizations);
+/*
+|--------------------------------------------------------------------------
+| Government Blockchain / Ministry Dropdown APIs
+|--------------------------------------------------------------------------
+| Used by:
+| Create Ministry Account screen
+|--------------------------------------------------------------------------
+*/
 
-/**
- * New Blockchain KYC reference routes
- */
-router.get('/next-customer-id', referenceController.getNextCustomerId);
-router.get('/source-of-funds', referenceController.getSourceOfFunds);
-router.get('/occupations', referenceController.getOccupations);
-router.get('/economic-sectors', referenceController.getEconomicSectors);
+router.get('/ministry-dropdowns', getMinistryDropdowns);
+router.get('/governorates', getGovernoratesByCountry);
 
 module.exports = router;

@@ -25,7 +25,7 @@ const referenceRoutes = require('./reference.routes');
 const dashboardRoutes = safeLoadRoute("dashboard", "./dashboard.routes");
 const publicAdministrationRoutes = require('./publicAdministration.routes');
 // router.use('/government-blockchain/public-administrations', publicAdministrationRoutes);
-
+const governmentReferenceRoutes = require('./government-blockchain/reference.routes');
 const healthRoutes = safeLoadRoute("health", "./health.routes");
 const blockchainRoutes = safeLoadRoute("blockchain", "./blockchain.routes");
 // const fabricRoutes = safeLoadRoute("fabric", "./fabric.routes");
@@ -36,10 +36,12 @@ if (healthRoutes) {
   router.use("/health", healthRoutes);
 }
 
+if (governmentReferenceRoutes) {
+  router.use("/government-blockchain/references", governmentReferenceRoutes);
+}
 if (blockchainRoutes) {
   router.use("/blockchain", blockchainRoutes);
 }
-
 if (fabricRoutes) {
   router.use("/fabric", fabricRoutes);
 }
