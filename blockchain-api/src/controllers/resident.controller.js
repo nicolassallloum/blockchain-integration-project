@@ -526,8 +526,30 @@ async function createWallet(req, res) {
       'Resident wallet created successfully. Temporary password generated.',
       {
         ...result,
+
+        // Password aliases for frontend compatibility.
         temporaryPassword,
-        passwordNotice: 'This password is shown only once. Please save it securely.'
+        generatedWalletPassword: temporaryPassword,
+        walletPassword: temporaryPassword,
+        accessCode: temporaryPassword,
+
+        walletAddress:
+          result?.wallet_address ||
+          result?.walletAddress ||
+          result?.wallet?.wallet_address ||
+          result?.wallet?.walletAddress,
+
+        walletStatus:
+          result?.wallet_status ||
+          result?.walletStatus ||
+          'Active',
+
+        blockchainStatus:
+          result?.blockchain_status ||
+          result?.blockchainStatus ||
+          'PENDING',
+
+        passwordNotice: 'This password is shown only once. Please save it securely. Only the hash is stored in PostgreSQL.'
       },
       201
     );

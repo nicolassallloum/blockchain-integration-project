@@ -8,15 +8,51 @@ import {
   AbstractControl,
   ValidationErrors,
 } from '@angular/forms';
+import { forkJoin } from 'rxjs';
+
+import {
+  GovernmentBlockchainResidentApiService,
+} from '../../../services/government-blockchain-resident-api.service';
+
+import {
+  ResidentReferenceApiService,
+  ResidentLookupItem,
+} from '../../../services/resident-reference-api.service';
 
 interface LookupItem {
   id: string;
   name: string;
 }
-import {
-  GovernmentBlockchainResidentApiService,
-  CreateResidentPayload,
-} from '../../../services/government-blockchain-resident-api.service';
+
+interface ResidentCreatedPopupData {
+  residentId: string;
+  fullName: string;
+  arabicFullName: string;
+  dateOfBirth: string;
+  gender: string;
+  nationality: string;
+  nationalIdNumber: string;
+  passportNumber: string;
+  residencyPermitNumber: string;
+  taxNumber: string;
+  mobileNumber: string;
+  email: string;
+  governorate: string;
+  district: string;
+  municipality: string;
+  address: string;
+  employmentStatus: string;
+  occupation: string;
+  monthlyIncome: number | null;
+  kycStatus: string;
+  riskCategory: string;
+  walletAddress: string;
+  walletCurrency: string;
+  walletStatus: string;
+  walletPassword: string;
+  createdAt: string;
+}
+
 interface ResidentDraft {
   residentId: string;
   firstName: string;
@@ -64,10 +100,15 @@ export class CreateResidentAccountComponent implements OnInit {
   isWalletCreating = signal(false);
   isDraftSaving = signal(false);
   isKycSubmitting = signal(false);
+  isReferenceLoading = signal(false);
+  isResidentIdLoading = signal(false);
 
   submitted = signal(false);
   successMessage = signal('');
   errorMessage = signal('');
+
+  showResidentCreatedPopup = signal(false);
+  residentCreatedPopupData = signal<ResidentCreatedPopupData | null>(null);
 
   readonly pageTitle = 'Create Resident Account';
   readonly routePath = '/government-blockchain/create-resident-account';
@@ -87,60 +128,13 @@ export class CreateResidentAccountComponent implements OnInit {
     { id: 'Other', name: 'Other' },
   ];
 
-  governorates: LookupItem[] = [
-    { id: 'Beirut', name: 'Beirut' },
-    { id: 'Mount Lebanon', name: 'Mount Lebanon' },
-    { id: 'North Lebanon', name: 'North Lebanon' },
-    { id: 'South Lebanon', name: 'South Lebanon' },
-    { id: 'Bekaa', name: 'Bekaa' },
-    { id: 'Nabatieh', name: 'Nabatieh' },
-    { id: 'Baalbek-Hermel', name: 'Baalbek-Hermel' },
-    { id: 'Akkar', name: 'Akkar' },
-  ];
+  governorates: ResidentLookupItem[] = [];
+  districts: ResidentLookupItem[] = [];
+  municipalities: ResidentLookupItem[] = [];
 
-  districts: LookupItem[] = [
-    { id: 'Beirut', name: 'Beirut' },
-    { id: 'Baabda', name: 'Baabda' },
-    { id: 'Metn', name: 'Metn' },
-    { id: 'Keserwan', name: 'Keserwan' },
-    { id: 'Tripoli', name: 'Tripoli' },
-    { id: 'Zahle', name: 'Zahle' },
-    { id: 'Saida', name: 'Saida' },
-    { id: 'Tyre', name: 'Tyre' },
-    { id: 'Nabatieh', name: 'Nabatieh' },
-  ];
-
-  municipalities: LookupItem[] = [
-    { id: 'Beirut Municipality', name: 'Beirut Municipality' },
-    { id: 'Baabda Municipality', name: 'Baabda Municipality' },
-    { id: 'Jdeideh Municipality', name: 'Jdeideh Municipality' },
-    { id: 'Jounieh Municipality', name: 'Jounieh Municipality' },
-    { id: 'Tripoli Municipality', name: 'Tripoli Municipality' },
-    { id: 'Zahle Municipality', name: 'Zahle Municipality' },
-    { id: 'Saida Municipality', name: 'Saida Municipality' },
-    { id: 'Tyre Municipality', name: 'Tyre Municipality' },
-  ];
-
-  employmentStatuses: LookupItem[] = [
-    { id: 'Employed', name: 'Employed' },
-    { id: 'Self-Employed', name: 'Self-Employed' },
-    { id: 'Unemployed', name: 'Unemployed' },
-    { id: 'Student', name: 'Student' },
-    { id: 'Retired', name: 'Retired' },
-  ];
-
-  kycStatuses: LookupItem[] = [
-    { id: 'Draft', name: 'Draft' },
-    { id: 'Pending Review', name: 'Pending Review' },
-    { id: 'Verified', name: 'Verified' },
-    { id: 'Rejected', name: 'Rejected' },
-  ];
-
-  riskCategories: LookupItem[] = [
-    { id: 'Low', name: 'Low Risk' },
-    { id: 'Medium', name: 'Medium Risk' },
-    { id: 'High', name: 'High Risk' },
-  ];
+  employmentStatuses: ResidentLookupItem[] = [];
+  kycStatuses: ResidentLookupItem[] = [];
+  riskCategories: ResidentLookupItem[] = [];
 
   walletCurrencies: LookupItem[] = [
     { id: 'LBP', name: 'LBP - Lebanese Pound' },
@@ -170,19 +164,22 @@ export class CreateResidentAccountComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private residentApi: GovernmentBlockchainResidentApiService
+    private residentApi: GovernmentBlockchainResidentApiService,
+    private residentReferenceApi: ResidentReferenceApiService
   ) {}
 
   ngOnInit(): void {
     this.buildForm();
-    this.loadStaticSampleData();
     this.registerNameAutoBuild();
+    this.registerLocationDropdownEvents();
+    this.loadReferenceData();
+    this.loadNextResidentId();
   }
 
   private buildForm(): void {
     this.residentForm = this.fb.group(
       {
-        residentId: ['', [Validators.required, Validators.maxLength(50)]],
+        residentId: [{ value: '', disabled: false }, [Validators.required, Validators.maxLength(50)]],
 
         firstName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
         fatherName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
@@ -192,7 +189,7 @@ export class CreateResidentAccountComponent implements OnInit {
         arabicFullName: ['', [Validators.required, Validators.maxLength(250)]],
         dateOfBirth: ['', [Validators.required, this.minimumAgeValidator(18)]],
         gender: ['', Validators.required],
-        nationality: ['', Validators.required],
+        nationality: ['Lebanese', Validators.required],
 
         nationalIdNumber: ['', [Validators.required, Validators.pattern(/^[0-9]{6,20}$/)]],
         passportNumber: ['', [Validators.maxLength(50)]],
@@ -211,26 +208,139 @@ export class CreateResidentAccountComponent implements OnInit {
         occupation: ['', [Validators.maxLength(150)]],
         monthlyIncome: [null, [Validators.min(0), Validators.max(1000000000)]],
 
-        kycStatus: ['Draft', Validators.required],
-        riskCategory: ['Low', Validators.required],
+        kycStatus: ['DRAFT', Validators.required],
+        riskCategory: ['LOW', Validators.required],
 
         walletAddress: [{ value: '', disabled: false }, [Validators.maxLength(150)]],
         walletCurrency: ['LBP', Validators.required],
         walletStatus: ['Not Created', Validators.required],
-        walletPassword: ['', [Validators.required, Validators.minLength(8)]],
-        confirmWalletPassword: ['', [Validators.required, Validators.minLength(8)]],
+
+        /*
+         * Wallet password is generated by backend after wallet/account creation.
+         * It is displayed here only if backend returns it.
+         */
+        walletPassword: [{ value: '', disabled: false }],
+        confirmWalletPassword: [{ value: '', disabled: false }],
       },
       {
-        validators: [this.identityDocumentValidator, this.walletPasswordMatchValidator],
+        validators: [this.identityDocumentValidator],
       }
     );
   }
 
-  private loadStaticSampleData(): void {
-    const generatedResidentId = this.generateResidentId();
+  private loadReferenceData(): void {
+    this.isReferenceLoading.set(true);
+
+    forkJoin({
+      governorates: this.residentReferenceApi.getGovernorates(),
+      kycStatuses: this.residentReferenceApi.getKycStatuses(),
+      riskCategories: this.residentReferenceApi.getRiskCategories(),
+      employmentStatuses: this.residentReferenceApi.getEmploymentStatuses(),
+    }).subscribe({
+      next: (response) => {
+        this.isReferenceLoading.set(false);
+
+        this.governorates = response.governorates?.data || [];
+        this.kycStatuses = response.kycStatuses?.data || [];
+        this.riskCategories = response.riskCategories?.data || [];
+        this.employmentStatuses = response.employmentStatuses?.data || [];
+
+        this.setDefaultValueIfEmpty('kycStatus', this.kycStatuses, 'DRAFT');
+        this.setDefaultValueIfEmpty('riskCategory', this.riskCategories, 'LOW');
+      },
+      error: (error) => {
+        this.isReferenceLoading.set(false);
+        this.errorMessage.set(error?.error?.message || 'Failed to load resident reference dropdowns.');
+        console.error('[Resident Reference API Error]', error);
+      },
+    });
+  }
+
+  private loadNextResidentId(): void {
+    this.isResidentIdLoading.set(true);
+
+    this.residentReferenceApi.getNextResidentId().subscribe({
+      next: (response) => {
+        this.isResidentIdLoading.set(false);
+
+        if (response?.success && response?.data?.residentId) {
+          this.residentForm.patchValue({
+            residentId: response.data.residentId,
+          });
+        }
+      },
+      error: (error) => {
+        this.isResidentIdLoading.set(false);
+        this.errorMessage.set(error?.error?.message || 'Failed to generate resident ID from PostgreSQL sequence.');
+        console.error('[Next Resident ID API Error]', error);
+      },
+    });
+  }
+
+  private registerLocationDropdownEvents(): void {
+    this.residentForm.get('governorate')?.valueChanges.subscribe((governorateId: string) => {
+      this.districts = [];
+      this.municipalities = [];
+
+      this.residentForm.patchValue(
+        {
+          district: '',
+          municipality: '',
+        },
+        { emitEvent: false }
+      );
+
+      if (governorateId) {
+        this.loadDistricts(governorateId);
+      }
+    });
+
+    this.residentForm.get('district')?.valueChanges.subscribe((districtId: string) => {
+      this.municipalities = [];
+
+      this.residentForm.patchValue(
+        {
+          municipality: '',
+        },
+        { emitEvent: false }
+      );
+
+      if (districtId) {
+        this.loadMunicipalities(districtId);
+      }
+    });
+  }
+
+  private loadDistricts(governorateId: string): void {
+    this.residentReferenceApi.getDistricts(governorateId).subscribe({
+      next: (response) => {
+        this.districts = response?.data || [];
+      },
+      error: (error) => {
+        this.districts = [];
+        this.errorMessage.set(error?.error?.message || 'Failed to load districts.');
+        console.error('[Districts API Error]', error);
+      },
+    });
+  }
+
+  private loadMunicipalities(districtId: string): void {
+    this.residentReferenceApi.getMunicipalities(districtId).subscribe({
+      next: (response) => {
+        this.municipalities = response?.data || [];
+      },
+      error: (error) => {
+        this.municipalities = [];
+        this.errorMessage.set(error?.error?.message || 'Failed to load municipalities.');
+        console.error('[Municipalities API Error]', error);
+      },
+    });
+  }
+
+  fillSampleData(): void {
+    const beirutGovernorate = this.governorates.find((item) => item.code === 'BEIRUT');
 
     this.residentForm.patchValue({
-      residentId: generatedResidentId,
       firstName: 'Nicolas',
       fatherName: 'Joseph',
       motherName: 'Mariam',
@@ -246,21 +356,40 @@ export class CreateResidentAccountComponent implements OnInit {
       taxNumber: 'TX-987654',
       mobileNumber: '+961 70 123 456',
       email: 'resident.demo@gov.lb',
-      governorate: 'Beirut',
-      district: 'Beirut',
-      municipality: 'Beirut Municipality',
+      governorate: beirutGovernorate?.id || '',
       address: 'Beirut Central District, Lebanon',
-      employmentStatus: 'Employed',
+      employmentStatus: 'EMPLOYED',
       occupation: 'Data Engineer',
       monthlyIncome: 25000000,
-      kycStatus: 'Draft',
-      riskCategory: 'Low',
+      kycStatus: 'DRAFT',
+      riskCategory: 'LOW',
       walletAddress: '',
       walletCurrency: 'LBP',
       walletStatus: 'Not Created',
       walletPassword: '',
       confirmWalletPassword: '',
     });
+
+    if (beirutGovernorate?.id) {
+      this.loadDistricts(beirutGovernorate.id);
+
+      setTimeout(() => {
+        const beirutDistrict = this.districts.find((item) => item.code === 'BEIRUT');
+        if (beirutDistrict?.id) {
+          this.residentForm.patchValue({ district: beirutDistrict.id });
+          this.loadMunicipalities(beirutDistrict.id);
+
+          setTimeout(() => {
+            const beirutMunicipality = this.municipalities.find(
+              (item) => item.code === 'BEIRUT_MUNICIPALITY'
+            );
+            if (beirutMunicipality?.id) {
+              this.residentForm.patchValue({ municipality: beirutMunicipality.id });
+            }
+          }, 300);
+        }
+      }, 300);
+    }
   }
 
   private registerNameAutoBuild(): void {
@@ -300,7 +429,9 @@ export class CreateResidentAccountComponent implements OnInit {
         this.isSubmitting.set(false);
 
         if (response?.success) {
-          this.successMessage.set('Resident account saved successfully to PostgreSQL.');
+          this.captureWalletPasswordFromResponse(response);
+          this.openResidentCreatedPopup();
+          this.successMessage.set('Resident account saved successfully to PostgreSQL and ready for blockchain wallet creation.');
         } else {
           this.errorMessage.set(response?.message || 'Resident save failed.');
         }
@@ -330,8 +461,6 @@ export class CreateResidentAccountComponent implements OnInit {
       'mobileNumber',
       'email',
       'walletCurrency',
-      'walletPassword',
-      'confirmWalletPassword',
     ];
 
     const hasMissingRequiredWalletData = requiredFields.some((field) => {
@@ -349,7 +478,6 @@ export class CreateResidentAccountComponent implements OnInit {
 
     const payload = {
       walletCurrency: this.residentForm.get('walletCurrency')?.value || 'LBP',
-      walletPassword: this.residentForm.get('walletPassword')?.value,
     };
 
     this.residentApi.createWallet(residentId, payload).subscribe({
@@ -359,14 +487,35 @@ export class CreateResidentAccountComponent implements OnInit {
         if (response?.success) {
           const walletAddress =
             response?.data?.wallet?.wallet_address ||
-            response?.data?.resident?.wallet_address;
+            response?.data?.wallet?.walletAddress ||
+            response?.data?.resident?.wallet_address ||
+            response?.data?.resident?.walletAddress;
+
+          const generatedPassword =
+            response?.data?.temporaryPassword ||
+            response?.data?.walletPassword ||
+            response?.data?.generatedWalletPassword ||
+            response?.data?.wallet_password ||
+            response?.data?.accessCode ||
+            response?.data?.wallet?.walletPassword ||
+            response?.data?.wallet?.generatedPassword ||
+            response?.data?.wallet?.accessCode ||
+            response?.data?.resident?.walletPassword ||
+            response?.data?.resident?.generatedPassword ||
+            '';
 
           this.residentForm.patchValue({
-            walletAddress,
+            walletAddress: walletAddress || 'Created on Blockchain',
             walletStatus: 'Active',
+            walletPassword: generatedPassword,
+            confirmWalletPassword: generatedPassword,
           });
 
-          this.successMessage.set('Resident wallet saved successfully to PostgreSQL.');
+          this.captureWalletPasswordFromResponse(response);
+
+          this.openResidentCreatedPopup();
+
+          this.successMessage.set('Resident wallet created successfully. Wallet address and generated password are displayed if returned by backend.');
         } else {
           this.errorMessage.set(response?.message || 'Wallet creation failed.');
         }
@@ -423,8 +572,8 @@ export class CreateResidentAccountComponent implements OnInit {
     this.isKycSubmitting.set(true);
 
     const payload = {
-      kycStatus: 'Pending Review',
-      riskCategory: this.residentForm.get('riskCategory')?.value || 'Low',
+      kycStatus: 'PENDING_REVIEW',
+      riskCategory: this.residentForm.get('riskCategory')?.value || 'LOW',
     };
 
     this.residentApi.submitKyc(residentId, payload).subscribe({
@@ -433,7 +582,7 @@ export class CreateResidentAccountComponent implements OnInit {
 
         if (response?.success) {
           this.residentForm.patchValue({
-            kycStatus: 'Pending Review',
+            kycStatus: 'PENDING_REVIEW',
           });
 
           this.successMessage.set('Resident KYC submitted successfully to PostgreSQL.');
@@ -453,15 +602,21 @@ export class CreateResidentAccountComponent implements OnInit {
     this.submitted.set(false);
     this.clearMessages();
     this.residentForm.reset();
+
+    this.districts = [];
+    this.municipalities = [];
+
     this.residentForm.patchValue({
-      residentId: this.generateResidentId(),
-      kycStatus: 'Draft',
-      riskCategory: 'Low',
+      kycStatus: 'DRAFT',
+      riskCategory: 'LOW',
+      nationality: 'Lebanese',
       walletCurrency: 'LBP',
       walletStatus: 'Not Created',
-      walletPassword: 'Wallet@123',
-      confirmWalletPassword: 'Wallet@123',
+      walletPassword: '',
+      confirmWalletPassword: '',
     });
+
+    this.loadNextResidentId();
   }
 
   getFieldError(fieldName: string): string {
@@ -484,14 +639,6 @@ export class CreateResidentAccountComponent implements OnInit {
     if (control.errors['max']) return 'Value is too large.';
     if (control.errors['minimumAge']) return 'Resident must be at least 18 years old.';
 
-    if (
-      fieldName === 'confirmWalletPassword' &&
-      this.residentForm?.errors?.['passwordMismatch']
-    ) {
-      return 'Wallet passwords do not match.';
-    }
-    if (control.errors['passwordMismatch']) return 'Wallet passwords do not match.';
-
     return 'Invalid value.';
   }
 
@@ -510,8 +657,66 @@ export class CreateResidentAccountComponent implements OnInit {
     );
   }
 
+
+  openResidentCreatedPopup(): void {
+    const rawValue = this.residentForm.getRawValue();
+
+    const selectedGovernorate = this.findLookupItem(this.governorates, rawValue.governorate);
+    const selectedDistrict = this.findLookupItem(this.districts, rawValue.district);
+    const selectedMunicipality = this.findLookupItem(this.municipalities, rawValue.municipality);
+    const selectedEmploymentStatus = this.findLookupItem(this.employmentStatuses, rawValue.employmentStatus);
+    const selectedKycStatus = this.findLookupItem(this.kycStatuses, rawValue.kycStatus);
+    const selectedRiskCategory = this.findLookupItem(this.riskCategories, rawValue.riskCategory);
+
+    this.residentCreatedPopupData.set({
+      residentId: rawValue.residentId || '-',
+      fullName: rawValue.fullName || '-',
+      arabicFullName: rawValue.arabicFullName || '-',
+      dateOfBirth: rawValue.dateOfBirth || '-',
+      gender: rawValue.gender || '-',
+      nationality: rawValue.nationality || '-',
+      nationalIdNumber: rawValue.nationalIdNumber || '-',
+      passportNumber: rawValue.passportNumber || '-',
+      residencyPermitNumber: rawValue.residencyPermitNumber || '-',
+      taxNumber: rawValue.taxNumber || '-',
+      mobileNumber: rawValue.mobileNumber || '-',
+      email: rawValue.email || '-',
+      governorate: selectedGovernorate?.name || rawValue.governorate || '-',
+      district: selectedDistrict?.name || rawValue.district || '-',
+      municipality: selectedMunicipality?.name || rawValue.municipality || '-',
+      address: rawValue.address || '-',
+      employmentStatus: selectedEmploymentStatus?.name || rawValue.employmentStatus || '-',
+      occupation: rawValue.occupation || '-',
+      monthlyIncome: rawValue.monthlyIncome,
+      kycStatus: selectedKycStatus?.name || rawValue.kycStatus || '-',
+      riskCategory: selectedRiskCategory?.name || rawValue.riskCategory || '-',
+      walletAddress: rawValue.walletAddress || 'Not Created Yet',
+      walletCurrency: rawValue.walletCurrency || '-',
+      walletStatus: rawValue.walletStatus || '-',
+      walletPassword: rawValue.walletPassword || 'Generated password not returned by backend',
+      createdAt: new Date().toLocaleString(),
+    });
+
+    this.showResidentCreatedPopup.set(true);
+  }
+
+  closeResidentCreatedPopup(): void {
+    this.showResidentCreatedPopup.set(false);
+  }
+
+  printResidentCreatedPopup(): void {
+    window.print();
+  }
+
   private preparePayload(): ResidentDraft {
     const rawValue = this.residentForm.getRawValue();
+
+    const selectedGovernorate = this.findLookupItem(this.governorates, rawValue.governorate);
+    const selectedDistrict = this.findLookupItem(this.districts, rawValue.district);
+    const selectedMunicipality = this.findLookupItem(this.municipalities, rawValue.municipality);
+    const selectedEmploymentStatus = this.findLookupItem(this.employmentStatuses, rawValue.employmentStatus);
+    const selectedKycStatus = this.findLookupItem(this.kycStatuses, rawValue.kycStatus);
+    const selectedRiskCategory = this.findLookupItem(this.riskCategories, rawValue.riskCategory);
 
     return {
       residentId: rawValue.residentId,
@@ -530,15 +735,21 @@ export class CreateResidentAccountComponent implements OnInit {
       taxNumber: rawValue.taxNumber,
       mobileNumber: rawValue.mobileNumber,
       email: rawValue.email,
-      governorate: rawValue.governorate,
-      district: rawValue.district,
-      municipality: rawValue.municipality,
+
+      /*
+       * Form stores dropdown IDs for cascading.
+       * Payload sends stable codes to PostgreSQL/backend.
+       */
+      governorate: selectedGovernorate?.code || rawValue.governorate,
+      district: selectedDistrict?.code || rawValue.district,
+      municipality: selectedMunicipality?.code || rawValue.municipality,
+
       address: rawValue.address,
-      employmentStatus: rawValue.employmentStatus,
+      employmentStatus: selectedEmploymentStatus?.code || rawValue.employmentStatus,
       occupation: rawValue.occupation,
       monthlyIncome: rawValue.monthlyIncome,
-      kycStatus: rawValue.kycStatus,
-      riskCategory: rawValue.riskCategory,
+      kycStatus: selectedKycStatus?.code || rawValue.kycStatus,
+      riskCategory: selectedRiskCategory?.code || rawValue.riskCategory,
       walletAddress: rawValue.walletAddress,
       walletCurrency: rawValue.walletCurrency,
       walletStatus: rawValue.walletStatus,
@@ -547,17 +758,43 @@ export class CreateResidentAccountComponent implements OnInit {
     };
   }
 
-  private generateResidentId(): string {
-    const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const randomPart = Math.floor(1000 + Math.random() * 9000);
-    return `RES-${datePart}-${randomPart}`;
+  private findLookupItem(items: ResidentLookupItem[], idOrCode: string): ResidentLookupItem | undefined {
+    return items.find((item) => item.id === idOrCode || item.code === idOrCode);
   }
 
-  private generateWalletAddress(): string {
-    const randomOne = Math.random().toString(16).substring(2, 10);
-    const randomTwo = Math.random().toString(16).substring(2, 10);
-    const randomThree = Math.random().toString(16).substring(2, 10);
-    return `0xRES${randomOne}${randomTwo}${randomThree}`.toUpperCase();
+  private setDefaultValueIfEmpty(
+    controlName: string,
+    items: ResidentLookupItem[],
+    preferredCode: string
+  ): void {
+    const control = this.residentForm.get(controlName);
+
+    if (!control || control.value) return;
+
+    const preferredItem = items.find((item) => item.code === preferredCode);
+    control.setValue(preferredItem?.id || preferredCode);
+  }
+
+  private captureWalletPasswordFromResponse(response: any): void {
+    const generatedPassword =
+      response?.data?.temporaryPassword ||
+      response?.data?.walletPassword ||
+      response?.data?.generatedWalletPassword ||
+      response?.data?.wallet_password ||
+      response?.data?.accessCode ||
+      response?.data?.wallet?.walletPassword ||
+      response?.data?.wallet?.generatedPassword ||
+      response?.data?.wallet?.accessCode ||
+      response?.data?.resident?.walletPassword ||
+      response?.data?.resident?.generatedPassword ||
+      '';
+
+    if (generatedPassword) {
+      this.residentForm.patchValue({
+        walletPassword: generatedPassword,
+        confirmWalletPassword: generatedPassword,
+      });
+    }
   }
 
   private clearMessages(): void {
@@ -584,21 +821,6 @@ export class CreateResidentAccountComponent implements OnInit {
 
       return age >= minAge ? null : { minimumAge: true };
     };
-  }
-
-  private walletPasswordMatchValidator(group: AbstractControl): ValidationErrors | null {
-    const walletPassword = group.get('walletPassword')?.value;
-    const confirmWalletPassword = group.get('confirmWalletPassword')?.value;
-
-    if (!walletPassword && !confirmWalletPassword) {
-      return null;
-    }
-
-    if (walletPassword !== confirmWalletPassword) {
-      return { passwordMismatch: true };
-    }
-
-    return null;
   }
 
   private identityDocumentValidator(group: AbstractControl): ValidationErrors | null {
