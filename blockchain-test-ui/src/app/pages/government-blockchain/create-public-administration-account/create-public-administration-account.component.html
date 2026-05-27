@@ -53,25 +53,45 @@
     <div class="form-grid">
       <div class="form-control">
         <label>Administration ID</label>
-        <input formControlName="administrationId" placeholder="ADM-001" />
-        <small *ngIf="isInvalid('administrationId')">Administration ID is required.</small>
+        <input
+          formControlName="administrationId"
+          placeholder="ADM-BLOCKCHAIN-1"
+          readonly
+        />
+        <small *ngIf="isLoadingCodes()">Generating next administration ID...</small>
+        <small *ngIf="isInvalid('administrationId')">
+          Administration ID is required and must be like ADM-BLOCKCHAIN-1.
+        </small>
       </div>
 
       <div class="form-control">
         <label>Administration Code</label>
-        <input formControlName="administrationCode" placeholder="ADM-MOI-001" />
-        <small *ngIf="isInvalid('administrationCode')">Administration code is required.</small>
+        <input
+          formControlName="administrationCode"
+          placeholder="ADM-BLOCKCHAIN-1"
+          readonly
+        />
+        <small *ngIf="isInvalid('administrationCode')">
+          Administration code is required and must be like ADM-BLOCKCHAIN-1.
+        </small>
       </div>
 
       <div class="form-control">
         <label>Administration Name</label>
-        <input formControlName="administrationName" placeholder="General Directorate of Personal Status" />
+        <input
+          formControlName="administrationName"
+          placeholder="General Directorate of Personal Status"
+        />
         <small *ngIf="isInvalid('administrationName')">Administration name is required.</small>
       </div>
 
       <div class="form-control">
         <label>Arabic Name</label>
-        <input formControlName="arabicName" placeholder="المديرية العامة للأحوال الشخصية" dir="rtl" />
+        <input
+          formControlName="arabicName"
+          placeholder="المديرية العامة للأحوال الشخصية"
+          dir="rtl"
+        />
         <small *ngIf="isInvalid('arabicName')">Arabic name is required.</small>
       </div>
 
@@ -157,7 +177,10 @@
         <label>Municipality</label>
         <select formControlName="municipality">
           <option value="">Select Municipality</option>
-          <option *ngFor="let municipality of municipalities" [value]="municipality">
+          <option
+            *ngFor="let municipality of filteredMunicipalities()"
+            [value]="municipality"
+          >
             {{ municipality }}
           </option>
         </select>
@@ -166,7 +189,11 @@
 
       <div class="form-control wide">
         <label>Address</label>
-        <textarea formControlName="address" rows="3" placeholder="Full official address"></textarea>
+        <textarea
+          formControlName="address"
+          rows="3"
+          placeholder="Full official address"
+        ></textarea>
         <small *ngIf="isInvalid('address')">Address is required.</small>
       </div>
     </div>
@@ -179,8 +206,14 @@
     <div class="form-grid">
       <div class="form-control">
         <label>Wallet Address</label>
-        <input formControlName="walletAddress" placeholder="WALLET-ADM-001" />
-        <small *ngIf="isInvalid('walletAddress')">Wallet address is required.</small>
+        <input
+          formControlName="walletAddress"
+          placeholder="GOV-ADM-1"
+          readonly
+        />
+        <small *ngIf="isInvalid('walletAddress')">
+          Wallet address is required and must be like GOV-ADM-1.
+        </small>
       </div>
 
       <div class="form-control">
@@ -205,7 +238,10 @@
     <div class="integration-box">
       <div>
         <strong>Persistence Target</strong>
-        <p>Both manual creation and wallet creation are prepared to save to Blockchain and PostgreSQL.</p>
+        <p>
+          Administration ID and Wallet Address are generated automatically.
+          Records are saved to Hyperledger Fabric Blockchain and PostgreSQL.
+        </p>
       </div>
 
       <div class="badges">
@@ -215,11 +251,21 @@
     </div>
 
     <div class="actions">
-      <button type="button" class="primary" (click)="createAdministration()" [disabled]="isSubmitting()">
+      <button
+        type="button"
+        class="primary"
+        (click)="createAdministration()"
+        [disabled]="isSubmitting() || isLoadingCodes()"
+      >
         {{ isSubmitting() ? 'Saving...' : 'Create Administration' }}
       </button>
 
-      <button type="button" class="secondary" (click)="createWallet()" [disabled]="isSubmitting()">
+      <button
+        type="button"
+        class="secondary"
+        (click)="createWallet()"
+        [disabled]="isSubmitting() || isLoadingCodes()"
+      >
         Create Wallet
       </button>
 
@@ -304,6 +350,97 @@
           </tr>
         </tbody>
       </table>
+    </div>
+  </div>
+
+  <div class="success-modal-backdrop" *ngIf="showCreatedPopup()">
+    <div class="success-modal">
+      <button type="button" class="modal-close" (click)="closeCreatedPopup()">×</button>
+
+      <p class="modal-eyebrow">Blockchain Confirmation</p>
+
+      <h2>Public Administration Created Successfully</h2>
+
+      <p class="modal-subtitle">
+        The public administration account, blockchain wallet, login credentials, and proof were generated successfully.
+      </p>
+
+      <div class="modal-divider"></div>
+
+      <div class="success-check">
+        ✓
+      </div>
+
+      <div class="modal-grid" *ngIf="createdPopupData() as popup">
+        <div class="modal-info-card">
+          <span>Administration Code</span>
+          <strong>{{ popup.administrationCode }}</strong>
+        </div>
+
+        <div class="modal-info-card">
+          <span>Administration ID</span>
+          <strong>{{ popup.administrationId }}</strong>
+        </div>
+
+        <div class="modal-info-card">
+          <span>Login Username</span>
+          <strong>{{ popup.loginUsername }}</strong>
+          <button type="button" (click)="copyValue(popup.loginUsername)">Copy</button>
+        </div>
+
+        <div class="modal-info-card warning">
+          <span>Generated Password</span>
+          <strong>{{ popup.generatedPassword }}</strong>
+          <button type="button" (click)="copyValue(popup.generatedPassword)">Copy</button>
+        </div>
+
+        <div class="modal-info-card wide">
+          <span>Wallet Address</span>
+          <strong>{{ popup.walletAddress }}</strong>
+          <button type="button" (click)="copyValue(popup.walletAddress)">Copy</button>
+        </div>
+
+        <div class="modal-info-card">
+          <span>Wallet Currency</span>
+          <strong>{{ popup.walletCurrency }}</strong>
+        </div>
+
+        <div class="modal-info-card">
+          <span>Wallet Status</span>
+          <strong>{{ popup.walletStatus }}</strong>
+        </div>
+
+        <div class="modal-info-card wide">
+          <span>Ledger Reference</span>
+          <strong>{{ popup.ledgerReference }}</strong>
+          <button type="button" (click)="copyValue(popup.ledgerReference)">Copy</button>
+        </div>
+
+        <div class="modal-info-card wide">
+          <span>Blockchain TX ID</span>
+          <strong>{{ popup.blockchainTxId }}</strong>
+          <button type="button" (click)="copyValue(popup.blockchainTxId)">Copy</button>
+        </div>
+
+        <div class="modal-info-card wide">
+          <span>PostgreSQL Record ID</span>
+          <strong>{{ popup.postgresRecordId }}</strong>
+        </div>
+      </div>
+
+      <div class="modal-note">
+        Important: Save the generated password now. It is returned once by the backend and should be changed by the public administration user after first login.
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="secondary" (click)="closeCreatedPopup()">
+          Close
+        </button>
+
+        <button type="button" class="primary" (click)="createAnotherAdministration()">
+          Create Another Administration
+        </button>
+      </div>
     </div>
   </div>
 </section>

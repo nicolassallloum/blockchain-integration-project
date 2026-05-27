@@ -367,10 +367,61 @@ async function savePublicAdministrationDraft(req, res) {
     });
   }
 }
+async function getNextPublicAdministrationCodes(req, res) {
+  try {
+    const result = await pool.query(`
+      SELECT
+        COALESCE(
+          MAX(
+            NULLIF(
+              REGEXP_REPLACE(administration_id, '^ADM-BLOCKCHAIN-', ''),
+              ''
+            )::INT
+          ),
+          0
+        ) AS last_admin_number,
+        COALESCE(
+          MAX(
+            NULLIF(
+              REGEXP_REPLACE(wallet_address, '^GOV-ADM-', ''),
+              ''
+            )::INT
+          ),
+          0
+        ) AS last_wallet_number
+      FROM blockchain.public_administrations
+      WHERE administration_id ~ '^ADM-BLOCKCHAIN-[0-9]+$'
+         OR wallet_address ~ '^GOV-ADM-[0-9]+$'
+    `);
 
+    const lastAdminNumber = Number(result.rows[0]?.last_admin_number || 0);
+    const lastWalletNumber = Number(result.rows[0]?.last_wallet_number || 0);
+
+    const nextNumber = Math.max(lastAdminNumber, lastWalletNumber) + 1;
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        nextNumber,
+        administrationId: `ADM-BLOCKCHAIN-${nextNumber}`,
+        administrationCode: `ADM-BLOCKCHAIN-${nextNumber}`,
+        walletAddress: `GOV-ADM-${nextNumber}`
+      }
+    });
+  } catch (error) {
+    console.error('[GET_NEXT_PUBLIC_ADMINISTRATION_CODES_ERROR]', error);
+
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to generate next public administration codes.',
+      error: error.message
+    });
+  }
+}
 module.exports = {
   createPublicAdministration,
   createPublicAdministrationWallet,
   bulkUploadPublicAdministrations,
-  savePublicAdministrationDraft
+  savePublicAdministrationDraft,
+  getNextPublicAdministrationCodes
 };

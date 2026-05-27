@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, OnInit, signal } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -15,6 +15,19 @@ import {
 } from '../../../models/public-administration.models';
 import { PublicAdministrationApiService } from '../../../services/public-administration-api.service';
 
+interface CreatedPublicAdministrationPopupData {
+  administrationId: string;
+  administrationCode: string;
+  loginUsername: string;
+  generatedPassword: string;
+  walletAddress: string;
+  walletCurrency: string;
+  walletStatus: string;
+  ledgerReference: string;
+  blockchainTxId: string;
+  postgresRecordId: string;
+}
+
 @Component({
   selector: 'app-create-public-administration-account',
   standalone: true,
@@ -22,13 +35,20 @@ import { PublicAdministrationApiService } from '../../../services/public-adminis
   templateUrl: './create-public-administration-account.component.html',
   styleUrl: './create-public-administration-account.component.scss'
 })
-export class CreatePublicAdministrationAccountComponent {
+export class CreatePublicAdministrationAccountComponent implements OnInit {
   activeMode = signal<'manual' | 'csv'>('manual');
   isSubmitting = signal(false);
   isUploading = signal(false);
+  isLoadingCodes = signal(false);
+
   message = signal<string | null>(null);
   error = signal<string | null>(null);
+
+  showCreatedPopup = signal(false);
+  createdPopupData = signal<CreatedPublicAdministrationPopupData | null>(null);
+
   csvRows = signal<PublicAdministrationPayload[]>([]);
+  filteredMunicipalities = signal<string[]>([]);
 
   readonly csvRowCount = computed(() => this.csvRows().length);
 
@@ -67,16 +87,61 @@ export class CreatePublicAdministrationAccountComponent {
     'South Lebanon'
   ];
 
-  municipalities = [
-    'Beirut Municipality',
-    'Tripoli Municipality',
-    'Sidon Municipality',
-    'Zahle Municipality',
-    'Jounieh Municipality',
-    'Byblos Municipality',
-    'Baalbek Municipality',
-    'Tyre Municipality'
-  ];
+  governorateMunicipalityMap: Record<string, string[]> = {
+    Beirut: ['Beirut Municipality'],
+    'Mount Lebanon': [
+      'Baabda Municipality',
+      'Jounieh Municipality',
+      'Byblos Municipality',
+      'Aley Municipality',
+      'Choueifat Municipality',
+      'Dekwaneh Municipality',
+      'Sin El Fil Municipality',
+      'Bourj Hammoud Municipality'
+    ],
+    'North Lebanon': [
+      'Tripoli Municipality',
+      'Mina Municipality',
+      'Zgharta Municipality',
+      'Bcharre Municipality',
+      'Batroun Municipality',
+      'Koura Municipality'
+    ],
+    Akkar: [
+      'Halba Municipality',
+      'Bebnine Municipality',
+      'Qobayat Municipality',
+      'Berqayel Municipality',
+      'Akkar El Atika Municipality'
+    ],
+    'Baalbek-Hermel': [
+      'Baalbek Municipality',
+      'Hermel Municipality',
+      'Douris Municipality',
+      'Ras Baalbek Municipality'
+    ],
+    Bekaa: [
+      'Zahle Municipality',
+      'Chtaura Municipality',
+      'Rachaya Municipality',
+      'West Bekaa Municipality',
+      'Taalabaya Municipality'
+    ],
+    Nabatieh: [
+      'Nabatieh Municipality',
+      'Bint Jbeil Municipality',
+      'Marjayoun Municipality',
+      'Hasbaya Municipality',
+      'Kfar Roummane Municipality'
+    ],
+    'South Lebanon': [
+      'Sidon Municipality',
+      'Tyre Municipality',
+      'Jezzine Municipality',
+      'Qana Municipality',
+      'Sarafand Municipality'
+    ]
+  };
 
   walletCurrencies: WalletCurrency[] = ['LBP', 'USD', 'EUR'];
   walletStatuses: WalletStatus[] = ['ACTIVE', 'INACTIVE', 'PENDING', 'SUSPENDED'];
@@ -86,48 +151,68 @@ export class CreatePublicAdministrationAccountComponent {
     private readonly api: PublicAdministrationApiService
   ) {
     this.administrationForm = this.fb.group({
-      administrationId: ['', [Validators.required, Validators.maxLength(50)]],
-      administrationCode: ['', [Validators.required, Validators.maxLength(50)]],
-      administrationName: ['', [Validators.required, Validators.maxLength(150)]],
-      arabicName: ['', [Validators.required, Validators.maxLength(150)]],
+      administrationId: [
+        '',
+        [
+          Validators.required,
+          Validators.maxLength(80),
+          Validators.pattern(/^ADM-BLOCKCHAIN-[0-9]+$/)
+        ]
+      ],
+      administrationCode: [
+        '',
+        [
+          Validators.required,
+          Validators.maxLength(80),
+          Validators.pattern(/^ADM-BLOCKCHAIN-[0-9]+$/)
+        ]
+      ],
+      administrationName: ['', [Validators.required, Validators.maxLength(200)]],
+      arabicName: ['', [Validators.required, Validators.maxLength(200)]],
       parentMinistry: ['', Validators.required],
       administrationType: ['DIRECTORATE', Validators.required],
-      directorName: ['', [Validators.required, Validators.maxLength(120)]],
-      contactPerson: ['', [Validators.required, Validators.maxLength(120)]],
+      directorName: ['', [Validators.required, Validators.maxLength(150)]],
+      contactPerson: ['', [Validators.required, Validators.maxLength(150)]],
       contactEmail: ['', [Validators.required, Validators.email]],
-      contactMobile: ['', [Validators.required, Validators.maxLength(30)]],
+      contactMobile: ['', [Validators.required, Validators.maxLength(50)]],
       country: ['Lebanon', Validators.required],
       governorate: ['', Validators.required],
       municipality: ['', Validators.required],
-      address: ['', [Validators.required, Validators.maxLength(250)]],
+      address: ['', [Validators.required, Validators.maxLength(500)]],
       walletAddress: [
         '',
         [
           Validators.required,
           Validators.maxLength(120),
-          Validators.pattern(/^WALLET-[A-Z0-9-_]+$/)
+          Validators.pattern(/^GOV-ADM-[0-9]+$/)
         ]
       ],
       walletCurrency: ['LBP', Validators.required],
       walletStatus: ['PENDING', Validators.required]
     });
+  }
 
-    this.setupWalletAutoGeneration();
+  ngOnInit(): void {
+    this.setupGovernorateMunicipalityLink();
+    this.loadNextCodes();
   }
 
   setMode(mode: 'manual' | 'csv'): void {
     this.activeMode.set(mode);
     this.clearMessages();
+
+    if (mode === 'manual') {
+      this.loadNextCodes();
+    }
   }
 
   createAdministration(): void {
     this.clearMessages();
-    this.ensureWalletAddress();
 
     if (this.administrationForm.invalid) {
       this.administrationForm.markAllAsTouched();
       this.error.set(
-        'Please fill all required fields. Wallet Address must start with WALLET-, example: WALLET-TEST1.'
+        'Please fill all required fields. Administration ID must be ADM-BLOCKCHAIN-1 and Wallet Address must be GOV-ADM-1 format.'
       );
       return;
     }
@@ -142,11 +227,12 @@ export class CreatePublicAdministrationAccountComponent {
           response.message ||
             'Public administration saved successfully in Blockchain and PostgreSQL.'
         );
+
+        this.openCreatedPopup(response);
       },
       error: (err) => {
         this.isSubmitting.set(false);
         console.error('[CREATE_PUBLIC_ADMINISTRATION_ERROR]', err);
-
         this.error.set(this.extractBackendError(err));
       }
     });
@@ -154,12 +240,11 @@ export class CreatePublicAdministrationAccountComponent {
 
   createWallet(): void {
     this.clearMessages();
-    this.ensureWalletAddress();
 
     if (this.administrationForm.invalid) {
       this.administrationForm.markAllAsTouched();
       this.error.set(
-        'Please complete the administration form before creating the wallet. Wallet Address must start with WALLET-.'
+        'Please complete the administration form before creating the wallet. Wallet Address must be GOV-ADM-1 format.'
       );
       return;
     }
@@ -172,13 +257,12 @@ export class CreatePublicAdministrationAccountComponent {
 
         this.message.set(
           response.message ||
-            'Administration wallet created successfully in Blockchain and PostgreSQL.'
+            'Public administration wallet updated successfully in PostgreSQL.'
         );
       },
       error: (err) => {
         this.isSubmitting.set(false);
         console.error('[CREATE_ADMINISTRATION_WALLET_ERROR]', err);
-
         this.error.set(this.extractBackendError(err));
       }
     });
@@ -186,15 +270,11 @@ export class CreatePublicAdministrationAccountComponent {
 
   saveDraft(): void {
     this.clearMessages();
-    this.ensureWalletAddress();
 
     const payload = this.buildPayload();
-
     localStorage.setItem('publicAdministrationDraft', JSON.stringify(payload));
 
-    this.message.set(
-      'Draft saved locally. API draft endpoint is also prepared for backend integration.'
-    );
+    this.message.set('Draft saved locally.');
   }
 
   resetForm(): void {
@@ -206,7 +286,9 @@ export class CreatePublicAdministrationAccountComponent {
     });
 
     this.csvRows.set([]);
+    this.filteredMunicipalities.set([]);
     this.clearMessages();
+    this.loadNextCodes();
   }
 
   onCsvSelected(event: Event): void {
@@ -282,7 +364,6 @@ export class CreatePublicAdministrationAccountComponent {
       error: (err) => {
         this.isUploading.set(false);
         console.error('[UPLOAD_PUBLIC_ADMINISTRATION_CSV_ERROR]', err);
-
         this.error.set(this.extractBackendError(err));
       }
     });
@@ -310,8 +391,8 @@ export class CreatePublicAdministrationAccountComponent {
     ].join(',');
 
     const sample = [
-      'ADM-001',
-      'ADM-MOI-001',
+      'ADM-BLOCKCHAIN-1',
+      'ADM-BLOCKCHAIN-1',
       'General Directorate of Personal Status',
       'المديرية العامة للأحوال الشخصية',
       'Ministry of Interior and Municipalities',
@@ -324,7 +405,7 @@ export class CreatePublicAdministrationAccountComponent {
       'Beirut',
       'Beirut Municipality',
       '"Beirut, Lebanon"',
-      'WALLET-ADM-001',
+      'GOV-ADM-1',
       'LBP',
       'PENDING'
     ].join(',');
@@ -348,48 +429,129 @@ export class CreatePublicAdministrationAccountComponent {
     return !!control && control.invalid && (control.dirty || control.touched);
   }
 
-  private setupWalletAutoGeneration(): void {
-    const administrationIdControl = this.administrationForm.get('administrationId');
-    const walletAddressControl = this.administrationForm.get('walletAddress');
+  closeCreatedPopup(): void {
+    this.showCreatedPopup.set(false);
+  }
 
-    if (!administrationIdControl || !walletAddressControl) {
+  createAnotherAdministration(): void {
+    this.showCreatedPopup.set(false);
+    this.resetForm();
+  }
+
+  copyValue(value: string | null | undefined): void {
+    if (!value) {
       return;
     }
 
-    administrationIdControl.valueChanges.subscribe((value) => {
-      const currentWalletAddress = String(walletAddressControl.value || '').trim();
+    navigator.clipboard.writeText(value).then(() => {
+      this.message.set('Value copied successfully.');
+    });
+  }
 
-      if (!currentWalletAddress || !currentWalletAddress.startsWith('WALLET-')) {
-        walletAddressControl.setValue(this.generateWalletAddress(value), {
-          emitEvent: false
+  private loadNextCodes(): void {
+    this.isLoadingCodes.set(true);
+
+    this.api.getNextCodes().subscribe({
+      next: (response) => {
+        this.isLoadingCodes.set(false);
+
+        const data = response?.data;
+
+        if (!data) {
+          this.error.set('Next sequence response is empty.');
+          return;
+        }
+
+        this.administrationForm.patchValue({
+          administrationId: data.administrationId,
+          administrationCode: data.administrationCode,
+          walletAddress: data.walletAddress
         });
+      },
+      error: (err) => {
+        this.isLoadingCodes.set(false);
+        console.error('[GET_NEXT_PUBLIC_ADMINISTRATION_CODES_ERROR]', err);
+        this.error.set(this.extractBackendError(err));
       }
     });
   }
 
-  private ensureWalletAddress(): void {
-    const administrationId = this.administrationForm.get('administrationId')?.value;
-    const walletAddressControl = this.administrationForm.get('walletAddress');
-    const currentWalletAddress = String(walletAddressControl?.value || '').trim();
+  private setupGovernorateMunicipalityLink(): void {
+    const governorateControl = this.administrationForm.get('governorate');
+    const municipalityControl = this.administrationForm.get('municipality');
 
-    if (
-      !currentWalletAddress ||
-      !currentWalletAddress.startsWith('WALLET-') ||
-      currentWalletAddress.includes('Street') ||
-      currentWalletAddress.includes('Center') ||
-      currentWalletAddress.includes('Road')
-    ) {
-      walletAddressControl?.setValue(this.generateWalletAddress(administrationId));
-    }
+    governorateControl?.valueChanges.subscribe((governorate: string) => {
+      const municipalities = this.governorateMunicipalityMap[governorate] || [];
+
+      this.filteredMunicipalities.set(municipalities);
+      municipalityControl?.setValue('');
+    });
   }
 
-  private generateWalletAddress(administrationId: string): string {
-    const cleanAdministrationId = String(administrationId || 'PUBLIC-ADMIN')
-      .trim()
-      .toUpperCase()
-      .replace(/[^A-Z0-9-_]/g, '-');
+  private openCreatedPopup(response: any): void {
+    const formValue = this.administrationForm.getRawValue();
+    const data = response?.data || {};
 
-    return `WALLET-${cleanAdministrationId}`;
+    const administrationId =
+      data.administration_id ||
+      data.administrationId ||
+      formValue.administrationId;
+
+    const administrationCode =
+      data.administration_code ||
+      data.administrationCode ||
+      formValue.administrationCode;
+
+    const walletAddress =
+      data.wallet_address ||
+      data.walletAddress ||
+      formValue.walletAddress;
+
+    const blockchainTxId =
+      response?.blockchainTxId ||
+      data.blockchain_tx_id ||
+      data.createdTxId ||
+      data.blockchainTxId ||
+      '';
+
+    const postgresRecordId =
+      response?.postgresRecordId ||
+      data.id ||
+      '';
+
+    this.createdPopupData.set({
+      administrationId,
+      administrationCode,
+      loginUsername:
+        data.login_username ||
+        data.loginUsername ||
+        formValue.contactEmail ||
+        administrationCode,
+      generatedPassword:
+        data.generated_password ||
+        data.generatedPassword ||
+        response?.generatedPassword ||
+        'Not returned by backend',
+      walletAddress,
+      walletCurrency:
+        data.wallet_currency ||
+        data.walletCurrency ||
+        formValue.walletCurrency ||
+        'LBP',
+      walletStatus:
+        data.wallet_status ||
+        data.walletStatus ||
+        formValue.walletStatus ||
+        'PENDING',
+      ledgerReference:
+        data.ledger_reference ||
+        data.ledgerReference ||
+        `PUBLIC_ADMINISTRATION_${administrationId}`,
+      blockchainTxId,
+      postgresRecordId
+    });
+
+    this.showCreatedPopup.set(true);
   }
 
   private buildPayload(): PublicAdministrationPayload {
@@ -440,10 +602,8 @@ export class CreatePublicAdministrationAccountComponent {
         return acc;
       }, {} as PublicAdministrationCsvRow);
 
-      const administrationId = this.clean(row.administrationId);
-
       return {
-        administrationId,
+        administrationId: this.clean(row.administrationId),
         administrationCode: this.clean(row.administrationCode),
         administrationName: this.clean(row.administrationName),
         arabicName: this.clean(row.arabicName),
@@ -457,8 +617,7 @@ export class CreatePublicAdministrationAccountComponent {
         governorate: this.clean(row.governorate),
         municipality: this.clean(row.municipality),
         address: this.clean(row.address),
-        walletAddress:
-          this.clean(row.walletAddress) || this.generateWalletAddress(administrationId),
+        walletAddress: this.clean(row.walletAddress),
         walletCurrency: (this.clean(row.walletCurrency) || 'LBP') as WalletCurrency,
         walletStatus: (this.clean(row.walletStatus) || 'PENDING') as WalletStatus,
         saveToBlockchain: true,

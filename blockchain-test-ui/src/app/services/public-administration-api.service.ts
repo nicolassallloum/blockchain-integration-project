@@ -19,7 +19,9 @@ export class PublicAdministrationApiService {
       administration: payload
     });
   }
-
+  getNextCodes() {
+    return this.http.get<any>(`${this.baseUrl}/next-codes`);
+  }
   createAdministrationWallet(payload: PublicAdministrationPayload) {
     return this.http.post<PublicAdministrationApiResponse>(
       `${this.baseUrl}/${payload.administrationId}/wallet`,
