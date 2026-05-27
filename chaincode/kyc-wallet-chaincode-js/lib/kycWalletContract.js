@@ -118,6 +118,7 @@ class KycWalletContract extends Contract {
             transaction
         });
     }
+
     async CreateResident(ctx, residentJson) {
         const resident = JSON.parse(residentJson);
 
@@ -252,6 +253,7 @@ class KycWalletContract extends Contract {
 
         return JSON.stringify(resident);
     }
+
     async CreateMinistry(ctx, ministryJson) {
         if (!ministryJson) {
             throw new Error('ministryJson is required');
@@ -350,6 +352,7 @@ class KycWalletContract extends Contract {
 
         return data.toString();
     }
+
     async CreatePublicAdministration(ctx, administrationJson) {
         if (!administrationJson) {
             throw new Error('administrationJson is required');
@@ -381,22 +384,26 @@ class KycWalletContract extends Contract {
 
         const txId = ctx.stub.getTxID();
         const createdAt = administration.createdAt || this._getTxTimestamp(ctx);
+
         const generatedNumber = this._generatePublicAdministrationNumber(
             administration.administrationId,
             txId
         );
 
-        const generatedWalletAddress =
-            administration.walletAddress &&
-            String(administration.walletAddress).startsWith('GOV-ADM-')
-                ? administration.walletAddress
-                : `GOV-ADM-${generatedNumber}`;
+        const generatedWalletAddress = `GOV-ADM-${generatedNumber}`;
 
-        const generatedPassword =
-            administration.generatedPassword ||
-            this._generateTemporaryPassword(administration.administrationId, txId);
+        const generatedPassword = this._generateTemporaryPassword(
+            administration.administrationId,
+            txId
+        );
 
         const passwordHash = this._hashValue(generatedPassword);
+
+        const loginUsername =
+            administration.loginUsername ||
+            administration.contactEmail ||
+            administration.administrationCode;
+
         const blockchainRecord = {
             docType: 'PUBLIC_ADMINISTRATION',
             ledgerReference,
@@ -414,11 +421,14 @@ class KycWalletContract extends Contract {
             governorate: administration.governorate || null,
             municipality: administration.municipality || null,
             address: administration.address || null,
-            walletAddress: generatedWalletAddress || null,
+
+            walletAddress: generatedWalletAddress,
             walletCurrency: administration.walletCurrency || 'LBP',
             walletStatus: administration.walletStatus || 'PENDING',
-            loginUsername: administration.loginUsername || administration.contactEmail || administration.administrationCode,
+
+            loginUsername,
             passwordHash,
+
             status: administration.status || 'ACTIVE',
             blockchainStatus: 'CONFIRMED',
             createdAt,
@@ -504,6 +514,7 @@ class KycWalletContract extends Contract {
 
         return JSON.stringify(results);
     }
+
     async TransferBetweenWallets(
         ctx,
         fromWalletAddress,
@@ -833,31 +844,31 @@ class KycWalletContract extends Contract {
             JSON.parse(transactionBytes.toString())
         );
     }
+
     _generatePublicAdministrationNumber(administrationId, txId) {
-        const rawValue = `${administrationId}|${txId}`;
+        const rawValue = `${administrationId}|${txId}|PUBLIC_ADMINISTRATION_WALLET`;
         const hash = crypto.createHash('sha256').update(rawValue).digest('hex');
 
-        const numberOnly = hash
-            .replace(/[a-f]/gi, '')
-            .substring(0, 12);
+        const hexPart = hash.substring(0, 15);
+        const numericValue = BigInt(`0x${hexPart}`).toString();
 
-        if (numberOnly && numberOnly.length >= 8) {
-            return numberOnly;
-        }
-
-        return String(Date.now());
+        return numericValue.substring(0, 12);
     }
 
     _generateTemporaryPassword(administrationId, txId) {
         const rawValue = `${administrationId}|${txId}|PUBLIC_ADMINISTRATION_PASSWORD`;
         const hash = crypto.createHash('sha256').update(rawValue).digest('hex');
 
-        return `Gov@${hash.substring(0, 10)}`;
+        const partOne = hash.substring(0, 6);
+        const partTwo = hash.substring(6, 10).toUpperCase();
+
+        return `Gov@${partOne}${partTwo}`;
     }
 
     _hashValue(value) {
         return crypto.createHash('sha256').update(String(value)).digest('hex');
     }
+
     async WalletExists(ctx, walletAddress) {
         this._required(walletAddress, 'walletAddress');
 
