@@ -12,18 +12,32 @@ function sendSuccess(res, message, data, statusCode = 200) {
 }
 
 function sendError(res, error) {
-  console.error('[REFERENCE_CONTROLLER_ERROR]', error);
+  console.error('[RESIDENT_REFERENCE_CONTROLLER_ERROR]', error);
 
   return res.status(error.statusCode || 500).json({
     success: false,
     message: error.message || 'Internal server error',
+    error: error.code || error.detail || null,
     timestamp: new Date().toISOString(),
   });
 }
 
-/**
- * GET /api/v1/government-blockchain/reference/next-resident-id
- */
+function normalizeGovernorateCodeSql(alias = 'g') {
+  return `
+    CASE ${alias}.governorate_code
+      WHEN 'LB_BA' THEN 'BEIRUT'
+      WHEN 'LB_JL' THEN 'MOUNT_LEBANON'
+      WHEN 'LB_AS' THEN 'NORTH_LEBANON'
+      WHEN 'LB_JA' THEN 'SOUTH_LEBANON'
+      WHEN 'LB_BI' THEN 'BEKAA'
+      WHEN 'LB_NA' THEN 'NABATIEH'
+      WHEN 'LB_BH' THEN 'BAALBEK_HERMEL'
+      WHEN 'LB_AK' THEN 'AKKAR'
+      ELSE ${alias}.governorate_code
+    END
+  `;
+}
+
 async function getNextResidentId(req, res) {
   try {
     const result = await pool.query(`
@@ -31,47 +45,38 @@ async function getNextResidentId(req, res) {
         'RES-BLOCKCHAIN-' || LPAD(nextval('blockchain.resident_seq')::TEXT, 6, '0') AS resident_id
     `);
 
-    return sendSuccess(
-      res,
-      'Next resident ID generated successfully.',
-      {
-        residentId: result.rows[0].resident_id,
-      }
-    );
+    return sendSuccess(res, 'Next resident ID generated successfully.', {
+      residentId: result.rows[0].resident_id,
+    });
   } catch (error) {
     return sendError(res, error);
   }
 }
 
-/**
- * GET /api/v1/government-blockchain/reference/governorates
- */
 async function getGovernorates(req, res) {
   try {
+    const normalizedCode = normalizeGovernorateCodeSql('g');
+
     const result = await pool.query(`
       SELECT
-          governorate_id AS id,
-          governorate_code AS code,
-          governorate_name AS name,
-          arabic_name AS "arabicName"
-      FROM blockchain.governorates
-      WHERE is_active = TRUE
-      ORDER BY sort_order, governorate_name
+          g.governorate_id::TEXT AS id,
+          ${normalizedCode} AS code,
+          REPLACE(REPLACE(g.governorate_name, ' (Governorate)', ''), ' (Province)', '') AS name,
+          g.governorate_name_ar AS "arabicName"
+      FROM blockchain.governorates g
+      JOIN blockchain.countries c
+        ON c.cou_id = g.country_id
+      WHERE g.is_active = TRUE
+        AND c.iso_cou_code_alpha = 'LB'
+      ORDER BY name
     `);
 
-    return sendSuccess(
-      res,
-      'Governorates retrieved successfully.',
-      result.rows
-    );
+    return sendSuccess(res, 'Governorates retrieved successfully.', result.rows);
   } catch (error) {
     return sendError(res, error);
   }
 }
 
-/**
- * GET /api/v1/government-blockchain/reference/districts?governorateId=1
- */
 async function getDistricts(req, res) {
   try {
     const { governorateId } = req.query;
@@ -84,35 +89,38 @@ async function getDistricts(req, res) {
       });
     }
 
+    const normalizedCode = normalizeGovernorateCodeSql('g');
+
     const result = await pool.query(
       `
+      WITH selected_governorate AS (
+        SELECT
+          ${normalizedCode} AS governorate_code
+        FROM blockchain.governorates g
+        WHERE g.governorate_id::TEXT = $1::TEXT
+        LIMIT 1
+      )
       SELECT
-          district_id AS id,
-          district_code AS code,
-          district_name AS name,
-          arabic_name AS "arabicName",
-          governorate_id AS "governorateId"
-      FROM blockchain.districts
-      WHERE is_active = TRUE
-        AND governorate_id = $1
-      ORDER BY sort_order, district_name
+          d.district_id::TEXT AS id,
+          d.district_code AS code,
+          d.district_name AS name,
+          d.district_name_ar AS "arabicName",
+          d.governorate_code AS "governorateCode"
+      FROM blockchain.districts d
+      JOIN selected_governorate sg
+        ON sg.governorate_code = d.governorate_code
+      WHERE d.is_active = TRUE
+      ORDER BY d.display_order, d.district_name
       `,
       [governorateId]
     );
 
-    return sendSuccess(
-      res,
-      'Districts retrieved successfully.',
-      result.rows
-    );
+    return sendSuccess(res, 'Districts retrieved successfully.', result.rows);
   } catch (error) {
     return sendError(res, error);
   }
 }
 
-/**
- * GET /api/v1/government-blockchain/reference/municipalities?districtId=1
- */
 async function getMunicipalities(req, res) {
   try {
     const { districtId } = req.query;
@@ -127,34 +135,36 @@ async function getMunicipalities(req, res) {
 
     const result = await pool.query(
       `
+      WITH selected_district AS (
+        SELECT
+          district_code,
+          governorate_code
+        FROM blockchain.districts
+        WHERE district_id::TEXT = $1::TEXT
+        LIMIT 1
+      )
       SELECT
-          municipality_id AS id,
-          municipality_code AS code,
-          municipality_name AS name,
-          arabic_name AS "arabicName",
-          district_id AS "districtId",
-          governorate_id AS "governorateId"
-      FROM blockchain.municipalities
-      WHERE is_active = TRUE
-        AND district_id = $1
-      ORDER BY sort_order, municipality_name
+          m.id::TEXT AS id,
+          m.municipality_code AS code,
+          m.municipality_name AS name,
+          NULL::TEXT AS "arabicName",
+          sd.district_code AS "districtCode",
+          sd.governorate_code AS "governorateCode"
+      FROM blockchain.municipalities m
+      JOIN selected_district sd
+        ON sd.district_code = m.district_code
+      WHERE m.is_active = TRUE
+      ORDER BY m.display_order, m.municipality_name
       `,
       [districtId]
     );
 
-    return sendSuccess(
-      res,
-      'Municipalities retrieved successfully.',
-      result.rows
-    );
+    return sendSuccess(res, 'Municipalities retrieved successfully.', result.rows);
   } catch (error) {
     return sendError(res, error);
   }
 }
 
-/**
- * GET /api/v1/government-blockchain/reference/kyc-statuses
- */
 async function getKycStatuses(req, res) {
   try {
     const result = await pool.query(`
@@ -162,26 +172,18 @@ async function getKycStatuses(req, res) {
           status_code AS id,
           status_code AS code,
           status_name AS name,
-          arabic_name AS "arabicName",
-          description
+          arabic_name AS "arabicName"
       FROM blockchain.kyc_statuses
       WHERE is_active = TRUE
       ORDER BY sort_order, status_name
     `);
 
-    return sendSuccess(
-      res,
-      'KYC statuses retrieved successfully.',
-      result.rows
-    );
+    return sendSuccess(res, 'KYC statuses retrieved successfully.', result.rows);
   } catch (error) {
     return sendError(res, error);
   }
 }
 
-/**
- * GET /api/v1/government-blockchain/reference/risk-categories
- */
 async function getRiskCategories(req, res) {
   try {
     const result = await pool.query(`
@@ -191,26 +193,18 @@ async function getRiskCategories(req, res) {
           risk_name AS name,
           arabic_name AS "arabicName",
           risk_score_min AS "riskScoreMin",
-          risk_score_max AS "riskScoreMax",
-          description
+          risk_score_max AS "riskScoreMax"
       FROM blockchain.risk_categories
       WHERE is_active = TRUE
       ORDER BY sort_order, risk_name
     `);
 
-    return sendSuccess(
-      res,
-      'Risk categories retrieved successfully.',
-      result.rows
-    );
+    return sendSuccess(res, 'Risk categories retrieved successfully.', result.rows);
   } catch (error) {
     return sendError(res, error);
   }
 }
 
-/**
- * GET /api/v1/government-blockchain/reference/employment-statuses
- */
 async function getEmploymentStatuses(req, res) {
   try {
     const result = await pool.query(`
@@ -218,18 +212,13 @@ async function getEmploymentStatuses(req, res) {
           status_code AS id,
           status_code AS code,
           status_name AS name,
-          arabic_name AS "arabicName",
-          description
+          arabic_name AS "arabicName"
       FROM blockchain.employment_statuses
       WHERE is_active = TRUE
       ORDER BY sort_order, status_name
     `);
 
-    return sendSuccess(
-      res,
-      'Employment statuses retrieved successfully.',
-      result.rows
-    );
+    return sendSuccess(res, 'Employment statuses retrieved successfully.', result.rows);
   } catch (error) {
     return sendError(res, error);
   }

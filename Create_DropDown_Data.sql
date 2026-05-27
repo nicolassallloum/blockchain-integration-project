@@ -877,3 +877,86 @@ UNION ALL
 SELECT 'employment_statuses' AS table_name, COUNT(*) FROM blockchain.employment_statuses;
 
 After this, we continue to STEP 4 — Create Reference API Endpoints for Resident ID and Dropdowns.
+
+
+
+CREATE TABLE IF NOT EXISTS blockchain.districts (
+    district_id BIGSERIAL PRIMARY KEY,
+    district_code VARCHAR(50) UNIQUE NOT NULL,
+    district_name VARCHAR(150) NOT NULL,
+    district_name_ar VARCHAR(150),
+    governorate_code VARCHAR(50) NOT NULL,
+    display_order INTEGER DEFAULT 1,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+ALTER TABLE blockchain.municipalities
+ADD COLUMN IF NOT EXISTS district_code VARCHAR(50);
+
+INSERT INTO blockchain.districts
+(district_code, district_name, district_name_ar, governorate_code, display_order)
+VALUES
+('BEIRUT', 'Beirut', 'بيروت', 'BEIRUT', 1),
+
+('BAABDA', 'Baabda', 'بعبدا', 'MOUNT_LEBANON', 1),
+('METN', 'Metn', 'المتن', 'MOUNT_LEBANON', 2),
+('KESERWAN', 'Keserwan', 'كسروان', 'MOUNT_LEBANON', 3),
+('JBEIL', 'Jbeil', 'جبيل', 'MOUNT_LEBANON', 4),
+('ALEY', 'Aley', 'عاليه', 'MOUNT_LEBANON', 5),
+('CHOUF', 'Chouf', 'الشوف', 'MOUNT_LEBANON', 6),
+
+('TRIPOLI', 'Tripoli', 'طرابلس', 'NORTH_LEBANON', 1),
+('ZGHARTA', 'Zgharta', 'زغرتا', 'NORTH_LEBANON', 2),
+('KOURA', 'Koura', 'الكورة', 'NORTH_LEBANON', 3),
+('BATROUN', 'Batroun', 'البترون', 'NORTH_LEBANON', 4),
+
+('SAIDA', 'Saida', 'صيدا', 'SOUTH_LEBANON', 1),
+('TYRE', 'Tyre', 'صور', 'SOUTH_LEBANON', 2),
+('JEZZINE', 'Jezzine', 'جزين', 'SOUTH_LEBANON', 3),
+
+('ZAHLE', 'Zahle', 'زحلة', 'BEKAA', 1),
+('WEST_BEKAA', 'West Bekaa', 'البقاع الغربي', 'BEKAA', 2),
+('RASHAYA', 'Rashaya', 'راشيا', 'BEKAA', 3),
+
+('NABATIEH', 'Nabatieh', 'النبطية', 'NABATIEH', 1),
+('BINT_JBEIL', 'Bint Jbeil', 'بنت جبيل', 'NABATIEH', 2),
+('MARJAYOUN', 'Marjayoun', 'مرجعيون', 'NABATIEH', 3),
+('HASBAYA', 'Hasbaya', 'حاصبيا', 'NABATIEH', 4),
+
+('BAALBEK', 'Baalbek', 'بعلبك', 'BAALBEK_HERMEL', 1),
+('HERMEL', 'Hermel', 'الهرمل', 'BAALBEK_HERMEL', 2),
+
+('AKKAR', 'Akkar', 'عكار', 'AKKAR', 1)
+ON CONFLICT (district_code)
+DO UPDATE SET
+    district_name = EXCLUDED.district_name,
+    district_name_ar = EXCLUDED.district_name_ar,
+    governorate_code = EXCLUDED.governorate_code,
+    display_order = EXCLUDED.display_order,
+    updated_at = CURRENT_TIMESTAMP;
+
+UPDATE blockchain.municipalities
+SET district_code = CASE
+    WHEN municipality_code = 'BEIRUT_MUNICIPALITY' THEN 'BEIRUT'
+    WHEN municipality_code = 'BAABDA_MUNICIPALITY' THEN 'BAABDA'
+    WHEN municipality_code IN ('DEKWANEH_MUNICIPALITY', 'SIN_EL_FIL_MUNICIPALITY', 'BOURJ_HAMMOUD_MUNICIPALITY') THEN 'METN'
+    WHEN municipality_code = 'JOUNIEH_MUNICIPALITY' THEN 'KESERWAN'
+    WHEN municipality_code = 'BYBLOS_MUNICIPALITY' THEN 'JBEIL'
+    WHEN municipality_code IN ('ALEY_MUNICIPALITY', 'CHOUEIFAT_MUNICIPALITY') THEN 'ALEY'
+    WHEN municipality_code = 'TRIPOLI_MUNICIPALITY' THEN 'TRIPOLI'
+    WHEN municipality_code = 'ZGHARTA_MUNICIPALITY' THEN 'ZGHARTA'
+    WHEN municipality_code = 'AMIYOUN_MUNICIPALITY' THEN 'KOURA'
+    WHEN municipality_code = 'BATROUN_MUNICIPALITY' THEN 'BATROUN'
+    WHEN municipality_code = 'SAIDA_MUNICIPALITY' THEN 'SAIDA'
+    WHEN municipality_code = 'TYRE_MUNICIPALITY' THEN 'TYRE'
+    WHEN municipality_code = 'JEZZINE_MUNICIPALITY' THEN 'JEZZINE'
+    WHEN municipality_code = 'ZAHLE_MUNICIPALITY' THEN 'ZAHLE'
+    WHEN municipality_code = 'NABATIEH_MUNICIPALITY' THEN 'NABATIEH'
+    WHEN municipality_code = 'BAALBEK_MUNICIPALITY' THEN 'BAALBEK'
+    WHEN municipality_code = 'HERMEL_MUNICIPALITY' THEN 'HERMEL'
+    WHEN municipality_code = 'HALBA_MUNICIPALITY' THEN 'AKKAR'
+    ELSE district_code
+END
+WHERE district_code IS NULL;

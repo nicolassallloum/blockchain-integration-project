@@ -26,8 +26,12 @@ const dashboardRoutes = safeLoadRoute("dashboard", "./dashboard.routes");
 const publicAdministrationRoutes = require('./publicAdministration.routes');
 // router.use('/government-blockchain/public-administrations', publicAdministrationRoutes);
 const governmentReferenceRoutes = require('./government-blockchain/reference.routes');
+const residentReferenceRoutes = require('./resident-reference.routes');
 const healthRoutes = safeLoadRoute("health", "./health.routes");
 const blockchainRoutes = safeLoadRoute("blockchain", "./blockchain.routes");
+// const referenceRoutes = require('./reference.routes');
+// const residentRoutes = require('./resident.routes');
+
 // const fabricRoutes = safeLoadRoute("fabric", "./fabric.routes");
 // const walletRoutes = safeLoadRoute("wallet", "./wallet.routes");
 // const transactionRoutes = safeLoadRoute("transaction", "./transaction.routes");
@@ -42,6 +46,14 @@ if (governmentReferenceRoutes) {
 if (blockchainRoutes) {
   router.use("/blockchain", blockchainRoutes);
 }
+
+if (residentRoutes) {
+  router.use("/government-blockchain/residents", residentRoutes);
+}
+
+// if (referenceRoutes) {
+//   router.use("/government-blockchain/reference", referenceRoutes);
+// }
 if (fabricRoutes) {
   router.use("/fabric", fabricRoutes);
 }
@@ -60,9 +72,9 @@ if (transactionRoutes) {
 if (couchdbRoutes) {
   router.use("/couchdb", couchdbRoutes);
 }
-if (residentRoutes) {
-  router.use("/government-blockchain/residents", residentRoutes);
-}
+// if (residentRoutes) {
+//   router.use("/government-blockchain/residents", residentRoutes);
+// }
 // router.use('/government-blockchain/residents', residentRoutes);
 if (referenceRoutes) {
   router.use("/reference", referenceRoutes);
@@ -79,4 +91,6 @@ router.get('/health', (req, res) => {
     timestamp: new Date().toISOString()
   });
 });
+router.use('/government-blockchain/resident-reference', residentReferenceRoutes);
+
 module.exports = router;

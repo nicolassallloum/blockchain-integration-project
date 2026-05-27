@@ -1,45 +1,41 @@
 'use strict';
 
 const express = require('express');
-
-const {
-  getOrganizationTypes,
-  getNextCustomerId,
-  getSourceOfFunds,
-  getOccupations,
-  getEconomicSectors,
-  getOrganizations,
-  getCountries,
-  getMinistryDropdowns,
-  getGovernoratesByCountry
-} = require('../controllers/reference.controller');
-
 const router = express.Router();
 
+const referenceController = require('../controllers/reference.controller');
+
+function requireHandler(name) {
+  const handler = referenceController[name];
+
+  if (typeof handler !== 'function') {
+    throw new Error(
+      `reference.controller.js is missing exported function: ${name}. ` +
+      `Available exports: ${Object.keys(referenceController).join(', ')}`
+    );
+  }
+
+  return handler;
+}
+
 /*
 |--------------------------------------------------------------------------
-| Existing Reference APIs
+| Government Blockchain Reference Routes
 |--------------------------------------------------------------------------
 */
 
-router.get('/organization-types', getOrganizationTypes);
-router.get('/next-customer-id', getNextCustomerId);
-router.get('/source-of-funds', getSourceOfFunds);
-router.get('/occupations', getOccupations);
-router.get('/economic-sectors', getEconomicSectors);
-router.get('/organizations', getOrganizations);
-router.get('/countries', getCountries);
+router.get('/next-resident-id', requireHandler('getNextResidentId'));
 
-/*
-|--------------------------------------------------------------------------
-| Government Blockchain / Ministry Dropdown APIs
-|--------------------------------------------------------------------------
-| Used by:
-| Create Ministry Account screen
-|--------------------------------------------------------------------------
-*/
+router.get('/governorates', requireHandler('getGovernorates'));
 
-router.get('/ministry-dropdowns', getMinistryDropdowns);
-router.get('/governorates', getGovernoratesByCountry);
+router.get('/districts', requireHandler('getDistricts'));
+
+router.get('/municipalities', requireHandler('getMunicipalities'));
+
+router.get('/kyc-statuses', requireHandler('getKycStatuses'));
+
+router.get('/risk-categories', requireHandler('getRiskCategories'));
+
+router.get('/employment-statuses', requireHandler('getEmploymentStatuses'));
 
 module.exports = router;
