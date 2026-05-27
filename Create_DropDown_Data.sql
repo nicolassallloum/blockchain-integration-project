@@ -693,3 +693,187 @@ UNION ALL
 SELECT 'municipalities' AS table_name, COUNT(*) FROM blockchain.municipalities;
 
 Then we continue to STEP 3 — Create KYC Status, Risk Category, and Employment Status reference tables.
+
+
+STEP 3 — Create KYC Status, Risk Category, and Employment Status Reference Tables
+
+Run PostgreSQL:
+
+psql -h 172.31.13.133 -p 5444 -U pgdata -d vfds_dev
+
+Then execute this full SQL script.
+
+1. Create KYC Status Table
+CREATE TABLE IF NOT EXISTS blockchain.kyc_statuses (
+    kyc_status_id BIGSERIAL PRIMARY KEY,
+    status_code VARCHAR(50) UNIQUE NOT NULL,
+    status_name VARCHAR(100) NOT NULL,
+    arabic_name VARCHAR(100),
+    description TEXT,
+    is_active BOOLEAN DEFAULT TRUE,
+    sort_order INTEGER DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+Insert KYC Status Data
+INSERT INTO blockchain.kyc_statuses
+(status_code, status_name, arabic_name, description, sort_order)
+VALUES
+('DRAFT', 'Draft', 'مسودة', 'Resident account is saved as draft and not submitted for review.', 1),
+('PENDING_REVIEW', 'Pending Review', 'قيد المراجعة', 'Resident KYC was submitted and is waiting for compliance review.', 2),
+('VERIFIED', 'Verified', 'تم التحقق', 'Resident KYC was reviewed and verified successfully.', 3),
+('REJECTED', 'Rejected', 'مرفوض', 'Resident KYC was reviewed and rejected.', 4)
+ON CONFLICT (status_code)
+DO UPDATE SET
+    status_name = EXCLUDED.status_name,
+    arabic_name = EXCLUDED.arabic_name,
+    description = EXCLUDED.description,
+    sort_order = EXCLUDED.sort_order,
+    updated_at = CURRENT_TIMESTAMP;
+2. Create Risk Category Table
+CREATE TABLE IF NOT EXISTS blockchain.risk_categories (
+    risk_category_id BIGSERIAL PRIMARY KEY,
+    risk_code VARCHAR(50) UNIQUE NOT NULL,
+    risk_name VARCHAR(100) NOT NULL,
+    arabic_name VARCHAR(100),
+    risk_score_min INTEGER,
+    risk_score_max INTEGER,
+    description TEXT,
+    is_active BOOLEAN DEFAULT TRUE,
+    sort_order INTEGER DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+Insert Risk Category Data
+INSERT INTO blockchain.risk_categories
+(risk_code, risk_name, arabic_name, risk_score_min, risk_score_max, description, sort_order)
+VALUES
+('LOW', 'Low Risk', 'مخاطر منخفضة', 0, 30, 'Resident has low KYC and AML risk indicators.', 1),
+('MEDIUM', 'Medium Risk', 'مخاطر متوسطة', 31, 70, 'Resident has medium KYC or AML risk indicators and may require additional review.', 2),
+('HIGH', 'High Risk', 'مخاطر عالية', 71, 100, 'Resident has high KYC or AML risk indicators and requires enhanced due diligence.', 3)
+ON CONFLICT (risk_code)
+DO UPDATE SET
+    risk_name = EXCLUDED.risk_name,
+    arabic_name = EXCLUDED.arabic_name,
+    risk_score_min = EXCLUDED.risk_score_min,
+    risk_score_max = EXCLUDED.risk_score_max,
+    description = EXCLUDED.description,
+    sort_order = EXCLUDED.sort_order,
+    updated_at = CURRENT_TIMESTAMP;
+3. Create Employment Status Table
+CREATE TABLE IF NOT EXISTS blockchain.employment_statuses (
+    employment_status_id BIGSERIAL PRIMARY KEY,
+    status_code VARCHAR(50) UNIQUE NOT NULL,
+    status_name VARCHAR(100) NOT NULL,
+    arabic_name VARCHAR(100),
+    description TEXT,
+    is_active BOOLEAN DEFAULT TRUE,
+    sort_order INTEGER DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+Insert Employment Status Data
+INSERT INTO blockchain.employment_statuses
+(status_code, status_name, arabic_name, description, sort_order)
+VALUES
+('EMPLOYED', 'Employed', 'موظف', 'Resident is currently employed.', 1),
+('SELF_EMPLOYED', 'Self-Employed', 'عامل لحسابه الخاص', 'Resident works independently or owns a business.', 2),
+('UNEMPLOYED', 'Unemployed', 'عاطل عن العمل', 'Resident is currently unemployed.', 3),
+('STUDENT', 'Student', 'طالب', 'Resident is currently a student.', 4),
+('RETIRED', 'Retired', 'متقاعد', 'Resident is retired.', 5)
+ON CONFLICT (status_code)
+DO UPDATE SET
+    status_name = EXCLUDED.status_name,
+    arabic_name = EXCLUDED.arabic_name,
+    description = EXCLUDED.description,
+    sort_order = EXCLUDED.sort_order,
+    updated_at = CURRENT_TIMESTAMP;
+4. Source Queries for Dropdowns
+KYC Status Dropdown
+SELECT
+    status_code AS id,
+    status_code AS code,
+    status_name AS name,
+    arabic_name,
+    description
+FROM blockchain.kyc_statuses
+WHERE is_active = TRUE
+ORDER BY sort_order, status_name;
+Risk Category Dropdown
+SELECT
+    risk_code AS id,
+    risk_code AS code,
+    risk_name AS name,
+    arabic_name,
+    risk_score_min,
+    risk_score_max,
+    description
+FROM blockchain.risk_categories
+WHERE is_active = TRUE
+ORDER BY sort_order, risk_name;
+Employment Status Dropdown
+SELECT
+    status_code AS id,
+    status_code AS code,
+    status_name AS name,
+    arabic_name,
+    description
+FROM blockchain.employment_statuses
+WHERE is_active = TRUE
+ORDER BY sort_order, status_name;
+5. Validation Queries
+
+Run:
+
+SELECT
+    status_code,
+    status_name,
+    arabic_name,
+    sort_order,
+    is_active
+FROM blockchain.kyc_statuses
+ORDER BY sort_order;
+SELECT
+    risk_code,
+    risk_name,
+    arabic_name,
+    risk_score_min,
+    risk_score_max,
+    sort_order,
+    is_active
+FROM blockchain.risk_categories
+ORDER BY sort_order;
+SELECT
+    status_code,
+    status_name,
+    arabic_name,
+    sort_order,
+    is_active
+FROM blockchain.employment_statuses
+ORDER BY sort_order;
+6. Expected Counts
+SELECT 'kyc_statuses' AS table_name, COUNT(*) FROM blockchain.kyc_statuses
+UNION ALL
+SELECT 'risk_categories' AS table_name, COUNT(*) FROM blockchain.risk_categories
+UNION ALL
+SELECT 'employment_statuses' AS table_name, COUNT(*) FROM blockchain.employment_statuses;
+
+Expected:
+
+kyc_statuses          | 4
+risk_categories       | 3
+employment_statuses   | 5
+7. Final Check for All Dropdown Tables
+SELECT 'governorates' AS table_name, COUNT(*) FROM blockchain.governorates
+UNION ALL
+SELECT 'districts' AS table_name, COUNT(*) FROM blockchain.districts
+UNION ALL
+SELECT 'municipalities' AS table_name, COUNT(*) FROM blockchain.municipalities
+UNION ALL
+SELECT 'kyc_statuses' AS table_name, COUNT(*) FROM blockchain.kyc_statuses
+UNION ALL
+SELECT 'risk_categories' AS table_name, COUNT(*) FROM blockchain.risk_categories
+UNION ALL
+SELECT 'employment_statuses' AS table_name, COUNT(*) FROM blockchain.employment_statuses;
+
+After this, we continue to STEP 4 — Create Reference API Endpoints for Resident ID and Dropdowns.
