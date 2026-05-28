@@ -33,7 +33,7 @@ const governmentMinistryRoutes = require('./routes/government-blockchain/ministr
 const governmentBlockchainRoutes = require('./routes/government-blockchain/ministry.routes');
 const ministryRoutes = require('./routes/government-blockchain/ministry.routes');
 const governmentBlockchainAuthRoutes = require('./routes/governmentBlockchainAuth.routes');
-
+const residentWalletRoutes = require('./routes/residentWallet.routes');
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 /**
@@ -366,8 +366,17 @@ if (dashboardRoutes) {
   app.use('/api/v1/dashboard', dashboardRoutes);
 }
 if (governmentBlockchainRoutes) {
-  app.use('/api/v1/government-blockchain', governmentBlockchainRoutes);;
+  app.use('/api/v1/government-blockchain', governmentBlockchainRoutes);
 }
+if (governmentBlockchainRoutes) {
+  app.use(
+  '/api/v1/government-blockchain/digital-kyc/resident-wallets',
+  residentWalletRoutes
+);
+}
+
+
+
 if (governmentBlockchainReferenceRoutes) {
   app.use(
     '/api/v1/government-blockchain/reference',
