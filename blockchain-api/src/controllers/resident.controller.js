@@ -668,6 +668,7 @@ exports.getResident = async (req, res) => {
   }
 };
 
+
 async function syncResidentToBlockchain(req, res) {
   const client = await pool.connect();
 
@@ -687,6 +688,7 @@ async function syncResidentToBlockchain(req, res) {
 
     if (residentResult.rows.length === 0) {
       await client.query('ROLLBACK');
+
       return res.status(404).json({
         success: false,
         message: 'Resident not found in PostgreSQL.'
@@ -735,22 +737,54 @@ async function syncResidentToBlockchain(req, res) {
     let walletFabricResult = null;
     let kycFabricResult = null;
 
+    /*
+      1. Resident Sync
+      Idempotent logic:
+      - If resident already exists on Fabric, do not fail.
+      - Continue to wallet creation.
+    */
     try {
-      residentFabricResult = await fabricService.submitTransaction(
-        'CreateResident',
-        [JSON.stringify(residentPayload)]
+      const existingResident = await fabricService.evaluateTransaction(
+        'GetResident',
+        residentId
       );
-    } catch (error) {
-      if (!String(error.message).includes('already exists')) {
-        throw error;
-      }
 
       residentFabricResult = {
+        success: true,
         skipped: true,
-        reason: error.message
+        reason: 'Resident already exists on blockchain',
+        data: existingResident
       };
+    } catch (lookupError) {
+      try {
+        residentFabricResult = await fabricService.submitTransaction(
+          'CreateResident',
+          [
+            JSON.stringify(residentPayload)
+          ]
+        );
+      } catch (createError) {
+        const msg = String(createError.message || '');
+
+        if (msg.includes('already exists')) {
+          residentFabricResult = {
+            success: true,
+            skipped: true,
+            reason: 'Resident already exists on blockchain',
+            errorMessage: msg
+          };
+        } else {
+          throw createError;
+        }
+      }
     }
 
+    /*
+      2. Wallet Sync
+      Idempotent logic:
+      - If wallet already exists on Fabric, update PostgreSQL as CONFIRMED.
+      - If wallet does not exist, create it using the official PostgreSQL wallet address.
+    */
     const walletResult = await client.query(
       `
       SELECT *
@@ -765,20 +799,24 @@ async function syncResidentToBlockchain(req, res) {
     if (walletResult.rows.length > 0) {
       const wallet = walletResult.rows[0];
 
-      try {
-        const officialWalletAddress =
-          wallet.wallet_address ||
-          resident.wallet_address ||
-          residentPayload.walletAddress;
+      const officialWalletAddress =
+        wallet.wallet_address ||
+        resident.wallet_address ||
+        residentPayload.walletAddress;
 
-        walletFabricResult = await fabricService.submitTransaction(
-          'CreateResidentWallet',
-          [
-            residentId,
-            wallet.wallet_currency || 'LBP',
-            officialWalletAddress
-          ]
+      try {
+        const existingWallet = await fabricService.evaluateTransaction(
+          'GetResidentWallet',
+          residentId
         );
+
+        walletFabricResult = {
+          success: true,
+          skipped: true,
+          reason: 'Resident wallet already exists on blockchain',
+          data: existingWallet,
+          walletAddress: officialWalletAddress
+        };
 
         await client.query(
           `
@@ -790,19 +828,63 @@ async function syncResidentToBlockchain(req, res) {
           `,
           [residentId]
         );
-      } catch (error) {
-        if (!String(error.message).includes('already exists')) {
-          throw error;
-        }
+      } catch (lookupWalletError) {
+        try {
+          walletFabricResult = await fabricService.submitTransaction(
+            'CreateResidentWallet',
+            [
+              residentId,
+              wallet.wallet_currency || 'LBP',
+              officialWalletAddress
+            ]
+          );
 
-        walletFabricResult = {
-          skipped: true,
-          reason: error.message
-        };
+          await client.query(
+            `
+            UPDATE blockchain.resident_wallets
+            SET blockchain_status = 'CONFIRMED',
+                fabric_tx_id = COALESCE(fabric_tx_id, 'FABRIC_CONFIRMED'),
+                updated_at = CURRENT_TIMESTAMP
+            WHERE resident_id = $1
+            `,
+            [residentId]
+          );
+        } catch (createWalletError) {
+          const msg = String(createWalletError.message || '');
+
+          if (msg.includes('already exists')) {
+            walletFabricResult = {
+              success: true,
+              skipped: true,
+              reason: 'Resident wallet already exists on blockchain',
+              walletAddress: officialWalletAddress,
+              errorMessage: msg
+            };
+
+            await client.query(
+              `
+              UPDATE blockchain.resident_wallets
+              SET blockchain_status = 'CONFIRMED',
+                  fabric_tx_id = COALESCE(fabric_tx_id, 'FABRIC_CONFIRMED'),
+                  updated_at = CURRENT_TIMESTAMP
+              WHERE resident_id = $1
+              `,
+              [residentId]
+            );
+          } else {
+            throw createWalletError;
+          }
+        }
       }
     }
 
-    if (resident.kyc_status && resident.kyc_status !== 'Draft') {
+    /*
+      3. KYC Sync
+      Only submit KYC if it is not Draft.
+    */
+    const kycStatus = String(resident.kyc_status || '').toUpperCase();
+
+    if (kycStatus && kycStatus !== 'DRAFT') {
       try {
         kycFabricResult = await fabricService.submitTransaction(
           'SubmitResidentKYC',
@@ -811,22 +893,32 @@ async function syncResidentToBlockchain(req, res) {
             resident.risk_category || 'Low'
           ]
         );
-      } catch (error) {
-        if (!String(error.message).includes('not found')) {
-          throw error;
-        }
+      } catch (kycError) {
+        const msg = String(kycError.message || '');
 
-        kycFabricResult = {
-          skipped: true,
-          reason: error.message
-        };
+        if (msg.includes('already') || msg.includes('not found')) {
+          kycFabricResult = {
+            success: true,
+            skipped: true,
+            reason: msg
+          };
+        } else {
+          throw kycError;
+        }
       }
+    } else {
+      kycFabricResult = {
+        success: true,
+        skipped: true,
+        reason: 'KYC status is Draft. KYC blockchain submission skipped.'
+      };
     }
 
     await client.query(
       `
       UPDATE blockchain.residents
-      SET updated_at = CURRENT_TIMESTAMP
+      SET blockchain_status = 'CONFIRMED',
+          updated_at = CURRENT_TIMESTAMP
       WHERE resident_id = $1
       `,
       [residentId]
@@ -841,7 +933,8 @@ async function syncResidentToBlockchain(req, res) {
         resident: residentFabricResult,
         wallet: walletFabricResult,
         kyc: kycFabricResult
-      })
+      }),
+      timestamp: new Date().toISOString()
     });
   } catch (error) {
     await client.query('ROLLBACK');
@@ -849,12 +942,14 @@ async function syncResidentToBlockchain(req, res) {
     return res.status(500).json({
       success: false,
       message: 'Failed to sync resident to blockchain.',
-      error: error.message
+      error: error.message,
+      timestamp: new Date().toISOString()
     });
   } finally {
     client.release();
   }
 }
+
 
 module.exports.syncResidentToBlockchain = syncResidentToBlockchain;
 
