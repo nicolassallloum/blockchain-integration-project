@@ -302,9 +302,19 @@
         <thead>
           <tr>
             <th>Document ID</th>
-            <th>Document Type</th>
+            <th>
+              <button class="sort-header-btn" type="button" (click)="toggleCreatedAtSort()">
+                Document Type
+                <span>{{ sortDirection === 'DESC' ? '↓' : '↑' }}</span>
+              </button>
+            </th>
             <th>Status</th>
-            <th>Created At</th>
+            <th>
+              <button class="sort-header-btn" type="button" (click)="toggleCreatedAtSort()">
+                Created At
+                <span>{{ sortDirection === 'DESC' ? '↓' : '↑' }}</span>
+              </button>
+            </th>
             <th>Revision</th>
             <th>Action</th>
           </tr>

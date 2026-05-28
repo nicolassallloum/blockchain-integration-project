@@ -44,7 +44,8 @@ export class CouchDbExplorerComponent implements OnInit {
   skip = 0;
 
   activeQuickFilter = 'ALL';
-
+  sortField: 'createdAt' = 'createdAt';
+  sortDirection: 'DESC' | 'ASC' = 'DESC';
   constructor(private couchDbService: CouchDbExplorerService) {}
 
   ngOnInit(): void {
@@ -146,9 +147,9 @@ export class CouchDbExplorerComponent implements OnInit {
       })
       .subscribe({
         next: (response) => {
-          this.records = response.data.documents || [];
+          this.records = this.sortRecordsByCreatedAt(response.data.documents || []);
           this.totalRows = response.data.totalRows || 0;
-          this.returned = response.data.returned || 0;
+          this.returned = this.records.length;
           this.loading = false;
         },
         error: (error) => {
@@ -349,6 +350,45 @@ export class CouchDbExplorerComponent implements OnInit {
   getSuccessfulTransactionsCount(): number {
     return this.getStatusCount('SUCCESS');
   }
+
+
+  sortRecordsByCreatedAt(records: any[]): any[] {
+    return [...records].sort((a, b) => {
+      const dateA = this.getCreatedAtTimestamp(a);
+      const dateB = this.getCreatedAtTimestamp(b);
+
+      if (this.sortDirection === 'ASC') {
+        return dateA - dateB;
+      }
+
+      return dateB - dateA;
+    });
+  }
+
+  getCreatedAtTimestamp(record: any): number {
+    const createdAt =
+      record?._ui_createdAt ||
+      record?.createdAt ||
+      record?.created_at ||
+      record?.timestamp ||
+      record?.txTimestamp ||
+      record?.createdDate ||
+      record?.createdOn;
+
+    if (!createdAt || createdAt === 'N/A') {
+      return 0;
+    }
+
+    const timestamp = new Date(createdAt).getTime();
+
+    return Number.isNaN(timestamp) ? 0 : timestamp;
+  }
+
+toggleCreatedAtSort(): void {
+  this.sortDirection = this.sortDirection === 'DESC' ? 'ASC' : 'DESC';
+  this.records = this.sortRecordsByCreatedAt(this.records);
+}
+
 
   copyJson(): void {
     if (!this.selectedRecord) {

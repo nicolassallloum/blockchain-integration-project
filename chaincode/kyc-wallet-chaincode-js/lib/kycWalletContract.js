@@ -189,7 +189,7 @@ class KycWalletContract extends Contract {
         return data.toString();
     }
 
-    async CreateResidentWallet(ctx, residentId, walletCurrency) {
+    async CreateResidentWallet(ctx, residentId, walletCurrency, walletAddress) {
         const residentKey = `RESIDENT_${residentId}`;
         const residentBytes = await ctx.stub.getState(residentKey);
 
@@ -199,7 +199,10 @@ class KycWalletContract extends Contract {
 
         const resident = JSON.parse(residentBytes.toString());
 
-        const walletAddress = `WALLET-${residentId}-${Date.now()}`;
+        const officialWalletAddress =
+        walletAddress && walletAddress.trim() !== ''
+            ? walletAddress.trim()
+            : `WALLET-${residentId}-${Date.now()}`;
         const walletKey = `RESIDENT_WALLET_${residentId}`;
 
         const wallet = {

@@ -766,11 +766,17 @@ async function syncResidentToBlockchain(req, res) {
       const wallet = walletResult.rows[0];
 
       try {
+        const officialWalletAddress =
+          wallet.wallet_address ||
+          resident.wallet_address ||
+          residentPayload.walletAddress;
+
         walletFabricResult = await fabricService.submitTransaction(
           'CreateResidentWallet',
           [
-          residentId,
-          wallet.wallet_currency || 'LBP'
+            residentId,
+            wallet.wallet_currency || 'LBP',
+            officialWalletAddress
           ]
         );
 

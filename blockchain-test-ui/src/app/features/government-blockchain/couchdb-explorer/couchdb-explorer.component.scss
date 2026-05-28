@@ -774,3 +774,26 @@ table {
     text-align: center;
   }
 }
+.sort-header-btn {
+  border: none;
+  background: transparent;
+  color: #475467;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  span {
+    font-size: 14px;
+    color: #2563eb;
+  }
+
+  &:hover {
+    color: #2563eb;
+  }
+}
