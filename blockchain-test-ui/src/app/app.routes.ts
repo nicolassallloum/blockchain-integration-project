@@ -36,7 +36,12 @@ export const routes: Routes = [
     path: 'government-blockchain/create-public-administration-account',
     component: CreatePublicAdministrationAccountComponent
   },
-
+  {
+    path: 'government-blockchain/account-login',
+    loadComponent: () =>
+      import('./features/government-blockchain/account-login/account-login.component')
+        .then(m => m.AccountLoginComponent)
+  },
   {
     path: 'government-blockchain/couchdb-explorer',
     component: CouchDbExplorerComponent,

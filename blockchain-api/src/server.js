@@ -32,6 +32,8 @@ const governmentBlockchainReferenceRoutes = require('./routes/government-blockch
 const governmentMinistryRoutes = require('./routes/government-blockchain/ministry.routes');
 const governmentBlockchainRoutes = require('./routes/government-blockchain/ministry.routes');
 const ministryRoutes = require('./routes/government-blockchain/ministry.routes');
+const governmentBlockchainAuthRoutes = require('./routes/governmentBlockchainAuth.routes');
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 /**
@@ -196,7 +198,10 @@ app.use((req, res, next) => {
 
   return next();
 });
-
+app.use(
+  '/api/v1/government-blockchain/auth',
+  governmentBlockchainAuthRoutes
+);
 /**
  * Normal CORS middleware.
  */

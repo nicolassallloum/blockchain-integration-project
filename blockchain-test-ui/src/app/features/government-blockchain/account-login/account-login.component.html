@@ -1,0 +1,242 @@
+<div class="account-login-page">
+  <div class="page-header">
+    <div>
+      <h1>Government Blockchain Account Login</h1>
+      <p>
+        Test login for Ministry, Public Administration, and Resident accounts.
+      </p>
+    </div>
+
+    <button
+      *ngIf="isLoggedIn"
+      type="button"
+      class="logout-btn"
+      (click)="logout()"
+    >
+      Logout
+    </button>
+  </div>
+
+  <section *ngIf="!isLoggedIn" class="login-card">
+    <div class="card-title">
+      <h2>Login To Account</h2>
+      <p>
+        Use the username and password created from the previous account creation
+        screens.
+      </p>
+    </div>
+
+    <form [formGroup]="loginForm" (ngSubmit)="login()" class="login-form">
+      <div class="form-grid">
+        <div class="form-field">
+          <label>Account Type</label>
+          <select formControlName="accountType">
+            <option
+              *ngFor="let type of accountTypes"
+              [value]="type.value"
+            >
+              {{ type.label }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label>Username</label>
+          <input
+            type="text"
+            formControlName="username"
+            placeholder="Enter username / account code"
+          />
+          <small
+            *ngIf="
+              loginForm.get('username')?.touched &&
+              loginForm.get('username')?.invalid
+            "
+          >
+            Username is required.
+          </small>
+        </div>
+
+        <div class="form-field">
+          <label>Password</label>
+          <input
+            type="password"
+            formControlName="password"
+            placeholder="Enter password"
+          />
+          <small
+            *ngIf="
+              loginForm.get('password')?.touched &&
+              loginForm.get('password')?.invalid
+            "
+          >
+            Password is required.
+          </small>
+        </div>
+      </div>
+
+      <div *ngIf="errorMessage" class="alert alert-error">
+        {{ errorMessage }}
+      </div>
+
+      <div *ngIf="successMessage" class="alert alert-success">
+        {{ successMessage }}
+      </div>
+
+      <div class="actions">
+        <button type="submit" class="primary-btn" [disabled]="isLoading">
+          {{ isLoading ? 'Logging in...' : 'Login Account' }}
+        </button>
+      </div>
+    </form>
+  </section>
+
+  <section *ngIf="isLoggedIn && loggedInAccount" class="account-dashboard">
+    <div class="summary-grid">
+      <div class="summary-card">
+        <span>Account Type</span>
+        <strong>{{ loggedInAccount.accountType }}</strong>
+      </div>
+
+      <div class="summary-card">
+        <span>Wallet Balance</span>
+        <strong>
+          {{ loggedInAccount.walletBalance | number: '1.0-2' }}
+          {{ loggedInAccount.currency }}
+        </strong>
+      </div>
+
+      <div class="summary-card">
+        <span>Status</span>
+        <strong [class]="getStatusClass(loggedInAccount.status)">
+          {{ loggedInAccount.status }}
+        </strong>
+      </div>
+
+      <div class="summary-card">
+        <span>Total Transactions</span>
+        <strong>{{ transactions.length }}</strong>
+      </div>
+    </div>
+
+    <div class="details-card">
+      <div class="section-header">
+        <div>
+          <h2>Account Information</h2>
+          <p>Full information of the logged-in blockchain account.</p>
+        </div>
+
+        <button type="button" class="primary-btn" (click)="startNewTransaction()">
+          Start New Transaction
+        </button>
+      </div>
+
+      <div class="details-grid">
+        <div class="detail-item">
+          <label>Account ID</label>
+          <span>{{ loggedInAccount.accountId }}</span>
+        </div>
+
+        <div class="detail-item">
+          <label>Username</label>
+          <span>{{ loggedInAccount.username }}</span>
+        </div>
+
+        <div class="detail-item">
+          <label>Display Name</label>
+          <span>{{ loggedInAccount.displayName }}</span>
+        </div>
+
+        <div class="detail-item">
+          <label>Arabic Name</label>
+          <span>{{ loggedInAccount.arabicName || '-' }}</span>
+        </div>
+
+        <div class="detail-item">
+          <label>Email</label>
+          <span>{{ loggedInAccount.email || '-' }}</span>
+        </div>
+
+        <div class="detail-item">
+          <label>Mobile</label>
+          <span>{{ loggedInAccount.mobile || '-' }}</span>
+        </div>
+
+        <div class="detail-item">
+          <label>Wallet Address</label>
+          <span>{{ loggedInAccount.walletAddress }}</span>
+        </div>
+
+        <div class="detail-item">
+          <label>Created At</label>
+          <span>{{ loggedInAccount.createdAt | date: 'medium' }}</span>
+        </div>
+
+        <div class="detail-item">
+          <label>Blockchain TX ID</label>
+          <span>{{ loggedInAccount.blockchainTxId || '-' }}</span>
+        </div>
+
+        <div class="detail-item">
+          <label>CouchDB Document ID</label>
+          <span>{{ loggedInAccount.couchDbDocId || '-' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="transactions-card">
+      <div class="section-header">
+        <div>
+          <h2>Account Transactions</h2>
+          <p>
+            All blockchain transactions related to the logged-in account.
+          </p>
+        </div>
+      </div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Transaction ID</th>
+              <th>Type</th>
+              <th>From Wallet</th>
+              <th>To Wallet</th>
+              <th>Amount</th>
+              <th>Currency</th>
+              <th>Status</th>
+              <th>Service</th>
+              <th>Blockchain TX</th>
+              <th>Created At</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr *ngFor="let tx of transactions">
+              <td>{{ tx.transactionId }}</td>
+              <td>{{ tx.transactionType }}</td>
+              <td>{{ tx.fromWalletAddress }}</td>
+              <td>{{ tx.toWalletAddress }}</td>
+              <td>{{ tx.amount | number: '1.0-2' }}</td>
+              <td>{{ tx.currency }}</td>
+              <td>
+                <span [class]="getStatusClass(tx.transactionStatus)">
+                  {{ tx.transactionStatus }}
+                </span>
+              </td>
+              <td>{{ tx.serviceName || '-' }}</td>
+              <td>{{ tx.blockchainTxId || '-' }}</td>
+              <td>{{ tx.createdAt | date: 'short' }}</td>
+            </tr>
+
+            <tr *ngIf="transactions.length === 0">
+              <td colspan="10" class="empty-state">
+                No transactions found for this account.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</div>

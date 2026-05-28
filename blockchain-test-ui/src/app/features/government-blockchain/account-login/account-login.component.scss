@@ -1,0 +1,267 @@
+.account-login-page {
+  padding: 24px;
+  background: #f5f7fb;
+  min-height: 100vh;
+}
+
+.page-header,
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.page-header h1,
+.section-header h2,
+.card-title h2 {
+  margin: 0;
+  color: #111827;
+  font-weight: 700;
+}
+
+.page-header p,
+.section-header p,
+.card-title p {
+  margin: 6px 0 0;
+  color: #6b7280;
+}
+
+.login-card,
+.details-card,
+.transactions-card {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  border: 1px solid #e5e7eb;
+  margin-bottom: 24px;
+}
+
+.login-form {
+  margin-top: 24px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-field label {
+  font-size: 14px;
+  color: #374151;
+  font-weight: 600;
+}
+
+.form-field input,
+.form-field select {
+  height: 44px;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  padding: 0 14px;
+  font-size: 14px;
+  outline: none;
+  background: #ffffff;
+}
+
+.form-field input:focus,
+.form-field select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.form-field small {
+  color: #dc2626;
+  font-size: 12px;
+}
+
+.actions {
+  margin-top: 24px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.primary-btn,
+.logout-btn {
+  border: none;
+  border-radius: 12px;
+  height: 42px;
+  padding: 0 18px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.primary-btn {
+  background: #1d4ed8;
+  color: #ffffff;
+}
+
+.primary-btn:disabled {
+  background: #93c5fd;
+  cursor: not-allowed;
+}
+
+.logout-btn {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.alert {
+  margin-top: 18px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+.alert-error {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.alert-success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.summary-card {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 20px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+.summary-card span {
+  display: block;
+  color: #6b7280;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.summary-card strong {
+  color: #111827;
+  font-size: 20px;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.detail-item {
+  background: #f9fafb;
+  border-radius: 14px;
+  padding: 14px;
+  border: 1px solid #e5e7eb;
+}
+
+.detail-item label {
+  display: block;
+  color: #6b7280;
+  font-size: 12px;
+  margin-bottom: 6px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.detail-item span {
+  color: #111827;
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  min-width: 1200px;
+  border-collapse: collapse;
+}
+
+thead {
+  background: #f3f4f6;
+}
+
+th,
+td {
+  padding: 13px 14px;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 13px;
+  color: #374151;
+}
+
+th {
+  color: #111827;
+  font-weight: 800;
+}
+
+.status-success,
+.status-warning,
+.status-danger,
+.status-neutral {
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  display: inline-block;
+}
+
+.status-success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-warning {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-danger {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.status-neutral {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.empty-state {
+  text-align: center;
+  color: #6b7280;
+  padding: 28px;
+}
+
+@media (max-width: 1100px) {
+  .form-grid,
+  .summary-grid,
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .page-header,
+  .section-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
