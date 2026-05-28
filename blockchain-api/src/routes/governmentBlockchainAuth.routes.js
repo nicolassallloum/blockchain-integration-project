@@ -2,11 +2,13 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/postgres');
 const bcrypt = require('bcryptjs');
-
+// const generatedPassword = generatePassword();
+// const passwordHash = await bcrypt.hash(generatedPassword, 10);
+// const loginUsername = administration.contactEmail;
 router.post('/login', async (req, res) => {
   try {
     const { username, password, accountType } = req.body;
-
+    // const isPasswordValid = await bcrypt.compare(password, storedPasswordHash);
     if (!username || !password || !accountType) {
       return res.status(400).json({
         success: false,
@@ -41,22 +43,36 @@ router.post('/login', async (req, res) => {
 
     if (accountType === 'PUBLIC_ADMINISTRATION') {
       query = `
-         SELECT
+        SELECT
           pa.administration_id AS "accountId",
           'PUBLIC_ADMINISTRATION' AS "accountType",
-          pa.contact_email AS "username",
+          COALESCE(pa.login_username, pa.contact_email, pa.administration_code) AS "username",
           pa.administration_code AS "administrationCode",
           pa.administration_name AS "displayName",
           pa.arabic_name AS "arabicName",
+          pa.parent_ministry AS "parentMinistry",
+          pa.administration_type AS "administrationType",
+          pa.director_name AS "directorName",
+          pa.contact_person AS "contactPerson",
           pa.contact_email AS "email",
           pa.contact_mobile AS "mobile",
+          pa.country AS "country",
+          pa.governorate AS "governorate",
+          pa.municipality AS "municipality",
+          pa.address AS "address",
           pa.wallet_status AS "status",
           pa.created_at AS "createdAt",
           pa.blockchain_tx_id AS "blockchainTxId",
+          pa.ledger_reference AS "couchDbDocId",
+          pa.password_hash AS "passwordHash",
           pa.wallet_address AS "walletAddress",
+          COALESCE(pa.wallet_balance, 0) AS "walletBalance",
           COALESCE(pa.wallet_currency, 'LBP') AS "currency"
         FROM blockchain.public_administrations pa
-        WHERE UPPER(pa.contact_email) = UPPER($1)
+        WHERE UPPER(COALESCE(pa.login_username, pa.contact_email, pa.administration_code)) = UPPER($1)
+        ORDER BY
+          CASE WHEN pa.password_hash IS NOT NULL THEN 0 ELSE 1 END,
+          pa.created_at DESC
         LIMIT 1
       `;
     }
@@ -66,21 +82,25 @@ router.post('/login', async (req, res) => {
         SELECT
           r.resident_id AS "accountId",
           'RESIDENT' AS "accountType",
-          r.login_username AS "username",
+          COALESCE(r.login_username, r.wallet_address, r.email) AS "username",
           CONCAT_WS(' ', r.first_name, r.last_name) AS "displayName",
           r.arabic_full_name AS "arabicName",
           r.email AS "email",
-          r.mobile AS "mobile",
+          r.mobile_number AS "mobile",
           r.wallet_status AS "status",
           r.created_at AS "createdAt",
-          r.tx_id AS "blockchainTxId",
-          r.ledger_reference AS "couchDbDocId",
+          r.tax_number AS "blockchainTxId",
           r.password_hash AS "passwordHash",
           r.wallet_address AS "walletAddress",
-          COALESCE(r.wallet_balance, 0) AS "walletBalance",
+          COALESCE(r.monthly_income, 0) AS "walletBalance",
           COALESCE(r.wallet_currency, 'LBP') AS "currency"
         FROM blockchain.residents r
-        WHERE UPPER(r.login_username) = UPPER($1)
+        WHERE UPPER(COALESCE(r.login_username, r.wallet_address, r.email)) = UPPER($1)
+          OR UPPER(r.wallet_address) = UPPER($1)
+          OR UPPER(r.email) = UPPER($1)
+        ORDER BY
+          CASE WHEN r.password_hash IS NOT NULL THEN 0 ELSE 1 END,
+          r.created_at DESC
         LIMIT 1
       `;
     }
@@ -104,17 +124,23 @@ router.post('/login', async (req, res) => {
     const account = result.rows[0];
 
     console.log('[LOGIN ACCOUNT ROW]', account);
+    console.log('[LOGIN ACCOUNT COLUMNS]', Object.keys(account));
+    console.log('[LOGIN PASSWORD HASH VALUE]', account.passwordHash);
 
-    const storedPasswordHash =
+    const storedPasswordHash = String(
       account.passwordHash ||
       account.passwordhash ||
-      account.password_hash;
+      account.password_hash ||
+      ''
+    ).trim();
 
     if (!storedPasswordHash) {
       return res.status(500).json({
         success: false,
-        message: 'Password hash was not returned from database query. Check SQL alias passwordHash.',
-        debugColumns: Object.keys(account)
+        message:
+          'Password hash value is empty. The column exists but the value returned is null or empty.',
+        debugColumns: Object.keys(account),
+        debugAccount: account
       });
     }
 
@@ -128,6 +154,8 @@ router.post('/login', async (req, res) => {
     }
 
     delete account.passwordHash;
+    delete account.passwordhash;
+    delete account.password_hash;
 
     return res.json({
       success: true,
