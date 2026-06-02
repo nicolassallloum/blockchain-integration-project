@@ -5,13 +5,21 @@
       <h1>Government Services</h1>
       <p class="subtitle">
         Manage government service definitions, fees, required documents, digital stamp rules,
-        and service availability.
+        and service availability. All services use GOV - Government Digital Token.
       </p>
     </div>
 
-    <button class="primary-btn" type="button" (click)="createService()">
+    <button class="primary-btn" type="button" (click)="openCreateForm()">
       + Create Service
     </button>
+  </div>
+
+  <div *ngIf="successMessage" class="alert alert-success">
+    {{ successMessage }}
+  </div>
+
+  <div *ngIf="errorMessage" class="alert alert-error">
+    {{ errorMessage }}
   </div>
 
   <div class="kpi-grid">
@@ -43,9 +51,15 @@
   <div class="filters-card">
     <div class="filters-header">
       <h2>Search & Filters</h2>
-      <button class="secondary-btn" type="button" (click)="clearFilters()">
-        Clear Filters
-      </button>
+      <div class="filter-actions">
+        <button class="secondary-btn" type="button" (click)="loadServices()">
+          Refresh
+        </button>
+
+        <button class="secondary-btn" type="button" (click)="clearFilters()">
+          Clear Filters
+        </button>
+      </div>
     </div>
 
     <div class="filters-grid">
@@ -55,52 +69,223 @@
           type="text"
           placeholder="Search by ID, code, service name, ministry..."
           [(ngModel)]="searchText"
+          (keyup.enter)="loadServices()"
         />
       </div>
 
       <div class="form-group">
         <label>Ministry</label>
-        <select [(ngModel)]="selectedMinistry">
+        <select [(ngModel)]="selectedMinistryId" (change)="loadServices()">
           <option value="">All Ministries</option>
-          <option value="Ministry of Finance">Ministry of Finance</option>
-          <option value="Ministry of Interior">Ministry of Interior</option>
-          <option value="Ministry of Public Health">Ministry of Public Health</option>
-          <option value="Ministry of Transport">Ministry of Transport</option>
+          <option *ngFor="let ministry of ministries" [value]="ministry.ministryId">
+            {{ ministry.ministryName }}
+          </option>
         </select>
       </div>
 
       <div class="form-group">
         <label>Service Category</label>
-        <select [(ngModel)]="selectedCategory">
+        <select [(ngModel)]="selectedCategoryId" (change)="loadServices()">
           <option value="">All Categories</option>
-          <option value="Finance">Finance</option>
-          <option value="Civil Affairs">Civil Affairs</option>
-          <option value="Health">Health</option>
-          <option value="Transport">Transport</option>
+          <option *ngFor="let category of categories" [value]="category.categoryId">
+            {{ category.categoryName }}
+          </option>
         </select>
       </div>
 
       <div class="form-group">
         <label>Service Status</label>
-        <select [(ngModel)]="selectedStatus">
+        <select [(ngModel)]="selectedStatus" (change)="loadServices()">
           <option value="">All Statuses</option>
-          <option value="Active">Active</option>
-          <option value="Inactive">Inactive</option>
-          <option value="Draft">Draft</option>
+          <option value="ACTIVE">Active</option>
+          <option value="INACTIVE">Inactive</option>
+          <option value="DRAFT">Draft</option>
         </select>
       </div>
     </div>
+  </div>
+
+  <div *ngIf="showForm" class="form-card">
+    <div class="form-header">
+      <div>
+        <h2>{{ isEditMode ? 'Edit Government Service' : 'Create Government Service' }}</h2>
+        <p>
+          Currency is locked to GOV - Government Digital Token.
+        </p>
+      </div>
+
+      <button class="secondary-btn" type="button" (click)="closeForm()">
+        Close
+      </button>
+    </div>
+
+    <form #serviceNgForm="ngForm" (ngSubmit)="submitService()">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Service Code *</label>
+          <input
+            type="text"
+            name="serviceCode"
+            [(ngModel)]="form.serviceCode"
+            placeholder="Example: MOF-TAX-001"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Service Name *</label>
+          <input
+            type="text"
+            name="serviceName"
+            [(ngModel)]="form.serviceName"
+            placeholder="Example: Tax Clearance Certificate"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Arabic Name</label>
+          <input
+            type="text"
+            name="arabicName"
+            [(ngModel)]="form.arabicName"
+            placeholder="Arabic service name"
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Category *</label>
+          <select
+            name="categoryId"
+            [(ngModel)]="form.categoryId"
+            required
+          >
+            <option value="">Select Category</option>
+            <option *ngFor="let category of categories" [value]="category.categoryId">
+              {{ category.categoryName }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Ministry</label>
+          <select name="ministryId" [(ngModel)]="form.ministryId">
+            <option value="">Not Assigned</option>
+            <option *ngFor="let ministry of ministries" [value]="ministry.ministryId">
+              {{ ministry.ministryName }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Administration</label>
+          <select name="administrationId" [(ngModel)]="form.administrationId">
+            <option value="">Not Assigned</option>
+            <option *ngFor="let admin of administrations" [value]="admin.administrationId">
+              {{ admin.administrationName }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Fee Amount *</label>
+          <input
+            type="number"
+            name="feeAmount"
+            [(ngModel)]="form.feeAmount"
+            min="0"
+            placeholder="Example: 25000"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Currency</label>
+          <input
+            type="text"
+            class="form-control"
+            value="GOV - Government Digital Token"
+            readonly
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Digital Stamp Required</label>
+          <select name="digitalStampRequired" [(ngModel)]="form.digitalStampRequired">
+            <option [ngValue]="true">Yes</option>
+            <option [ngValue]="false">No</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Processing Time</label>
+          <input
+            type="text"
+            name="processingTime"
+            [(ngModel)]="form.processingTime"
+            placeholder="Example: 2 Business Days"
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Status</label>
+          <select name="serviceStatus" [(ngModel)]="form.serviceStatus">
+            <option value="ACTIVE">Active</option>
+            <option value="INACTIVE">Inactive</option>
+            <option value="DRAFT">Draft</option>
+          </select>
+        </div>
+
+        <div class="form-group full-width">
+          <label>Required Documents</label>
+          <textarea
+            name="requiredDocuments"
+            [(ngModel)]="form.requiredDocuments"
+            rows="3"
+            placeholder="Example: National ID, Tax Number, Application Form"
+          ></textarea>
+        </div>
+
+        <div class="form-group full-width">
+          <label>Description</label>
+          <textarea
+            name="description"
+            [(ngModel)]="form.description"
+            rows="3"
+            placeholder="Service description"
+          ></textarea>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button class="secondary-btn" type="button" (click)="closeForm()">
+          Cancel
+        </button>
+
+        <button
+          class="primary-btn"
+          type="submit"
+          [disabled]="loading || serviceNgForm.invalid"
+        >
+          {{ loading ? 'Saving...' : isEditMode ? 'Update Service' : 'Create Service' }}
+        </button>
+      </div>
+    </form>
   </div>
 
   <div class="table-card">
     <div class="table-header">
       <div>
         <h2>Services Catalog</h2>
-        <p>{{ filteredServices.length }} records found</p>
+        <p>{{ services.length }} records found</p>
       </div>
     </div>
 
-    <div class="table-wrapper">
+    <div *ngIf="loading" class="loading-state">
+      Loading government services...
+    </div>
+
+    <div class="table-wrapper" *ngIf="!loading">
       <table>
         <thead>
           <tr>
@@ -121,39 +306,63 @@
         </thead>
 
         <tbody>
-          <tr *ngFor="let service of filteredServices">
-            <td class="strong">{{ service.serviceId }}</td>
+          <tr *ngFor="let service of services">
+            <td class="strong">{{ service.servicePublicId }}</td>
             <td>{{ service.serviceCode }}</td>
             <td>{{ service.serviceName }}</td>
-            <td class="arabic">{{ service.arabicName }}</td>
-            <td>{{ service.ministry }}</td>
-            <td>{{ service.administration }}</td>
-            <td>{{ service.serviceCategory }}</td>
-            <td>{{ service.feeAmount | number }} {{ service.currency }}</td>
-            <td class="documents-cell">{{ service.requiredDocuments }}</td>
+            <td class="arabic">{{ service.arabicName || '-' }}</td>
+            <td>{{ service.ministryName || 'Not Assigned' }}</td>
+            <td>{{ service.administrationName || 'Not Assigned' }}</td>
+            <td>{{ service.categoryName || '-' }}</td>
+
             <td>
-              <span class="stamp-badge" [ngClass]="getStampClass(service.digitalStampRequired)">
-                {{ service.digitalStampRequired }}
+              {{ service.feeAmount | number }} {{ service.currencyCode || 'GOV' }}
+            </td>
+
+            <td class="documents-cell">
+              {{ service.requiredDocuments || '-' }}
+            </td>
+
+            <td>
+              <span
+                class="stamp-badge"
+                [ngClass]="getStampClass(service.digitalStampRequired)"
+              >
+                {{ service.digitalStampRequired ? 'Yes' : 'No' }}
               </span>
             </td>
-            <td>{{ service.processingTime }}</td>
+
+            <td>{{ service.processingTime || '-' }}</td>
+
             <td>
-              <span class="status-badge" [ngClass]="getStatusClass(service.serviceStatus)">
-                {{ service.serviceStatus }}
+              <span
+                class="status-badge"
+                [ngClass]="getStatusClass(service.serviceStatus)"
+              >
+                {{ formatStatus(service.serviceStatus) }}
               </span>
             </td>
+
             <td>
               <div class="actions">
-                <button type="button" class="action-btn view" (click)="viewTransactions(service)">
+                <button
+                  type="button"
+                  class="action-btn view"
+                  (click)="viewTransactions(service)"
+                >
                   Transactions
                 </button>
 
-                <button type="button" class="action-btn edit" (click)="editService(service)">
+                <button
+                  type="button"
+                  class="action-btn edit"
+                  (click)="editService(service)"
+                >
                   Edit
                 </button>
 
                 <button
-                  *ngIf="service.serviceStatus !== 'Active'"
+                  *ngIf="service.serviceStatus !== 'ACTIVE'"
                   type="button"
                   class="action-btn activate"
                   (click)="activateService(service)"
@@ -162,7 +371,7 @@
                 </button>
 
                 <button
-                  *ngIf="service.serviceStatus === 'Active'"
+                  *ngIf="service.serviceStatus === 'ACTIVE'"
                   type="button"
                   class="action-btn deactivate"
                   (click)="deactivateService(service)"
@@ -173,7 +382,7 @@
             </td>
           </tr>
 
-          <tr *ngIf="filteredServices.length === 0">
+          <tr *ngIf="services.length === 0">
             <td colspan="13" class="empty-state">
               No government services found for the selected filters.
             </td>
