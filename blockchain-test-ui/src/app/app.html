@@ -76,61 +76,75 @@
         <span class="menu-text">Back</span>
       </a>
 
-      <a routerLink="/digital-kyc/dashboard" routerLinkActive="active">
-        <span class="nav-dot"></span>
-        <span class="menu-text">Dashboard</span>
-      </a>
-
-      <a routerLink="/digital-kyc/wallet-create" routerLinkActive="active">
-        <span class="nav-dot"></span>
-        <span class="menu-text">Wallet Create</span>
-      </a>
-
-      <a routerLink="/digital-kyc/blockchain-kyc" routerLinkActive="active">
-        <span class="nav-dot"></span>
-        <span class="menu-text">BlockChain Wallet Create (FOR TEST)</span>
-      </a>
-
-      <a routerLink="/digital-kyc/wallet-login" routerLinkActive="active">
-        <span class="nav-dot"></span>
-        <span class="menu-text">Wallet Login</span>
-      </a>
-
-      <a routerLink="/digital-kyc/wallet-query" routerLinkActive="active">
-        <span class="nav-dot"></span>
-        <span class="menu-text">Wallet Query</span>
-      </a>
-
-      <a routerLink="/digital-kyc/fabric-test" routerLinkActive="active">
-        <span class="nav-dot"></span>
-        <span class="menu-text">Fabric Test</span>
-      </a>
-
-      <div class="menu-divider"></div>
-
-      <a routerLink="/digital-kyc/wallet-transfer" routerLinkActive="active">
-        <span class="nav-dot"></span>
-        <span class="menu-text">Wallet Transfer</span>
-      </a>
-
-      <a routerLink="/digital-kyc/organization-transfer" routerLinkActive="active">
-        <span class="nav-dot"></span>
-        <span class="menu-text">Organization Transfer</span>
-      </a>
-
-      <a routerLink="/digital-kyc/transaction-history" routerLinkActive="active">
-        <span class="nav-dot"></span>
-        <span class="menu-text">Transaction History</span>
-      </a>
-
-      <a
-        routerLink="/data-generation-engine"
-        routerLinkActive="active"
-        class="sidebar-link"
+      <!-- KYC Blockchain Main Menu -->
+      <button
+        type="button"
+        class="government-main-menu"
+        [class.active]="kycMenuOpen"
+        (click)="toggleKycMenu()"
       >
         <span class="nav-dot"></span>
-        <span class="menu-text">Data Generation Engine</span>
-      </a>
+        <span class="menu-text">KYC Blockchain</span>
+        <span class="menu-arrow menu-text">
+          {{ kycMenuOpen ? '▾' : '▸' }}
+        </span>
+      </button>
+
+      <div class="government-submenu" *ngIf="kycMenuOpen">
+        <a routerLink="/digital-kyc/dashboard" routerLinkActive="active">
+          <span class="nav-dot"></span>
+          <span class="menu-text">Dashboard</span>
+        </a>
+
+        <a routerLink="/digital-kyc/wallet-create" routerLinkActive="active">
+          <span class="nav-dot"></span>
+          <span class="menu-text">Wallet Create</span>
+        </a>
+
+        <a routerLink="/digital-kyc/blockchain-kyc" routerLinkActive="active">
+          <span class="nav-dot"></span>
+          <span class="menu-text">BlockChain Wallet Create (FOR TEST)</span>
+        </a>
+
+        <a routerLink="/digital-kyc/wallet-login" routerLinkActive="active">
+          <span class="nav-dot"></span>
+          <span class="menu-text">Wallet Login</span>
+        </a>
+
+        <a routerLink="/digital-kyc/wallet-query" routerLinkActive="active">
+          <span class="nav-dot"></span>
+          <span class="menu-text">Wallet Query</span>
+        </a>
+
+        <a routerLink="/digital-kyc/fabric-test" routerLinkActive="active">
+          <span class="nav-dot"></span>
+          <span class="menu-text">Fabric Test</span>
+        </a>
+
+        <a routerLink="/digital-kyc/wallet-transfer" routerLinkActive="active">
+          <span class="nav-dot"></span>
+          <span class="menu-text">Wallet Transfer</span>
+        </a>
+
+        <a routerLink="/digital-kyc/organization-transfer" routerLinkActive="active">
+          <span class="nav-dot"></span>
+          <span class="menu-text">Organization Transfer</span>
+        </a>
+
+        <a routerLink="/digital-kyc/transaction-history" routerLinkActive="active">
+          <span class="nav-dot"></span>
+          <span class="menu-text">Transaction History</span>
+        </a>
+
+        <a
+          routerLink="/data-generation-engine"
+          routerLinkActive="active"
+          class="sidebar-link"
+        >
+          <span class="nav-dot"></span>
+          <span class="menu-text">Data Generation Engine</span>
+        </a>
+      </div>
 
       <div class="menu-divider"></div>
 
@@ -168,14 +182,16 @@
           <span class="nav-dot"></span>
           <span class="menu-text">Create Resident Account</span>
         </a>
+
         <a
           routerLink="/government-blockchain/account-login"
           routerLinkActive="active"
           class="sidebar-link"
         >
           <span class="sidebar-icon">🔐</span>
-          <span>Account Login</span>
+          <span class="menu-text">Account Login</span>
         </a>
+
         <a routerLink="/government-blockchain/resident-wallets" routerLinkActive="active">
           <span class="nav-dot"></span>
           <span class="menu-text">Resident Wallets</span>
@@ -186,15 +202,15 @@
           <span class="menu-text">Government Services</span>
         </a>
 
-
         <a
           routerLink="/government-blockchain/couchdb-explorer"
           routerLinkActive="active"
           class="nav-item"
         >
           <span class="nav-dot"></span>
-          <span class="nav-label">CouchDB Explorer</span>
+          <span class="menu-text">CouchDB Explorer</span>
         </a>
+
         <a routerLink="/government-blockchain/new-transaction" routerLinkActive="active">
           <span class="nav-dot"></span>
           <span class="menu-text">New Transaction</span>

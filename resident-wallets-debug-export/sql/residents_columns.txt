@@ -1,0 +1,39 @@
+       column_name       |          data_type          | character_maximum_length | is_nullable |                  column_default                  
+-------------------------+-----------------------------+--------------------------+-------------+--------------------------------------------------
+ id                      | bigint                      |                          | NO          | nextval('blockchain.residents_id_seq'::regclass)
+ resident_id             | character varying           |                       80 | NO          | 
+ first_name              | character varying           |                      150 | NO          | 
+ father_name             | character varying           |                      150 | YES         | 
+ mother_name             | character varying           |                      150 | YES         | 
+ last_name               | character varying           |                      150 | NO          | 
+ full_name               | character varying           |                      300 | NO          | 
+ arabic_full_name        | character varying           |                      300 | YES         | 
+ date_of_birth           | date                        |                          | YES         | 
+ gender                  | character varying           |                       30 | YES         | 
+ nationality             | character varying           |                      100 | YES         | 
+ national_id_number      | character varying           |                      100 | YES         | 
+ passport_number         | character varying           |                      100 | YES         | 
+ residency_permit_number | character varying           |                      100 | YES         | 
+ tax_number              | character varying           |                      100 | YES         | 
+ mobile_number           | character varying           |                       50 | YES         | 
+ email                   | character varying           |                      200 | YES         | 
+ governorate             | character varying           |                      150 | YES         | 
+ district                | character varying           |                      150 | YES         | 
+ municipality            | character varying           |                      150 | YES         | 
+ address                 | text                        |                          | YES         | 
+ employment_status       | character varying           |                      100 | YES         | 
+ occupation              | character varying           |                      200 | YES         | 
+ monthly_income          | numeric                     |                          | YES         | 
+ kyc_status              | character varying           |                       50 | YES         | 'Draft'::character varying
+ risk_category           | character varying           |                       50 | YES         | 'Low'::character varying
+ wallet_address          | character varying           |                      200 | YES         | 
+ wallet_currency         | character varying           |                       20 | YES         | 'LBP'::character varying
+ wallet_status           | character varying           |                       50 | YES         | 'Not Created'::character varying
+ record_status           | character varying           |                       50 | YES         | 'ACTIVE'::character varying
+ created_at              | timestamp without time zone |                          | YES         | CURRENT_TIMESTAMP
+ updated_at              | timestamp without time zone |                          | YES         | CURRENT_TIMESTAMP
+ blockchain_status       | text                        |                          | YES         | 
+ login_username          | character varying           |                      150 | YES         | 
+ password_hash           | character varying           |                      255 | YES         | 
+(35 rows)
+

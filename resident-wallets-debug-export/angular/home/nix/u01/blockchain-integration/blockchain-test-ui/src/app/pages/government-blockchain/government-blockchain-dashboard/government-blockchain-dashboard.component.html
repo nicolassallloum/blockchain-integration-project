@@ -1,0 +1,322 @@
+<section class="government-dashboard-page">
+  <div class="page-header">
+    <div>
+      <div class="eyebrow">Government Blockchain Services Platform</div>
+      <h1>{{ pageTitle }}</h1>
+      <p>{{ pageSubtitle }}</p>
+    </div>
+
+    <div class="header-actions">
+      <div class="last-updated">
+        <span>Last Updated</span>
+        <strong>{{ lastUpdated | date: 'yyyy-MM-dd HH:mm' }}</strong>
+      </div>
+
+      <button type="button" class="refresh-btn">
+        Refresh Dashboard
+      </button>
+    </div>
+  </div>
+
+  <div class="summary-strip">
+    <div class="summary-card">
+      <span>Platform Status</span>
+      <strong class="status-green">Operational</strong>
+    </div>
+
+    <div class="summary-card">
+      <span>Blockchain Network</span>
+      <strong>Hyperledger Fabric</strong>
+    </div>
+
+    <div class="summary-card">
+      <span>State Database</span>
+      <strong>CouchDB</strong>
+    </div>
+
+    <div class="summary-card">
+      <span>Off-Chain Database</span>
+      <strong>PostgreSQL</strong>
+    </div>
+  </div>
+
+  <div class="kpi-grid">
+    <article
+      class="kpi-card"
+      *ngFor="let kpi of kpis; trackBy: trackByTitle"
+      [ngClass]="'tone-' + kpi.tone"
+    >
+      <div class="kpi-top">
+        <div class="kpi-icon">{{ kpi.icon }}</div>
+
+        <div class="kpi-trend" *ngIf="kpi.trend">
+          {{ kpi.trend }}
+        </div>
+      </div>
+
+      <div class="kpi-value">
+        {{ kpi.value | number }}
+        <span *ngIf="kpi.suffix">{{ kpi.suffix }}</span>
+      </div>
+
+      <h3>{{ kpi.title }}</h3>
+      <p>{{ kpi.subtitle }}</p>
+    </article>
+  </div>
+
+  <div class="dashboard-grid">
+    <article class="panel chart-panel">
+      <div class="panel-header">
+        <div>
+          <h2>Transactions by Status</h2>
+          <p>Current government transaction status distribution</p>
+        </div>
+      </div>
+
+      <div class="bar-list">
+        <div
+          class="bar-row"
+          *ngFor="let item of transactionsByStatus; trackBy: trackByLabel"
+        >
+          <div class="bar-info">
+            <span>{{ item.label }}</span>
+            <strong>{{ item.value }}%</strong>
+          </div>
+          <div class="bar-track">
+            <div
+              class="bar-fill"
+              [ngClass]="'tone-' + item.tone"
+              [style.width.%]="item.value"
+            ></div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="panel chart-panel">
+      <div class="panel-header">
+        <div>
+          <h2>Transactions by Ministry</h2>
+          <p>Most active ministries by transaction volume</p>
+        </div>
+      </div>
+
+      <div class="bar-list">
+        <div
+          class="bar-row"
+          *ngFor="let item of transactionsByMinistry; trackBy: trackByLabel"
+        >
+          <div class="bar-info">
+            <span>{{ item.label }}</span>
+            <strong>{{ item.value }}%</strong>
+          </div>
+          <div class="bar-track">
+            <div
+              class="bar-fill"
+              [ngClass]="'tone-' + item.tone"
+              [style.width.%]="item.value"
+            ></div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="panel chart-panel">
+      <div class="panel-header">
+        <div>
+          <h2>Wallet Growth</h2>
+          <p>New blockchain wallets created by month</p>
+        </div>
+      </div>
+
+      <div class="column-chart">
+        <div
+          class="column-item"
+          *ngFor="let item of walletGrowth; trackBy: trackByLabel"
+        >
+          <div class="column-value">{{ item.value }}K</div>
+          <div class="column-track">
+            <div
+              class="column-fill"
+              [style.height.%]="getBarWidth(item.value, walletGrowth)"
+            ></div>
+          </div>
+          <div class="column-label">{{ item.label }}</div>
+        </div>
+      </div>
+    </article>
+
+    <article class="panel chart-panel">
+      <div class="panel-header">
+        <div>
+          <h2>Blockchain Submission Status</h2>
+          <p>Fabric ledger submission and confirmation status</p>
+        </div>
+      </div>
+
+      <div class="donut-layout">
+        <div class="donut-placeholder">
+          <span>{{ getTotal(blockchainSubmissionStatus) }}%</span>
+          <small>Total</small>
+        </div>
+
+        <div class="legend-list">
+          <div
+            class="legend-item"
+            *ngFor="let item of blockchainSubmissionStatus; trackBy: trackByLabel"
+          >
+            <span class="legend-dot" [ngClass]="'tone-' + item.tone"></span>
+            <span>{{ item.label }}</span>
+            <strong>{{ item.value }}%</strong>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="panel chart-panel">
+      <div class="panel-header">
+        <div>
+          <h2>Payments Timeline</h2>
+          <p>Daily government payment activity</p>
+        </div>
+      </div>
+
+      <div class="column-chart compact">
+        <div
+          class="column-item"
+          *ngFor="let item of paymentsTimeline; trackBy: trackByLabel"
+        >
+          <div class="column-value">{{ item.value }}M</div>
+          <div class="column-track">
+            <div
+              class="column-fill payment"
+              [style.height.%]="getBarWidth(item.value, paymentsTimeline)"
+            ></div>
+          </div>
+          <div class="column-label">{{ item.label }}</div>
+        </div>
+      </div>
+    </article>
+
+    <article class="panel chart-panel">
+      <div class="panel-header">
+        <div>
+          <h2>AML Alerts Distribution</h2>
+          <p>Risk levels generated by AML screening engine</p>
+        </div>
+      </div>
+
+      <div class="bar-list">
+        <div
+          class="bar-row"
+          *ngFor="let item of amlAlertsDistribution; trackBy: trackByLabel"
+        >
+          <div class="bar-info">
+            <span>{{ item.label }}</span>
+            <strong>{{ item.value }}%</strong>
+          </div>
+          <div class="bar-track">
+            <div
+              class="bar-fill"
+              [ngClass]="'tone-' + item.tone"
+              [style.width.%]="item.value"
+            ></div>
+          </div>
+        </div>
+      </div>
+    </article>
+  </div>
+
+  <article class="panel health-panel">
+    <div class="panel-header">
+      <div>
+        <h2>Blockchain Health</h2>
+        <p>Live readiness indicators for Fabric, CouchDB, PostgreSQL, and chaincode</p>
+      </div>
+    </div>
+
+    <div class="health-grid">
+      <div
+        class="health-card"
+        *ngFor="let item of blockchainHealth; trackBy: trackByTitle"
+      >
+        <div class="health-main">
+          <span
+            class="health-dot"
+            [ngClass]="getStatusClass(item.status)"
+          ></span>
+
+          <div>
+            <h3>{{ item.title }}</h3>
+            <p>{{ item.description }}</p>
+          </div>
+        </div>
+
+        <strong [ngClass]="getStatusClass(item.status)">
+          {{ item.value }}
+        </strong>
+      </div>
+    </div>
+  </article>
+
+  <article class="panel transactions-panel">
+    <div class="panel-header">
+      <div>
+        <h2>Recent Transactions</h2>
+        <p>Latest government service transactions submitted by residents</p>
+      </div>
+
+      <button type="button" class="view-all-btn">
+        View All Transactions
+      </button>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Transaction ID</th>
+            <th>Resident Name</th>
+            <th>Ministry</th>
+            <th>Service</th>
+            <th>Amount</th>
+            <th>Status</th>
+            <th>Blockchain Status</th>
+            <th>Created At</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr
+            *ngFor="let tx of recentTransactions; trackBy: trackByTransactionId"
+          >
+            <td>
+              <strong class="transaction-id">{{ tx.transactionId }}</strong>
+            </td>
+            <td>{{ tx.residentName }}</td>
+            <td>{{ tx.ministry }}</td>
+            <td>{{ tx.service }}</td>
+            <td>
+              {{ tx.amount | number }}
+              {{ tx.currency }}
+            </td>
+            <td>
+              <span class="status-pill" [ngClass]="getStatusClass(tx.status)">
+                {{ tx.status.replaceAll('_', ' ') }}
+              </span>
+            </td>
+            <td>
+              <span
+                class="status-pill blockchain"
+                [ngClass]="getStatusClass(tx.blockchainStatus)"
+              >
+                {{ tx.blockchainStatus }}
+              </span>
+            </td>
+            <td>{{ tx.createdAt }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </article>
+</section>

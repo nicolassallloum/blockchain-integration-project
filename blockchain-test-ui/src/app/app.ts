@@ -30,7 +30,9 @@ export class App {
 
   isSidebarCollapsed = false;
   sidebarSearchText = '';
-  governmentMenuOpen = false;
+
+  kycMenuOpen = true;
+  governmentMenuOpen = true;
 
   menuItems: SidebarMenuItem[] = [
     {
@@ -39,185 +41,201 @@ export class App {
       icon: '↩',
       group: 'Navigation'
     },
+
+    // KYC Blockchain
     {
       label: 'Dashboard',
       route: '/digital-kyc/dashboard',
       icon: '●',
-      group: 'Digital KYC'
+      group: 'KYC Blockchain'
     },
     {
       label: 'Wallet Create',
       route: '/digital-kyc/wallet-create',
       icon: '●',
-      group: 'Digital KYC'
+      group: 'KYC Blockchain'
     },
     {
-      label: 'BLOCKCHAIN Wallet Create',
+      label: 'BlockChain Wallet Create (FOR TEST)',
       route: '/digital-kyc/blockchain-kyc',
       icon: '●',
-      group: 'BlockChain Digital KYC'
+      group: 'KYC Blockchain'
     },
     {
       label: 'Wallet Login',
       route: '/digital-kyc/wallet-login',
       icon: '●',
-      group: 'Digital KYC'
+      group: 'KYC Blockchain'
     },
     {
       label: 'Wallet Query',
       route: '/digital-kyc/wallet-query',
       icon: '●',
-      group: 'Digital KYC'
+      group: 'KYC Blockchain'
     },
     {
       label: 'Fabric Test',
       route: '/digital-kyc/fabric-test',
       icon: '●',
-      group: 'Digital KYC'
+      group: 'KYC Blockchain'
     },
     {
       label: 'Wallet Transfer',
       route: '/digital-kyc/wallet-transfer',
       icon: '●',
-      group: 'Wallet Session'
+      group: 'KYC Blockchain'
     },
     {
       label: 'Organization Transfer',
       route: '/digital-kyc/organization-transfer',
       icon: '●',
-      group: 'Wallet Session'
+      group: 'KYC Blockchain'
     },
     {
       label: 'Transaction History',
       route: '/digital-kyc/transaction-history',
       icon: '●',
-      group: 'Wallet Session'
+      group: 'KYC Blockchain'
     },
     {
       label: 'Data Generation Engine',
       route: '/data-generation-engine',
       icon: '●',
-      group: 'Tools'
+      group: 'KYC Blockchain'
     },
+
+    // Government Blockchain
     {
       label: 'Government Dashboard',
       route: '/government-blockchain/dashboard',
       icon: '●',
-      group: 'Government Blockchain Services'
+      group: 'Government Blockchain'
     },
     {
       label: 'Create Ministry Account',
       route: '/government-blockchain/create-ministry-account',
       icon: '●',
-      group: 'Government Blockchain Services'
+      group: 'Government Blockchain'
     },
     {
       label: 'Create Public Administration',
       route: '/government-blockchain/create-public-administration-account',
       icon: '●',
-      group: 'Government Blockchain Services'
+      group: 'Government Blockchain'
     },
     {
       label: 'Create Resident Account',
       route: '/government-blockchain/create-resident-account',
       icon: '●',
-      group: 'Government Blockchain Services'
+      group: 'Government Blockchain'
+    },
+    {
+      label: 'Account Login',
+      route: '/government-blockchain/account-login',
+      icon: '🔐',
+      group: 'Government Blockchain'
     },
     {
       label: 'Resident Wallets',
       route: '/government-blockchain/resident-wallets',
       icon: '●',
-      group: 'Government Blockchain Services'
+      group: 'Government Blockchain'
     },
     {
       label: 'Government Services',
       route: '/government-blockchain/government-services',
       icon: '●',
-      group: 'Government Blockchain Services'
+      group: 'Government Blockchain'
+    },
+    {
+      label: 'CouchDB Explorer',
+      route: '/government-blockchain/couchdb-explorer',
+      icon: '●',
+      group: 'Government Blockchain'
     },
     {
       label: 'New Transaction',
       route: '/government-blockchain/new-transaction',
       icon: '●',
-      group: 'Government Blockchain Services'
+      group: 'Government Blockchain'
     },
     {
       label: 'Transaction List',
       route: '/government-blockchain/transactions',
       icon: '●',
-      group: 'Government Blockchain Services'
+      group: 'Government Blockchain'
     },
     {
       label: 'Approval Queue',
       route: '/government-blockchain/approval-queue',
       icon: '●',
-      group: 'Government Blockchain Services'
+      group: 'Government Blockchain'
     },
     {
       label: 'Payments / Digital Stamps',
       route: '/government-blockchain/payments-digital-stamps',
       icon: '●',
-      group: 'Government Blockchain Services'
+      group: 'Government Blockchain'
     },
     {
       label: 'Documents & KYC',
       route: '/government-blockchain/documents-kyc',
       icon: '●',
-      group: 'Government Blockchain Services'
+      group: 'Government Blockchain'
     },
     {
       label: 'Blockchain Proof',
       route: '/government-blockchain/blockchain-proof',
       icon: '●',
-      group: 'Government Blockchain Services'
+      group: 'Government Blockchain'
     },
     {
       label: 'Hash Verification',
       route: '/government-blockchain/hash-verification',
       icon: '●',
-      group: 'Government Blockchain Services'
+      group: 'Government Blockchain'
     },
     {
       label: 'Risk / Fraud Screening',
       route: '/government-blockchain/risk-fraud-screening',
       icon: '●',
-      group: 'Government Blockchain Services'
+      group: 'Government Blockchain'
     },
     {
       label: 'AML Dashboard',
       route: '/government-blockchain/aml/dashboard',
       icon: '●',
-      group: 'Government Blockchain Services'
+      group: 'Government Blockchain'
     },
     {
       label: 'AML Alerts Queue',
       route: '/government-blockchain/aml/alerts',
       icon: '●',
-      group: 'Government Blockchain Services'
+      group: 'Government Blockchain'
     },
     {
       label: 'AML Case Management',
       route: '/government-blockchain/aml/case-management',
       icon: '●',
-      group: 'Government Blockchain Services'
+      group: 'Government Blockchain'
     },
     {
       label: 'Reports',
       route: '/government-blockchain/reports',
       icon: '●',
-      group: 'Government Blockchain Services'
+      group: 'Government Blockchain'
     },
     {
       label: 'Audit Logs',
       route: '/government-blockchain/audit-logs',
       icon: '●',
-      group: 'Government Blockchain Services'
+      group: 'Government Blockchain'
     },
     {
       label: 'Settings',
       route: '/government-blockchain/settings',
       icon: '●',
-      group: 'Government Blockchain Services'
+      group: 'Government Blockchain'
     }
   ];
 
@@ -228,7 +246,20 @@ export class App {
 
     if (this.isSidebarCollapsed) {
       this.sidebarSearchText = '';
+      this.kycMenuOpen = false;
       this.governmentMenuOpen = false;
+    }
+  }
+
+  toggleKycMenu(): void {
+    if (this.isSidebarCollapsed) {
+      this.isSidebarCollapsed = false;
+    }
+
+    this.kycMenuOpen = !this.kycMenuOpen;
+
+    if (this.kycMenuOpen) {
+      this.router.navigate(['/digital-kyc/dashboard']);
     }
   }
 
@@ -268,6 +299,14 @@ export class App {
     }
 
     if (item.route) {
+      if (item.route.startsWith('/digital-kyc') || item.route === '/data-generation-engine') {
+        this.kycMenuOpen = true;
+      }
+
+      if (item.route.startsWith('/government-blockchain')) {
+        this.governmentMenuOpen = true;
+      }
+
       this.router.navigate([item.route]);
     }
   }

@@ -350,27 +350,6 @@ if (governmentTransactionsRoutes) {
   console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/transactions');
 }
 
-
-/**
- * Resident Wallets route.
- * IMPORTANT:
- * Must be mounted before the generic ministry route:
- * /api/v1/government-blockchain/:ministryId
- */
-if (residentWalletsRoutes) {
-  app.use(
-    '/api/v1/government-blockchain',
-    residentWalletsRoutes
-  );
-  console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/resident-wallets');
-
-  app.use(
-    '/api/v1/government-blockchain/digital-kyc',
-    residentWalletsRoutes
-  );
-  console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/digital-kyc/resident-wallets');
-}
-
 if (governmentMinistryRoutes) {
   app.use(
     '/api/v1/government-blockchain/ministries',
@@ -382,6 +361,11 @@ if (governmentMinistryRoutes) {
    * Keep this because your old project used the ministry router also
    * under /api/v1/government-blockchain.
    */
+  app.use(
+    '/api/v1/government-blockchain',
+    governmentMinistryRoutes
+  );
+  console.log('[ROUTE MOUNTED] /api/v1/government-blockchain');
 }
 
 if (governmentBlockchainReferenceRoutes) {
