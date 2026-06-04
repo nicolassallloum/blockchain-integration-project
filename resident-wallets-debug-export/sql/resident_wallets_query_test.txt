@@ -2,33 +2,33 @@
 ----+------------------------------------------+-----------------------+-------------------------+----------+-----------------+---------------+-------------------+----------------------------
  34 |                                          | RES-BLOCKCHAIN-70     | JJJ aaa aaa             | LBP      |               0 | Not Created   | PENDING           | 2026-06-02 15:12:41.187307
  33 |                                          | RES-BLOCKCHAIN-66     | Gaelle Hicham Abdallah  | LBP      |        10000.00 | Not Created   | PENDING           | 2026-06-01 15:15:48.265993
- 32 | 0xRESRESBLOCKCHAIN000048C42EFA75104D20A0 | RES-BLOCKCHAIN-000048 | Nicolas Joseph Salloum  | LBP      |     25000000.00 | Active        | PENDING           | 2026-05-28 16:26:02.929205
- 31 | 0xRESRESBLOCKCHAIN000043C3043AC76C444726 | RES-BLOCKCHAIN-000043 | Nicolas Joseph Salloum  | LBP      |     25000000.00 | Active        | PENDING           | 2026-05-28 14:14:58.796371
- 30 | 0xRESRESBLOCKCHAIN000030ED89463656AA7E89 | RES-BLOCKCHAIN-000030 | Nicolas Joseph Salloum  | LBP      |     25000000.00 | Active        | CONFIRMED         | 2026-05-28 09:53:44.885472
- 29 | 0xRESRESBLOCKCHAIN000028097233CBFFAE6C3F | RES-BLOCKCHAIN-000028 | Nicolas Joseph Salloum  | LBP      |     25000000.00 | Active        | PENDING           | 2026-05-28 09:42:32.402475
- 28 | 0xRESRESBLOCKCHAIN000027059DAC03E93DB04A | RES-BLOCKCHAIN-000027 | Nicolas Joseph Salloum  | LBP      |     25000000.00 | Active        | PENDING           | 2026-05-28 09:37:26.607248
- 27 | 0xRESRESBLOCKCHAIN000026CD8BB356C9B6D35C | RES-BLOCKCHAIN-000026 | Nicolas Joseph Salloum  | LBP      |     25000000.00 | Active        | PENDING           | 2026-05-28 09:32:40.713422
- 26 | 0xRESRESBLOCKCHAIN000025CCD68E22AA7D93AC | RES-BLOCKCHAIN-000025 | Nicolas Joseph Salloum  | LBP      |     25000000.00 | Active        | PENDING           | 2026-05-28 09:11:44.171067
- 25 | 0xRESRESBLOCKCHAIN000021D57C60DCCD56EC9E | RES-BLOCKCHAIN-000021 | Nicolas Joseph Salloum  | LBP      |     25000000.00 | Active        | PENDING           | 2026-05-27 17:14:23.123745
- 24 | 0xRESRESBLOCKCHAIN0000203E34A6AB942D94E7 | RES-BLOCKCHAIN-000020 | Nicolas Joseph Salloum  | LBP      |     25000000.00 | Active        | PENDING           | 2026-05-27 17:06:52.581365
- 23 | 0xRESRESBLOCKCHAIN000018B248E779D9906E22 | RES-BLOCKCHAIN-000018 | Nicolas Joseph Salloum  | LBP      |     25000000.00 | Active        | PENDING           | 2026-05-27 16:59:13.154561
- 22 | 0xRESRESBLOCKCHAIN0000177464BA9C7ABFD971 | RES-BLOCKCHAIN-000017 | Nicolas Joseph Salloum  | LBP      |     25000000.00 | Active        | PENDING           | 2026-05-27 16:53:54.916718
- 21 | 0xRESRESBLOCKCHAIN0000148C64BA22B639BE5C | RES-BLOCKCHAIN-000014 | Nicolas Joseph Salloum  | LBP      |     25000000.00 | Active        | PENDING           | 2026-05-27 16:48:17.035868
- 20 | 0xRESRESBLOCKCHAIN000013895B37BE14233C87 | RES-BLOCKCHAIN-000013 | Nicolas Joseph Salloum  | LBP      |     25000000.00 | Active        | PENDING           | 2026-05-27 16:46:17.57186
- 19 | 0xRESRESBLOCKCHAIN00001288A54456DE8655A4 | RES-BLOCKCHAIN-000012 | Nicolas Joseph Salloum  | LBP      |     25000000.00 | Active        | PENDING           | 2026-05-27 16:24:29.133025
- 18 | 0xRESRESBLOCKCHAIN00001127AC30E7843FBCDF | RES-BLOCKCHAIN-000011 | Nicolas Joseph Salloum  | LBP      |     25000000.00 | Active        | PENDING           | 2026-05-27 16:21:07.293414
+ 32 | 0xRESRESBLOCKCHAIN000048C42EFA75104D20A0 | RES-BLOCKCHAIN-000048 | Nicolas Bernard Salloum  | LBP      |     25000000.00 | Active        | PENDING           | 2026-05-28 16:26:02.929205
+ 31 | 0xRESRESBLOCKCHAIN000043C3043AC76C444726 | RES-BLOCKCHAIN-000043 | Nicolas Bernard Salloum  | LBP      |     25000000.00 | Active        | PENDING           | 2026-05-28 14:14:58.796371
+ 30 | 0xRESRESBLOCKCHAIN000030ED89463656AA7E89 | RES-BLOCKCHAIN-000030 | Nicolas Bernard Salloum  | LBP      |     25000000.00 | Active        | CONFIRMED         | 2026-05-28 09:53:44.885472
+ 29 | 0xRESRESBLOCKCHAIN000028097233CBFFAE6C3F | RES-BLOCKCHAIN-000028 | Nicolas Bernard Salloum  | LBP      |     25000000.00 | Active        | PENDING           | 2026-05-28 09:42:32.402475
+ 28 | 0xRESRESBLOCKCHAIN000027059DAC03E93DB04A | RES-BLOCKCHAIN-000027 | Nicolas Bernard Salloum  | LBP      |     25000000.00 | Active        | PENDING           | 2026-05-28 09:37:26.607248
+ 27 | 0xRESRESBLOCKCHAIN000026CD8BB356C9B6D35C | RES-BLOCKCHAIN-000026 | Nicolas Bernard Salloum  | LBP      |     25000000.00 | Active        | PENDING           | 2026-05-28 09:32:40.713422
+ 26 | 0xRESRESBLOCKCHAIN000025CCD68E22AA7D93AC | RES-BLOCKCHAIN-000025 | Nicolas Bernard Salloum  | LBP      |     25000000.00 | Active        | PENDING           | 2026-05-28 09:11:44.171067
+ 25 | 0xRESRESBLOCKCHAIN000021D57C60DCCD56EC9E | RES-BLOCKCHAIN-000021 | Nicolas Bernard Salloum  | LBP      |     25000000.00 | Active        | PENDING           | 2026-05-27 17:14:23.123745
+ 24 | 0xRESRESBLOCKCHAIN0000203E34A6AB942D94E7 | RES-BLOCKCHAIN-000020 | Nicolas Bernard Salloum  | LBP      |     25000000.00 | Active        | PENDING           | 2026-05-27 17:06:52.581365
+ 23 | 0xRESRESBLOCKCHAIN000018B248E779D9906E22 | RES-BLOCKCHAIN-000018 | Nicolas Bernard Salloum  | LBP      |     25000000.00 | Active        | PENDING           | 2026-05-27 16:59:13.154561
+ 22 | 0xRESRESBLOCKCHAIN0000177464BA9C7ABFD971 | RES-BLOCKCHAIN-000017 | Nicolas Bernard Salloum  | LBP      |     25000000.00 | Active        | PENDING           | 2026-05-27 16:53:54.916718
+ 21 | 0xRESRESBLOCKCHAIN0000148C64BA22B639BE5C | RES-BLOCKCHAIN-000014 | Nicolas Bernard Salloum  | LBP      |     25000000.00 | Active        | PENDING           | 2026-05-27 16:48:17.035868
+ 20 | 0xRESRESBLOCKCHAIN000013895B37BE14233C87 | RES-BLOCKCHAIN-000013 | Nicolas Bernard Salloum  | LBP      |     25000000.00 | Active        | PENDING           | 2026-05-27 16:46:17.57186
+ 19 | 0xRESRESBLOCKCHAIN00001288A54456DE8655A4 | RES-BLOCKCHAIN-000012 | Nicolas Bernard Salloum  | LBP      |     25000000.00 | Active        | PENDING           | 2026-05-27 16:24:29.133025
+ 18 | 0xRESRESBLOCKCHAIN00001127AC30E7843FBCDF | RES-BLOCKCHAIN-000011 | Nicolas Bernard Salloum  | LBP      |     25000000.00 | Active        | PENDING           | 2026-05-27 16:21:07.293414
  17 | Barbar Abou Jaoudeh Street               | RES-BLOCKCHAIN-000009 | NICOLAS SALLOUM         | USD      |       150000.00 | Active        | PENDING           | 2026-05-27 16:20:15.985467
- 16 | 0xRESRES202605274012DB4048EFA7235215     | RES-20260527-4012     | Nicolas Joseph Salloum  | LBP      |     25000000.00 | Active        | PENDING           | 2026-05-27 13:59:38.297484
- 15 | 0xRESRES2026052658791991058CF3C2D87B     | RES-20260526-5879     | Nicolas Joseph Salloum  | LBP      |     25000000.00 | Active        | PENDING           | 2026-05-26 11:32:57.033291
+ 16 | 0xRESRES202605274012DB4048EFA7235215     | RES-20260527-4012     | Nicolas Bernard Salloum  | LBP      |     25000000.00 | Active        | PENDING           | 2026-05-27 13:59:38.297484
+ 15 | 0xRESRES2026052658791991058CF3C2D87B     | RES-20260526-5879     | Nicolas Bernard Salloum  | LBP      |     25000000.00 | Active        | PENDING           | 2026-05-26 11:32:57.033291
  14 | WALLET-RES-20260526-9002-1779783954376   | RES-20260526-9002     | Karim Joseph Haddad     | LBP      |     25000000.00 | Active        | PENDING           | 2026-05-26 11:21:07.209851
  13 | 0xRESRES2026052690012698E0E1ADE35080     | RES-20260526-9001     | Karim Joseph Haddad     | LBP      |     25000000.00 | Active        | PENDING           | 2026-05-26 10:53:49.198966
- 12 | 0xRESRES2026052696287CD83A5CBF7ECEAB     | RES-20260526-9628     | Nicolas Joseph Salloum  | LBP      |     25000000.00 | Active        | PENDING           | 2026-05-26 10:12:03.583885
- 11 | 0xRESRES202605255982C4FC02B1964CF8CF     | RES-20260525-5983     | Nicolas Joseph Salloum  | LBP      |     25000000.00 | Active        | PENDING           | 2026-05-25 17:50:22.948053
- 10 | 0xRESRES202605255982C4FC02B1964CF8CF     | RES-20260525-5982     | Nicolas Joseph Salloum  | LBP      |     25000000.00 | Active        | PENDING           | 2026-05-25 17:49:58.01036
-  9 | 0xRESRES202605257204A927F8933504E47F     | RES-20260525-7204     | Nicolas Joseph Salloum  | LBP      |     25000000.00 | Active        | PENDING           | 2026-05-25 17:47:17.242061
-  8 |                                          | RES-20260525-8847     | Nicolas Joseph Salloum  | LBP      |     25000000.00 | Not Created   | PENDING           | 2026-05-25 17:46:47.424675
+ 12 | 0xRESRES2026052696287CD83A5CBF7ECEAB     | RES-20260526-9628     | Nicolas Bernard Salloum  | LBP      |     25000000.00 | Active        | PENDING           | 2026-05-26 10:12:03.583885
+ 11 | 0xRESRES202605255982C4FC02B1964CF8CF     | RES-20260525-5983     | Nicolas Bernard Salloum  | LBP      |     25000000.00 | Active        | PENDING           | 2026-05-25 17:50:22.948053
+ 10 | 0xRESRES202605255982C4FC02B1964CF8CF     | RES-20260525-5982     | Nicolas Bernard Salloum  | LBP      |     25000000.00 | Active        | PENDING           | 2026-05-25 17:49:58.01036
+  9 | 0xRESRES202605257204A927F8933504E47F     | RES-20260525-7204     | Nicolas Bernard Salloum  | LBP      |     25000000.00 | Active        | PENDING           | 2026-05-25 17:47:17.242061
+  8 |                                          | RES-20260525-8847     | Nicolas Bernard Salloum  | LBP      |     25000000.00 | Not Created   | PENDING           | 2026-05-25 17:46:47.424675
   7 | WALLET-RES-20260525-1705-1779718598005   | RES-20260525-1705     | Karim Joseph Haddad     | LBP      |     25000000.00 | Active        | PENDING           | 2026-05-25 17:02:58.632392
-  6 |                                          | RES-20260522-4039     | Nicolas Joseph Salloum  | LBP      |     25000000.00 | Not Created   | PENDING           | 2026-05-22 16:41:49.489937
+  6 |                                          | RES-20260522-4039     | Nicolas Bernard Salloum  | LBP      |     25000000.00 | Not Created   | PENDING           | 2026-05-22 16:41:49.489937
   5 |                                          | RES-TEST-003          | Nicolas Bernard Salloum | LBP      |     25000000.00 | Not Created   | PENDING           | 2026-05-22 16:40:14.790809
 (30 rows)
 

@@ -161,7 +161,7 @@ export class App {
     },
     {
       label: 'Transaction List',
-      route: '/government-blockchain/transactions',
+      route: '/government-blockchain/transaction-list',
       icon: '●',
       group: 'Government Blockchain'
     },
@@ -203,19 +203,19 @@ export class App {
     },
     {
       label: 'AML Dashboard',
-      route: '/government-blockchain/aml/dashboard',
+      route: '/government-blockchain/aml-dashboard',
       icon: '●',
       group: 'Government Blockchain'
     },
     {
       label: 'AML Alerts Queue',
-      route: '/government-blockchain/aml/alerts',
+      route: '/government-blockchain/aml-alerts-queue',
       icon: '●',
       group: 'Government Blockchain'
     },
     {
       label: 'AML Case Management',
-      route: '/government-blockchain/aml/case-management',
+      route: '/government-blockchain/aml-case-management',
       icon: '●',
       group: 'Government Blockchain'
     },

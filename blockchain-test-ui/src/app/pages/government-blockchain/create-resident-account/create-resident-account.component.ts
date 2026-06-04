@@ -345,7 +345,7 @@ export class CreateResidentAccountComponent implements OnInit {
       fatherName: 'Joseph',
       motherName: 'Mariam',
       lastName: 'Salloum',
-      fullName: 'Nicolas Joseph Salloum',
+      fullName: 'Nicolas Bernard Salloum',
       arabicFullName: 'نيكولا جوزيف سلوم',
       dateOfBirth: '1995-06-15',
       gender: 'Male',
