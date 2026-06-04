@@ -298,7 +298,7 @@ export class App {
       return;
     }
 
-    if (item.route) {
+    if (item.route) { 
       if (item.route.startsWith('/digital-kyc') || item.route === '/data-generation-engine') {
         this.kycMenuOpen = true;
       }
