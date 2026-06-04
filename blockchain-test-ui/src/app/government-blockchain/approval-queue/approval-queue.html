@@ -1,0 +1,95 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1>Approval Queue</h1>
+      <p>Review and approve pending government service transactions before blockchain submission.</p>
+    </div>
+
+    <button class="primary-btn">Approve Selected</button>
+  </div>
+
+  <div class="cards-grid">
+    <div class="summary-card">
+      <h3>Pending Approvals</h3>
+      <strong>184</strong>
+      <span>Waiting officer action</span>
+    </div>
+
+    <div class="summary-card">
+      <h3>High Priority</h3>
+      <strong>36</strong>
+      <span>Urgent service requests</span>
+    </div>
+
+    <div class="summary-card">
+      <h3>Approved Today</h3>
+      <strong>92</strong>
+      <span>Processed requests</span>
+    </div>
+
+    <div class="summary-card">
+      <h3>Rejected Today</h3>
+      <strong>11</strong>
+      <span>Invalid requests</span>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <h2>Pending Requests</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Request ID</th>
+          <th>Resident</th>
+          <th>Service</th>
+          <th>Ministry</th>
+          <th>Priority</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <td>REQ-000145</td>
+          <td>Rami Haddad</td>
+          <td>Driving License Renewal</td>
+          <td>Ministry of Interior</td>
+          <td><span class="badge danger">High</span></td>
+          <td><span class="badge warning">Pending</span></td>
+          <td>
+            <button class="small-btn success-btn">Approve</button>
+            <button class="small-btn danger-btn">Reject</button>
+          </td>
+        </tr>
+
+        <tr>
+          <td>REQ-000146</td>
+          <td>Nour Salem</td>
+          <td>Passport Renewal</td>
+          <td>General Security</td>
+          <td><span class="badge info">Normal</span></td>
+          <td><span class="badge warning">Pending</span></td>
+          <td>
+            <button class="small-btn success-btn">Approve</button>
+            <button class="small-btn danger-btn">Reject</button>
+          </td>
+        </tr>
+
+        <tr>
+          <td>REQ-000147</td>
+          <td>Karim Mansour</td>
+          <td>Birth Certificate</td>
+          <td>Ministry of Interior</td>
+          <td><span class="badge info">Normal</span></td>
+          <td><span class="badge warning">Pending</span></td>
+          <td>
+            <button class="small-btn success-btn">Approve</button>
+            <button class="small-btn danger-btn">Reject</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

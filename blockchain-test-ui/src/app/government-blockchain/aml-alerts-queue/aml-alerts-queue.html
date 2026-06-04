@@ -1,0 +1,86 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1>AML Alerts Queue</h1>
+      <p>Review AML alerts generated from transactions, wallets, and blockchain activity.</p>
+    </div>
+
+    <button class="primary-btn">Assign Alerts</button>
+  </div>
+
+  <div class="cards-grid">
+    <div class="summary-card">
+      <h3>New Alerts</h3>
+      <strong>39</strong>
+      <span>Unassigned alerts</span>
+    </div>
+
+    <div class="summary-card">
+      <h3>In Review</h3>
+      <strong>74</strong>
+      <span>Assigned to officers</span>
+    </div>
+
+    <div class="summary-card">
+      <h3>Escalated</h3>
+      <strong>16</strong>
+      <span>High-risk cases</span>
+    </div>
+
+    <div class="summary-card">
+      <h3>Closed Today</h3>
+      <strong>28</strong>
+      <span>Completed reviews</span>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <h2>AML Alert Queue</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Alert ID</th>
+          <th>Rule Triggered</th>
+          <th>Resident / Wallet</th>
+          <th>Risk Score</th>
+          <th>Risk Level</th>
+          <th>Assigned To</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <td>AML-ALERT-001</td>
+          <td>Large Transaction Amount</td>
+          <td>0xRES...4726</td>
+          <td>76</td>
+          <td><span class="badge warning">Medium</span></td>
+          <td>Officer Karim</td>
+          <td><span class="badge warning">In Review</span></td>
+        </tr>
+
+        <tr>
+          <td>AML-ALERT-002</td>
+          <td>Blacklist Wallet Match</td>
+          <td>0xBAD...1190</td>
+          <td>98</td>
+          <td><span class="badge danger">High</span></td>
+          <td>Compliance Team</td>
+          <td><span class="badge danger">Escalated</span></td>
+        </tr>
+
+        <tr>
+          <td>AML-ALERT-003</td>
+          <td>Repeated Failed Payments</td>
+          <td>0xRES...8821</td>
+          <td>55</td>
+          <td><span class="badge warning">Medium</span></td>
+          <td>Not Assigned</td>
+          <td><span class="badge info">New</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

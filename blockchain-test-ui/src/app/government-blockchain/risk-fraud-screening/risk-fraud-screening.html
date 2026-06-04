@@ -1,0 +1,86 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1>Risk / Fraud Screening</h1>
+      <p>Monitor suspicious transactions, abnormal behavior, blacklist matches, and fraud indicators.</p>
+    </div>
+
+    <button class="primary-btn">Run Risk Scan</button>
+  </div>
+
+  <div class="cards-grid">
+    <div class="summary-card">
+      <h3>Total Screened</h3>
+      <strong>18,950</strong>
+      <span>Transactions scanned</span>
+    </div>
+
+    <div class="summary-card">
+      <h3>Low Risk</h3>
+      <strong>17,880</strong>
+      <span>Normal activity</span>
+    </div>
+
+    <div class="summary-card">
+      <h3>Medium Risk</h3>
+      <strong>720</strong>
+      <span>Needs monitoring</span>
+    </div>
+
+    <div class="summary-card">
+      <h3>High Risk</h3>
+      <strong>91</strong>
+      <span>Immediate review</span>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <h2>Risk Screening Results</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Screening ID</th>
+          <th>Resident</th>
+          <th>Transaction</th>
+          <th>Risk Score</th>
+          <th>Risk Level</th>
+          <th>Reason</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <td>RISK-000001</td>
+          <td>Ali Hassan</td>
+          <td>GOV-TXN-000001</td>
+          <td>18</td>
+          <td><span class="badge success">Low</span></td>
+          <td>Normal payment pattern</td>
+          <td><span class="badge success">Cleared</span></td>
+        </tr>
+
+        <tr>
+          <td>RISK-000002</td>
+          <td>Maya Khoury</td>
+          <td>GOV-TXN-000002</td>
+          <td>62</td>
+          <td><span class="badge warning">Medium</span></td>
+          <td>Multiple requests in short period</td>
+          <td><span class="badge warning">Review</span></td>
+        </tr>
+
+        <tr>
+          <td>RISK-000003</td>
+          <td>Unknown Wallet</td>
+          <td>GOV-TXN-000003</td>
+          <td>91</td>
+          <td><span class="badge danger">High</span></td>
+          <td>Blacklist wallet match</td>
+          <td><span class="badge danger">Blocked</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

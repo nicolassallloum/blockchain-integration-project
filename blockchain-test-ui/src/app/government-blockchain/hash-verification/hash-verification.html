@@ -1,0 +1,99 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1>Hash Verification</h1>
+      <p>Validate document hashes, transaction hashes, and blockchain integrity records.</p>
+    </div>
+
+    <button class="primary-btn">Run Verification</button>
+  </div>
+
+  <div class="form-card">
+    <h2>Verify Hash</h2>
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Hash Type</label>
+        <select>
+          <option>Transaction Hash</option>
+          <option>Document Hash</option>
+          <option>Wallet Hash</option>
+          <option>KYC Proof Hash</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Reference Number</label>
+        <input type="text" placeholder="Example: GOV-TXN-000001" />
+      </div>
+
+      <div class="form-group full-width">
+        <label>Hash Value</label>
+        <textarea rows="4" placeholder="Paste hash value here..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="cards-grid">
+    <div class="summary-card">
+      <h3>Checks Today</h3>
+      <strong>420</strong>
+      <span>Hash validations</span>
+    </div>
+
+    <div class="summary-card">
+      <h3>Valid Hashes</h3>
+      <strong>397</strong>
+      <span>Matched successfully</span>
+    </div>
+
+    <div class="summary-card">
+      <h3>Invalid Hashes</h3>
+      <strong>12</strong>
+      <span>Mismatch detected</span>
+    </div>
+
+    <div class="summary-card">
+      <h3>Pending</h3>
+      <strong>11</strong>
+      <span>Awaiting ledger check</span>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <h2>Recent Hash Verifications</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Verification ID</th>
+          <th>Reference</th>
+          <th>Hash Type</th>
+          <th>Hash Preview</th>
+          <th>Result</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <td>HV-000001</td>
+          <td>GOV-TXN-000001</td>
+          <td>Transaction Hash</td>
+          <td>0xA98F...12BC</td>
+          <td><span class="badge success">Valid</span></td>
+          <td>2026-06-04</td>
+        </tr>
+
+        <tr>
+          <td>HV-000002</td>
+          <td>DOC-000339</td>
+          <td>Document Hash</td>
+          <td>0xFF10...89DA</td>
+          <td><span class="badge danger">Mismatch</span></td>
+          <td>2026-06-04</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

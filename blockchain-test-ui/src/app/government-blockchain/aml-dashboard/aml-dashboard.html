@@ -1,0 +1,110 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1>AML Dashboard</h1>
+      <p>Anti-money laundering overview for alerts, rules, cases, and suspicious blockchain activity.</p>
+    </div>
+
+    <button class="primary-btn">Generate AML Report</button>
+  </div>
+
+  <div class="cards-grid">
+    <div class="summary-card">
+      <h3>Total AML Alerts</h3>
+      <strong>315</strong>
+      <span>Detected by rules engine</span>
+    </div>
+
+    <div class="summary-card">
+      <h3>Open Cases</h3>
+      <strong>48</strong>
+      <span>Under investigation</span>
+    </div>
+
+    <div class="summary-card">
+      <h3>Closed Cases</h3>
+      <strong>204</strong>
+      <span>Resolved investigations</span>
+    </div>
+
+    <div class="summary-card">
+      <h3>High Risk Alerts</h3>
+      <strong>22</strong>
+      <span>Critical AML review</span>
+    </div>
+  </div>
+
+  <div class="dashboard-grid">
+    <div class="chart-card">
+      <h2>AML Alerts by Risk Level</h2>
+
+      <div class="static-chart">
+        <div class="chart-row">
+          <span>Low</span>
+          <div class="bar"><div class="bar-fill low" style="width: 70%;"></div></div>
+          <strong>180</strong>
+        </div>
+
+        <div class="chart-row">
+          <span>Medium</span>
+          <div class="bar"><div class="bar-fill medium" style="width: 45%;"></div></div>
+          <strong>113</strong>
+        </div>
+
+        <div class="chart-row">
+          <span>High</span>
+          <div class="bar"><div class="bar-fill high" style="width: 18%;"></div></div>
+          <strong>22</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <h2>Active AML Rules</h2>
+
+      <ul class="status-list">
+        <li><span>Large transaction amount</span><strong>Active</strong></li>
+        <li><span>Multiple failed transactions</span><strong>Active</strong></li>
+        <li><span>Blacklist wallet match</span><strong>Active</strong></li>
+        <li><span>Unusual location behavior</span><strong>Active</strong></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <h2>Latest AML Alerts</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Alert ID</th>
+          <th>Rule</th>
+          <th>Wallet</th>
+          <th>Risk Level</th>
+          <th>Case Status</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <td>AML-000001</td>
+          <td>Large Transaction</td>
+          <td>0xRES...4726</td>
+          <td><span class="badge warning">Medium</span></td>
+          <td><span class="badge warning">Open</span></td>
+          <td>2026-06-04</td>
+        </tr>
+
+        <tr>
+          <td>AML-000002</td>
+          <td>Blacklist Match</td>
+          <td>0xBAD...9901</td>
+          <td><span class="badge danger">High</span></td>
+          <td><span class="badge danger">Escalated</span></td>
+          <td>2026-06-04</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

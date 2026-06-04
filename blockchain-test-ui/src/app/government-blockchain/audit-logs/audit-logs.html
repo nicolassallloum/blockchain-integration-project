@@ -1,0 +1,108 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1>Audit Logs</h1>
+      <p>Track all user actions, API events, blockchain operations, and system security logs.</p>
+    </div>
+
+    <button class="primary-btn">Export Logs</button>
+  </div>
+
+  <div class="cards-grid">
+    <div class="summary-card">
+      <h3>Total Logs</h3>
+      <strong>92,410</strong>
+      <span>Recorded events</span>
+    </div>
+
+    <div class="summary-card">
+      <h3>User Actions</h3>
+      <strong>44,290</strong>
+      <span>Frontend activities</span>
+    </div>
+
+    <div class="summary-card">
+      <h3>API Events</h3>
+      <strong>38,102</strong>
+      <span>Backend requests</span>
+    </div>
+
+    <div class="summary-card">
+      <h3>Security Alerts</h3>
+      <strong>64</strong>
+      <span>Suspicious activity</span>
+    </div>
+  </div>
+
+  <div class="filter-card">
+    <input type="text" placeholder="Search by username, action, or reference..." />
+
+    <select>
+      <option>All Log Types</option>
+      <option>User Action</option>
+      <option>API Request</option>
+      <option>Blockchain Event</option>
+      <option>Security Alert</option>
+    </select>
+
+    <select>
+      <option>All Severities</option>
+      <option>Info</option>
+      <option>Warning</option>
+      <option>Error</option>
+      <option>Critical</option>
+    </select>
+
+    <button class="secondary-btn">Search</button>
+  </div>
+
+  <div class="table-card">
+    <h2>Latest Audit Logs</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Log ID</th>
+          <th>User</th>
+          <th>Action</th>
+          <th>Module</th>
+          <th>IP Address</th>
+          <th>Severity</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <td>LOG-000001</td>
+          <td>admin@gov.lb</td>
+          <td>Create Transaction</td>
+          <td>New Transaction</td>
+          <td>172.31.13.90</td>
+          <td><span class="badge info">Info</span></td>
+          <td>2026-06-04 10:15</td>
+        </tr>
+
+        <tr>
+          <td>LOG-000002</td>
+          <td>officer@gov.lb</td>
+          <td>Approve Request</td>
+          <td>Approval Queue</td>
+          <td>172.31.13.91</td>
+          <td><span class="badge success">Success</span></td>
+          <td>2026-06-04 10:19</td>
+        </tr>
+
+        <tr>
+          <td>LOG-000003</td>
+          <td>unknown</td>
+          <td>Failed Login Attempt</td>
+          <td>Authentication</td>
+          <td>45.12.88.10</td>
+          <td><span class="badge danger">Critical</span></td>
+          <td>2026-06-04 10:22</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

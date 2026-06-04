@@ -1,0 +1,124 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1>Settings</h1>
+      <p>Configure government blockchain platform settings, security, integrations, and system parameters.</p>
+    </div>
+
+    <button class="primary-btn">Save Settings</button>
+  </div>
+
+  <div class="settings-grid">
+    <div class="settings-card">
+      <h2>Blockchain Configuration</h2>
+
+      <div class="form-group">
+        <label>Blockchain Network</label>
+        <input type="text" value="Hyperledger Fabric" />
+      </div>
+
+      <div class="form-group">
+        <label>Channel Name</label>
+        <input type="text" value="kycchannelnix1" />
+      </div>
+
+      <div class="form-group">
+        <label>Chaincode Name</label>
+        <input type="text" value="kyc-wallet-chaincode-js" />
+      </div>
+
+      <div class="form-group">
+        <label>Organization MSP</label>
+        <input type="text" value="Org1MSP" />
+      </div>
+    </div>
+
+    <div class="settings-card">
+      <h2>API Configuration</h2>
+
+      <div class="form-group">
+        <label>API Base URL</label>
+        <input type="text" value="http://172.31.13.90:3001/api/v1" />
+      </div>
+
+      <div class="form-group">
+        <label>Environment</label>
+        <select>
+          <option selected>Production</option>
+          <option>Development</option>
+          <option>Testing</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Request Timeout</label>
+        <input type="text" value="30000 ms" />
+      </div>
+
+      <div class="form-group">
+        <label>CORS Status</label>
+        <input type="text" value="Enabled" />
+      </div>
+    </div>
+
+    <div class="settings-card">
+      <h2>Security Settings</h2>
+
+      <div class="form-group">
+        <label>Password Policy</label>
+        <select>
+          <option selected>Strong</option>
+          <option>Medium</option>
+          <option>Basic</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>JWT Expiry</label>
+        <input type="text" value="24 Hours" />
+      </div>
+
+      <div class="form-group">
+        <label>Two-Factor Authentication</label>
+        <select>
+          <option selected>Enabled</option>
+          <option>Disabled</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Audit Logging</label>
+        <select>
+          <option selected>Enabled</option>
+          <option>Disabled</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="settings-card">
+      <h2>System Status</h2>
+
+      <ul class="status-list">
+        <li>
+          <span>PostgreSQL Database</span>
+          <strong class="status-green">Connected</strong>
+        </li>
+
+        <li>
+          <span>Fabric Peer</span>
+          <strong class="status-green">Online</strong>
+        </li>
+
+        <li>
+          <span>CouchDB</span>
+          <strong class="status-green">Online</strong>
+        </li>
+
+        <li>
+          <span>API Middleware</span>
+          <strong class="status-green">Running</strong>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>

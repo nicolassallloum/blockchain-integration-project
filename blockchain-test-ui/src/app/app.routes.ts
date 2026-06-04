@@ -18,6 +18,19 @@ import { CreatePublicAdministrationAccountComponent } from './pages/government-b
 import { FabricTestComponent } from './features/fabric-test/fabric-test.component';
 import { CreateResidentAccountComponent } from './pages/government-blockchain/create-resident-account/create-resident-account.component';
 import { NewTransactionComponent } from './pages/government-blockchain/new-transaction/new-transaction.component';
+import { TransactionList } from './government-blockchain/transaction-list/transaction-list';
+import { ApprovalQueue } from './government-blockchain/approval-queue/approval-queue';
+import { PaymentsDigitalStamps } from './government-blockchain/payments-digital-stamps/payments-digital-stamps';
+import { DocumentsKyc } from './government-blockchain/documents-kyc/documents-kyc';
+import { BlockchainProof } from './government-blockchain/blockchain-proof/blockchain-proof';
+import { HashVerification } from './government-blockchain/hash-verification/hash-verification';
+import { RiskFraudScreening } from './government-blockchain/risk-fraud-screening/risk-fraud-screening';
+import { AmlDashboard } from './government-blockchain/aml-dashboard/aml-dashboard';
+import { AmlAlertsQueue } from './government-blockchain/aml-alerts-queue/aml-alerts-queue';
+import { AmlCaseManagement } from './government-blockchain/aml-case-management/aml-case-management';
+import { Reports } from './government-blockchain/reports/reports';
+import { AuditLogs } from './government-blockchain/audit-logs/audit-logs';
+import { Settings } from './government-blockchain/settings/settings';
 export const routes: Routes = [
   {
     path: '',
@@ -83,6 +96,58 @@ export const routes: Routes = [
     title: 'Resident Wallet Login'
   },
 
+  {
+    path: 'government-blockchain/transaction-list',
+    component: TransactionList
+  },
+  {
+    path: 'government-blockchain/approval-queue',
+    component: ApprovalQueue
+  },
+  {
+    path: 'government-blockchain/payments-digital-stamps',
+    component: PaymentsDigitalStamps
+  },
+  {
+    path: 'government-blockchain/documents-kyc',
+    component: DocumentsKyc
+  },
+  {
+    path: 'government-blockchain/blockchain-proof',
+    component: BlockchainProof
+  },
+  {
+    path: 'government-blockchain/hash-verification',
+    component: HashVerification
+  },
+  {
+    path: 'government-blockchain/risk-fraud-screening',
+    component: RiskFraudScreening
+  },
+  {
+    path: 'government-blockchain/aml-dashboard',
+    component: AmlDashboard
+  },
+  {
+    path: 'government-blockchain/aml-alerts-queue',
+    component: AmlAlertsQueue
+  },
+  {
+    path: 'government-blockchain/aml-case-management',
+    component: AmlCaseManagement
+  },
+  {
+    path: 'government-blockchain/reports',
+    component: Reports
+  },
+  {
+    path: 'government-blockchain/audit-logs',
+    component: AuditLogs
+  },
+  {
+    path: 'government-blockchain/settings',
+    component: Settings
+  },
   {
     path: 'digital-kyc/wallet-create',
     component: WalletCreate
@@ -150,7 +215,7 @@ export const routes: Routes = [
     path: 'digital-kyc/fabric-test',
     component: FabricTestComponent
   },
-
+ 
   /*
    * Blockchain Full KYC Routes
    *

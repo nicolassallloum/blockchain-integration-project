@@ -1,0 +1,103 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1>Transaction List</h1>
+      <p>View all government blockchain transactions with their approval and blockchain status.</p>
+    </div>
+
+    <button class="primary-btn">Export Transactions</button>
+  </div>
+
+  <div class="cards-grid">
+    <div class="summary-card">
+      <h3>Total Transactions</h3>
+      <strong>12,450</strong>
+      <span>All service transactions</span>
+    </div>
+
+    <div class="summary-card">
+      <h3>Approved</h3>
+      <strong>9,820</strong>
+      <span>Completed successfully</span>
+    </div>
+
+    <div class="summary-card">
+      <h3>Pending</h3>
+      <strong>1,430</strong>
+      <span>Waiting for approval</span>
+    </div>
+
+    <div class="summary-card">
+      <h3>Failed</h3>
+      <strong>215</strong>
+      <span>Need technical review</span>
+    </div>
+  </div>
+
+  <div class="filter-card">
+    <input type="text" placeholder="Search by transaction reference..." />
+    <select>
+      <option>All Statuses</option>
+      <option>Approved</option>
+      <option>Pending</option>
+      <option>Rejected</option>
+    </select>
+    <select>
+      <option>All Blockchain Statuses</option>
+      <option>Synced</option>
+      <option>Pending</option>
+      <option>Failed</option>
+    </select>
+    <button class="secondary-btn">Search</button>
+  </div>
+
+  <div class="table-card">
+    <h2>Latest Transactions</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Reference</th>
+          <th>Resident</th>
+          <th>Service</th>
+          <th>Amount</th>
+          <th>Status</th>
+          <th>Blockchain Status</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <td>GOV-TXN-000001</td>
+          <td>Ali Hassan</td>
+          <td>Vehicle Registration Renewal</td>
+          <td>75,000 LBP</td>
+          <td><span class="badge success">Approved</span></td>
+          <td><span class="badge success">SYNCED</span></td>
+          <td>2026-06-04</td>
+        </tr>
+
+        <tr>
+          <td>GOV-TXN-000002</td>
+          <td>Maya Khoury</td>
+          <td>Passport Renewal</td>
+          <td>250,000 LBP</td>
+          <td><span class="badge warning">Pending</span></td>
+          <td><span class="badge warning">PENDING</span></td>
+          <td>2026-06-04</td>
+        </tr>
+
+        <tr>
+          <td>GOV-TXN-000003</td>
+          <td>George Nader</td>
+          <td>Birth Certificate</td>
+          <td>50,000 LBP</td>
+          <td><span class="badge danger">Rejected</span></td>
+          <td><span class="badge danger">FAILED</span></td>
+          <td>2026-06-03</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

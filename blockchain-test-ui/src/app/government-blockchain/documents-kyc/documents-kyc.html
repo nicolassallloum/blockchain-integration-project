@@ -1,0 +1,86 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1>Documents & KYC</h1>
+      <p>Review resident KYC documents, verification status, and compliance validation.</p>
+    </div>
+
+    <button class="primary-btn">Upload Document</button>
+  </div>
+
+  <div class="cards-grid">
+    <div class="summary-card">
+      <h3>Total Documents</h3>
+      <strong>21,900</strong>
+      <span>Uploaded KYC files</span>
+    </div>
+
+    <div class="summary-card">
+      <h3>Verified</h3>
+      <strong>18,430</strong>
+      <span>Approved documents</span>
+    </div>
+
+    <div class="summary-card">
+      <h3>Pending</h3>
+      <strong>2,145</strong>
+      <span>Waiting review</span>
+    </div>
+
+    <div class="summary-card">
+      <h3>Rejected</h3>
+      <strong>392</strong>
+      <span>Invalid or expired</span>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <h2>KYC Document Queue</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Resident ID</th>
+          <th>Full Name</th>
+          <th>Document Type</th>
+          <th>Document No.</th>
+          <th>Expiry Date</th>
+          <th>KYC Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <td>RES-000043</td>
+          <td>Nicolas Joseph Salloum</td>
+          <td>National ID</td>
+          <td>1234567890</td>
+          <td>2031-12-31</td>
+          <td><span class="badge success">Verified</span></td>
+          <td><button class="small-btn">View</button></td>
+        </tr>
+
+        <tr>
+          <td>RES-000044</td>
+          <td>Sarah Nassar</td>
+          <td>Passport</td>
+          <td>RL987654</td>
+          <td>2028-05-20</td>
+          <td><span class="badge warning">Pending</span></td>
+          <td><button class="small-btn">Review</button></td>
+        </tr>
+
+        <tr>
+          <td>RES-000045</td>
+          <td>Fadi Khoury</td>
+          <td>Residency Document</td>
+          <td>DOC-778899</td>
+          <td>2023-10-01</td>
+          <td><span class="badge danger">Expired</span></td>
+          <td><button class="small-btn">Review</button></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
