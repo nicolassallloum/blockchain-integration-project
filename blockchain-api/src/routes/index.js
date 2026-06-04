@@ -24,6 +24,8 @@ const fabricRoutes = require('./fabric.routes');
 const referenceRoutes = require('./reference.routes');
 const dashboardRoutes = safeLoadRoute("dashboard", "./dashboard.routes");
 const publicAdministrationRoutes = require('./publicAdministration.routes');
+const governmentTransactionsRoutes = require('./government-transactions.routes');
+
 // router.use('/government-blockchain/public-administrations', publicAdministrationRoutes);
 const governmentReferenceRoutes = require('./government-blockchain/reference.routes');
 const residentReferenceRoutes = require('./resident-reference.routes');
@@ -57,6 +59,18 @@ if (residentRoutes) {
 if (fabricRoutes) {
   router.use("/fabric", fabricRoutes);
 }
+
+
+
+
+if (governmentTransactionsRoutes) {
+router.use(
+  '/government-blockchain/government-transactions',
+  governmentTransactionsRoutes
+);
+}
+
+
 if (publicAdministrationRoutes) {
   router.use('/government-blockchain/public-administrations', publicAdministrationRoutes);
 }

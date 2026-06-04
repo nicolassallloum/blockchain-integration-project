@@ -200,15 +200,16 @@ class KycWalletContract extends Contract {
         const resident = JSON.parse(residentBytes.toString());
 
         const officialWalletAddress =
-        walletAddress && walletAddress.trim() !== ''
-            ? walletAddress.trim()
-            : `WALLET-${residentId}-${Date.now()}`;
+            walletAddress && walletAddress.trim() !== ''
+                ? walletAddress.trim()
+                : `WALLET-${residentId}-${Date.now()}`;
+
         const walletKey = `RESIDENT_WALLET_${residentId}`;
 
         const wallet = {
             docType: 'residentWallet',
             residentId,
-            walletAddress,
+            walletAddress: officialWalletAddress,
             walletCurrency: walletCurrency || 'LBP',
             walletStatus: 'Created',
             blockchainStatus: 'Committed',
@@ -216,7 +217,7 @@ class KycWalletContract extends Contract {
             updatedAt: new Date().toISOString()
         };
 
-        resident.walletAddress = walletAddress;
+        resident.walletAddress = officialWalletAddress;
         resident.walletCurrency = wallet.walletCurrency;
         resident.walletStatus = 'Created';
         resident.updatedAt = new Date().toISOString();
@@ -255,6 +256,144 @@ class KycWalletContract extends Contract {
         await ctx.stub.putState(key, Buffer.from(JSON.stringify(resident)));
 
         return JSON.stringify(resident);
+    }
+
+    async CreateGovernmentTransaction(ctx, transactionJson) {
+        this._required(transactionJson, 'transactionJson');
+
+        let transaction;
+
+        try {
+            transaction = JSON.parse(transactionJson);
+        } catch (error) {
+            throw new Error(`Invalid government transaction JSON: ${error.message}`);
+        }
+
+        this._required(transaction.transactionReference, 'transactionReference');
+        this._required(transaction.residentId, 'residentId');
+        this._required(transaction.serviceCode, 'serviceCode');
+        this._required(transaction.serviceName, 'serviceName');
+
+        const key = `GOV_TXN_${transaction.transactionReference}`;
+
+        const exists = await ctx.stub.getState(key);
+        if (exists && exists.length > 0) {
+            throw new Error(
+                `Government transaction already exists: ${transaction.transactionReference}`
+            );
+        }
+
+        const txId = ctx.stub.getTxID();
+        const createdAt = transaction.createdAt || this._getTxTimestamp(ctx);
+
+        const record = {
+            docType: 'GOVERNMENT_TRANSACTION',
+            ledgerReference: key,
+
+            transactionReference: transaction.transactionReference,
+            blockchainTxId: txId,
+
+            residentId: transaction.residentId || null,
+            residentWalletAddress: transaction.residentWalletAddress || null,
+            residentFullName: transaction.residentFullName || null,
+            residentNationalId: transaction.residentNationalId || null,
+            residentMobile: transaction.residentMobile || null,
+            residentEmail: transaction.residentEmail || null,
+
+            serviceId: transaction.serviceId || null,
+            servicePublicId: transaction.servicePublicId || null,
+            serviceCode: transaction.serviceCode || null,
+            serviceName: transaction.serviceName || null,
+            serviceArabicName: transaction.serviceArabicName || null,
+            ministryId: transaction.ministryId || null,
+            administrationId: transaction.administrationId || null,
+            categoryId: transaction.categoryId || null,
+
+            amount: transaction.amount || '0',
+            currencyCode: transaction.currencyCode || 'GOV',
+            paymentMethod: transaction.paymentMethod || 'WALLET',
+            transactionType: transaction.transactionType || 'GOVERNMENT_SERVICE',
+            transactionStatus: transaction.transactionStatus || 'PENDING',
+
+            notes: transaction.notes || null,
+            documentHash: transaction.documentHash || null,
+
+            createdByAccountType: transaction.createdByAccountType || null,
+            createdByLoginUsername: transaction.createdByLoginUsername || null,
+            createdByWalletAddress: transaction.createdByWalletAddress || null,
+
+            blockchainStatus: 'CONFIRMED',
+            createdAt,
+            updatedAt: createdAt,
+            createdTxId: txId,
+            updatedTxId: txId
+        };
+
+        await ctx.stub.putState(key, Buffer.from(JSON.stringify(record)));
+
+        return this._successResponse(
+            'Government transaction created on blockchain successfully',
+            {
+                key,
+                transactionReference: record.transactionReference,
+                blockchainTxId: txId,
+                record
+            }
+        );
+    }
+
+    async GetGovernmentTransaction(ctx, transactionReference) {
+        this._required(transactionReference, 'transactionReference');
+
+        const key = `GOV_TXN_${transactionReference}`;
+        const data = await ctx.stub.getState(key);
+
+        if (!data || data.length === 0) {
+            throw new Error(
+                `Government transaction not found: ${transactionReference}`
+            );
+        }
+
+        return data.toString();
+    }
+
+    async GovernmentTransactionExists(ctx, transactionReference) {
+        this._required(transactionReference, 'transactionReference');
+
+        const key = `GOV_TXN_${transactionReference}`;
+        const data = await ctx.stub.getState(key);
+
+        return data && data.length > 0;
+    }
+
+    async QueryGovernmentTransactionsByResident(ctx, residentId) {
+        this._required(residentId, 'residentId');
+
+        const query = {
+            selector: {
+                docType: 'GOVERNMENT_TRANSACTION',
+                residentId
+            }
+        };
+
+        const results = await this._queryLedgerWithKeys(ctx, query);
+
+        return JSON.stringify(results);
+    }
+
+    async QueryGovernmentTransactionsByService(ctx, serviceCode) {
+        this._required(serviceCode, 'serviceCode');
+
+        const query = {
+            selector: {
+                docType: 'GOVERNMENT_TRANSACTION',
+                serviceCode
+            }
+        };
+
+        const results = await this._queryLedgerWithKeys(ctx, query);
+
+        return JSON.stringify(results);
     }
 
     async CreateMinistry(ctx, ministryJson) {

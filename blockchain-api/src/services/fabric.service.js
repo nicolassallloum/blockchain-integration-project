@@ -44,7 +44,7 @@ class FabricService {
         process.env.FABRIC_PEER_ENDPOINT ||
         process.env.PEER_ENDPOINT ||
         process.env.GRPC_PEER_ENDPOINT ||
-        'peer0.org1.blockchain.local:7051',
+        'localhost:7051',
 
       peerHostAlias:
         process.env.FABRIC_PEER_HOST_ALIAS ||
@@ -94,11 +94,12 @@ class FabricService {
         process.env.FABRIC_DEFAULT_TIMEOUT_MS ||
         60000
       ),
+
       endorsingOrganizations: String(
         process.env.FABRIC_ENDORSING_ORGS ||
         process.env.FABRIC_ENDORSING_ORGANIZATIONS ||
         process.env.FABRIC_MSP_ID ||
-        ''
+        'Org1MSP'
       )
         .split(',')
         .map((item) => item.trim())
@@ -227,11 +228,15 @@ class FabricService {
   }
 
   parseBufferResult(buffer) {
-    if (!buffer) return null;
+    if (!buffer) {
+      return null;
+    }
 
     const text = Buffer.from(buffer).toString('utf8');
 
-    if (!text) return null;
+    if (!text) {
+      return null;
+    }
 
     try {
       return JSON.parse(text);
@@ -258,6 +263,7 @@ class FabricService {
         'system'
     };
   }
+
   normalizeArgs(args = []) {
     if (args === undefined || args === null) {
       return [];
@@ -269,63 +275,102 @@ class FabricService {
 
     return [String(args)];
   }
-  async submitTransaction(functionName, args = [], context = {}) {
-      const startedAt = Date.now();
-      const config = this.getConfig();
-      const auditContext = this.normalizeContext(context);
 
-      try {
-        await auditService.log({
-          ...auditContext,
-          eventType: AUDIT_EVENT_TYPES.BLOCKCHAIN_SUBMIT_REQUEST,
-          eventCategory: AUDIT_EVENT_CATEGORY.BLOCKCHAIN,
-          eventStatus: AUDIT_EVENT_STATUS.PENDING,
-          blockchainFunction: functionName,
-          chaincodeName: config.chaincodeName,
-          channelName: config.channelName,
-          requestPayload: {
-            functionName,
-            args
-          },
-          serviceName: 'fabric.service'
+  getEndorsingOrganizations(functionName, config) {
+    /*
+      Chaincode policy is OR('Org1MSP.peer','Org2MSP.peer').
+      Backend connects through Org1 gateway, so Org1 endorsement is enough.
+      Do not request Org2 from this API server.
+    */
+    return ['Org1MSP'];
+  }
+
+  async submitTransaction(functionName, args = [], context = {}) {
+    const startedAt = Date.now();
+    const config = this.getConfig();
+    const auditContext = this.normalizeContext(context);
+
+    try {
+      await auditService.log({
+        ...auditContext,
+        eventType: AUDIT_EVENT_TYPES.BLOCKCHAIN_SUBMIT_REQUEST,
+        eventCategory: AUDIT_EVENT_CATEGORY.BLOCKCHAIN,
+        eventStatus: AUDIT_EVENT_STATUS.PENDING,
+        blockchainFunction: functionName,
+        chaincodeName: config.chaincodeName,
+        channelName: config.channelName,
+        requestPayload: {
+          functionName,
+          args
+        },
+        serviceName: 'fabric.service'
+      });
+
+      const connection = await this.connect();
+
+      const normalizedArgs = this.normalizeArgs(args);
+      const endorsingOrganizations = this.getEndorsingOrganizations(
+        functionName,
+        config
+      );
+
+      let resultBuffer;
+      let transactionId = null;
+      let commitStatus = null;
+
+      console.log('[FABRIC SUBMIT CONFIG]', {
+        functionName,
+        channelName: config.channelName,
+        chaincodeName: config.chaincodeName,
+        peerEndpoint: config.peerEndpoint,
+        peerHostAlias: config.peerHostAlias,
+        endorsingOrganizations,
+        argsCount: normalizedArgs.length
+      });
+
+      if (
+        connection.contract &&
+        typeof connection.contract.newProposal === 'function' &&
+        endorsingOrganizations &&
+        endorsingOrganizations.length > 0
+      ) {
+        const proposal = connection.contract.newProposal(functionName, {
+          arguments: normalizedArgs,
+          endorsingOrganizations
         });
 
-        const connection = await this.connect();
+        const endorsedProposal = await proposal.endorse();
 
-        let resultBuffer;
-  let transactionId = null;
-  let commitStatus = null;
+        resultBuffer = endorsedProposal.getResult();
 
-  if (
-    connection.contract &&
-    typeof connection.contract.newProposal === 'function' &&
-    config.endorsingOrganizations &&
-    config.endorsingOrganizations.length > 0
-  ) {
-    const proposal = connection.contract.newProposal(functionName, {
-      arguments: this.normalizeArgs(args),
-      endorsingOrganizations: config.endorsingOrganizations
-    });
+        const submittedTransaction = await endorsedProposal.submit();
 
-    const endorsedProposal = await proposal.endorse();
-    const submittedTransaction = await endorsedProposal.submit();
+        commitStatus = await submittedTransaction.getStatus();
+        transactionId = commitStatus.transactionId || null;
 
-    resultBuffer = endorsedProposal.getResult();
+        console.log('[FABRIC COMMIT STATUS]', {
+          functionName,
+          transactionId,
+          successful: commitStatus.successful,
+          code: commitStatus.code
+        });
 
-    commitStatus = await submittedTransaction.getStatus();
-    transactionId = commitStatus.transactionId || null;
+        if (!commitStatus.successful) {
+          throw new Error(
+            `Transaction commit failed with code ${commitStatus.code} for transaction ${commitStatus.transactionId}`
+          );
+        }
+      } else {
+        console.log('[FABRIC FALLBACK SUBMIT]', {
+          functionName,
+          reason: 'newProposal not available or no endorsing organizations'
+        });
 
-    if (!commitStatus.successful) {
-      throw new Error(
-        `Transaction commit failed with code ${commitStatus.code} for transaction ${commitStatus.transactionId}`
-      );
-    }
-  } else {
-    resultBuffer = await connection.contract.submitTransaction(
-      functionName,
-      ...this.normalizeArgs(args)
-    );
-  }
+        resultBuffer = await connection.contract.submitTransaction(
+          functionName,
+          ...normalizedArgs
+        );
+      }
 
       const parsedResult = this.parseBufferResult(resultBuffer);
 
@@ -459,7 +504,8 @@ class FabricService {
       throw error;
     }
   }
-async createPublicAdministration(payload, context = {}) {
+
+  async createPublicAdministration(payload, context = {}) {
     return this.submitTransaction(
       'CreatePublicAdministration',
       [JSON.stringify(payload)],
@@ -482,6 +528,7 @@ async createPublicAdministration(payload, context = {}) {
       context
     );
   }
+
   async disconnect() {
     try {
       if (this.gateway) {

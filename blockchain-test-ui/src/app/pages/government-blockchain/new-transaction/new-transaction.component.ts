@@ -1,17 +1,23 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, signal } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
   ReactiveFormsModule,
   Validators
 } from '@angular/forms';
+import { GovernmentTransactionApiService } from '../../../services/government-transaction-api.service';
 
 interface ResidentOption {
+  dbId: number;
   residentId: string;
   residentName: string;
   walletAddress: string;
   nationalId: string;
+  mobile: string;
+  email: string;
+  walletCurrency: string;
+  walletStatus: string;
 }
 
 interface MinistryOption {
@@ -20,9 +26,15 @@ interface MinistryOption {
 }
 
 interface ServiceOption {
+  serviceId: number;
+  servicePublicId: string;
   serviceCode: string;
   serviceName: string;
+  arabicName: string;
   ministryCode: string;
+  ministryId: string;
+  administrationId: string;
+  categoryId: string;
   feeAmount: number;
   currency: string;
   digitalStampRequired: boolean;
@@ -45,31 +57,13 @@ interface UploadedDocument {
   templateUrl: './new-transaction.component.html',
   styleUrl: './new-transaction.component.scss'
 })
-export class NewTransactionComponent {
+export class NewTransactionComponent implements OnInit {
   transactionForm: FormGroup;
 
   readonly today = new Date();
 
-  residents: ResidentOption[] = [
-    {
-      residentId: 'RES-000001',
-      residentName: 'Nicolas Bernard Salloum',
-      walletAddress: '0x9F12A8C77E22B91F44AA1010D88B2100A1B2C3D4',
-      nationalId: '199506150001'
-    },
-    {
-      residentId: 'RES-000002',
-      residentName: 'Maya Georges Haddad',
-      walletAddress: '0x7A81C9F03B55E22D00CD9898ABF44321EF109871',
-      nationalId: '199204220144'
-    },
-    {
-      residentId: 'RES-000003',
-      residentName: 'Karim Joseph Khoury',
-      walletAddress: '0x11AC44E55D889900BBAACCDDEEFF772299001122',
-      nationalId: '198812120099'
-    }
-  ];
+  residents: ResidentOption[] = [];
+  services: ServiceOption[] = [];
 
   ministries: MinistryOption[] = [
     {
@@ -87,45 +81,6 @@ export class NewTransactionComponent {
     {
       ministryCode: 'MOPH',
       ministryName: 'Ministry of Public Health'
-    }
-  ];
-
-  services: ServiceOption[] = [
-    {
-      serviceCode: 'TAX-CERT-001',
-      serviceName: 'Tax Clearance Certificate',
-      ministryCode: 'MOF',
-      feeAmount: 250000,
-      currency: 'LBP',
-      digitalStampRequired: true,
-      processingTime: '2 Business Days'
-    },
-    {
-      serviceCode: 'BIRTH-REG-001',
-      serviceName: 'Birth Certificate Request',
-      ministryCode: 'MOIM',
-      feeAmount: 150000,
-      currency: 'LBP',
-      digitalStampRequired: true,
-      processingTime: '1 Business Day'
-    },
-    {
-      serviceCode: 'CRIM-REC-001',
-      serviceName: 'Criminal Record Certificate',
-      ministryCode: 'MOJ',
-      feeAmount: 300000,
-      currency: 'LBP',
-      digitalStampRequired: true,
-      processingTime: '3 Business Days'
-    },
-    {
-      serviceCode: 'HEALTH-LIC-001',
-      serviceName: 'Health License Request',
-      ministryCode: 'MOPH',
-      feeAmount: 500000,
-      currency: 'LBP',
-      digitalStampRequired: false,
-      processingTime: '5 Business Days'
     }
   ];
 
@@ -165,19 +120,23 @@ export class NewTransactionComponent {
     }
   ]);
 
-  filteredServices = computed(() => {
+  getFilteredServices(): ServiceOption[] {
     const ministryCode = this.transactionForm?.get('ministry')?.value;
 
     if (!ministryCode) {
       return this.services;
     }
 
-    return this.services.filter(service => service.ministryCode === ministryCode);
-  });
-
+    return this.services.filter(service =>
+      String(service.ministryCode || '') === String(ministryCode)
+    );
+  }
   selectedServiceDetails = signal<ServiceOption | null>(null);
 
-  constructor(private fb: FormBuilder) {
+  constructor(
+    private fb: FormBuilder,
+    private governmentTransactionApi: GovernmentTransactionApiService
+  ) {
     this.transactionForm = this.fb.group({
       transactionId: [
         this.generateTransactionId(),
@@ -228,6 +187,100 @@ export class NewTransactionComponent {
     });
   }
 
+  ngOnInit(): void {
+    this.loadResidents();
+    this.loadServices();
+  }
+
+  loadResidents(): void {
+    this.governmentTransactionApi.getResidentsDropdown().subscribe({
+      next: (response) => {
+        const rows = response?.data || [];
+
+        this.residents = rows.map((row: any) => ({
+          dbId: Number(row.id || row.value),
+          residentId: row.resident_id,
+          residentName: row.full_name,
+          walletAddress: row.wallet_address,
+          nationalId: row.national_id_number,
+          mobile: row.mobile_number,
+          email: row.email,
+          walletCurrency: row.wallet_currency || 'LBP',
+          walletStatus: row.wallet_status
+        }));
+      },
+      error: (error) => {
+        console.error('Failed to load residents dropdown', error);
+        this.residents = [];
+      }
+    });
+  }
+
+  loadServices(): void {
+    this.governmentTransactionApi.getServices().subscribe({
+      next: (response) => {
+        const rows = response?.data || [];
+
+        this.services = rows.map((row: any) => {
+          const ministryCode =
+            row.ministry_id ||
+            row.ministry_code ||
+            row.ministry_name ||
+            'UNKNOWN';
+
+          return {
+            serviceId: Number(row.service_id || 0),
+            servicePublicId: row.service_public_id,
+            serviceCode: row.service_code,
+            serviceName: row.service_name,
+            arabicName: row.arabic_name,
+            ministryCode,
+            ministryId: row.ministry_id,
+            administrationId: row.administration_id,
+            categoryId: row.category_id,
+            feeAmount: Number(row.fee_amount || row.service_fee || 0),
+            currency: row.currency_code || row.currency || 'LBP',
+            digitalStampRequired:
+              row.digital_stamp_required === true ||
+              row.digital_stamp_required === 'true',
+            processingTime: row.processing_time || ''
+          };
+        });
+
+        if (this.services.length > 0) {
+          this.ministries = this.buildMinistriesFromServices(this.services);
+        }
+      },
+      error: (error) => {
+        console.error('Failed to load services', error);
+        this.services = [];
+      }
+    });
+  }
+
+  buildMinistriesFromServices(services: ServiceOption[]): MinistryOption[] {
+    const map = new Map<string, MinistryOption>();
+
+    for (const service of services) {
+      const ministryCode =
+        service.ministryCode ||
+        service.ministryId ||
+        'UNKNOWN';
+
+      if (!map.has(ministryCode)) {
+        map.set(ministryCode, {
+          ministryCode,
+          ministryName:
+            ministryCode === 'UNKNOWN'
+              ? 'Unknown Ministry'
+              : `Ministry ${ministryCode}`
+        });
+      }
+    }
+
+    return Array.from(map.values());
+  }
+
   onResidentChange(): void {
     const residentId = this.transactionForm.get('residentId')?.value;
     const selectedResident = this.residents.find(
@@ -240,7 +293,8 @@ export class NewTransactionComponent {
 
     this.transactionForm.patchValue({
       residentName: selectedResident.residentName,
-      walletAddress: selectedResident.walletAddress
+      walletAddress: selectedResident.walletAddress,
+      currency: selectedResident.walletCurrency || 'LBP'
     });
   }
 
@@ -285,20 +339,99 @@ export class NewTransactionComponent {
       return;
     }
 
-    console.log('Draft transaction saved:', this.transactionForm.getRawValue());
+    this.submitToApi('Draft');
   }
 
   submitTransaction(): void {
+    this.transactionForm.patchValue({
+      transactionStatus: 'Submitted'
+    });
+
     if (this.transactionForm.invalid) {
       this.transactionForm.markAllAsTouched();
       return;
     }
 
-    this.transactionForm.patchValue({
-      transactionStatus: 'Submitted'
-    });
+    this.submitToApi('Submitted');
+  }
 
-    console.log('Transaction submitted:', this.transactionForm.getRawValue());
+  submitToApi(status: string): void {
+    const formValue = this.transactionForm.getRawValue();
+
+    const selectedResident = this.residents.find(
+      resident => resident.residentId === formValue.residentId
+    );
+
+    const selectedService = this.services.find(
+      service => service.serviceCode === formValue.service
+    );
+
+    if (!selectedResident || !selectedService) {
+      console.error('Resident or service not selected');
+      return;
+    }
+
+    const payload = {
+      resident: {
+        residentId: selectedResident.residentId,
+        walletAddress: selectedResident.walletAddress,
+        fullName: selectedResident.residentName,
+        nationalId: selectedResident.nationalId,
+        mobile: selectedResident.mobile,
+        email: selectedResident.email
+      },
+      service: {
+        serviceId: selectedService.serviceId,
+        servicePublicId: selectedService.servicePublicId,
+        serviceCode: selectedService.serviceCode,
+        serviceName: selectedService.serviceName,
+        arabicName: selectedService.arabicName,
+        ministryId: selectedService.ministryId,
+        administrationId: selectedService.administrationId,
+        categoryId: selectedService.categoryId,
+        fee_amount: selectedService.feeAmount,
+        currency_code: selectedService.currency
+      },
+      transaction: {
+        clientTransactionId: formValue.transactionId,
+        amount: formValue.feeAmount,
+        currencyCode: formValue.currency,
+        paymentMethod: formValue.paymentMethod,
+        transactionType: 'GOVERNMENT_SERVICE',
+        transactionStatus: status,
+        notes: formValue.notes,
+        documentHash: this.getFirstDocumentHash()
+      },
+      documents: this.uploadedDocuments(),
+      createdBy: {
+        accountType: 'PUBLIC_ADMINISTRATION',
+        loginUsername: 'system',
+        walletAddress: null
+      }
+    };
+
+    this.governmentTransactionApi.createTransaction(payload).subscribe({
+      next: (response) => {
+        console.log('Government transaction saved:', response);
+
+        if (response?.transactionReference) {
+          this.transactionForm.patchValue({
+            transactionId: response.transactionReference,
+            transactionStatus: response.blockchainStatus === 'SYNCED'
+              ? 'Submitted'
+              : status
+          });
+        }
+
+        alert(
+          `Transaction saved successfully.\nReference: ${response?.transactionReference}\nBlockchain Status: ${response?.blockchainStatus}`
+        );
+      },
+      error: (error) => {
+        console.error('Failed to submit transaction', error);
+        alert(error?.error?.message || 'Failed to submit transaction.');
+      }
+    });
   }
 
   uploadDocuments(): void {
@@ -315,8 +448,6 @@ export class NewTransactionComponent {
       ...documents,
       newDocument
     ]);
-
-    console.log('Document uploaded:', newDocument);
   }
 
   generateHash(): void {
@@ -333,8 +464,6 @@ export class NewTransactionComponent {
     });
 
     this.uploadedDocuments.set(documents);
-
-    console.log('Document hashes generated:', documents);
   }
 
   isInvalid(controlName: string): boolean {
@@ -371,6 +500,14 @@ export class NewTransactionComponent {
       default:
         return 'status-default';
     }
+  }
+
+  private getFirstDocumentHash(): string | null {
+    const document = this.uploadedDocuments().find(
+      item => item.hash && item.hash !== 'Pending generation'
+    );
+
+    return document?.hash || null;
   }
 
   private generateTransactionId(): string {

@@ -1,5 +1,22 @@
 .
+├── Application_Files.txt
 ├── apply_project_viewer_count.sh
+├── backups
+│   └── step59-dashboard-enhancement-20260518-115815
+│       ├── blockchain-api
+│       │   └── src
+│       │       ├── routes
+│       │       │   └── index.js
+│       │       └── server.js
+│       └── blockchain-test-ui
+│           └── src
+│               └── app
+│                   ├── core
+│                   │   └── services
+│                   │       └── wallet-api.service.ts
+│                   └── features
+│                       └── dashboard
+│                           └── dashboard.component.ts
 ├── blockchain-api
 │   ├── backups
 │   │   ├── old-api-folder
@@ -32,6 +49,7 @@
 │   │       ├── wallet.routes.js
 │   │       └── wallet.service.js
 │   ├── blockchain_update_needed_files.txt
+│   ├── Chaincode
 │   ├── config
 │   │   ├── config.js
 │   │   └── connection-org1.json
@@ -40,7 +58,9 @@
 │   │   ├── scripts
 │   │   └── seeds
 │   │       └── insert-bank001-organization.sql
+│   ├── export_government_account_tables.sh
 │   ├── export_real_backend_files.sh
+│   ├── kyc-wallet-chaincode-js.tar.gz
 │   ├── logs
 │   │   ├── app.log
 │   │   └── error.log
@@ -251,6 +271,16 @@
 │   │   │   ├── LICENSE
 │   │   │   ├── package.json
 │   │   │   └── README.md
+│   │   ├── append-field
+│   │   │   ├── index.js
+│   │   │   ├── lib
+│   │   │   │   ├── parse-path.js
+│   │   │   │   └── set-value.js
+│   │   │   ├── LICENSE
+│   │   │   ├── package.json
+│   │   │   ├── README.md
+│   │   │   └── test
+│   │   │       └── forms.js
 │   │   ├── aproba
 │   │   │   ├── index.js
 │   │   │   ├── LICENSE
@@ -424,6 +454,135 @@
 │   │   │   ├── waterfall.js
 │   │   │   ├── whilst.js
 │   │   │   └── wrapSync.js
+│   │   ├── asynckit
+│   │   │   ├── bench.js
+│   │   │   ├── index.js
+│   │   │   ├── lib
+│   │   │   │   ├── abort.js
+│   │   │   │   ├── async.js
+│   │   │   │   ├── defer.js
+│   │   │   │   ├── iterate.js
+│   │   │   │   ├── readable_asynckit.js
+│   │   │   │   ├── readable_parallel.js
+│   │   │   │   ├── readable_serial.js
+│   │   │   │   ├── readable_serial_ordered.js
+│   │   │   │   ├── state.js
+│   │   │   │   ├── streamify.js
+│   │   │   │   └── terminator.js
+│   │   │   ├── LICENSE
+│   │   │   ├── package.json
+│   │   │   ├── parallel.js
+│   │   │   ├── README.md
+│   │   │   ├── serial.js
+│   │   │   ├── serialOrdered.js
+│   │   │   └── stream.js
+│   │   ├── axios
+│   │   │   ├── CHANGELOG.md
+│   │   │   ├── dist
+│   │   │   │   ├── axios.js
+│   │   │   │   ├── axios.js.map
+│   │   │   │   ├── axios.min.js
+│   │   │   │   ├── axios.min.js.map
+│   │   │   │   ├── browser
+│   │   │   │   │   ├── axios.cjs
+│   │   │   │   │   └── axios.cjs.map
+│   │   │   │   ├── esm
+│   │   │   │   │   ├── axios.js
+│   │   │   │   │   ├── axios.js.map
+│   │   │   │   │   ├── axios.min.js
+│   │   │   │   │   └── axios.min.js.map
+│   │   │   │   └── node
+│   │   │   │       ├── axios.cjs
+│   │   │   │       └── axios.cjs.map
+│   │   │   ├── index.d.cts
+│   │   │   ├── index.d.ts
+│   │   │   ├── index.js
+│   │   │   ├── lib
+│   │   │   │   ├── adapters
+│   │   │   │   │   ├── adapters.js
+│   │   │   │   │   ├── fetch.js
+│   │   │   │   │   ├── http.js
+│   │   │   │   │   ├── README.md
+│   │   │   │   │   └── xhr.js
+│   │   │   │   ├── axios.js
+│   │   │   │   ├── cancel
+│   │   │   │   │   ├── CanceledError.js
+│   │   │   │   │   ├── CancelToken.js
+│   │   │   │   │   └── isCancel.js
+│   │   │   │   ├── core
+│   │   │   │   │   ├── AxiosError.js
+│   │   │   │   │   ├── AxiosHeaders.js
+│   │   │   │   │   ├── Axios.js
+│   │   │   │   │   ├── buildFullPath.js
+│   │   │   │   │   ├── dispatchRequest.js
+│   │   │   │   │   ├── InterceptorManager.js
+│   │   │   │   │   ├── mergeConfig.js
+│   │   │   │   │   ├── README.md
+│   │   │   │   │   ├── settle.js
+│   │   │   │   │   └── transformData.js
+│   │   │   │   ├── defaults
+│   │   │   │   │   ├── index.js
+│   │   │   │   │   └── transitional.js
+│   │   │   │   ├── env
+│   │   │   │   │   ├── classes
+│   │   │   │   │   │   └── FormData.js
+│   │   │   │   │   ├── data.js
+│   │   │   │   │   └── README.md
+│   │   │   │   ├── helpers
+│   │   │   │   │   ├── AxiosTransformStream.js
+│   │   │   │   │   ├── AxiosURLSearchParams.js
+│   │   │   │   │   ├── bind.js
+│   │   │   │   │   ├── buildURL.js
+│   │   │   │   │   ├── callbackify.js
+│   │   │   │   │   ├── combineURLs.js
+│   │   │   │   │   ├── composeSignals.js
+│   │   │   │   │   ├── cookies.js
+│   │   │   │   │   ├── deprecatedMethod.js
+│   │   │   │   │   ├── estimateDataURLDecodedBytes.js
+│   │   │   │   │   ├── formDataToJSON.js
+│   │   │   │   │   ├── formDataToStream.js
+│   │   │   │   │   ├── fromDataURI.js
+│   │   │   │   │   ├── HttpStatusCode.js
+│   │   │   │   │   ├── isAbsoluteURL.js
+│   │   │   │   │   ├── isAxiosError.js
+│   │   │   │   │   ├── isURLSameOrigin.js
+│   │   │   │   │   ├── null.js
+│   │   │   │   │   ├── parseHeaders.js
+│   │   │   │   │   ├── parseProtocol.js
+│   │   │   │   │   ├── progressEventReducer.js
+│   │   │   │   │   ├── readBlob.js
+│   │   │   │   │   ├── README.md
+│   │   │   │   │   ├── resolveConfig.js
+│   │   │   │   │   ├── sanitizeHeaderValue.js
+│   │   │   │   │   ├── shouldBypassProxy.js
+│   │   │   │   │   ├── speedometer.js
+│   │   │   │   │   ├── spread.js
+│   │   │   │   │   ├── throttle.js
+│   │   │   │   │   ├── toFormData.js
+│   │   │   │   │   ├── toURLEncodedForm.js
+│   │   │   │   │   ├── trackStream.js
+│   │   │   │   │   ├── validator.js
+│   │   │   │   │   └── ZlibHeaderTransformStream.js
+│   │   │   │   ├── platform
+│   │   │   │   │   ├── browser
+│   │   │   │   │   │   ├── classes
+│   │   │   │   │   │   │   ├── Blob.js
+│   │   │   │   │   │   │   ├── FormData.js
+│   │   │   │   │   │   │   └── URLSearchParams.js
+│   │   │   │   │   │   └── index.js
+│   │   │   │   │   ├── common
+│   │   │   │   │   │   └── utils.js
+│   │   │   │   │   ├── index.js
+│   │   │   │   │   └── node
+│   │   │   │   │       ├── classes
+│   │   │   │   │       │   ├── FormData.js
+│   │   │   │   │       │   └── URLSearchParams.js
+│   │   │   │   │       └── index.js
+│   │   │   │   └── utils.js
+│   │   │   ├── LICENSE
+│   │   │   ├── MIGRATION_GUIDE.md
+│   │   │   ├── package.json
+│   │   │   └── README.md
 │   │   ├── balanced-match
 │   │   │   ├── dist
 │   │   │   │   ├── commonjs
@@ -539,6 +698,35 @@
 │   │   │   ├── package.json
 │   │   │   ├── README.md
 │   │   │   └── test.js
+│   │   ├── buffer-from
+│   │   │   ├── index.js
+│   │   │   ├── LICENSE
+│   │   │   ├── package.json
+│   │   │   └── readme.md
+│   │   ├── busboy
+│   │   │   ├── bench
+│   │   │   │   ├── bench-multipart-fields-100mb-big.js
+│   │   │   │   ├── bench-multipart-fields-100mb-small.js
+│   │   │   │   ├── bench-multipart-files-100mb-big.js
+│   │   │   │   ├── bench-multipart-files-100mb-small.js
+│   │   │   │   ├── bench-urlencoded-fields-100pairs-small.js
+│   │   │   │   └── bench-urlencoded-fields-900pairs-small-alt.js
+│   │   │   ├── lib
+│   │   │   │   ├── index.js
+│   │   │   │   ├── types
+│   │   │   │   │   ├── multipart.js
+│   │   │   │   │   └── urlencoded.js
+│   │   │   │   └── utils.js
+│   │   │   ├── LICENSE
+│   │   │   ├── package.json
+│   │   │   ├── README.md
+│   │   │   └── test
+│   │   │       ├── common.js
+│   │   │       ├── test.js
+│   │   │       ├── test-types-multipart-charsets.js
+│   │   │       ├── test-types-multipart.js
+│   │   │       ├── test-types-multipart-stream-pause.js
+│   │   │       └── test-types-urlencoded.js
 │   │   ├── bytebuffer
 │   │   │   ├── bower.json
 │   │   │   ├── bytebuffer.png
@@ -853,6 +1041,13 @@
 │   │   │   ├── README.md
 │   │   │   └── tests
 │   │   │       └── test.js
+│   │   ├── combined-stream
+│   │   │   ├── lib
+│   │   │   │   └── combined_stream.js
+│   │   │   ├── License
+│   │   │   ├── package.json
+│   │   │   ├── Readme.md
+│   │   │   └── yarn.lock
 │   │   ├── commander
 │   │   │   ├── esm.mjs
 │   │   │   ├── index.js
@@ -891,6 +1086,11 @@
 │   │   │   ├── README.markdown
 │   │   │   └── test
 │   │   │       └── map.js
+│   │   ├── concat-stream
+│   │   │   ├── index.js
+│   │   │   ├── LICENSE
+│   │   │   ├── package.json
+│   │   │   └── readme.md
 │   │   ├── console-control-strings
 │   │   │   ├── index.js
 │   │   │   ├── LICENSE
@@ -996,6 +1196,13 @@
 │   │   │       ├── cmp.js
 │   │   │       ├── NaN.js
 │   │   │       └── neg-vs-pos-0.js
+│   │   ├── delayed-stream
+│   │   │   ├── lib
+│   │   │   │   └── delayed_stream.js
+│   │   │   ├── License
+│   │   │   ├── Makefile
+│   │   │   ├── package.json
+│   │   │   └── Readme.md
 │   │   ├── delegates
 │   │   │   ├── History.md
 │   │   │   ├── index.js
@@ -2173,6 +2380,16 @@
 │   │   │   ├── gulpfile.babel.js
 │   │   │   ├── package.json
 │   │   │   └── README.md
+│   │   ├── es-set-tostringtag
+│   │   │   ├── CHANGELOG.md
+│   │   │   ├── index.d.ts
+│   │   │   ├── index.js
+│   │   │   ├── LICENSE
+│   │   │   ├── package.json
+│   │   │   ├── README.md
+│   │   │   ├── test
+│   │   │   │   └── index.js
+│   │   │   └── tsconfig.json
 │   │   ├── estraverse
 │   │   │   ├── estraverse.js
 │   │   │   ├── gulpfile.js
@@ -2449,6 +2666,38 @@
 │   │   │   ├── package.json
 │   │   │   ├── README.md
 │   │   │   └── test.js
+│   │   ├── follow-redirects
+│   │   │   ├── debug.js
+│   │   │   ├── http.js
+│   │   │   ├── https.js
+│   │   │   ├── index.js
+│   │   │   ├── LICENSE
+│   │   │   ├── package.json
+│   │   │   └── README.md
+│   │   ├── form-data
+│   │   │   ├── CHANGELOG.md
+│   │   │   ├── index.d.ts
+│   │   │   ├── lib
+│   │   │   │   ├── browser.js
+│   │   │   │   ├── form_data.js
+│   │   │   │   └── populate.js
+│   │   │   ├── License
+│   │   │   ├── node_modules
+│   │   │   │   ├── mime-db
+│   │   │   │   │   ├── db.json
+│   │   │   │   │   ├── HISTORY.md
+│   │   │   │   │   ├── index.js
+│   │   │   │   │   ├── LICENSE
+│   │   │   │   │   ├── package.json
+│   │   │   │   │   └── README.md
+│   │   │   │   └── mime-types
+│   │   │   │       ├── HISTORY.md
+│   │   │   │       ├── index.js
+│   │   │   │       ├── LICENSE
+│   │   │   │       ├── package.json
+│   │   │   │       └── README.md
+│   │   │   ├── package.json
+│   │   │   └── README.md
 │   │   ├── forwarded
 │   │   │   ├── HISTORY.md
 │   │   │   ├── index.js
@@ -6732,6 +6981,22 @@
 │   │   │   │   │   └── get-own-property-symbols.js
 │   │   │   │   └── tests.js
 │   │   │   └── tsconfig.json
+│   │   ├── has-tostringtag
+│   │   │   ├── CHANGELOG.md
+│   │   │   ├── index.d.ts
+│   │   │   ├── index.js
+│   │   │   ├── LICENSE
+│   │   │   ├── package.json
+│   │   │   ├── README.md
+│   │   │   ├── shams.d.ts
+│   │   │   ├── shams.js
+│   │   │   ├── test
+│   │   │   │   ├── index.js
+│   │   │   │   ├── shams
+│   │   │   │   │   ├── core-js.js
+│   │   │   │   │   └── get-own-property-symbols.js
+│   │   │   │   └── tests.js
+│   │   │   └── tsconfig.json
 │   │   ├── has-unicode
 │   │   │   ├── index.js
 │   │   │   ├── LICENSE
@@ -9022,6 +9287,46 @@
 │   │   │   ├── license.md
 │   │   │   ├── package.json
 │   │   │   └── readme.md
+│   │   ├── multer
+│   │   │   ├── index.js
+│   │   │   ├── lib
+│   │   │   │   ├── counter.js
+│   │   │   │   ├── file-appender.js
+│   │   │   │   ├── make-middleware.js
+│   │   │   │   ├── multer-error.js
+│   │   │   │   └── remove-uploaded-files.js
+│   │   │   ├── LICENSE
+│   │   │   ├── node_modules
+│   │   │   │   ├── media-typer
+│   │   │   │   │   ├── HISTORY.md
+│   │   │   │   │   ├── index.js
+│   │   │   │   │   ├── LICENSE
+│   │   │   │   │   ├── package.json
+│   │   │   │   │   └── README.md
+│   │   │   │   ├── mime-db
+│   │   │   │   │   ├── db.json
+│   │   │   │   │   ├── HISTORY.md
+│   │   │   │   │   ├── index.js
+│   │   │   │   │   ├── LICENSE
+│   │   │   │   │   ├── package.json
+│   │   │   │   │   └── README.md
+│   │   │   │   ├── mime-types
+│   │   │   │   │   ├── HISTORY.md
+│   │   │   │   │   ├── index.js
+│   │   │   │   │   ├── LICENSE
+│   │   │   │   │   ├── package.json
+│   │   │   │   │   └── README.md
+│   │   │   │   └── type-is
+│   │   │   │       ├── HISTORY.md
+│   │   │   │       ├── index.js
+│   │   │   │       ├── LICENSE
+│   │   │   │       ├── package.json
+│   │   │   │       └── README.md
+│   │   │   ├── package.json
+│   │   │   ├── README.md
+│   │   │   └── storage
+│   │   │       ├── disk.js
+│   │   │       └── memory.js
 │   │   ├── nan
 │   │   │   ├── CHANGELOG.md
 │   │   │   ├── CMakeLists.txt
@@ -10431,6 +10736,12 @@
 │   │   │   ├── LICENSE
 │   │   │   ├── package.json
 │   │   │   └── README.md
+│   │   ├── proxy-from-env
+│   │   │   ├── index.cjs
+│   │   │   ├── index.js
+│   │   │   ├── LICENSE
+│   │   │   ├── package.json
+│   │   │   └── README.md
 │   │   ├── pstree.remy
 │   │   │   ├── lib
 │   │   │   │   ├── index.js
@@ -10797,6 +11108,14 @@
 │   │   │   ├── LICENSE
 │   │   │   ├── package.json
 │   │   │   └── README.md
+│   │   ├── streamsearch
+│   │   │   ├── lib
+│   │   │   │   └── sbmh.js
+│   │   │   ├── LICENSE
+│   │   │   ├── package.json
+│   │   │   ├── README.md
+│   │   │   └── test
+│   │   │       └── test.js
 │   │   ├── string_decoder
 │   │   │   ├── lib
 │   │   │   │   └── string_decoder.js
@@ -10911,6 +11230,17 @@
 │   │   │   ├── LICENSE
 │   │   │   ├── package.json
 │   │   │   └── README.md
+│   │   ├── typedarray
+│   │   │   ├── example
+│   │   │   │   └── tarray.js
+│   │   │   ├── index.js
+│   │   │   ├── LICENSE
+│   │   │   ├── package.json
+│   │   │   ├── readme.markdown
+│   │   │   └── test
+│   │   │       ├── server
+│   │   │       │   └── undef_globals.js
+│   │   │       └── tarray.js
 │   │   ├── type-is
 │   │   │   ├── HISTORY.md
 │   │   │   ├── index.js
@@ -11757,6 +12087,21 @@
 │   │   └── organization_wallet_credentials_2026-05-07T13-24-43-711Z.json
 │   ├── package.json
 │   ├── package-lock.json
+│   ├── postgres_export_20260521_145251
+│   ├── postgres_export_20260521_145318
+│   │   ├── cleanup_and_insert_query_csv_logical_data_FIXED.sql
+│   │   ├── cleanup_and_insert_query_csv_logical_data_OPTIMIZED.sql
+│   │   ├── cleanup_and_insert_query_csv_logical_data.sql
+│   │   ├── cleanup_and_insert_query_csv_logical_data_V3_SAFE_UPSERT.sql
+│   │   ├── cleanup_and_insert_query_csv_logical_data_V4_FIX_ITEM_CREATION_DATE.sql
+│   │   ├── fin_account_info.csv
+│   │   ├── fin_account_item.csv
+│   │   ├── insert_only_missing_customer_account_headers.sql
+│   │   ├── ref_com_currency.csv
+│   │   ├── ref_item.csv
+│   │   ├── ref_lgcy_item_info.csv
+│   │   ├── ref_sysp71.csv
+│   │   └── sts_status.csv
 │   ├── postgresql
 │   │   ├── step-21-wallet-alignment-fix.sql
 │   │   ├── step-23-integration-requests-fix.sql
@@ -11781,6 +12126,18 @@
 │   │   ├── Source_Queries.sql
 │   │   ├── test-fabric-connection.js
 │   │   └── UseFul_Queries.sql
+│   ├── sql
+│   │   ├── create-government-dropdown-tables.sql
+│   │   ├── create-wallet-dropdown-tables.sql
+│   │   ├── step-aml-01-create-tables.sql
+│   │   ├── step-aml-02a-fix-aml-rules-columns.sql
+│   │   ├── step-aml-02-insert-default-rules.sql
+│   │   ├── step-aml-03a-fix-service-required-columns.sql
+│   │   ├── step-aml-03b-fix-aml-alerts-columns.sql
+│   │   ├── step-aml-03c-fix-aml-blacklist-columns.sql
+│   │   ├── step-aml-03d-fix-wallet-risk-columns.sql
+│   │   ├── step-aml-03e-fix-execution-log-columns.sql
+│   │   └── step-aml-03f-fix-aml-alerts-rule-id.sql
 │   ├── src
 │   │   ├── app
 │   │   │   ├── features
@@ -11800,32 +12157,50 @@
 │   │   │   ├── blockchain.config.js
 │   │   │   ├── config.js
 │   │   │   ├── connection-org1.json
+│   │   │   ├── couchdb.config.js
 │   │   │   ├── database.js
 │   │   │   ├── env.validator.js
 │   │   │   ├── index.js
 │   │   │   ├── logger.config.js
+│   │   │   ├── postgres.js
 │   │   │   └── security.config.js
 │   │   ├── constants
 │   │   │   └── audit.constants.js
 │   │   ├── controllers
 │   │   │   ├── auth.controller.js
 │   │   │   ├── blockchain.controller.js
+│   │   │   ├── blockchain-kyc.controller.js
+│   │   │   ├── couchdb.controller.js
+│   │   │   ├── dashboard.controller.js
 │   │   │   ├── data-generator.controller.js
 │   │   │   ├── fabric.controller.js
+│   │   │   ├── government-blockchain
+│   │   │   │   ├── ministry.controller.js
+│   │   │   │   └── reference.controller.js
 │   │   │   ├── health.controller.js
 │   │   │   ├── organization.controller.js
 │   │   │   ├── project-view.controller.js
 │   │   │   ├── project-view.controller.js.bak_final_ip_fix_20260514_115010
 │   │   │   ├── project-view.controller.js.bak_fix_20260514_112517
 │   │   │   ├── project-view.controller.js.bak_real_pc_ip_20260514_112949
+│   │   │   ├── publicAdministration.controller.js
 │   │   │   ├── reference.controller.js
 │   │   │   ├── reference.controller.js.bak_org_type_filter
+│   │   │   ├── resident.controller.js
+│   │   │   ├── resident.controller.js.bak_step6_idempotent_sync_20260528_100130
+│   │   │   ├── resident.controller.js.bak_step6_idempotent_sync_20260528_103302
+│   │   │   ├── resident.controller.js.bak_step6_wallet_address_20260527_173352
+│   │   │   ├── resident.controller.js.bak_wallet_password_alias_20260527_170801
+│   │   │   ├── resident-reference.controller.js
+│   │   │   ├── residentWallet.controller.js
 │   │   │   ├── transaction.controller.js
 │   │   │   ├── wallet-auth.controller.js
 │   │   │   ├── wallet.controller.js
 │   │   │   ├── wallet.controller.js.bak_next_customer_id
 │   │   │   └── wallet-query.controller.js
 │   │   ├── database
+│   │   │   └── postgres.js
+│   │   ├── db
 │   │   │   └── postgres.js
 │   │   ├── index.js
 │   │   ├── logs
@@ -11851,30 +12226,50 @@
 │   │   │   ├── errorHandler.middleware.js
 │   │   │   ├── notFound.middleware.js
 │   │   │   ├── requestLogger.middleware.js
+│   │   │   ├── upload.middleware.js
 │   │   │   └── wallet-login.validator.js
 │   │   ├── repositories
 │   │   │   ├── blockchain.repository.js
-│   │   │   └── enterprise-persistence.repository.js
+│   │   │   ├── enterprise-persistence.repository.js
+│   │   │   └── resident.repository.js
 │   │   ├── routes
 │   │   │   ├── auth.routes.js
+│   │   │   ├── blockchain-kyc.routes.js
 │   │   │   ├── blockchain.routes.js
+│   │   │   ├── couchdb.routes.js
+│   │   │   ├── dashboard.routes.js
 │   │   │   ├── data-generator.routes.js
 │   │   │   ├── fabric.routes.js
+│   │   │   ├── government-blockchain
+│   │   │   │   ├── ministry.routes.js
+│   │   │   │   └── reference.routes.js
+│   │   │   ├── governmentBlockchainAuth.routes.js
+│   │   │   ├── government-services.routes.js
 │   │   │   ├── health.routes.js
 │   │   │   ├── index.js
 │   │   │   ├── organization.routes.js
 │   │   │   ├── project-view.routes.js
+│   │   │   ├── publicAdministration.routes.js
 │   │   │   ├── reference.routes.js
 │   │   │   ├── reference.routes.js.bak_org_type_filter
+│   │   │   ├── resident-reference.routes.js
+│   │   │   ├── resident.routes.js
+│   │   │   ├── residentWallet.routes.js
 │   │   │   ├── transaction.routes.js
 │   │   │   ├── transactions.routes.js
 │   │   │   ├── wallet-query.routes.js
 │   │   │   ├── wallet.routes.js
 │   │   │   └── wallet.routes.js.bak_next_customer_id
 │   │   ├── scripts
+│   │   │   ├── enterprise-persistence.repository.js
 │   │   │   ├── generate-wallets-transactions-fast.js
 │   │   │   ├── generate-wallets-transactions-fast.js.backup_before_duplicate_fix_20260511_162339
-│   │   │   └── generate-wallets-transactions.js
+│   │   │   ├── generate-wallets-transactions.js
+│   │   │   ├── generator_enterprise_sync_fix.zip
+│   │   │   ├── README_BLOCKCHAIN_ORGANIZATION_FIX.txt
+│   │   │   ├── README_FK_ORGANIZATION_FIX.txt
+│   │   │   ├── README_REF_CUSTOMER_TRANSACTION_FIX.txt
+│   │   │   └── test-aml-service.js
 │   │   ├── server.js
 │   │   ├── server.js.bak.before_options_fix_20260506_133738
 │   │   ├── server.js.bak.before_organizations_route_20260506_181742
@@ -11882,13 +12277,20 @@
 │   │   ├── server.js.bak.clean_cors_20260506_135957
 │   │   ├── server.js.bak_project_viewers_20260514_112226
 │   │   ├── services
+│   │   │   ├── aml.service.js
+│   │   │   ├── aml.services.js
 │   │   │   ├── audit.service.js
+│   │   │   ├── blockchain-kyc.service.js
 │   │   │   ├── blockchain.service.js
+│   │   │   ├── couchdb.service.js
+│   │   │   ├── dashboard.service.js
 │   │   │   ├── database.service.js
 │   │   │   ├── fabricGateway.service.js
 │   │   │   ├── fabric.service.js
 │   │   │   ├── health.service.js
 │   │   │   ├── organization.service.js
+│   │   │   ├── reference.service.js
+│   │   │   ├── resident.service.js
 │   │   │   ├── transaction.service.js
 │   │   │   ├── transaction.service.js.bak_balance_after_transfer
 │   │   │   ├── transaction.service.js.bak_customer_to_org_20260514_132823
@@ -11909,6 +12311,20 @@
 │   │   │   ├── wallet.service.js.bak_login_wallet_address
 │   │   │   ├── wallet.service.js.bak_next_customer_id
 │   │   │   └── wallet.service.js.bak.restore_working_20260506_152505
+│   │   ├── uploads
+│   │   │   ├── kyc-documents
+│   │   │   │   ├── 1779191305831-611108439-MCP_Server_for_Blockchain_Integration_Project_Print.pdf
+│   │   │   │   ├── 1779191497760-665186153-MCP_Server_for_Blockchain_Integration_Project_Print.pdf
+│   │   │   │   ├── 1779197283638-802293441-MCP_Server_for_Blockchain_Integration_Project_Print.pdf
+│   │   │   │   ├── 1779197670894-68759891-BlockChain_Benchmark.png
+│   │   │   │   ├── 1779197949390-509881406-Screenshot_2026-02-10_122253.png
+│   │   │   │   ├── 1779198584795-612625488-Screenshot_2026-02-10_121245.png
+│   │   │   │   └── 1779203244305-805081562-e699a45f-f752-472e-99fb-943abf92a8e3.png
+│   │   │   └── proof-of-address
+│   │   │       ├── 1779191497736-840995990-MCP_Server_for_Blockchain_Integration_Project_Print.pdf
+│   │   │       ├── 1779197670881-589373829-MCP_Server_for_Blockchain_Integration_Project_Print.pdf
+│   │   │       ├── 1779197949348-515802249-Screenshot_2026-02-10_120411.png
+│   │   │       └── 1779198584737-796063136-Screenshot_2026-02-10_121230.png
 │   │   └── utils
 │   │       ├── apiResponse.js
 │   │       ├── asyncHandler.js
@@ -11924,8 +12340,11 @@
 │   └── wallet
 │       └── admin.id
 ├── blockchain-api-files-for-chatgpt.txt
+├── blockchain-api-runtime.log
+├── blockchain-kyc-files-for-chatgpt.tar.gz
 ├── blockchain-test-ui
 │   ├── angular.json
+│   ├── angular.json.bak_budget_fix_20260527_162244
 │   ├── backups
 │   │   ├── before-wallet-information-fix-20260508_153504
 │   │   │   └── app
@@ -12074,18 +12493,10 @@
 │   ├── create-step-32-2-bulk-wallet-screens.sh
 │   ├── dist
 │   │   └── blockchain-test-ui
-│   │       ├── 3rdpartylicenses.txt
-│   │       ├── browser
-│   │       │   ├── assets
-│   │       │   │   └── images
-│   │       │   │       └── valoores-logo.png
-│   │       │   ├── favicon.ico
-│   │       │   ├── index.html
-│   │       │   ├── main-IGGJJWSX.js
-│   │       │   └── styles-5INURTSO.css
-│   │       └── prerendered-routes.json
+│   │       └── browser
 │   ├── export_organization_transfer_backend_files.sh
 │   ├── export_real_organization_transfer_backend_files.sh
+│   ├── Front_End_Files.txt
 │   ├── frontend_updated_files_excel_row.tsv
 │   ├── node_modules
 │   │   ├── abbrev
@@ -20584,6 +20995,16 @@
 │   │   │   ├── license
 │   │   │   ├── package.json
 │   │   │   └── readme.md
+│   │   ├── append-field
+│   │   │   ├── index.js
+│   │   │   ├── lib
+│   │   │   │   ├── parse-path.js
+│   │   │   │   └── set-value.js
+│   │   │   ├── LICENSE
+│   │   │   ├── package.json
+│   │   │   ├── README.md
+│   │   │   └── test
+│   │   │       └── forms.js
 │   │   ├── @babel
 │   │   │   ├── code-frame
 │   │   │   │   ├── lib
@@ -21509,6 +21930,20 @@
 │   │   │   ├── LICENSE.txt
 │   │   │   ├── package.json
 │   │   │   └── README.md
+│   │   ├── bcryptjs
+│   │   │   ├── bin
+│   │   │   │   └── bcrypt
+│   │   │   ├── index.d.ts
+│   │   │   ├── index.js
+│   │   │   ├── LICENSE
+│   │   │   ├── package.json
+│   │   │   ├── README.md
+│   │   │   ├── types.d.ts
+│   │   │   └── umd
+│   │   │       ├── index.d.ts
+│   │   │       ├── index.js
+│   │   │       ├── package.json
+│   │   │       └── types.d.ts
 │   │   ├── beasties
 │   │   │   ├── dist
 │   │   │   │   ├── index.cjs
@@ -21570,6 +22005,30 @@
 │   │   │   ├── LICENSE
 │   │   │   ├── package.json
 │   │   │   └── readme.md
+│   │   ├── busboy
+│   │   │   ├── bench
+│   │   │   │   ├── bench-multipart-fields-100mb-big.js
+│   │   │   │   ├── bench-multipart-fields-100mb-small.js
+│   │   │   │   ├── bench-multipart-files-100mb-big.js
+│   │   │   │   ├── bench-multipart-files-100mb-small.js
+│   │   │   │   ├── bench-urlencoded-fields-100pairs-small.js
+│   │   │   │   └── bench-urlencoded-fields-900pairs-small-alt.js
+│   │   │   ├── lib
+│   │   │   │   ├── index.js
+│   │   │   │   ├── types
+│   │   │   │   │   ├── multipart.js
+│   │   │   │   │   └── urlencoded.js
+│   │   │   │   └── utils.js
+│   │   │   ├── LICENSE
+│   │   │   ├── package.json
+│   │   │   ├── README.md
+│   │   │   └── test
+│   │   │       ├── common.js
+│   │   │       ├── test.js
+│   │   │       ├── test-types-multipart-charsets.js
+│   │   │       ├── test-types-multipart.js
+│   │   │       ├── test-types-multipart-stream-pause.js
+│   │   │       └── test-types-urlencoded.js
 │   │   ├── bytes
 │   │   │   ├── History.md
 │   │   │   ├── index.js
@@ -22724,6 +23183,11 @@
 │   │   │   ├── LICENSE
 │   │   │   ├── package.json
 │   │   │   └── README.md
+│   │   ├── concat-stream
+│   │   │   ├── index.js
+│   │   │   ├── LICENSE
+│   │   │   ├── package.json
+│   │   │   └── readme.md
 │   │   ├── content-disposition
 │   │   │   ├── index.js
 │   │   │   ├── LICENSE
@@ -27067,6 +27531,46 @@
 │   │   │   ├── README.md
 │   │   │   └── src
 │   │   │       └── extract.cpp
+│   │   ├── multer
+│   │   │   ├── index.js
+│   │   │   ├── lib
+│   │   │   │   ├── counter.js
+│   │   │   │   ├── file-appender.js
+│   │   │   │   ├── make-middleware.js
+│   │   │   │   ├── multer-error.js
+│   │   │   │   └── remove-uploaded-files.js
+│   │   │   ├── LICENSE
+│   │   │   ├── node_modules
+│   │   │   │   ├── media-typer
+│   │   │   │   │   ├── HISTORY.md
+│   │   │   │   │   ├── index.js
+│   │   │   │   │   ├── LICENSE
+│   │   │   │   │   ├── package.json
+│   │   │   │   │   └── README.md
+│   │   │   │   ├── mime-db
+│   │   │   │   │   ├── db.json
+│   │   │   │   │   ├── HISTORY.md
+│   │   │   │   │   ├── index.js
+│   │   │   │   │   ├── LICENSE
+│   │   │   │   │   ├── package.json
+│   │   │   │   │   └── README.md
+│   │   │   │   ├── mime-types
+│   │   │   │   │   ├── HISTORY.md
+│   │   │   │   │   ├── index.js
+│   │   │   │   │   ├── LICENSE
+│   │   │   │   │   ├── package.json
+│   │   │   │   │   └── README.md
+│   │   │   │   └── type-is
+│   │   │   │       ├── HISTORY.md
+│   │   │   │       ├── index.js
+│   │   │   │       ├── LICENSE
+│   │   │   │       ├── package.json
+│   │   │   │       └── README.md
+│   │   │   ├── package.json
+│   │   │   ├── README.md
+│   │   │   └── storage
+│   │   │       ├── disk.js
+│   │   │       └── memory.js
 │   │   ├── mute-stream
 │   │   │   ├── lib
 │   │   │   │   └── index.js
@@ -29029,6 +29533,35 @@
 │   │   │   ├── index.js
 │   │   │   ├── LICENSE
 │   │   │   ├── package.json
+│   │   │   └── README.md
+│   │   ├── readable-stream
+│   │   │   ├── CONTRIBUTING.md
+│   │   │   ├── errors-browser.js
+│   │   │   ├── errors.js
+│   │   │   ├── experimentalWarning.js
+│   │   │   ├── GOVERNANCE.md
+│   │   │   ├── lib
+│   │   │   │   ├── internal
+│   │   │   │   │   └── streams
+│   │   │   │   │       ├── async_iterator.js
+│   │   │   │   │       ├── buffer_list.js
+│   │   │   │   │       ├── destroy.js
+│   │   │   │   │       ├── end-of-stream.js
+│   │   │   │   │       ├── from-browser.js
+│   │   │   │   │       ├── from.js
+│   │   │   │   │       ├── pipeline.js
+│   │   │   │   │       ├── state.js
+│   │   │   │   │       ├── stream-browser.js
+│   │   │   │   │       └── stream.js
+│   │   │   │   ├── _stream_duplex.js
+│   │   │   │   ├── _stream_passthrough.js
+│   │   │   │   ├── _stream_readable.js
+│   │   │   │   ├── _stream_transform.js
+│   │   │   │   └── _stream_writable.js
+│   │   │   ├── LICENSE
+│   │   │   ├── package.json
+│   │   │   ├── readable-browser.js
+│   │   │   ├── readable.js
 │   │   │   └── README.md
 │   │   ├── readdirp
 │   │   │   ├── index.d.ts
@@ -31585,6 +32118,12 @@
 │   │   │   ├── tsconfig.json
 │   │   │   └── webSocket
 │   │   │       └── package.json
+│   │   ├── safe-buffer
+│   │   │   ├── index.d.ts
+│   │   │   ├── index.js
+│   │   │   ├── LICENSE
+│   │   │   ├── package.json
+│   │   │   └── README.md
 │   │   ├── safer-buffer
 │   │   │   ├── dangerous.js
 │   │   │   ├── LICENSE
@@ -32850,6 +33389,20 @@
 │   │   │   ├── license
 │   │   │   ├── package.json
 │   │   │   └── readme.md
+│   │   ├── streamsearch
+│   │   │   ├── lib
+│   │   │   │   └── sbmh.js
+│   │   │   ├── LICENSE
+│   │   │   ├── package.json
+│   │   │   ├── README.md
+│   │   │   └── test
+│   │   │       └── test.js
+│   │   ├── string_decoder
+│   │   │   ├── lib
+│   │   │   │   └── string_decoder.js
+│   │   │   ├── LICENSE
+│   │   │   ├── package.json
+│   │   │   └── README.md
 │   │   ├── string-width
 │   │   │   ├── index.d.ts
 │   │   │   ├── index.js
@@ -33239,6 +33792,17 @@
 │   │   │   ├── package.json
 │   │   │   └── README.md
 │   │   ├── @tybys
+│   │   ├── typedarray
+│   │   │   ├── example
+│   │   │   │   └── tarray.js
+│   │   │   ├── index.js
+│   │   │   ├── LICENSE
+│   │   │   ├── package.json
+│   │   │   ├── readme.markdown
+│   │   │   └── test
+│   │   │       ├── server
+│   │   │       │   └── undef_globals.js
+│   │   │       └── tarray.js
 │   │   ├── type-is
 │   │   │   ├── HISTORY.md
 │   │   │   ├── index.js
@@ -33652,6 +34216,13 @@
 │   │   │   ├── package.json
 │   │   │   ├── README.md
 │   │   │   └── utils.js
+│   │   ├── util-deprecate
+│   │   │   ├── browser.js
+│   │   │   ├── History.md
+│   │   │   ├── LICENSE
+│   │   │   ├── node.js
+│   │   │   ├── package.json
+│   │   │   └── README.md
 │   │   ├── validate-npm-package-name
 │   │   │   ├── lib
 │   │   │   │   ├── builtin-modules.json
@@ -34988,13 +35559,26 @@
 │   │   │   │   │   ├── dashboard.component.css.bak_valoores_reference_design
 │   │   │   │   │   ├── dashboard.component.ts
 │   │   │   │   │   ├── dashboard.component.ts.bak_fix_20260514_112517
-│   │   │   │   │   └── dashboard.component.ts.bak_project_viewers_20260514_112226
+│   │   │   │   │   ├── dashboard.component.ts.bak_project_viewers_20260514_112226
+│   │   │   │   │   └── dashboard.component.ts.bak_total_balance_billions_20260520_101114
 │   │   │   │   ├── fabric-test
 │   │   │   │   │   ├── fabric-test.component copy.ts
 │   │   │   │   │   ├── fabric-test.component.css
 │   │   │   │   │   ├── fabric-test.component.html
 │   │   │   │   │   ├── fabric-test.component.ts
 │   │   │   │   │   └── fabric-test.component.ts.bak_add_api_key
+│   │   │   │   ├── government-blockchain
+│   │   │   │   │   ├── account-login
+│   │   │   │   │   │   ├── account-login.component.html
+│   │   │   │   │   │   ├── account-login.component.scss
+│   │   │   │   │   │   └── account-login.component.ts
+│   │   │   │   │   ├── couchdb-explorer
+│   │   │   │   │   │   ├── couchdb-explorer.component.html
+│   │   │   │   │   │   ├── couchdb-explorer.component.scss
+│   │   │   │   │   │   └── couchdb-explorer.component.ts
+│   │   │   │   │   └── services
+│   │   │   │   │       ├── couchdb-explorer.service.ts
+│   │   │   │   │       └── government-account-auth.service.ts
 │   │   │   │   └── transactions
 │   │   │   │       ├── balance-query
 │   │   │   │       │   ├── balance-query.component.css
@@ -35015,6 +35599,11 @@
 │   │   │   │           ├── wallet-transfer.component.css
 │   │   │   │           ├── wallet-transfer.component.html
 │   │   │   │           └── wallet-transfer.component.ts
+│   │   │   ├── government-blockchain
+│   │   │   │   └── resident-wallets
+│   │   │   │       ├── resident-wallets.component.html
+│   │   │   │       ├── resident-wallets.component.scss
+│   │   │   │       └── resident-wallets.component.ts
 │   │   │   ├── layout
 │   │   │   │   └── sidebar
 │   │   │   │       ├── sidebar.component.css
@@ -35023,11 +35612,134 @@
 │   │   │   │       ├── sidebar.component.html
 │   │   │   │       ├── sidebar.component.html.bak_logo_image_only
 │   │   │   │       └── sidebar.component.html.bak_logo_update
+│   │   │   ├── models
+│   │   │   │   ├── blockchain-full-kyc.models.ts
+│   │   │   │   └── public-administration.models.ts
 │   │   │   ├── pages
+│   │   │   │   ├── blockchain-full-kyc
+│   │   │   │   │   ├── blockchain-proof
+│   │   │   │   │   │   ├── blockchain-proof.component.ts
+│   │   │   │   │   │   ├── blockchain-proof.html
+│   │   │   │   │   │   ├── blockchain-proof.scss
+│   │   │   │   │   │   └── blockchain-proof.ts
+│   │   │   │   │   ├── citizen-kyc-details
+│   │   │   │   │   │   ├── citizen-kyc-details.component.ts
+│   │   │   │   │   │   ├── citizen-kyc-details.html
+│   │   │   │   │   │   ├── citizen-kyc-details.scss
+│   │   │   │   │   │   └── citizen-kyc-details.ts
+│   │   │   │   │   ├── citizen-kyc-list
+│   │   │   │   │   │   ├── citizen-kyc-list.component.ts
+│   │   │   │   │   │   ├── citizen-kyc-list.html
+│   │   │   │   │   │   ├── citizen-kyc-list.scss
+│   │   │   │   │   │   └── citizen-kyc-list.ts
+│   │   │   │   │   ├── create-citizen-kyc
+│   │   │   │   │   │   ├── create-citizen-kyc.component.ts
+│   │   │   │   │   │   ├── create-citizen-kyc.html
+│   │   │   │   │   │   ├── create-citizen-kyc.scss
+│   │   │   │   │   │   └── create-citizen-kyc.ts
+│   │   │   │   │   ├── document-management
+│   │   │   │   │   │   ├── document-management.component.ts
+│   │   │   │   │   │   ├── document-management.html
+│   │   │   │   │   │   ├── document-management.scss
+│   │   │   │   │   │   └── document-management.ts
+│   │   │   │   │   ├── duplicate-identity-check
+│   │   │   │   │   │   ├── duplicate-identity-check.component.ts
+│   │   │   │   │   │   ├── duplicate-identity-check.html
+│   │   │   │   │   │   ├── duplicate-identity-check.scss
+│   │   │   │   │   │   └── duplicate-identity-check.ts
+│   │   │   │   │   ├── full-kyc-dashboard
+│   │   │   │   │   │   ├── full-kyc-dashboard.component.html
+│   │   │   │   │   │   ├── full-kyc-dashboard.component.scss
+│   │   │   │   │   │   ├── full-kyc-dashboard.component.ts
+│   │   │   │   │   │   ├── full-kyc-dashboard.html
+│   │   │   │   │   │   ├── full-kyc-dashboard.scss
+│   │   │   │   │   │   └── full-kyc-dashboard.ts
+│   │   │   │   │   ├── hash-verification
+│   │   │   │   │   │   ├── hash-verification.component.ts
+│   │   │   │   │   │   ├── hash-verification.html
+│   │   │   │   │   │   ├── hash-verification.scss
+│   │   │   │   │   │   └── hash-verification.ts
+│   │   │   │   │   ├── kyc-approval
+│   │   │   │   │   │   ├── kyc-approval.component.ts
+│   │   │   │   │   │   ├── kyc-approval.html
+│   │   │   │   │   │   ├── kyc-approval.scss
+│   │   │   │   │   │   └── kyc-approval.ts
+│   │   │   │   │   ├── kyc-audit-logs
+│   │   │   │   │   │   ├── kyc-audit-logs.component.ts
+│   │   │   │   │   │   ├── kyc-audit-logs.html
+│   │   │   │   │   │   ├── kyc-audit-logs.scss
+│   │   │   │   │   │   └── kyc-audit-logs.ts
+│   │   │   │   │   ├── kyc-reports
+│   │   │   │   │   │   ├── kyc-reports.component.ts
+│   │   │   │   │   │   ├── kyc-reports.html
+│   │   │   │   │   │   ├── kyc-reports.scss
+│   │   │   │   │   │   └── kyc-reports.ts
+│   │   │   │   │   ├── kyc-review-queue
+│   │   │   │   │   │   ├── kyc-review-queue.component.ts
+│   │   │   │   │   │   ├── kyc-review-queue.html
+│   │   │   │   │   │   ├── kyc-review-queue.scss
+│   │   │   │   │   │   └── kyc-review-queue.ts
+│   │   │   │   │   ├── kyc-settings
+│   │   │   │   │   │   ├── kyc-settings.component.ts
+│   │   │   │   │   │   ├── kyc-settings.html
+│   │   │   │   │   │   ├── kyc-settings.scss
+│   │   │   │   │   │   └── kyc-settings.ts
+│   │   │   │   │   ├── risk-fraud-screening
+│   │   │   │   │   │   ├── risk-fraud-screening.component.ts
+│   │   │   │   │   │   ├── risk-fraud-screening.html
+│   │   │   │   │   │   ├── risk-fraud-screening.scss
+│   │   │   │   │   │   └── risk-fraud-screening.ts
+│   │   │   │   │   ├── state-institutions
+│   │   │   │   │   │   ├── state-institutions.component.ts
+│   │   │   │   │   │   ├── state-institutions.html
+│   │   │   │   │   │   ├── state-institutions.scss
+│   │   │   │   │   │   └── state-institutions.ts
+│   │   │   │   │   └── users-roles
+│   │   │   │   │       ├── users-roles.component.ts
+│   │   │   │   │       ├── users-roles.html
+│   │   │   │   │       ├── users-roles.scss
+│   │   │   │   │       └── users-roles.ts
+│   │   │   │   ├── blockchain-kyc
+│   │   │   │   │   ├── blockchain-kyc.component.html
+│   │   │   │   │   ├── blockchain-kyc.component.scss
+│   │   │   │   │   ├── blockchain-kyc.component.ts
+│   │   │   │   │   ├── blockchain-kyc.html
+│   │   │   │   │   ├── blockchain-kyc.scss
+│   │   │   │   │   └── blockchain-kyc.ts
 │   │   │   │   ├── data-generation-engine
 │   │   │   │   │   ├── data-generation-engine.html
 │   │   │   │   │   ├── data-generation-engine.scss
 │   │   │   │   │   └── data-generation-engine.ts
+│   │   │   │   ├── government-blockchain
+│   │   │   │   │   ├── create-ministry-account
+│   │   │   │   │   │   ├── create-ministry-account.component.html
+│   │   │   │   │   │   ├── create-ministry-account.component.scss
+│   │   │   │   │   │   ├── create-ministry-account.component.ts
+│   │   │   │   │   │   └── Source_Queries.sql
+│   │   │   │   │   ├── create-public-administration-account
+│   │   │   │   │   │   ├── create-public-administration-account.component.html
+│   │   │   │   │   │   ├── create-public-administration-account.component.scss
+│   │   │   │   │   │   └── create-public-administration-account.component.ts
+│   │   │   │   │   ├── create-resident-account
+│   │   │   │   │   │   ├── create-resident-account.component.html
+│   │   │   │   │   │   ├── create-resident-account.component.scss
+│   │   │   │   │   │   └── create-resident-account.component.ts
+│   │   │   │   │   ├── government-blockchain-dashboard
+│   │   │   │   │   │   ├── government-blockchain-dashboard.component.html
+│   │   │   │   │   │   ├── government-blockchain-dashboard.component.scss
+│   │   │   │   │   │   └── government-blockchain-dashboard.component.ts
+│   │   │   │   │   ├── government-services
+│   │   │   │   │   │   ├── government-services.component.html
+│   │   │   │   │   │   ├── government-services.component.scss
+│   │   │   │   │   │   └── government-services.component.ts
+│   │   │   │   │   ├── new-transaction
+│   │   │   │   │   │   ├── new-transaction.component.html
+│   │   │   │   │   │   ├── new-transaction.component.scss
+│   │   │   │   │   │   └── new-transaction.component.ts
+│   │   │   │   │   └── resident-wallet-login
+│   │   │   │   │       ├── resident-wallet-login.component.html
+│   │   │   │   │       ├── resident-wallet-login.component.scss
+│   │   │   │   │       └── resident-wallet-login.component.ts
 │   │   │   │   ├── organization-wallet-create
 │   │   │   │   │   ├── organization-wallet-create.css
 │   │   │   │   │   ├── organization-wallet-create.html
@@ -35063,9 +35775,28 @@
 │   │   │   │       ├── wallet-query.html
 │   │   │   │       └── wallet-query.ts
 │   │   │   └── services
+│   │   │       ├── blockchain-full-kyc-api.service.ts
+│   │   │       ├── blockchain-kyc.service.ts
+│   │   │       ├── blockchain-kyc.ts
 │   │   │       ├── fabric.service.ts
 │   │   │       ├── fabric.service.ts.bak_add_api_key
+│   │   │       ├── government-blockchain
+│   │   │       │   └── government-services.service.ts
+│   │   │       ├── government-blockchain-reference-api.service.ts
+│   │   │       ├── government-blockchain-resident-api.service.ts
+│   │   │       ├── government-ministry-api.service.ts
 │   │   │       ├── organization.service.js
+│   │   │       ├── public-administration-api.service.ts
+│   │   │       ├── resident-reference-api.service.ts
+│   │   │       ├── resident-wallet.service.ts
+│   │   │       ├── src
+│   │   │       │   └── app
+│   │   │       │       └── pages
+│   │   │       │           └── blockchain-full-kyc
+│   │   │       │               └── full-kyc-dashboard
+│   │   │       │                   ├── full-kyc-dashboard.component.html
+│   │   │       │                   ├── full-kyc-dashboard.component.scss
+│   │   │       │                   └── full-kyc-dashboard.component.ts
 │   │   │       ├── transaction.service.ts
 │   │   │       ├── transaction.service.ts.bak_add_api_key_header
 │   │   │       ├── wallet.service.ts
@@ -35200,6 +35931,7 @@
 │   │   │   └── database.js
 │   │   ├── controllers
 │   │   │   ├── organization.controller.js
+│   │   │   ├── publicAdministration.controller.js
 │   │   │   └── reference.controller.js
 │   │   ├── environments
 │   │   │   ├── environment.prod.ts
@@ -35208,6 +35940,7 @@
 │   │   ├── main.ts
 │   │   ├── routes
 │   │   │   ├── organization.routes.js
+│   │   │   ├── publicAdministration.routes.js
 │   │   │   └── reference.routes.js
 │   │   └── styles.scss
 │   ├── tsconfig.app.json
@@ -35218,6 +35951,7 @@
 │   ├── updated-files-today.txt
 │   ├── updated_frontend_files_with_dates.txt
 │   └── updated_frontend_files_without_time.txt
+├── blockchain-ui-runtime.log
 ├── blockchain_update_needed_files.txt
 ├── chaincode
 │   ├── kyc-chaincode
@@ -35251,7 +35985,8 @@
 │       ├── index.js
 │       ├── kyc-wallet-chaincode-js.tar.gz
 │       ├── lib
-│       │   └── kycWalletContract.js
+│       │   ├── kycWalletContract.js
+│       │   └── kycWalletContract.js.bak_step6_wallet_address_20260527_173352
 │       ├── META-INF
 │       │   └── statedb
 │       │       └── couchdb
@@ -37897,6 +38632,8 @@
 │       │       └── README.md
 │       ├── package.json
 │       └── package-lock.json
+├── chaincode.txt
+├── check-blockchain-project-status.sh
 ├── cleanup-backup-20260506_121933
 ├── cleanup-backup-20260506_121948
 │   ├── blockchain-api.backup
@@ -72672,7 +73409,13 @@
 ├── couchdb
 ├── CouchDB.bash
 ├── create-couchdb-indexes.sh
+├── Create_DropDown_Data.sql
 ├── create-kyc-wallet-chaincode-structure.sh
+├── dashboard-files-export
+│   ├── dashboard-api.service.ts
+│   ├── dashboard.component.css
+│   └── dashboard.component.ts
+├── dashboard-files-export.tar.gz
 ├── data-generator-files-for-chatgpt.txt
 ├── data-generator-script-for-chatgpt.txt
 ├── DELETE_ENGINE.py.bak
@@ -72702,6 +73445,8 @@
 ├── export_project_viewer_count_files.sh
 ├── export_project_viewer_count_missing_files.sh
 ├── export_real_angular_api_files.sh
+├── export_step59_dashboard_files.sh
+├── export_step59_db_schema.sh
 ├── export_wallet_organization_code_files.sh
 ├── fabric
 │   ├── fabric-samples
@@ -75645,6 +76390,7 @@
 │   │       │   ├── signcerts
 │   │       │   └── user
 │   │       └── tls-cert.pem
+│   ├── kyc-wallet-chaincode-js.tar.gz
 │   ├── logs
 │   ├── organizations
 │   │   ├── cryptogen
@@ -75973,7 +76719,46 @@
 ├── fix_project_viewer_count_errors.sh
 ├── fix_project_viewer_real_pc_ip.sh
 ├── force_frontend_viewer_ip.sh
+├── generator_enterprise_sync_fix.zip
+├── handoff
+│   └── blockchain-kyc-files
+│       ├── backend
+│       │   ├── blockchain-kyc.controller.js
+│       │   ├── blockchain-kyc.routes.js
+│       │   ├── blockchain-kyc.service.js
+│       │   ├── database.js
+│       │   ├── fabric.service.js
+│       │   ├── package.json
+│       │   ├── reference.controller.js
+│       │   ├── reference.routes.js
+│       │   ├── server.js
+│       │   ├── upload.middleware.js
+│       │   ├── wallet.controller.js
+│       │   ├── wallet.routes.js
+│       │   └── wallet.service.js
+│       ├── commands-output
+│       │   ├── api-routes.txt
+│       │   ├── backend-related-files.txt
+│       │   ├── customer-tables-search.txt
+│       │   ├── fabric-search.txt
+│       │   ├── frontend-related-files.txt
+│       │   └── wallet-create-search.txt
+│       ├── db-structure
+│       │   ├── blockchain_kyc_wallet_requests.txt
+│       │   ├── blockchain_wallets.txt
+│       │   ├── sdedba_cfg_customer.txt
+│       │   └── sdedba_ref_customer.txt
+│       ├── frontend
+│       │   ├── blockchain-kyc.component.html
+│       │   ├── blockchain-kyc.component.scss
+│       │   └── blockchain-kyc.component.ts
+│       └── README_FOR_CHATGPT.txt
 ├── kyc-wallet-chaincode-js_1.0.tar.gz
+├── kyc-wallet-chaincode-js_2.4.tar.gz
+├── kyc-wallet-chaincode-js_2.5.tar.gz
+├── kyc-wallet-chaincode-js_2.6.tar.gz
+├── kyc-wallet-chaincode-js_2.7.tar.gz
+├── kyc-wallet-chaincode-js_2.8.tar.gz
 ├── logs
 ├── Notes
 ├── organizations
@@ -76048,6 +76833,12 @@
 │   ├── stop-network.sh
 │   └── verify-network.sh
 ├── src
+│   ├── app
+│   │   └── government-blockchain
+│   │       └── resident-wallets
+│   │           ├── resident-wallets.component.html
+│   │           ├── resident-wallets.component.scss
+│   │           └── resident-wallets.component.ts
 │   ├── middlewares
 │   │   └── wallet-login.validator.js
 │   ├── src
@@ -76061,6 +76852,7 @@
 │   └── utils
 │       ├── jwt.util.js
 │       └── password.util.js
+├── start-blockchain-project-after-reboot.sh
 ├── step-09-ledger-data-model
 │   ├── chaincode-models
 │   ├── couchdb-indexes
@@ -76080,6 +76872,185 @@
 │       ├── transaction-sample.json
 │       └── wallet-sample.json
 ├── 🔹 STEP 33 — Spring Boot Integration Design.bash
+├── step59-dashboard-enhancement-export
+│   ├── backend
+│   │   └── blockchain-api
+│   │       ├── package.json
+│   │       └── src
+│   │           ├── app.js
+│   │           ├── config
+│   │           │   └── database.js
+│   │           ├── routes
+│   │           │   └── index.js
+│   │           └── server.js
+│   ├── backend-discovered
+│   │   └── blockchain-api
+│   │       └── src
+│   │           ├── controllers
+│   │           │   ├── organization.controller.js
+│   │           │   ├── transaction.controller.js
+│   │           │   ├── wallet-auth.controller.js
+│   │           │   ├── wallet.controller.js
+│   │           │   ├── wallet.controller.js.bak_next_customer_id
+│   │           │   └── wallet-query.controller.js
+│   │           ├── middlewares
+│   │           │   └── wallet-login.validator.js
+│   │           ├── routes
+│   │           │   ├── organization.routes.js
+│   │           │   ├── transaction.routes.js
+│   │           │   ├── transactions.routes.js
+│   │           │   ├── wallet-query.routes.js
+│   │           │   ├── wallet.routes.js
+│   │           │   └── wallet.routes.js.bak_next_customer_id
+│   │           ├── scripts
+│   │           │   ├── generate-wallets-transactions-fast.js
+│   │           │   ├── generate-wallets-transactions-fast.js.backup_before_duplicate_fix_20260511_162339
+│   │           │   └── generate-wallets-transactions.js
+│   │           ├── server.js.bak.before_organizations_route_20260506_181742
+│   │           ├── server.js.bak.before_organizations_route_20260507_091230
+│   │           ├── services
+│   │           │   ├── organization.service.js
+│   │           │   ├── transaction.service.js
+│   │           │   ├── transaction.service.js.bak_balance_after_transfer
+│   │           │   ├── transaction.service.js.bak_customer_to_org_20260514_132823
+│   │           │   ├── transaction.service.js.bak_fixed_org_wallet_rules
+│   │           │   ├── transaction.service.js.bak_fix_org_receiver_type_only
+│   │           │   ├── transaction.service.js.bak_org_to_org_final_fix
+│   │           │   ├── transaction.service.js.bak_step_32_1_org_fk_fix
+│   │           │   ├── transaction.service.js.bak_step_32_1_status_fix
+│   │           │   ├── transaction.service.js.bak.step32_23514_fix
+│   │           │   ├── transaction.service.js.bak.step32_constraint_fix
+│   │           │   ├── transaction.service.js.bak.step32_type_fix
+│   │           │   ├── transaction.service.js.bak_wallet_to_org_type_20260514_133559
+│   │           │   ├── wallet-auth.service.js
+│   │           │   ├── wallet-query.service.js
+│   │           │   ├── wallet.service.js
+│   │           │   ├── wallet.service.js.backup_before_blockchain_first_20260511_152225
+│   │           │   ├── wallet.service.js.bak_fix_wallet_create_profile
+│   │           │   ├── wallet.service.js.bak_login_wallet_address
+│   │           │   ├── wallet.service.js.bak_next_customer_id
+│   │           │   └── wallet.service.js.bak.restore_working_20260506_152505
+│   │           └── utils
+│   │               └── walletAddressGenerator.js
+│   ├── discovery
+│   │   ├── backend_dashboard_related_files.txt
+│   │   ├── database_discovery_commands.sql
+│   │   └── frontend_dashboard_related_files.txt
+│   ├── frontend
+│   │   └── blockchain-test-ui
+│   │       ├── package.json
+│   │       └── src
+│   │           ├── app
+│   │           │   ├── app.config.ts
+│   │           │   └── app.routes.ts
+│   │           └── environments
+│   │               └── environment.ts
+│   └── frontend-discovered
+│       └── blockchain-test-ui
+│           └── src
+│               └── app
+│                   ├── core
+│                   │   └── services
+│                   │       ├── dashboard-api.service.ts
+│                   │       ├── transaction-api.service.ts
+│                   │       └── wallet-api.service.ts
+│                   ├── features
+│                   │   ├── dashboard
+│                   │   │   ├── dashboard.component.css
+│                   │   │   ├── dashboard.component.css.bak_valoores_reference_design
+│                   │   │   ├── dashboard.component.ts
+│                   │   │   ├── dashboard.component.ts.bak_fix_20260514_112517
+│                   │   │   └── dashboard.component.ts.bak_project_viewers_20260514_112226
+│                   │   └── transactions
+│                   │       ├── organization-transfer
+│                   │       │   ├── organization-transfer.component.css
+│                   │       │   ├── organization-transfer.component.html
+│                   │       │   ├── organization-transfer.component.ts
+│                   │       │   ├── organization-transfer.component.ts.bak_fix_session_detection
+│                   │       │   ├── organization-transfer.component.ts.bak_org_to_org_final
+│                   │       │   └── organization-transfer.component.ts.bak_org_to_org_frontend_fix
+│                   │       ├── transaction-history
+│                   │       │   ├── transaction-history.component.css
+│                   │       │   ├── transaction-history.component.html
+│                   │       │   └── transaction-history.component.ts
+│                   │       └── wallet-transfer
+│                   │           ├── wallet-transfer.component.css
+│                   │           ├── wallet-transfer.component.html
+│                   │           └── wallet-transfer.component.ts
+│                   ├── pages
+│                   │   ├── organization-wallet-create
+│                   │   │   ├── organization-wallet-create.css
+│                   │   │   ├── organization-wallet-create.html
+│                   │   │   └── organization-wallet-create.ts
+│                   │   ├── wallet-create
+│                   │   │   ├── wallet-create.css
+│                   │   │   ├── wallet-create.html
+│                   │   │   ├── wallet-create.html.bak_org_type_filter
+│                   │   │   ├── wallet-create.html.bak_step_32_1
+│                   │   │   ├── wallet-create.ts
+│                   │   │   ├── wallet-create.ts.bak_fix_org_type_loop
+│                   │   │   ├── wallet-create.ts.bak_org_type_filter
+│                   │   │   ├── wallet-create.ts.bak_org_type_methods_fix
+│                   │   │   └── wallet-create.ts.bak_step_32_1
+│                   │   ├── wallet-information
+│                   │   │   ├── wallet-information.component.css
+│                   │   │   ├── wallet-information.component.html
+│                   │   │   ├── wallet-information.component.ts
+│                   │   │   ├── wallet-information.html
+│                   │   │   ├── wallet-information.scss
+│                   │   │   └── wallet-information.ts
+│                   │   ├── wallet-login
+│                   │   │   ├── wallet-login.css
+│                   │   │   ├── wallet-login.html
+│                   │   │   ├── wallet-login.html.bak_wallet_address_login
+│                   │   │   ├── wallet-login.ts
+│                   │   │   ├── wallet-login.ts.bak_fix_wallet_type_org
+│                   │   │   └── wallet-login.ts.bak_wallet_address_login
+│                   │   └── wallet-query
+│                   │       ├── wallet-query.css
+│                   │       ├── wallet-query.css~clear
+│                   │       ├── wallet-query.html
+│                   │       └── wallet-query.ts
+│                   └── services
+│                       ├── organization.service.js
+│                       ├── transaction.service.ts
+│                       ├── transaction.service.ts.bak_add_api_key_header
+│                       ├── wallet.service.ts
+│                       ├── wallet.service.ts.bak_bulk_wallet_fix
+│                       ├── wallet.service.ts.bak_fix_missing_methods
+│                       ├── wallet.service.ts.bak_fix_wallet_routes
+│                       ├── wallet.service.ts.bak_org_type_filter
+│                       ├── wallet.service.ts.bak_restore_safe_bulk
+│                       ├── wallet-session.service.ts
+│                       ├── wallet-session.service.ts.bak_duplicate_wallet_type
+│                       ├── wallet-session.service.ts.bak_fix_org_wallet_type
+│                       └── wallet-session.ts
+├── step59-dashboard-enhancement-files.tar.gz
+├── step59-dashboard-enhancement-patch
+│   ├── blockchain-api
+│   │   └── src
+│   │       ├── controllers
+│   │       │   └── dashboard.controller.js
+│   │       ├── routes
+│   │       │   ├── dashboard.routes.js
+│   │       │   └── index.js
+│   │       ├── server.js
+│   │       └── services
+│   │           └── dashboard.service.js
+│   ├── blockchain-test-ui
+│   │   └── src
+│   │       └── app
+│   │           ├── core
+│   │           │   └── services
+│   │           │       └── wallet-api.service.ts
+│   │           └── features
+│   │               └── dashboard
+│   │                   └── dashboard.component.ts
+│   ├── README_STEP59_DASHBOARD_ENHANCEMENT.md
+│   └── scripts
+│       └── install_step59_dashboard_enhancement.sh
+├── step59-dashboard-enhancement-patch.tar.gz
+├── step59-db-schema.txt
 ├── STEP-5-DOCKER-RUNTIME-SETUP.sh
 ├── tree_20251205.txt
 ├── tree_20261105.txt
@@ -77144,4 +78115,4 @@
 │   └── pyvenv.cfg
 └── wallet_organization_code_update_files.txt
 
-8728 directories, 68417 files
+8947 directories, 69169 files

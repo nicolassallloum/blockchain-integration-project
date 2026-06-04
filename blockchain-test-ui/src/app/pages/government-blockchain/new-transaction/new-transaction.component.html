@@ -110,8 +110,8 @@
           <label>Service</label>
           <select formControlName="service" (change)="onServiceChange()">
             <option value="">Select Service</option>
-            <option *ngFor="let service of filteredServices()" [value]="service.serviceCode">
-              {{ service.serviceName }}
+            <option *ngFor="let service of getFilteredServices()" [value]="service.serviceCode">
+              {{ service.serviceName }} — {{ service.feeAmount | number }} {{ service.currency }}
             </option>
           </select>
           <small *ngIf="isInvalid('service')">Service is required.</small>

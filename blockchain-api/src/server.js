@@ -4,43 +4,27 @@
  * Blockchain API Middleware Server
  * Blockchain Integration Project
  *
- * Updated for:
- * - Angular UI direct CORS support
- * - Browser OPTIONS / preflight handling
- * - /api/v1/data-generator route
- * - /api/v1/organizations route
- * - /api/v1/wallets route
- * - /api/v1/transactions route
- * - /api/v1/fabric route
- * - /api/v1/reference route
- * - Professional request logging
+ * Cleaned for:
+ * - Correct route loading order
+ * - Government transactions route
+ * - Government services route
+ * - Resident search route
+ * - CORS support
+ * - Request logging
  * - Professional 404 and global error handling
  */
 
 require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const crypto = require('crypto');
 const os = require('os');
-const routes = require('./routes');
-
-
 
 const app = express();
-const blockchainKycRoutes = require('./routes/blockchain-kyc.routes');
-const governmentBlockchainReferenceRoutes = require('./routes/government-blockchain/reference.routes');
-const governmentMinistryRoutes = require('./routes/government-blockchain/ministry.routes');
-const governmentBlockchainRoutes = require('./routes/government-blockchain/ministry.routes');
-const ministryRoutes = require('./routes/government-blockchain/ministry.routes');
-const governmentBlockchainAuthRoutes = require('./routes/governmentBlockchainAuth.routes');
-const residentWalletRoutes = require('./routes/residentWallet.routes');
-const governmentServicesRoutes = require('./routes/government-services.routes');
 
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 /**
  * Optional packages.
- * Loaded safely so the API does not crash if a package is unavailable.
  */
 function optionalRequire(packageName) {
   try {
@@ -51,11 +35,8 @@ function optionalRequire(packageName) {
   }
 }
 
-const helmet = optionalRequire('helmet');
-
 /**
- * Route loader.
- * This avoids server crash if a route file is temporarily missing.
+ * Safe route loader.
  */
 function safeRoute(routePath, routeName) {
   try {
@@ -67,6 +48,8 @@ function safeRoute(routePath, routeName) {
     return null;
   }
 }
+
+const helmet = optionalRequire('helmet');
 
 /**
  * Server configuration.
@@ -80,40 +63,34 @@ const NODE_ENV = process.env.NODE_ENV || 'production';
 
 /**
  * CORS configuration.
- *
- * Important:
- * - Browser UI is running on port 4200.
- * - Backend API is running on port 3001.
- * - Browser preflight OPTIONS must be answered before routes/security.
  */
-const defaultAllowedOrigins = [
-  'http://172.31.13.90:4200',
-  'http://172.31.13.90:8080',
-  'http://127.0.0.1:4200',
-  'http://localhost:4200',
-  'http://127.0.0.1:8080',
-  'http://localhost:8080',
-  'http://127.0.0.1:5173',
-  'http://localhost:5173'
-];
 const allowedOrigins = [
   'http://localhost:4200',
   'http://127.0.0.1:4200',
 
-  // Old server IP
+  'http://localhost:8080',
+  'http://127.0.0.1:8080',
+
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+
   'http://172.31.13.90:4200',
   'http://172.31.13.90:8080',
 
-  // Current server IP
   'http://172.31.3.90:4200',
-  'http://172.31.3.90:8080',
+  'http://172.31.3.90:8080'
 ];
+
 const envAllowedOrigins = String(process.env.CORS_ALLOWED_ORIGINS || process.env.CORS_ORIGIN || '')
   .split(',')
   .map((origin) => origin.trim())
   .filter(Boolean);
 
-// const allowedOrigins = Array.from(new Set([...defaultAllowedOrigins, ...envAllowedOrigins]));
+for (const origin of envAllowedOrigins) {
+  if (!allowedOrigins.includes(origin)) {
+    allowedOrigins.push(origin);
+  }
+}
 
 const allowedHeaders = [
   'Accept',
@@ -133,11 +110,6 @@ const exposedHeaders = [
 
 const corsOptions = {
   origin(origin, callback) {
-    /**
-     * Allow:
-     * - Server-to-server requests with no Origin header
-     * - Browser requests from allowed origins
-     */
     if (!origin) {
       return callback(null, true);
     }
@@ -162,36 +134,18 @@ const corsOptions = {
 };
 
 /**
- * Manual CORS preflight middleware.
- *
- * This is intentionally placed before:
- * - helmet
- * - body parser
- * - route handlers
- * - API key middleware if added later
- *
- * This ensures Angular OPTIONS requests do not stay pending.
+ * Manual CORS preflight.
  */
 app.use((req, res, next) => {
   const origin = req.headers.origin;
 
-  if (!origin) {
-    return next();
-  }
-
-  if (allowedOrigins.includes(origin)) {
+  if (origin && allowedOrigins.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Vary', 'Origin');
     res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', allowedHeaders.join(','));
     res.setHeader('Access-Control-Expose-Headers', exposedHeaders.join(','));
     res.setHeader('Access-Control-Max-Age', '86400');
-  } else {
-    console.warn('[CORS_BLOCKED_PREFLIGHT]', {
-      origin,
-      method: req.method,
-      url: req.originalUrl
-    });
   }
 
   if (req.method === 'OPTIONS') {
@@ -200,19 +154,12 @@ app.use((req, res, next) => {
 
   return next();
 });
-app.use(
-  '/api/v1/government-blockchain/auth',
-  governmentBlockchainAuthRoutes
-);
-app.use(
-  '/api/v1/government-blockchain/services',
-  governmentServicesRoutes
-);
+
 /**
  * Normal CORS middleware.
  */
 app.use(cors(corsOptions));
-app.use('/api/v1/government-blockchain/ministries', ministryRoutes);
+
 /**
  * Security headers.
  */
@@ -254,7 +201,7 @@ app.use((req, res, next) => {
 });
 
 /**
- * Lightweight request logger.
+ * Request logger.
  */
 app.use((req, res, next) => {
   const startedAt = Date.now();
@@ -278,8 +225,6 @@ app.use((req, res, next) => {
 
 /**
  * Route imports.
- *
- * Routes are loaded after middleware definitions but before route registration.
  */
 const walletRoutes = safeRoute('./routes/wallet.routes', 'wallet.routes');
 const dataGeneratorRoutes = safeRoute('./routes/data-generator.routes', 'data-generator.routes');
@@ -289,10 +234,47 @@ const referenceRoutes = safeRoute('./routes/reference.routes', 'reference.routes
 const organizationRoutes = safeRoute('./routes/organization.routes', 'organization.routes');
 const projectViewRoutes = safeRoute('./routes/project-view.routes', 'project-view.routes');
 const dashboardRoutes = safeRoute('./routes/dashboard.routes', 'dashboard.routes');
-const residentRoutes = require('./routes/resident.routes');
+
+const blockchainKycRoutes = safeRoute('./routes/blockchain-kyc.routes', 'blockchain-kyc.routes');
+
+const governmentBlockchainAuthRoutes = safeRoute(
+  './routes/governmentBlockchainAuth.routes',
+  'governmentBlockchainAuth.routes'
+);
+
+const governmentBlockchainReferenceRoutes = safeRoute(
+  './routes/government-blockchain/reference.routes',
+  'government-blockchain/reference.routes'
+);
+
+const governmentMinistryRoutes = safeRoute(
+  './routes/government-blockchain/ministry.routes',
+  'government-blockchain/ministry.routes'
+);
+
+const residentWalletRoutes = safeRoute(
+  './routes/residentWallet.routes',
+  'residentWallet.routes'
+);
+
+const residentRoutes = safeRoute(
+  './routes/resident.routes',
+  'resident.routes'
+);
+
+const governmentServicesRoutes = safeRoute(
+  './routes/government-services.routes',
+  'government-services.routes'
+);
+
+const governmentTransactionsRoutes = safeRoute(
+  './routes/government-transactions.routes',
+  'government-transactions.routes'
+);
+
 /**
- * Optional root API routes aggregator.
- * Keep it optional because some versions of the project may not have src/routes/index.js.
+ * Optional generic API route aggregator.
+ * Keep after all specific routes.
  */
 const apiRoutes = safeRoute('./routes', 'routes/index');
 
@@ -316,12 +298,18 @@ app.get('/api/v1/health', (req, res) => {
         memoryTotal: os.totalmem()
       },
       blockchain: {
-        channelName: process.env.FABRIC_CHANNEL_NAME || process.env.CHANNEL_NAME || 'kycchannelnix1',
+        channelName:
+          process.env.FABRIC_CHANNEL_NAME ||
+          process.env.CHANNEL_NAME ||
+          'kycchannelnix1',
         chaincodeName:
           process.env.FABRIC_CHAINCODE_NAME ||
           process.env.CHAINCODE_NAME ||
           'kyc-wallet-chaincode-js',
-        mspId: process.env.FABRIC_MSP_ID || process.env.MSP_ID || 'Org1MSP'
+        mspId:
+          process.env.FABRIC_MSP_ID ||
+          process.env.MSP_ID ||
+          'Org1MSP'
       }
     },
     meta: null,
@@ -332,86 +320,130 @@ app.get('/api/v1/health', (req, res) => {
 });
 
 /**
- * API routes.
- *
+ * API route registrations.
  * IMPORTANT:
- * All route registrations must be BEFORE the 404 handler.
+ * Specific routes must be registered before generic routes and before 404.
  */
-if (walletRoutes) {
-  app.use('/api/v1/wallets', walletRoutes);
-}
-app.use('/api/v1/kyc', blockchainKycRoutes);
-if (dataGeneratorRoutes) {
-  app.use('/api/v1/data-generator', dataGeneratorRoutes);
-}
 
-if (transactionRoutes) {
-  app.use('/api/v1/transactions', transactionRoutes);
-}
-
-if (fabricRoutes) {
-  app.use('/api/v1/fabric', fabricRoutes);
-}
-
-if (referenceRoutes) {
-  app.use('/api/v1/reference', referenceRoutes);
-}
-if (blockchainKycRoutes) {
-  app.use('/api/v1/kyc', blockchainKycRoutes);
-}
-
-if (organizationRoutes) {
-  app.use('/api/v1/organizations', organizationRoutes);
-}
-
-if (projectViewRoutes) {
-  app.use('/api/v1/project-views', projectViewRoutes);
-}
-
-if (dashboardRoutes) {
-  app.use('/api/v1/dashboard', dashboardRoutes);
-}
-if (governmentBlockchainRoutes) {
-  app.use('/api/v1/government-blockchain', governmentBlockchainRoutes);
-}
-if (governmentBlockchainRoutes) {
+if (governmentBlockchainAuthRoutes) {
   app.use(
-  '/api/v1/government-blockchain/digital-kyc/resident-wallets',
-  residentWalletRoutes
-);
+    '/api/v1/government-blockchain/auth',
+    governmentBlockchainAuthRoutes
+  );
+  console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/auth');
 }
 
+if (governmentServicesRoutes) {
+  app.use(
+    '/api/v1/government-blockchain/services',
+    governmentServicesRoutes
+  );
+  console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/services');
+}
 
+if (governmentTransactionsRoutes) {
+  app.use(
+    '/api/v1/government-blockchain/transactions',
+    governmentTransactionsRoutes
+  );
+  console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/transactions');
+}
+
+if (governmentMinistryRoutes) {
+  app.use(
+    '/api/v1/government-blockchain/ministries',
+    governmentMinistryRoutes
+  );
+  console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/ministries');
+
+  /**
+   * Keep this because your old project used the ministry router also
+   * under /api/v1/government-blockchain.
+   */
+  app.use(
+    '/api/v1/government-blockchain',
+    governmentMinistryRoutes
+  );
+  console.log('[ROUTE MOUNTED] /api/v1/government-blockchain');
+}
 
 if (governmentBlockchainReferenceRoutes) {
   app.use(
     '/api/v1/government-blockchain/reference',
     governmentBlockchainReferenceRoutes
   );
-}
-if (governmentMinistryRoutes) {
-  app.use('/api/v1/government-blockchain/residents', residentRoutes);
-    console.log('[ROUTES] resident route loaded');
+  console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/reference');
 }
 
+if (residentWalletRoutes) {
+  app.use(
+    '/api/v1/government-blockchain/digital-kyc/resident-wallets',
+    residentWalletRoutes
+  );
+  console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/digital-kyc/resident-wallets');
+}
 
+if (residentRoutes) {
+  app.use(
+    '/api/v1/government-blockchain/residents',
+    residentRoutes
+  );
+  console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/residents');
+}
+
+if (blockchainKycRoutes) {
+  app.use('/api/v1/kyc', blockchainKycRoutes);
+  console.log('[ROUTE MOUNTED] /api/v1/kyc');
+}
+
+if (walletRoutes) {
+  app.use('/api/v1/wallets', walletRoutes);
+  console.log('[ROUTE MOUNTED] /api/v1/wallets');
+}
+
+if (dataGeneratorRoutes) {
+  app.use('/api/v1/data-generator', dataGeneratorRoutes);
+  console.log('[ROUTE MOUNTED] /api/v1/data-generator');
+}
+
+if (transactionRoutes) {
+  app.use('/api/v1/transactions', transactionRoutes);
+  console.log('[ROUTE MOUNTED] /api/v1/transactions');
+}
+
+if (fabricRoutes) {
+  app.use('/api/v1/fabric', fabricRoutes);
+  console.log('[ROUTE MOUNTED] /api/v1/fabric');
+}
+
+if (referenceRoutes) {
+  app.use('/api/v1/reference', referenceRoutes);
+  console.log('[ROUTE MOUNTED] /api/v1/reference');
+}
+
+if (organizationRoutes) {
+  app.use('/api/v1/organizations', organizationRoutes);
+  console.log('[ROUTE MOUNTED] /api/v1/organizations');
+}
+
+if (projectViewRoutes) {
+  app.use('/api/v1/project-views', projectViewRoutes);
+  console.log('[ROUTE MOUNTED] /api/v1/project-views');
+}
+
+if (dashboardRoutes) {
+  app.use('/api/v1/dashboard', dashboardRoutes);
+  console.log('[ROUTE MOUNTED] /api/v1/dashboard');
+}
 
 /**
- * Optional generic API route aggregator.
- * Registered after specific routes to avoid overriding them.
+ * Generic route aggregator must be after specific routes.
  */
 if (apiRoutes) {
   app.use('/api/v1', apiRoutes);
-}
-if (residentRoutes) {
-  app.use('/api/v1', residentRoutes);
+  console.log('[ROUTE MOUNTED] /api/v1 generic routes');
 }
 
-
-residentRoutes
-if (routes) {
-  app.use('/api/v1', routes);
-}
 /**
  * Root endpoint.
  */
@@ -423,6 +455,14 @@ app.get('/', (req, res) => {
       version: SERVICE_VERSION,
       environment: NODE_ENV,
       health: '/api/v1/health',
+
+      governmentAuth: '/api/v1/government-blockchain/auth',
+      governmentServices: '/api/v1/government-blockchain/services',
+      governmentTransactions: '/api/v1/government-blockchain/transactions',
+      governmentTransactionServices: '/api/v1/government-blockchain/transactions/services',
+      governmentTransactionResidentSearch:
+        '/api/v1/government-blockchain/transactions/residents/search',
+
       wallets: '/api/v1/wallets',
       dataGenerator: '/api/v1/data-generator/run',
       transactions: '/api/v1/transactions',
@@ -519,7 +559,9 @@ const server = app.listen(PORT, HOST, () => {
   console.log(`Environment: ${NODE_ENV}`);
   console.log(`Listening: http://${HOST}:${PORT}`);
   console.log(`Health: http://${HOST}:${PORT}/api/v1/health`);
-  console.log(`Data Generator: http://${HOST}:${PORT}/api/v1/data-generator/run`);
+  console.log(`Government Transactions: http://${HOST}:${PORT}/api/v1/government-blockchain/transactions`);
+  console.log(`Government Transaction Services: http://${HOST}:${PORT}/api/v1/government-blockchain/transactions/services`);
+  console.log(`Resident Search: http://${HOST}:${PORT}/api/v1/government-blockchain/transactions/residents/search`);
   console.log(`Allowed CORS Origins: ${allowedOrigins.join(', ')}`);
   console.log('======================================================');
 });
