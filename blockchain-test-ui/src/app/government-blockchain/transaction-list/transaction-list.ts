@@ -100,7 +100,9 @@ export class TransactionList implements OnInit {
       value === 'PENDING' ||
       value === 'WAITING_APPROVAL' ||
       value === 'WAITING' ||
-      value === 'DRAFT'
+      value === 'DRAFT' ||
+      value === 'SUBMITTED' ||
+      value === 'PROCESSING'
     ) {
       return 'status-pending';
     }
