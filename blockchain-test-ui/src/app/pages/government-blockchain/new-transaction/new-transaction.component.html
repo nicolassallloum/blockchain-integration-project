@@ -33,7 +33,7 @@
       <span>Transaction Status</span>
       <strong>
         <span class="status-pill" [ngClass]="getStatusClass(transactionForm.get('transactionStatus')?.value)">
-          {{ transactionForm.get('transactionStatus')?.value }}
+          {{ getStatusLabel(transactionForm.get('transactionStatus')?.value) }}
         </span>
       </strong>
     </div>
@@ -154,8 +154,9 @@
         <div class="form-group">
           <label>Transaction Status</label>
           <select formControlName="transactionStatus">
-            <option *ngFor="let status of transactionStatuses" [value]="status">
-              {{ status }}
+            <option value="">Select Transaction Status</option>
+            <option *ngFor="let status of transactionStatuses" [value]="status.value">
+              {{ status.label }}
             </option>
           </select>
           <small *ngIf="isInvalid('transactionStatus')">Transaction status is required.</small>
@@ -201,8 +202,8 @@
           <label>Payment Method</label>
           <select formControlName="paymentMethod">
             <option value="">Select Payment Method</option>
-            <option *ngFor="let method of paymentMethods" [value]="method">
-              {{ method }}
+            <option *ngFor="let method of paymentMethods" [value]="method.value">
+              {{ method.label }}
             </option>
           </select>
           <small *ngIf="isInvalid('paymentMethod')">Payment method is required.</small>

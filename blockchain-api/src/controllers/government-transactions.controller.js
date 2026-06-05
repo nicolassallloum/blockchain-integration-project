@@ -47,6 +47,7 @@ async function getResidentsForDropdown(req, res) {
           wallet_currency,
           wallet_status
       FROM blockchain.residents
+      WHERE LOGIN_USERNAME IS NOT NULL
       ORDER BY id
     `);
 
@@ -103,7 +104,8 @@ async function createGovernmentTransaction(req, res) {
           wallet_currency,
           wallet_status
       FROM blockchain.residents
-      WHERE id = $1
+      WHERE LOGIN_USERNAME IS NOT NULL
+      AND id = $1
       `,
       [payload.residentId]
     );

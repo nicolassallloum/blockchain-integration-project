@@ -40,7 +40,12 @@ interface ServiceOption {
   digitalStampRequired: boolean;
   processingTime: string;
 }
-
+interface LookupOption {
+  value: string;
+  label: string;
+  description?: string;
+  display_order?: number;
+}
 interface UploadedDocument {
   id: string;
   fileName: string;
@@ -84,22 +89,8 @@ export class NewTransactionComponent implements OnInit {
     }
   ];
 
-  paymentMethods: string[] = [
-    'Resident Wallet',
-    'Digital Stamp Wallet',
-    'Bank Card',
-    'Cash Office Payment',
-    'Government Payment Gateway'
-  ];
-
-  transactionStatuses: string[] = [
-    'Draft',
-    'Submitted',
-    'Pending Payment',
-    'Pending Approval',
-    'Approved',
-    'Rejected'
-  ];
+  paymentMethods: LookupOption[] = [];
+  transactionStatuses: LookupOption[] = [];
 
   uploadedDocuments = signal<UploadedDocument[]>([
     {
@@ -171,7 +162,7 @@ export class NewTransactionComponent implements OnInit {
         [Validators.required]
       ],
       transactionStatus: [
-        'Draft',
+        'DRAFT',
         [Validators.required]
       ],
       paymentMethod: [
@@ -190,6 +181,8 @@ export class NewTransactionComponent implements OnInit {
   ngOnInit(): void {
     this.loadResidents();
     this.loadServices();
+    this.loadTransactionStatuses();
+    this.loadPaymentMethods();
   }
 
   loadResidents(): void {
@@ -257,7 +250,38 @@ export class NewTransactionComponent implements OnInit {
       }
     });
   }
+  loadTransactionStatuses(): void {
+    this.governmentTransactionApi.getTransactionStatuses().subscribe({
+      next: (response) => {
+        this.transactionStatuses = response?.data || [];
 
+        if (
+          this.transactionStatuses.length > 0 &&
+          !this.transactionForm.get('transactionStatus')?.value
+        ) {
+          this.transactionForm.patchValue({
+            transactionStatus: this.transactionStatuses[0].value
+          });
+        }
+      },
+      error: (error) => {
+        console.error('Failed to load transaction statuses', error);
+        this.transactionStatuses = [];
+      }
+    });
+  }
+
+  loadPaymentMethods(): void {
+    this.governmentTransactionApi.getPaymentMethods().subscribe({
+      next: (response) => {
+        this.paymentMethods = response?.data || [];
+      },
+      error: (error) => {
+        console.error('Failed to load payment methods', error);
+        this.paymentMethods = [];
+      }
+    });
+  }
   buildMinistriesFromServices(services: ServiceOption[]): MinistryOption[] {
     const map = new Map<string, MinistryOption>();
 
@@ -331,7 +355,7 @@ export class NewTransactionComponent implements OnInit {
 
   saveDraft(): void {
     this.transactionForm.patchValue({
-      transactionStatus: 'Draft'
+      transactionStatus: 'DFAFT'
     });
 
     if (this.transactionForm.invalid) {
@@ -339,12 +363,12 @@ export class NewTransactionComponent implements OnInit {
       return;
     }
 
-    this.submitToApi('Draft');
+    this.submitToApi('DRAFT');
   }
 
   submitTransaction(): void {
     this.transactionForm.patchValue({
-      transactionStatus: 'Submitted'
+      transactionStatus: 'SUBMITTED'
     });
 
     if (this.transactionForm.invalid) {
@@ -352,7 +376,7 @@ export class NewTransactionComponent implements OnInit {
       return;
     }
 
-    this.submitToApi('Submitted');
+    this.submitToApi('SUBMITTED');
   }
 
   submitToApi(status: string): void {
@@ -418,7 +442,7 @@ export class NewTransactionComponent implements OnInit {
           this.transactionForm.patchValue({
             transactionId: response.transactionReference,
             transactionStatus: response.blockchainStatus === 'SYNCED'
-              ? 'Submitted'
+              ? 'SUBMITTED'
               : status
           });
         }
@@ -472,23 +496,29 @@ export class NewTransactionComponent implements OnInit {
   }
 
   getStatusClass(status: string): string {
-    switch (status) {
-      case 'Draft':
+    switch (String(status || '').toUpperCase()) {
+      case 'DRAFT':
         return 'status-draft';
-      case 'Submitted':
+      case 'SUBMITTED':
         return 'status-submitted';
-      case 'Pending Payment':
-      case 'Pending Approval':
+      case 'PENDING_PAYMENT':
+      case 'PENDING_APPROVAL':
         return 'status-pending';
-      case 'Approved':
+      case 'APPROVED':
         return 'status-approved';
-      case 'Rejected':
+      case 'REJECTED':
         return 'status-rejected';
       default:
         return 'status-default';
     }
   }
+  getStatusLabel(statusValue: string): string {
+    const status = this.transactionStatuses.find(
+      item => item.value === statusValue
+    );
 
+    return status?.label || statusValue;
+  }
   getDocumentStatusClass(status: string): string {
     switch (status) {
       case 'Verified':

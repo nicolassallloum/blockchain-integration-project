@@ -18,6 +18,14 @@ export class GovernmentTransactionApiService {
     return this.http.get<any>(`${this.baseUrl}/services`);
   }
 
+  getTransactionStatuses() {
+    return this.http.get<any>(`${this.baseUrl}/reference/transaction-status`);
+  }
+
+  getPaymentMethods() {
+    return this.http.get<any>(`${this.baseUrl}/reference/payment-methods`);
+  }
+
   createTransaction(payload: any) {
     return this.http.post<any>(this.baseUrl, payload);
   }
