@@ -70,24 +70,7 @@ export class NewTransactionComponent implements OnInit {
   residents: ResidentOption[] = [];
   services: ServiceOption[] = [];
 
-  ministries: MinistryOption[] = [
-    {
-      ministryCode: 'MOF',
-      ministryName: 'Ministry of Finance'
-    },
-    {
-      ministryCode: 'MOIM',
-      ministryName: 'Ministry of Interior and Municipalities'
-    },
-    {
-      ministryCode: 'MOJ',
-      ministryName: 'Ministry of Justice'
-    },
-    {
-      ministryCode: 'MOPH',
-      ministryName: 'Ministry of Public Health'
-    }
-  ];
+  ministries: MinistryOption[] = [];
 
   paymentMethods: LookupOption[] = [];
   transactionStatuses: LookupOption[] = [];
@@ -180,6 +163,7 @@ export class NewTransactionComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadResidents();
+    this.loadMinistries();
     this.loadServices();
     this.loadTransactionStatuses();
     this.loadPaymentMethods();
@@ -205,6 +189,23 @@ export class NewTransactionComponent implements OnInit {
       error: (error) => {
         console.error('Failed to load residents dropdown', error);
         this.residents = [];
+      }
+    });
+  }
+
+  loadMinistries(): void {
+    this.governmentTransactionApi.getMinistriesDropdown().subscribe({
+      next: (response) => {
+        const rows = response?.data || [];
+
+        this.ministries = rows.map((row: any) => ({
+          ministryCode: row.value || row.ministry_id,
+          ministryName: row.label || row.ministry_name || row.ministry_code || row.value
+        }));
+      },
+      error: (error) => {
+        console.error('Failed to load ministries dropdown', error);
+        this.ministries = [];
       }
     });
   }
@@ -240,9 +241,8 @@ export class NewTransactionComponent implements OnInit {
           };
         });
 
-        if (this.services.length > 0) {
-          this.ministries = this.buildMinistriesFromServices(this.services);
-        }
+        // Ministries are loaded from blockchain.government_ministries.
+        // Do not overwrite them from services.
       },
       error: (error) => {
         console.error('Failed to load services', error);
@@ -355,7 +355,7 @@ export class NewTransactionComponent implements OnInit {
 
   saveDraft(): void {
     this.transactionForm.patchValue({
-      transactionStatus: 'DFAFT'
+      transactionStatus: 'DRAFT'
     });
 
     if (this.transactionForm.invalid) {

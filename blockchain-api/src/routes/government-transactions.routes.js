@@ -609,4 +609,52 @@ router.post('/', async (req, res) => {
   }
 });
 
+
+/**
+ * GET /api/v1/government-blockchain/transactions/ministries-dropdown
+ *
+ * Load ministries from blockchain.government_ministries.
+ */
+router.get('/ministries-dropdown', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT
+        gm.ministry_id::text AS value,
+        gm.ministry_id::text AS ministry_id,
+        gm.ministry_reference_id,
+        gm.ministry_code,
+        gm.ministry_name AS label,
+        gm.ministry_name,
+        gm.arabic_name,
+        gm.ministry_type,
+        gm.parent_ministry
+      FROM blockchain.government_ministries gm
+      ORDER BY gm.ministry_name ASC
+    `);
+
+    return res.json({
+      success: true,
+      message: 'Ministries dropdown loaded successfully from PostgreSQL',
+      data: result.rows
+    });
+  } catch (error) {
+    console.error('[MINISTRIES DROPDOWN ERROR]', {
+      message: error.message,
+      code: error.code,
+      detail: error.detail,
+      hint: error.hint,
+      column: error.column
+    });
+
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to load ministries dropdown',
+      error: error.message,
+      code: error.code || null,
+      detail: error.detail || null,
+      hint: error.hint || null
+    });
+  }
+});
+
 module.exports = router;

@@ -18,6 +18,10 @@ export class GovernmentTransactionApiService {
     return this.http.get<any>(`${this.baseUrl}/services`);
   }
 
+  getMinistriesDropdown() {
+    return this.http.get<any>(`${this.baseUrl}/ministries-dropdown`);
+  }
+
   getTransactionStatuses() {
     return this.http.get<any>(`${this.baseUrl}/reference/transaction-status`);
   }

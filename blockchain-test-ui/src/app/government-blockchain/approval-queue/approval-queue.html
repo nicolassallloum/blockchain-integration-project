@@ -1,95 +1,239 @@
 <div class="page-container">
+
   <div class="page-header">
     <div>
-      <h1>Approval Queue</h1>
-      <p>Review and approve pending government service transactions before blockchain submission.</p>
+      <h1>Transaction Approval Queue</h1>
+      <p>Review all government transactions and apply approval rules before blockchain submission.</p>
     </div>
 
-    <button class="primary-btn">Approve Selected</button>
+    <button
+      class="primary-btn"
+      [disabled]="!hasSelectedPending()"
+      (click)="approveSelected()"
+    >
+      Approve Selected
+    </button>
+  </div>
+
+  <div *ngIf="errorMessage()" class="alert error-alert">
+    {{ errorMessage() }}
   </div>
 
   <div class="cards-grid">
     <div class="summary-card">
-      <h3>Pending Approvals</h3>
-      <strong>184</strong>
-      <span>Waiting officer action</span>
+      <div class="card-icon blue-icon">▤</div>
+      <div>
+        <h3>Total Transactions</h3>
+        <strong>{{ totalTransactions() }}</strong>
+        <span>All time transactions</span>
+      </div>
     </div>
 
     <div class="summary-card">
-      <h3>High Priority</h3>
-      <strong>36</strong>
-      <span>Urgent service requests</span>
+      <div class="card-icon yellow-icon">◷</div>
+      <div>
+        <h3>Requires Approval</h3>
+        <strong>{{ requiresApproval() }}</strong>
+        <span>Pending manual review</span>
+      </div>
     </div>
 
     <div class="summary-card">
-      <h3>Approved Today</h3>
-      <strong>92</strong>
-      <span>Processed requests</span>
+      <div class="card-icon green-icon">✓</div>
+      <div>
+        <h3>Auto Approved</h3>
+        <strong>{{ autoApproved() }}</strong>
+        <span>Automatically approved</span>
+      </div>
     </div>
 
     <div class="summary-card">
-      <h3>Rejected Today</h3>
-      <strong>11</strong>
-      <span>Invalid requests</span>
+      <div class="card-icon red-icon">✕</div>
+      <div>
+        <h3>Rejected Today</h3>
+        <strong>{{ rejectedToday() }}</strong>
+        <span>Manually rejected</span>
+      </div>
     </div>
+  </div>
+
+  <div class="filters-card">
+    <div class="filter-control search-control">
+      <label>Search Transactions</label>
+      <input
+        type="text"
+        placeholder="Search by ID, resident, or service..."
+        [ngModel]="searchText()"
+        (ngModelChange)="searchText.set($event)"
+      />
+    </div>
+
+    <div class="filter-control">
+      <label>Ministry</label>
+      <select
+        [ngModel]="ministryFilter()"
+        (ngModelChange)="ministryFilter.set($event)"
+      >
+        <option value="ALL">All Ministries</option>
+        <option *ngFor="let ministry of ministries()" [value]="ministry">
+          {{ ministry }}
+        </option>
+      </select>
+    </div>
+
+    <div class="filter-control">
+      <label>Status</label>
+      <select
+        [ngModel]="statusFilter()"
+        (ngModelChange)="statusFilter.set($event)"
+      >
+        <option value="ALL">All Statuses</option>
+        <option value="AUTO_APPROVED">Auto Approved</option>
+        <option value="APPROVED">Approved</option>
+        <option value="PENDING_REVIEW">Pending Review</option>
+        <option value="REJECTED">Rejected</option>
+      </select>
+    </div>
+
+    <div class="filter-control">
+      <label>Approval Type</label>
+      <select
+        [ngModel]="approvalTypeFilter()"
+        (ngModelChange)="approvalTypeFilter.set($event)"
+      >
+        <option value="ALL">All Approval Types</option>
+        <option value="AUTO_APPROVE">Auto Approve</option>
+        <option value="MANUAL_REVIEW">Manual Review</option>
+      </select>
+    </div>
+
+    <div class="filter-control amount-control">
+      <label>Amount Range (GOV)</label>
+      <div class="amount-inputs">
+        <input
+          type="number"
+          placeholder="Min amount"
+          [ngModel]="minAmount()"
+          (ngModelChange)="minAmount.set($event === '' ? null : +$event)"
+        />
+        <span>-</span>
+        <input
+          type="number"
+          placeholder="Max amount"
+          [ngModel]="maxAmount()"
+          (ngModelChange)="maxAmount.set($event === '' ? null : +$event)"
+        />
+      </div>
+    </div>
+
+    <button class="clear-btn" (click)="clearFilters()">
+      Clear Filters
+    </button>
   </div>
 
   <div class="table-card">
-    <h2>Pending Requests</h2>
+    <div class="table-header">
+      <h2>All Transactions</h2>
 
-    <table>
-      <thead>
-        <tr>
-          <th>Request ID</th>
-          <th>Resident</th>
-          <th>Service</th>
-          <th>Ministry</th>
-          <th>Priority</th>
-          <th>Status</th>
-          <th>Action</th>
-        </tr>
-      </thead>
+      <button class="secondary-btn" (click)="loadTransactions()" [disabled]="loading()">
+        {{ loading() ? 'Loading...' : 'Refresh' }}
+      </button>
+    </div>
 
-      <tbody>
-        <tr>
-          <td>REQ-000145</td>
-          <td>Rami Haddad</td>
-          <td>Driving License Renewal</td>
-          <td>Ministry of Interior</td>
-          <td><span class="badge danger">High</span></td>
-          <td><span class="badge warning">Pending</span></td>
-          <td>
-            <button class="small-btn success-btn">Approve</button>
-            <button class="small-btn danger-btn">Reject</button>
-          </td>
-        </tr>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th class="checkbox-col">
+              <input type="checkbox" (change)="toggleAll($event)" />
+            </th>
+            <th>Transaction ID</th>
+            <th>Resident</th>
+            <th>Service</th>
+            <th>Ministry</th>
+            <th>Amount (GOV)</th>
+            <th>Approval Rule</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
 
-        <tr>
-          <td>REQ-000146</td>
-          <td>Nour Salem</td>
-          <td>Passport Renewal</td>
-          <td>General Security</td>
-          <td><span class="badge info">Normal</span></td>
-          <td><span class="badge warning">Pending</span></td>
-          <td>
-            <button class="small-btn success-btn">Approve</button>
-            <button class="small-btn danger-btn">Reject</button>
-          </td>
-        </tr>
+        <tbody>
+          <tr *ngIf="loading()">
+            <td colspan="9" class="empty-row">Loading transactions...</td>
+          </tr>
 
-        <tr>
-          <td>REQ-000147</td>
-          <td>Karim Mansour</td>
-          <td>Birth Certificate</td>
-          <td>Ministry of Interior</td>
-          <td><span class="badge info">Normal</span></td>
-          <td><span class="badge warning">Pending</span></td>
-          <td>
-            <button class="small-btn success-btn">Approve</button>
-            <button class="small-btn danger-btn">Reject</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+          <tr *ngIf="!loading() && filteredTransactions().length === 0">
+            <td colspan="9" class="empty-row">No transactions found.</td>
+          </tr>
+
+          <tr *ngFor="let tx of filteredTransactions()">
+            <td class="checkbox-col">
+              <input
+                type="checkbox"
+                [(ngModel)]="tx.selected"
+                [disabled]="tx.status !== 'PENDING_REVIEW'"
+              />
+            </td>
+
+            <td class="strong-text">{{ tx.transactionId }}</td>
+            <td>{{ tx.residentName }}</td>
+            <td>{{ tx.serviceName }}</td>
+            <td>{{ tx.ministryName }}</td>
+            <td class="amount-text">{{ formatAmount(tx.amountGov) }}</td>
+
+            <td>
+              <span
+                class="badge"
+                [ngClass]="{
+                  'info': tx.approvalRule === 'AUTO_APPROVE',
+                  'manual': tx.approvalRule === 'MANUAL_REVIEW'
+                }"
+              >
+                {{ approvalRuleLabel(tx.approvalRule) }}
+              </span>
+            </td>
+
+            <td>
+              <span
+                class="badge"
+                [ngClass]="{
+                  'success': tx.status === 'AUTO_APPROVED' || tx.status === 'APPROVED',
+                  'warning': tx.status === 'PENDING_REVIEW',
+                  'danger': tx.status === 'REJECTED'
+                }"
+              >
+                {{ statusLabel(tx.status) }}
+              </span>
+            </td>
+
+            <td>
+              <div class="action-buttons" *ngIf="tx.status === 'PENDING_REVIEW'; else noAction">
+                <button class="small-btn success-btn" (click)="approve(tx)">
+                  Approve
+                </button>
+
+                <button class="small-btn danger-btn" (click)="reject(tx)">
+                  Reject
+                </button>
+              </div>
+
+              <ng-template #noAction>
+                <span class="no-action">—</span>
+              </ng-template>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
+
+  <div class="rule-card">
+    <strong>Approval Rules:</strong>
+    Transactions below <strong>10,000,000 GOV</strong> are automatically approved.
+    Transactions above <strong>10,000,000 GOV</strong>, or any transaction from
+    <strong>Ministry of Interior</strong> or <strong>Ministry of Defence</strong>,
+    require manual approval or rejection.
+  </div>
+
 </div>
