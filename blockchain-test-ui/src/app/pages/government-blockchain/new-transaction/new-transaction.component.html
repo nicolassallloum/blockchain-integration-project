@@ -4,50 +4,59 @@
       <p class="eyebrow">Government Blockchain Services Platform</p>
       <h1>New Government Transaction</h1>
       <p class="subtitle">
-        Create and submit resident service transactions with wallet payment, digital stamp validation,
-        document upload, and blockchain hash preparation.
+        Create resident service transactions using GOV currency, validated payment logic,
+        KYC document upload, and Pending Review workflow.
       </p>
     </div>
 
     <div class="header-actions">
-      <button type="button" class="btn secondary" (click)="saveDraft()">
-        Save Draft
-      </button>
-
-      <button type="button" class="btn primary" (click)="submitTransaction()">
-        Submit Transaction
+      <button
+        type="button"
+        class="btn primary"
+        (click)="submitTransaction()"
+        [disabled]="isSubmitting">
+        {{ isSubmitting ? 'Submitting...' : 'Submit Transaction' }}
       </button>
     </div>
   </div>
 
+  <div *ngIf="successMessage" class="alert success">
+    {{ successMessage }}
+  </div>
+
+  <div *ngIf="errorMessage" class="alert error">
+    {{ errorMessage }}
+  </div>
+
   <div class="kpi-grid">
     <div class="kpi-card">
-      <span>Total Fee</span>
-      <strong>
-        {{ transactionForm.get('feeAmount')?.value || 0 | number }}
-        {{ transactionForm.get('currency')?.value || 'LBP' }}
-      </strong>
+      <span>Total Fees</span>
+      <strong>{{ getFeeBreakdown().totalFee | number:'1.2-2' }} GOV</strong>
+      <small *ngIf="getFeeBreakdown().feePercentage > 0">
+        Base {{ getFeeBreakdown().baseFee | number:'1.2-2' }} GOV +
+        {{ getFeeBreakdown().feePercentage }}%
+      </small>
+    </div>
+
+    <div class="kpi-card">
+      <span>Currency</span>
+      <strong>GOV</strong>
+      <small>Locked currency</small>
     </div>
 
     <div class="kpi-card">
       <span>Transaction Status</span>
       <strong>
-        <span class="status-pill" [ngClass]="getStatusClass(transactionForm.get('transactionStatus')?.value)">
-          {{ getStatusLabel(transactionForm.get('transactionStatus')?.value) }}
+        <span class="status-pill" [ngClass]="getStatusClass(getCalculatedTransactionStatus())">
+          {{ getCalculatedTransactionStatusLabel() }}
         </span>
-      </strong>
-    </div>
-
-    <div class="kpi-card">
-      <span>Digital Stamp</span>
-      <strong>
-        {{ transactionForm.get('digitalStampRequired')?.value ? 'Required' : 'Not Required' }}
       </strong>
     </div>
 
     <div class="kpi-card">
       <span>Uploaded Documents</span>
       <strong>{{ uploadedDocuments().length }}</strong>
+      <small>KYC documents</small>
     </div>
   </div>
 
@@ -56,32 +65,45 @@
       <div class="section-header">
         <div>
           <h2>1. Resident Information</h2>
-          <p>Select the resident account and verify wallet information.</p>
+          <p>Select the resident and verify GOV wallet information.</p>
         </div>
       </div>
 
       <div class="form-grid">
         <div class="form-group">
-          <label>Resident ID</label>
+          <label>Resident</label>
           <select formControlName="residentId" (change)="onResidentChange()">
             <option value="">Select Resident</option>
             <option *ngFor="let resident of residents" [value]="resident.residentId">
-              {{ resident.residentId }} — {{ resident.residentName }}
+              {{ resident.residentName }} — {{ resident.residentId }}
             </option>
           </select>
-          <small *ngIf="isInvalid('residentId')">Resident ID is required.</small>
+          <small *ngIf="isInvalid('residentId')">Resident is required.</small>
         </div>
 
         <div class="form-group">
           <label>Resident Name</label>
-          <input type="text" formControlName="residentName" placeholder="Resident Name" readonly />
+          <input type="text" formControlName="residentName" readonly />
           <small *ngIf="isInvalid('residentName')">Resident name is required.</small>
         </div>
 
         <div class="form-group full">
           <label>Wallet Address</label>
-          <input type="text" formControlName="walletAddress" placeholder="Wallet Address" readonly />
+          <input type="text" formControlName="walletAddress" readonly />
           <small *ngIf="isInvalid('walletAddress')">Wallet address is required.</small>
+        </div>
+
+        <div class="form-group">
+          <label>Resident Wallet Balance</label>
+          <input
+            type="text"
+            [value]="(transactionForm.get('walletBalance')?.value || 0 | number:'1.2-2') + ' GOV'"
+            readonly />
+        </div>
+
+        <div class="form-group">
+          <label>Wallet Status</label>
+          <input type="text" formControlName="walletStatus" readonly />
         </div>
       </div>
     </section>
@@ -90,43 +112,42 @@
       <div class="section-header">
         <div>
           <h2>2. Service Information</h2>
-          <p>Select the ministry and government service requested by the resident.</p>
+          <p>Select the government service. Fees are always calculated in GOV.</p>
         </div>
       </div>
 
       <div class="form-grid">
-        <div class="form-group">
-          <label>Ministry</label>
-          <select formControlName="ministry" (change)="onMinistryChange()">
-            <option value="">Select Ministry</option>
-            <option *ngFor="let ministry of ministries" [value]="ministry.ministryCode">
-              {{ ministry.ministryName }}
+        <div class="form-group full">
+          <label>Service</label>
+          <select formControlName="serviceId" (change)="onServiceChange()">
+            <option value="">Select Service</option>
+            <option *ngFor="let service of services" [value]="service.serviceId">
+              {{ service.serviceName }} — {{ service.feeAmount | number:'1.2-2' }} GOV
             </option>
           </select>
-          <small *ngIf="isInvalid('ministry')">Ministry is required.</small>
+          <small *ngIf="isInvalid('serviceId')">Service is required.</small>
         </div>
 
         <div class="form-group">
-          <label>Service</label>
-          <select formControlName="service" (change)="onServiceChange()">
-            <option value="">Select Service</option>
-            <option *ngFor="let service of getFilteredServices()" [value]="service.serviceCode">
-              {{ service.serviceName }} — {{ service.feeAmount | number }} {{ service.currency }}
-            </option>
-          </select>
-          <small *ngIf="isInvalid('service')">Service is required.</small>
+          <label>Service Name</label>
+          <input type="text" formControlName="serviceName" readonly />
+        </div>
+
+        <div class="form-group">
+          <label>Service Fee</label>
+          <input type="text" [value]="(transactionForm.get('feeAmount')?.value || 0 | number:'1.2-2') + ' GOV'" readonly />
         </div>
       </div>
 
       <div class="service-summary" *ngIf="selectedServiceDetails() as service">
         <div>
           <span>Service Code</span>
-          <strong>{{ service.serviceCode }}</strong>
+          <strong>{{ service.serviceCode || 'N/A' }}</strong>
         </div>
 
         <div>
           <span>Processing Time</span>
-          <strong>{{ service.processingTime }}</strong>
+          <strong>{{ service.processingTime || 'N/A' }}</strong>
         </div>
 
         <div>
@@ -140,7 +161,7 @@
       <div class="section-header">
         <div>
           <h2>3. Transaction Information</h2>
-          <p>Define the transaction reference, status, and operational notes.</p>
+          <p>Transaction is saved as Pending Review.</p>
         </div>
       </div>
 
@@ -153,13 +174,7 @@
 
         <div class="form-group">
           <label>Transaction Status</label>
-          <select formControlName="transactionStatus">
-            <option value="">Select Transaction Status</option>
-            <option *ngFor="let status of transactionStatuses" [value]="status.value">
-              {{ status.label }}
-            </option>
-          </select>
-          <small *ngIf="isInvalid('transactionStatus')">Transaction status is required.</small>
+          <input type="text" [value]="getCalculatedTransactionStatusLabel()" readonly />
         </div>
 
         <div class="form-group full">
@@ -177,25 +192,15 @@
       <div class="section-header">
         <div>
           <h2>4. Payment Information</h2>
-          <p>Review service fees and select the transaction payment method.</p>
+          <p>Currency is locked to GOV. Extra fees apply based on payment method.</p>
         </div>
       </div>
 
       <div class="form-grid">
         <div class="form-group">
-          <label>Fee Amount</label>
-          <input type="number" formControlName="feeAmount" placeholder="Fee Amount" />
-          <small *ngIf="isInvalid('feeAmount')">Valid fee amount is required.</small>
-        </div>
-
-        <div class="form-group">
           <label>Currency</label>
-          <select formControlName="currency">
-            <option value="LBP">LBP</option>
-            <option value="USD">USD</option>
-            <option value="EUR">EUR</option>
-          </select>
-          <small *ngIf="isInvalid('currency')">Currency is required.</small>
+          <input type="text" formControlName="currency" readonly />
+          <small>Currency cannot be changed.</small>
         </div>
 
         <div class="form-group">
@@ -208,25 +213,111 @@
           </select>
           <small *ngIf="isInvalid('paymentMethod')">Payment method is required.</small>
         </div>
+      </div>
 
-        <div class="form-group checkbox-group">
-          <label class="checkbox-label">
-            <input type="checkbox" formControlName="digitalStampRequired" />
-            <span>Digital Stamp Required</span>
-          </label>
+      <div class="fee-breakdown">
+        <div>
+          <span>Base Fee</span>
+          <strong>{{ getFeeBreakdown().baseFee | number:'1.2-2' }} GOV</strong>
         </div>
+
+        <div>
+          <span>Extra Fee</span>
+          <strong>{{ getFeeBreakdown().feeExtraAmount | number:'1.2-2' }} GOV</strong>
+          <small>{{ getFeeBreakdown().feePercentage }}%</small>
+        </div>
+
+        <div>
+          <span>Total Fees</span>
+          <strong>{{ getFeeBreakdown().totalFee | number:'1.2-2' }} GOV</strong>
+        </div>
+      </div>
+
+      <div class="conditional-panel" *ngIf="getPaymentMethod() === 'RESIDENT_WALLET'">
+        <h3>Resident Wallet Payment</h3>
+        <p>
+          Current Balance:
+          <strong>{{ transactionForm.get('walletBalance')?.value || 0 | number:'1.2-2' }} GOV</strong>
+        </p>
+        <p>
+          Required Amount:
+          <strong>{{ getFeeBreakdown().totalFee | number:'1.2-2' }} GOV</strong>
+        </p>
+      </div>
+
+      <div class="conditional-panel" *ngIf="getPaymentMethod() === 'DIGITAL_STAMP_WALLET'">
+        <h3>Digital Stamp Wallet</h3>
+        <p>Enter an existing issued/active payment reference or stamp ID.</p>
+
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>Payment Code</label>
+            <input
+              type="text"
+              formControlName="paymentCode"
+              placeholder="Example: PAY-123456 or DST-123456" />
+            <small *ngIf="isInvalid('paymentCode')">Payment Code is required.</small>
+          </div>
+        </div>
+      </div>
+
+      <div class="conditional-panel" *ngIf="getPaymentMethod() === 'BANK_CARD'">
+        <h3>Bank Card Payment</h3>
+        <p>Card number and CVV are validated but not stored by backend.</p>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Cardholder Name</label>
+            <input type="text" formControlName="cardholderName" />
+            <small *ngIf="isInvalid('cardholderName')">Cardholder name is required.</small>
+          </div>
+
+          <div class="form-group">
+            <label>Card Number</label>
+            <input type="text" formControlName="cardNumber" maxlength="19" />
+            <small *ngIf="isInvalid('cardNumber')">Valid card number is required.</small>
+          </div>
+
+          <div class="form-group">
+            <label>Expiry Date</label>
+            <input type="text" formControlName="expiryDate" placeholder="MM/YY" />
+            <small *ngIf="isInvalid('expiryDate')">Expiry date is required.</small>
+          </div>
+
+          <div class="form-group">
+            <label>CVV</label>
+            <input type="password" formControlName="cvv" maxlength="4" />
+            <small *ngIf="isInvalid('cvv')">CVV is required.</small>
+          </div>
+
+          <div class="form-group full">
+            <label>Billing Reference</label>
+            <input type="text" formControlName="billingReference" />
+            <small *ngIf="isInvalid('billingReference')">Billing reference is required.</small>
+          </div>
+        </div>
+      </div>
+
+      <div class="conditional-panel" *ngIf="getPaymentMethod() === 'CASH_OFFICE_PAYMENT'">
+        <h3>Cash Office Payment</h3>
+        <p>A 5% office processing fee is added automatically.</p>
+      </div>
+
+      <div class="conditional-panel" *ngIf="getPaymentMethod() === 'GOVERNMENT_PAYMENT_GATEWAY'">
+        <h3>Government Payment Gateway</h3>
+        <p>A 10% gateway processing fee is added automatically.</p>
       </div>
     </section>
 
     <section class="form-card">
       <div class="section-header">
         <div>
-          <h2>5. Document Upload</h2>
-          <p>Upload transaction documents and generate blockchain-ready document hashes.</p>
+          <h2>5. Upload Documents</h2>
+          <p>Open the Upload KYC Document modal and attach documents for this transaction.</p>
         </div>
 
         <div class="section-actions">
-          <button type="button" class="btn secondary" (click)="uploadDocuments()">
+          <button type="button" class="btn secondary" (click)="openUploadDocuments()">
             Upload Documents
           </button>
 
@@ -236,7 +327,11 @@
         </div>
       </div>
 
-      <div class="documents-table-wrapper">
+      <div *ngIf="uploadedDocuments().length === 0" class="empty-documents">
+        No documents uploaded yet.
+      </div>
+
+      <div class="documents-table-wrapper" *ngIf="uploadedDocuments().length > 0">
         <table>
           <thead>
             <tr>
@@ -268,11 +363,7 @@
     </section>
 
     <div class="bottom-actions">
-      <button type="button" class="btn secondary" (click)="saveDraft()">
-        Save Draft
-      </button>
-
-      <button type="button" class="btn dark" (click)="uploadDocuments()">
+      <button type="button" class="btn dark" (click)="openUploadDocuments()">
         Upload Documents
       </button>
 
@@ -280,9 +371,202 @@
         Generate Hash
       </button>
 
-      <button type="button" class="btn primary" (click)="submitTransaction()">
-        Submit Transaction
+      <button
+        type="button"
+        class="btn primary"
+        (click)="submitTransaction()"
+        [disabled]="isSubmitting">
+        {{ isSubmitting ? 'Submitting...' : 'Submit Transaction' }}
       </button>
     </div>
   </form>
+
+  <div class="modal-backdrop" *ngIf="showUploadModal">
+    <div class="upload-modal">
+      <div class="modal-header">
+        <div>
+          <h2>Upload KYC Document</h2>
+          <p>Resident, fees, and GOV currency are passed from the transaction screen.</p>
+        </div>
+
+        <button type="button" class="close-btn" (click)="closeUploadModal()">×</button>
+      </div>
+
+      <div *ngIf="uploadMessage" class="alert info">
+        {{ uploadMessage }}
+      </div>
+
+      <form [formGroup]="uploadForm" class="modal-form">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Resident ID</label>
+            <input type="text" formControlName="residentId" readonly />
+          </div>
+
+          <div class="form-group">
+            <label>Resident Name</label>
+            <input type="text" formControlName="residentName" readonly />
+          </div>
+
+          <div class="form-group">
+            <label>Total Fees</label>
+            <input type="text" [value]="(uploadForm.get('totalFees')?.value || 0 | number:'1.2-2') + ' GOV'" readonly />
+          </div>
+
+          <div class="form-group">
+            <label>Currency</label>
+            <input type="text" formControlName="currency" readonly />
+          </div>
+
+          <div class="form-group">
+            <label>Document Type</label>
+            <select formControlName="documentType">
+              <option value="">Select Document Type</option>
+              <option value="National ID">National ID</option>
+              <option value="Passport">Passport</option>
+              <option value="Residence Permit">Residence Permit</option>
+              <option value="Application Form">Application Form</option>
+              <option value="Payment Receipt">Payment Receipt</option>
+              <option value="Supporting Document">Supporting Document</option>
+            </select>
+            <small *ngIf="isInvalid('documentType')">Document type is required.</small>
+          </div>
+
+          <div class="form-group">
+            <label>Document Number</label>
+            <input type="text" formControlName="documentNumber" />
+          </div>
+
+          <div class="form-group">
+            <label>Expiry Date</label>
+            <input type="date" formControlName="expiryDate" />
+          </div>
+
+          <div class="form-group">
+            <label>Uploaded By</label>
+            <input type="text" formControlName="uploadedBy" />
+          </div>
+
+          <div class="form-group full">
+            <label>Document File</label>
+            <input #documentFileInput type="file" (change)="onFileSelected($event)" />
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn secondary" (click)="closeUploadModal()">
+            Cancel
+          </button>
+
+          <button
+            type="button"
+            class="btn primary"
+            (click)="submitKycDocument()"
+            [disabled]="isUploadingDocument">
+            {{ isUploadingDocument ? 'Uploading...' : 'Upload KYC Document' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <div class="modal-backdrop receipt-print-area" *ngIf="showReceiptPopup && receiptData">
+    <div class="receipt-modal">
+      <div class="receipt-header">
+        <div>
+          <p class="eyebrow">Government Blockchain Services Platform</p>
+          <h2>Transaction Receipt</h2>
+          <p>Official GOV payment transaction receipt</p>
+        </div>
+
+        <button type="button" class="close-btn no-print" (click)="closeReceiptPopup()">×</button>
+      </div>
+
+      <div class="receipt-status">
+        <span
+          class="status-pill"
+          [ngClass]="getStatusClass(receiptData.transactionStatus)">
+          {{ getStatusLabel(receiptData.transactionStatus) }}
+        </span>
+
+        <strong>{{ receiptData.transactionReference }}</strong>
+      </div>
+
+      <div class="receipt-grid">
+        <div>
+          <span>Resident Name</span>
+          <strong>{{ receiptData.residentName }}</strong>
+        </div>
+
+        <div>
+          <span>Resident ID</span>
+          <strong>{{ receiptData.residentId }}</strong>
+        </div>
+
+        <div class="full">
+          <span>Wallet Address</span>
+          <strong>{{ receiptData.walletAddress }}</strong>
+        </div>
+
+        <div>
+          <span>Service</span>
+          <strong>{{ receiptData.serviceName }}</strong>
+        </div>
+
+        <div>
+          <span>Service Code</span>
+          <strong>{{ receiptData.serviceCode }}</strong>
+        </div>
+
+        <div>
+          <span>Payment Method</span>
+          <strong>{{ receiptData.paymentMethod }}</strong>
+        </div>
+
+        <div>
+          <span>Base Fee</span>
+          <strong>{{ receiptData.baseFee | number:'1.2-2' }} GOV</strong>
+        </div>
+
+        <div>
+          <span>Extra Fee</span>
+          <strong>{{ receiptData.extraFee | number:'1.2-2' }} GOV</strong>
+        </div>
+
+        <div>
+          <span>Total Fees</span>
+          <strong>{{ receiptData.totalFee | number:'1.2-2' }} GOV</strong>
+        </div>
+
+        <div>
+          <span>Auto Approved</span>
+          <strong>{{ receiptData.autoApproved ? 'Yes' : 'No' }}</strong>
+        </div>
+
+        <div>
+          <span>Documents</span>
+          <strong>{{ receiptData.uploadedDocumentsCount }}</strong>
+        </div>
+
+        <div>
+          <span>Created At</span>
+          <strong>{{ receiptData.createdAt | date:'medium' }}</strong>
+        </div>
+      </div>
+
+      <div class="receipt-note">
+        <strong>Currency:</strong> GOV only. This receipt was generated from the Government Blockchain Services Platform.
+      </div>
+
+      <div class="modal-actions no-print">
+        <button type="button" class="btn secondary" (click)="closeReceiptPopup()">
+          Close
+        </button>
+
+        <button type="button" class="btn primary" (click)="printReceipt()">
+          Print Receipt
+        </button>
+      </div>
+    </div>
+  </div>
+
 </div>

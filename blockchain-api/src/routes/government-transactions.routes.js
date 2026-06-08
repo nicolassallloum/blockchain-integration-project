@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+
 let pool;
 
 try {
@@ -12,6 +13,78 @@ try {
     throw error2;
   }
 }
+
+const PAYMENT_METHODS = {
+  RESIDENT_WALLET: 'RESIDENT_WALLET',
+  DIGITAL_STAMP_WALLET: 'DIGITAL_STAMP_WALLET',
+  BANK_CARD: 'BANK_CARD',
+  CASH_OFFICE_PAYMENT: 'CASH_OFFICE_PAYMENT',
+  GOVERNMENT_PAYMENT_GATEWAY: 'GOVERNMENT_PAYMENT_GATEWAY'
+};
+
+function cleanText(value) {
+  return String(value || '').trim();
+}
+
+function toNumber(value, fallback = 0) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function roundMoney(value) {
+  return Math.round(toNumber(value) * 100) / 100;
+}
+
+function calculateFees(baseFee, paymentMethod) {
+  const cleanBaseFee = roundMoney(baseFee);
+
+  let feePercentage = 0;
+
+  if (paymentMethod === PAYMENT_METHODS.CASH_OFFICE_PAYMENT) {
+    feePercentage = 5;
+  }
+
+  if (paymentMethod === PAYMENT_METHODS.GOVERNMENT_PAYMENT_GATEWAY) {
+    feePercentage = 10;
+  }
+
+  const feeExtraAmount = roundMoney(cleanBaseFee * feePercentage / 100);
+  const totalFee = roundMoney(cleanBaseFee + feeExtraAmount);
+
+  return {
+    baseFee: cleanBaseFee,
+    feePercentage,
+    feeExtraAmount,
+    totalFee,
+    currency: 'GOV'
+  };
+}
+
+function sanitizeBankCardDetails(details = {}) {
+  const cardNumber = cleanText(details.cardNumber || details.card_number);
+  const last4 = cardNumber ? cardNumber.replace(/\D/g, '').slice(-4) : null;
+
+  return {
+    cardholderName: cleanText(details.cardholderName || details.cardholder_name),
+    cardLast4: last4,
+    expiryDate: cleanText(details.expiryDate || details.expiry_date),
+    billingReference: cleanText(details.billingReference || details.billing_reference),
+    cardNumberStored: false,
+    cvvStored: false
+  };
+}
+
+function getClientDetails(req) {
+  return {
+    ip: req.ip || req.headers['x-forwarded-for'] || null,
+    userAgent: req.headers['user-agent'] || null,
+    requestId: req.headers['x-request-id'] || null
+  };
+}
+
+/**
+ * GET /api/v1/government-blockchain/transactions
+ */
 router.get('/', async (req, res) => {
   try {
     const {
@@ -84,10 +157,16 @@ router.get('/', async (req, res) => {
         gt.ministry_name,
         gt.administration_id,
         gt.amount,
+        gt.base_fee,
+        gt.fee_extra_amount,
+        gt.fee_percentage,
         gt.total_fee,
-        COALESCE(gt.currency_code, gt.currency, 'LBP') AS currency_code,
-        gt.currency,
+        COALESCE(gt.currency_code, gt.currency, 'GOV') AS currency_code,
+        'GOV' AS currency,
         gt.payment_method,
+        gt.payment_details,
+        gt.digital_stamp_payment_ref,
+        gt.digital_stamp_id,
         gt.transaction_type,
         gt.transaction_status,
         gt.notes,
@@ -121,17 +200,14 @@ router.get('/', async (req, res) => {
     const statsQuery = `
       SELECT
         COUNT(*) AS total_transactions,
-
         COUNT(*) FILTER (
           WHERE UPPER(COALESCE(transaction_status::text, '')) IN
           ('APPROVED', 'COMPLETED', 'SUCCESS', 'PAID')
         ) AS approved_transactions,
-
         COUNT(*) FILTER (
           WHERE UPPER(COALESCE(transaction_status::text, '')) IN
-          ('PENDING', 'WAITING_APPROVAL', 'WAITING', 'DRAFT', 'SUBMITTED', 'PROCESSING')
+          ('PENDING', 'WAITING_APPROVAL', 'WAITING', 'DRAFT', 'SUBMITTED', 'PROCESSING', 'PENDING_REVIEW', 'PENDING_APPROVAL')
         ) AS pending_transactions,
-
         COUNT(*) FILTER (
           WHERE UPPER(COALESCE(transaction_status::text, '')) IN
           ('FAILED', 'REJECTED', 'CANCELLED')
@@ -160,7 +236,6 @@ router.get('/', async (req, res) => {
         failed: Number(statsResult.rows[0].failed_transactions || 0)
       }
     });
-
   } catch (error) {
     console.error('[GOVERNMENT TRANSACTIONS LIST ERROR]', {
       message: error.message,
@@ -204,6 +279,7 @@ router.get('/reference/transaction-status', async (req, res) => {
     });
   } catch (error) {
     console.error('[TRANSACTION STATUS LOOKUP ERROR]', error);
+
     return res.status(500).json({
       success: false,
       message: 'Failed to load transaction statuses',
@@ -234,6 +310,7 @@ router.get('/reference/payment-methods', async (req, res) => {
     });
   } catch (error) {
     console.error('[PAYMENT METHOD LOOKUP ERROR]', error);
+
     return res.status(500).json({
       success: false,
       message: 'Failed to load payment methods',
@@ -244,80 +321,28 @@ router.get('/reference/payment-methods', async (req, res) => {
 
 /**
  * GET /api/v1/government-blockchain/transactions/residents-dropdown
- *
- * Load residents from PostgreSQL for New Transaction dropdown.
- * Uses to_jsonb() to avoid errors when some optional columns do not exist.
  */
 router.get('/residents-dropdown', async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT
-        COALESCE(
-          to_jsonb(r)->>'id',
-          to_jsonb(r)->>'resident_db_id',
-          to_jsonb(r)->>'resident_id'
-        ) AS id,
-
-        COALESCE(
-          to_jsonb(r)->>'id',
-          to_jsonb(r)->>'resident_db_id',
-          to_jsonb(r)->>'resident_id'
-        ) AS value,
-
-        to_jsonb(r)->>'resident_id' AS resident_id,
-
-        COALESCE(
-          NULLIF(TRIM(CONCAT_WS(
-            ' ',
-            NULLIF(to_jsonb(r)->>'first_name', ''),
-            NULLIF(to_jsonb(r)->>'father_name', ''),
-            NULLIF(to_jsonb(r)->>'last_name', '')
-          )), ''),
-          to_jsonb(r)->>'full_name',
-          to_jsonb(r)->>'resident_name',
-          to_jsonb(r)->>'name',
-          to_jsonb(r)->>'resident_id'
-        ) AS full_name,
-
-        COALESCE(
-          to_jsonb(r)->>'wallet_address',
-          to_jsonb(r)->>'walletAddress'
-        ) AS wallet_address,
-
-        COALESCE(
-          to_jsonb(r)->>'national_id',
-          to_jsonb(r)->>'national_id_number',
-          to_jsonb(r)->>'national_number',
-          to_jsonb(r)->>'identity_number',
-          to_jsonb(r)->>'id_number',
-          to_jsonb(r)->>'nationality'
-        ) AS national_id_number,
-
-        COALESCE(
-          to_jsonb(r)->>'mobile',
-          to_jsonb(r)->>'mobile_number',
-          to_jsonb(r)->>'phone',
-          to_jsonb(r)->>'phone_number'
-        ) AS mobile_number,
-
-        COALESCE(
-          to_jsonb(r)->>'email',
-          ''
-        ) AS email,
-
-        COALESCE(
-          to_jsonb(r)->>'wallet_currency',
-          'LBP'
-        ) AS wallet_currency,
-
-        COALESCE(
-          to_jsonb(r)->>'wallet_status',
-          'ACTIVE'
-        ) AS wallet_status
-
+        r.id AS id,
+        r.id AS value,
+        r.resident_id,
+        r.full_name,
+        r.wallet_address,
+        r.national_id_number,
+        r.mobile_number,
+        r.email,
+        'GOV' AS wallet_currency,
+        COALESCE(rw.wallet_status, r.wallet_status, 'ACTIVE') AS wallet_status,
+        COALESCE(rw.wallet_balance, 0)::NUMERIC AS wallet_balance
       FROM blockchain.residents r
-      WHERE to_jsonb(r)->>'resident_id' IS NOT NULL
-      ORDER BY COALESCE(to_jsonb(r)->>'created_at', '') DESC
+      LEFT JOIN blockchain.resident_wallets rw
+        ON rw.resident_id = r.resident_id
+        OR UPPER(rw.wallet_address) = UPPER(r.wallet_address)
+      WHERE r.resident_id IS NOT NULL
+      ORDER BY r.full_name ASC
       LIMIT 500
     `);
 
@@ -348,87 +373,27 @@ router.get('/residents-dropdown', async (req, res) => {
 
 /**
  * GET /api/v1/government-blockchain/transactions/services
- *
- * Load government services from PostgreSQL for New Transaction dropdown.
- * Uses to_jsonb() to avoid errors when optional columns do not exist.
  */
 router.get('/services', async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT
-        CASE
-          WHEN COALESCE(to_jsonb(gs)->>'service_id', '') ~ '^[0-9]+$'
-          THEN (to_jsonb(gs)->>'service_id')::BIGINT
-          ELSE NULL
-        END AS service_id,
-
-        COALESCE(
-          to_jsonb(gs)->>'service_public_id',
-          to_jsonb(gs)->>'public_id',
-          to_jsonb(gs)->>'service_code'
-        ) AS service_public_id,
-
-        COALESCE(
-          to_jsonb(gs)->>'service_code',
-          to_jsonb(gs)->>'code'
-        ) AS service_code,
-
-        COALESCE(
-          to_jsonb(gs)->>'service_name',
-          to_jsonb(gs)->>'name'
-        ) AS service_name,
-
-        COALESCE(
-          to_jsonb(gs)->>'arabic_name',
-          to_jsonb(gs)->>'service_arabic_name',
-          ''
-        ) AS arabic_name,
-
-        COALESCE(
-          to_jsonb(gs)->>'ministry_id',
-          to_jsonb(gs)->>'ministry_code',
-          to_jsonb(gs)->>'ministry_name'
-        ) AS ministry_id,
-
-        COALESCE(
-          to_jsonb(gs)->>'administration_id',
-          ''
-        ) AS administration_id,
-
-        COALESCE(
-          to_jsonb(gs)->>'category_id',
-          ''
-        ) AS category_id,
-
-        CASE
-          WHEN COALESCE(to_jsonb(gs)->>'fee_amount', to_jsonb(gs)->>'service_fee', '0') ~ '^[0-9]+(\.[0-9]+)?$'
-          THEN COALESCE(to_jsonb(gs)->>'fee_amount', to_jsonb(gs)->>'service_fee', '0')::NUMERIC
-          ELSE 0
-        END AS fee_amount,
-
-        COALESCE(
-          to_jsonb(gs)->>'currency_code',
-          to_jsonb(gs)->>'currency',
-          'LBP'
-        ) AS currency_code,
-
-        CASE
-          WHEN LOWER(COALESCE(to_jsonb(gs)->>'digital_stamp_required', 'false')) IN ('true', '1', 'yes')
-          THEN TRUE
-          ELSE FALSE
-        END AS digital_stamp_required,
-
-        COALESCE(
-          to_jsonb(gs)->>'processing_time',
-          ''
-        ) AS processing_time
-
+        gs.service_id AS service_id,
+        gs.service_public_id,
+        gs.service_code,
+        gs.service_name,
+        COALESCE(gs.arabic_name, '') AS arabic_name,
+        gs.ministry_id::TEXT AS ministry_id,
+        COALESCE(gs.administration_id::TEXT, '') AS administration_id,
+        COALESCE(gs.category_id::TEXT, '') AS category_id,
+        COALESCE(gs.fee_amount, 0)::NUMERIC AS fee_amount,
+        'GOV' AS currency_code,
+        COALESCE(gs.digital_stamp_required, FALSE) AS digital_stamp_required,
+        COALESCE(gs.processing_time, '') AS processing_time
       FROM blockchain.government_services gs
-      WHERE COALESCE(
-        NULLIF(LOWER(to_jsonb(gs)->>'is_active'), ''),
-        'true'
-      ) NOT IN ('false', '0', 'no', 'inactive')
-      ORDER BY COALESCE(to_jsonb(gs)->>'service_name', to_jsonb(gs)->>'name', '') ASC
+      WHERE UPPER(COALESCE(gs.service_status, 'ACTIVE')) IN ('ACTIVE', 'APPROVED', 'PUBLISHED')
+      AND COALESCE(gs.fee_amount, 0) > 0
+      ORDER BY gs.service_name ASC
     `);
 
     return res.json({
@@ -456,15 +421,51 @@ router.get('/services', async (req, res) => {
   }
 });
 
+/**
+ * POST /api/v1/government-blockchain/transactions/fee-preview
+ */
+router.post('/fee-preview', async (req, res) => {
+  try {
+    const paymentMethod = cleanText(req.body?.paymentMethod).toUpperCase();
+    const baseFee = toNumber(req.body?.baseFee || req.body?.feeAmount, 0);
 
+    if (!Object.values(PAYMENT_METHODS).includes(paymentMethod)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid payment method.'
+      });
+    }
+
+    return res.json({
+      success: true,
+      data: calculateFees(baseFee, paymentMethod)
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to calculate fee preview',
+      error: error.message
+    });
+  }
+});
 
 /**
  * POST /api/v1/government-blockchain/transactions
- *
- * Create a government transaction in PostgreSQL.
  */
 router.post('/', async (req, res) => {
+  let client = null;
+  let useTransaction = false;
+
   try {
+    if (typeof pool.connect === 'function') {
+      client = await pool.connect();
+      useTransaction = true;
+    } else {
+      client = {
+        query: (...args) => pool.query(...args),
+        release: () => {}
+      };
+    }
     const {
       resident = {},
       service = {},
@@ -472,6 +473,250 @@ router.post('/', async (req, res) => {
       documents = [],
       createdBy = {}
     } = req.body || {};
+
+    const residentId = cleanText(resident.residentId);
+    const serviceId = toNumber(service.serviceId, 0);
+    const paymentMethod = cleanText(transaction.paymentMethod).toUpperCase();
+
+    if (!residentId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Resident ID is required.'
+      });
+    }
+
+    if (!serviceId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Service ID is required.'
+      });
+    }
+
+    if (!Object.values(PAYMENT_METHODS).includes(paymentMethod)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid payment method.',
+        allowedPaymentMethods: Object.values(PAYMENT_METHODS)
+      });
+    }
+
+    if (useTransaction) {
+      await client.query('BEGIN');
+    }
+
+    const residentResult = await client.query(
+      `
+      SELECT
+        r.id,
+        r.resident_id,
+        r.full_name,
+        r.wallet_address,
+        r.national_id_number,
+        r.mobile_number,
+        r.email,
+        COALESCE(rw.wallet_balance, 0)::NUMERIC AS wallet_balance,
+        COALESCE(rw.wallet_status, r.wallet_status, 'ACTIVE') AS wallet_status
+      FROM blockchain.residents r
+      LEFT JOIN blockchain.resident_wallets rw
+        ON rw.resident_id = r.resident_id
+        OR UPPER(rw.wallet_address) = UPPER(r.wallet_address)
+      WHERE r.resident_id = $1
+      LIMIT 1
+      `,
+      [residentId]
+    );
+
+    if (residentResult.rowCount === 0) {
+      if (useTransaction) {
+        await client.query('ROLLBACK');
+      }
+
+      return res.status(404).json({
+        success: false,
+        message: 'Resident not found.'
+      });
+    }
+
+    const dbResident = residentResult.rows[0];
+
+    const serviceResult = await client.query(
+      `
+      SELECT
+        gs.service_id,
+        gs.service_public_id,
+        gs.service_code,
+        gs.service_name,
+        gs.arabic_name,
+        gs.ministry_id::TEXT AS ministry_id,
+        COALESCE(gs.administration_id::TEXT, '') AS administration_id,
+        COALESCE(gs.category_id::TEXT, '') AS category_id,
+        COALESCE(gs.fee_amount, 0)::NUMERIC AS fee_amount,
+        COALESCE(gs.digital_stamp_required, FALSE) AS digital_stamp_required
+      FROM blockchain.government_services gs
+      WHERE gs.service_id = $1
+      LIMIT 1
+      `,
+      [serviceId]
+    );
+
+    if (serviceResult.rowCount === 0) {
+      if (useTransaction) {
+        await client.query('ROLLBACK');
+      }
+
+      return res.status(404).json({
+        success: false,
+        message: 'Government service not found.'
+      });
+    }
+
+    const dbService = serviceResult.rows[0];
+    const feeBreakdown = calculateFees(dbService.fee_amount, paymentMethod);
+
+    let paymentDetails = {
+      method: paymentMethod,
+      currency: 'GOV',
+      feeBreakdown,
+      client: getClientDetails(req)
+    };
+
+    let digitalStampRecord = null;
+
+    if (paymentMethod === PAYMENT_METHODS.RESIDENT_WALLET) {
+      const walletBalance = toNumber(dbResident.wallet_balance, 0);
+
+      if (walletBalance < feeBreakdown.totalFee) {
+        if (useTransaction) {
+        await client.query('ROLLBACK');
+      }
+
+        return res.status(400).json({
+          success: false,
+          message: 'Resident wallet balance is not enough for this transaction.',
+          data: {
+            walletBalance,
+            requiredAmount: feeBreakdown.totalFee,
+            currency: 'GOV'
+          }
+        });
+      }
+
+      paymentDetails.wallet = {
+        walletAddress: dbResident.wallet_address,
+        walletBalanceBefore: walletBalance,
+        requiredAmount: feeBreakdown.totalFee,
+        balanceValidated: true
+      };
+    }
+
+    if (paymentMethod === PAYMENT_METHODS.DIGITAL_STAMP_WALLET) {
+      const paymentCode = cleanText(
+        transaction.paymentCode ||
+        transaction.payment_code ||
+        transaction.digitalStampPaymentCode
+      );
+
+      if (!paymentCode) {
+        if (useTransaction) {
+        await client.query('ROLLBACK');
+      }
+
+        return res.status(400).json({
+          success: false,
+          message: 'Payment Code is required for Digital Stamp Wallet.'
+        });
+      }
+
+      const stampResult = await client.query(
+        `
+        SELECT *
+        FROM blockchain.digital_stamp_payments
+        WHERE (
+          UPPER(payment_ref) = UPPER($1)
+          OR UPPER(stamp_id) = UPPER($1)
+        )
+        AND UPPER(payment_status) IN ('PAID', 'SUCCESS', 'COMPLETED')
+        AND UPPER(stamp_status) IN ('ISSUED', 'ACTIVE')
+        ORDER BY created_at DESC
+        LIMIT 1
+        FOR UPDATE
+        `,
+        [paymentCode]
+      );
+
+      if (stampResult.rowCount === 0) {
+        if (useTransaction) {
+        await client.query('ROLLBACK');
+      }
+
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid payment code. No issued/active digital stamp was found.'
+        });
+      }
+
+      digitalStampRecord = stampResult.rows[0];
+
+      await client.query(
+        `
+        UPDATE blockchain.digital_stamp_payments
+        SET
+          stamp_status = 'Redeemed',
+          updated_at = NOW()
+        WHERE id = $1
+        `,
+        [digitalStampRecord.id]
+      );
+
+      paymentDetails.digitalStamp = {
+        paymentCode,
+        paymentRef: digitalStampRecord.payment_ref,
+        stampId: digitalStampRecord.stamp_id,
+        stampStatusBefore: digitalStampRecord.stamp_status,
+        stampStatusAfter: 'Redeemed'
+      };
+    }
+
+    if (paymentMethod === PAYMENT_METHODS.BANK_CARD) {
+      const bankCardDetails = sanitizeBankCardDetails(transaction.bankCard || transaction.bank_card || {});
+
+      if (
+        !bankCardDetails.cardholderName ||
+        !bankCardDetails.cardLast4 ||
+        !bankCardDetails.expiryDate ||
+        !bankCardDetails.billingReference
+      ) {
+        if (useTransaction) {
+        await client.query('ROLLBACK');
+      }
+
+        return res.status(400).json({
+          success: false,
+          message: 'Cardholder Name, Card Number, Expiry Date, and Billing Reference are required for Bank Card payment.'
+        });
+      }
+
+      paymentDetails.bankCard = bankCardDetails;
+    }
+
+    if (paymentMethod === PAYMENT_METHODS.CASH_OFFICE_PAYMENT) {
+      paymentDetails.cashOfficePayment = {
+        surchargeApplied: true,
+        surchargePercentage: 5
+      };
+    }
+
+    if (paymentMethod === PAYMENT_METHODS.GOVERNMENT_PAYMENT_GATEWAY) {
+      paymentDetails.governmentPaymentGateway = {
+        gatewayFeeApplied: true,
+        gatewayFeePercentage: 10
+      };
+    }
+
+    const calculatedTransactionStatus =
+      feeBreakdown.totalFee < 10000000
+        ? 'APPROVED'
+        : 'PENDING_REVIEW';
 
     const transactionReference =
       transaction.clientTransactionId && String(transaction.clientTransactionId).startsWith('GOV-TXN-')
@@ -485,14 +730,16 @@ router.post('/', async (req, res) => {
 
     const uploadedDocumentsCount = Array.isArray(documents) ? documents.length : 0;
 
-    const insertResult = await pool.query(
+    const insertResult = await client.query(
       `
       INSERT INTO blockchain.government_transactions (
         transaction_reference,
 
         resident_id,
+        resident_db_id,
         resident_wallet_address,
         resident_full_name,
+        resident_name,
         resident_national_id,
         resident_mobile,
         resident_email,
@@ -507,8 +754,16 @@ router.post('/', async (req, res) => {
         category_id,
 
         amount,
+        base_fee,
+        fee_extra_amount,
+        fee_percentage,
+        total_fee,
+        currency,
         currency_code,
         payment_method,
+        payment_details,
+        digital_stamp_payment_ref,
+        digital_stamp_id,
         transaction_type,
         transaction_status,
 
@@ -529,49 +784,59 @@ router.post('/', async (req, res) => {
       VALUES (
         $1,
 
-        $2, $3, $4, $5, $6, $7,
+        $2, $3, $4, $5, $6, $7, $8, $9,
 
-        $8, $9, $10, $11, $12, $13, $14, $15,
+        $10, $11, $12, $13, $14, $15, $16, $17,
 
-        $16, $17, $18, $19, $20,
+        $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30,
 
-        $21, $22, $23, $24,
+        $31, $32, $33, $34,
 
-        $25, $26, $27,
+        $35, $36, $37,
 
-        $28, $29, NOW(), NOW()
+        $38, $39, NOW(), NOW()
       )
       RETURNING *
       `,
       [
         transactionReference,
 
-        resident.residentId || null,
-        resident.walletAddress || null,
-        resident.fullName || null,
-        resident.nationalId || null,
-        resident.mobile || null,
-        resident.email || null,
+        dbResident.resident_id,
+        dbResident.id,
+        dbResident.wallet_address,
+        dbResident.full_name,
+        dbResident.full_name,
+        dbResident.national_id_number,
+        dbResident.mobile_number,
+        dbResident.email,
 
-        service.serviceId || null,
-        service.servicePublicId || null,
-        service.serviceCode || null,
-        service.serviceName || null,
-        service.arabicName || null,
-        service.ministryId || null,
-        service.administrationId || null,
-        service.categoryId || null,
+        dbService.service_id,
+        dbService.service_public_id,
+        dbService.service_code,
+        dbService.service_name,
+        dbService.arabic_name,
+        dbService.ministry_id,
+        dbService.administration_id,
+        dbService.category_id,
 
-        transaction.amount || service.fee_amount || 0,
-        transaction.currencyCode || service.currency_code || 'LBP',
-        transaction.paymentMethod || null,
+        feeBreakdown.totalFee,
+        feeBreakdown.baseFee,
+        feeBreakdown.feeExtraAmount,
+        feeBreakdown.feePercentage,
+        feeBreakdown.totalFee,
+        'GOV',
+        'GOV',
+        paymentMethod,
+        JSON.stringify(paymentDetails),
+        digitalStampRecord?.payment_ref || null,
+        digitalStampRecord?.stamp_id || null,
         transaction.transactionType || 'GOVERNMENT_SERVICE',
-        transaction.transactionStatus || 'DRAFT',
+        calculatedTransactionStatus,
 
         transaction.notes || null,
         documentHash,
         uploadedDocumentsCount,
-        service.digitalStampRequired || false,
+        dbService.digital_stamp_required || false,
 
         createdBy.accountType || 'PUBLIC_ADMINISTRATION',
         createdBy.loginUsername || 'system',
@@ -582,21 +847,44 @@ router.post('/', async (req, res) => {
       ]
     );
 
+    if (useTransaction) {
+      await client.query('COMMIT');
+    }
+
     return res.status(201).json({
       success: true,
-      message: 'Government transaction saved successfully in PostgreSQL',
+      message:
+        calculatedTransactionStatus === 'APPROVED'
+          ? 'Government transaction created and auto approved successfully.'
+          : 'Government transaction saved successfully as Pending Review.',
       transactionReference: insertResult.rows[0].transaction_reference,
+      transactionStatus: insertResult.rows[0].transaction_status,
+      autoApprovalLimit: 10000000,
+      autoApproved: calculatedTransactionStatus === 'APPROVED',
       blockchainStatus: insertResult.rows[0].blockchain_status,
+      currency: 'GOV',
+      feeBreakdown,
+      paymentMethod,
       data: insertResult.rows[0]
     });
   } catch (error) {
+    try {
+      if (useTransaction) {
+        await client.query('ROLLBACK');
+      }
+    } catch (rollbackError) {
+      console.error('[CREATE GOVERNMENT TRANSACTION ROLLBACK ERROR]', rollbackError);
+    }
+
     console.error('[CREATE GOVERNMENT TRANSACTION ERROR]', {
       message: error.message,
       code: error.code,
       detail: error.detail,
       hint: error.hint,
-      column: error.column
-    });
+      table: error.table,
+      column: error.column,
+      constraint: error.constraint
+    })
 
     return res.status(500).json({
       success: false,
@@ -606,14 +894,15 @@ router.post('/', async (req, res) => {
       detail: error.detail || null,
       hint: error.hint || null
     });
+  } finally {
+    if (client && typeof client.release === 'function') {
+      client.release();
+    }
   }
 });
 
-
 /**
  * GET /api/v1/government-blockchain/transactions/ministries-dropdown
- *
- * Load ministries from blockchain.government_ministries.
  */
 router.get('/ministries-dropdown', async (req, res) => {
   try {

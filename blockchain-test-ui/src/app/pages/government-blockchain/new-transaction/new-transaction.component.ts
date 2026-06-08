@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild, signal } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
   ReactiveFormsModule,
   Validators
 } from '@angular/forms';
+
 import { GovernmentTransactionApiService } from '../../../services/government-transaction-api.service';
 
 interface ResidentOption {
@@ -18,11 +19,7 @@ interface ResidentOption {
   email: string;
   walletCurrency: string;
   walletStatus: string;
-}
-
-interface MinistryOption {
-  ministryCode: string;
-  ministryName: string;
+  walletBalance: number;
 }
 
 interface ServiceOption {
@@ -31,7 +28,6 @@ interface ServiceOption {
   serviceCode: string;
   serviceName: string;
   arabicName: string;
-  ministryCode: string;
   ministryId: string;
   administrationId: string;
   categoryId: string;
@@ -40,12 +36,14 @@ interface ServiceOption {
   digitalStampRequired: boolean;
   processingTime: string;
 }
+
 interface LookupOption {
   value: string;
   label: string;
   description?: string;
   display_order?: number;
 }
+
 interface UploadedDocument {
   id: string;
   fileName: string;
@@ -53,6 +51,14 @@ interface UploadedDocument {
   size: string;
   hash: string;
   status: 'Uploaded' | 'Pending Hash' | 'Verified';
+}
+
+interface FeeBreakdown {
+  baseFee: number;
+  feePercentage: number;
+  feeExtraAmount: number;
+  totalFee: number;
+  currency: 'GOV';
 }
 
 @Component({
@@ -63,110 +69,86 @@ interface UploadedDocument {
   styleUrl: './new-transaction.component.scss'
 })
 export class NewTransactionComponent implements OnInit {
-  transactionForm: FormGroup;
+  @ViewChild('documentFileInput') documentFileInput?: ElementRef<HTMLInputElement>;
 
-  readonly today = new Date();
+  transactionForm: FormGroup;
+  uploadForm: FormGroup;
 
   residents: ResidentOption[] = [];
   services: ServiceOption[] = [];
-
-  ministries: MinistryOption[] = [];
-
   paymentMethods: LookupOption[] = [];
   transactionStatuses: LookupOption[] = [];
 
-  uploadedDocuments = signal<UploadedDocument[]>([
-    {
-      id: 'DOC-001',
-      fileName: 'national-id-front.pdf',
-      documentType: 'National ID',
-      size: '420 KB',
-      hash: '0x8d7f9e3a1c22b7f9c6a1001b8f9d22e77456aa11',
-      status: 'Verified'
-    },
-    {
-      id: 'DOC-002',
-      fileName: 'application-form.pdf',
-      documentType: 'Application Form',
-      size: '810 KB',
-      hash: 'Pending generation',
-      status: 'Pending Hash'
-    }
-  ]);
-
-  getFilteredServices(): ServiceOption[] {
-    const ministryCode = this.transactionForm?.get('ministry')?.value;
-
-    if (!ministryCode) {
-      return this.services;
-    }
-
-    return this.services.filter(service =>
-      String(service.ministryCode || '') === String(ministryCode)
-    );
-  }
   selectedServiceDetails = signal<ServiceOption | null>(null);
+  uploadedDocuments = signal<UploadedDocument[]>([]);
+
+  isSubmitting = false;
+  isUploadingDocument = false;
+  showUploadModal = false;
+  showReceiptPopup = false;
+
+  receiptData: any = null;
+
+  successMessage = '';
+  errorMessage = '';
+  uploadMessage = '';
+
+  selectedUploadFile: File | null = null;
 
   constructor(
     private fb: FormBuilder,
     private governmentTransactionApi: GovernmentTransactionApiService
   ) {
     this.transactionForm = this.fb.group({
-      transactionId: [
-        this.generateTransactionId(),
-        [Validators.required]
-      ],
-      residentId: [
-        '',
-        [Validators.required]
-      ],
-      walletAddress: [
-        '',
-        [Validators.required]
-      ],
-      residentName: [
-        '',
-        [Validators.required]
-      ],
-      ministry: [
-        '',
-        [Validators.required]
-      ],
-      service: [
-        '',
-        [Validators.required]
-      ],
-      feeAmount: [
-        '',
-        [Validators.required, Validators.min(0)]
-      ],
-      currency: [
-        'LBP',
-        [Validators.required]
-      ],
-      transactionStatus: [
-        'DRAFT',
-        [Validators.required]
-      ],
-      paymentMethod: [
-        '',
-        [Validators.required]
-      ],
-      digitalStampRequired: [
-        false
-      ],
-      notes: [
-        ''
-      ]
+      transactionId: [this.generateTransactionId(), [Validators.required]],
+
+      residentId: ['', [Validators.required]],
+      residentName: ['', [Validators.required]],
+      walletAddress: ['', [Validators.required]],
+      walletBalance: [0],
+      walletStatus: [''],
+
+      serviceId: ['', [Validators.required]],
+      serviceName: ['', [Validators.required]],
+      feeAmount: [0, [Validators.required, Validators.min(0)]],
+      currency: ['GOV', [Validators.required]],
+
+      transactionStatus: ['PENDING_REVIEW', [Validators.required]],
+      paymentMethod: ['', [Validators.required]],
+
+      paymentCode: [''],
+
+      cardholderName: [''],
+      cardNumber: [''],
+      expiryDate: [''],
+      cvv: [''],
+      billingReference: [''],
+
+      digitalStampRequired: [false],
+      notes: ['']
+    });
+
+    this.uploadForm = this.fb.group({
+      residentId: ['', [Validators.required]],
+      residentName: ['', [Validators.required]],
+      totalFees: [0, [Validators.required]],
+      currency: ['GOV', [Validators.required]],
+      documentType: ['', [Validators.required]],
+      documentNumber: [''],
+      expiryDate: [''],
+      uploadedBy: ['Officer']
     });
   }
 
   ngOnInit(): void {
     this.loadResidents();
-    this.loadMinistries();
     this.loadServices();
     this.loadTransactionStatuses();
     this.loadPaymentMethods();
+
+    this.transactionForm.get('paymentMethod')?.valueChanges.subscribe(() => {
+      this.onPaymentMethodChange();
+    });
   }
 
   loadResidents(): void {
@@ -175,37 +157,21 @@ export class NewTransactionComponent implements OnInit {
         const rows = response?.data || [];
 
         this.residents = rows.map((row: any) => ({
-          dbId: Number(row.id || row.value),
-          residentId: row.resident_id,
-          residentName: row.full_name,
-          walletAddress: row.wallet_address,
-          nationalId: row.national_id_number,
-          mobile: row.mobile_number,
-          email: row.email,
-          walletCurrency: row.wallet_currency || 'LBP',
-          walletStatus: row.wallet_status
+          dbId: Number(row.id || row.value || 0),
+          residentId: row.resident_id || '',
+          residentName: row.full_name || row.name || '',
+          walletAddress: row.wallet_address || '',
+          nationalId: row.national_id_number || '',
+          mobile: row.mobile_number || '',
+          email: row.email || '',
+          walletCurrency: 'GOV',
+          walletStatus: row.wallet_status || 'ACTIVE',
+          walletBalance: Number(row.wallet_balance || 0)
         }));
       },
       error: (error) => {
-        console.error('Failed to load residents dropdown', error);
+        console.error('[RESIDENTS DROPDOWN ERROR]', error);
         this.residents = [];
-      }
-    });
-  }
-
-  loadMinistries(): void {
-    this.governmentTransactionApi.getMinistriesDropdown().subscribe({
-      next: (response) => {
-        const rows = response?.data || [];
-
-        this.ministries = rows.map((row: any) => ({
-          ministryCode: row.value || row.ministry_id,
-          ministryName: row.label || row.ministry_name || row.ministry_code || row.value
-        }));
-      },
-      error: (error) => {
-        console.error('Failed to load ministries dropdown', error);
-        this.ministries = [];
       }
     });
   }
@@ -215,57 +181,37 @@ export class NewTransactionComponent implements OnInit {
       next: (response) => {
         const rows = response?.data || [];
 
-        this.services = rows.map((row: any) => {
-          const ministryCode =
-            row.ministry_id ||
-            row.ministry_code ||
-            row.ministry_name ||
-            'UNKNOWN';
-
-          return {
-            serviceId: Number(row.service_id || 0),
-            servicePublicId: row.service_public_id,
-            serviceCode: row.service_code,
-            serviceName: row.service_name,
-            arabicName: row.arabic_name,
-            ministryCode,
-            ministryId: row.ministry_id,
-            administrationId: row.administration_id,
-            categoryId: row.category_id,
-            feeAmount: Number(row.fee_amount || row.service_fee || 0),
-            currency: row.currency_code || row.currency || 'LBP',
-            digitalStampRequired:
-              row.digital_stamp_required === true ||
-              row.digital_stamp_required === 'true',
-            processingTime: row.processing_time || ''
-          };
-        });
-
-        // Ministries are loaded from blockchain.government_ministries.
-        // Do not overwrite them from services.
+        this.services = rows.map((row: any) => ({
+          serviceId: Number(row.service_id || row.id || 0),
+          servicePublicId: row.service_public_id || '',
+          serviceCode: row.service_code || '',
+          serviceName: row.service_name || row.name || '',
+          arabicName: row.arabic_name || '',
+          ministryId: row.ministry_id || '',
+          administrationId: row.administration_id || '',
+          categoryId: row.category_id || '',
+          feeAmount: Number(row.fee_amount || row.fees || 0),
+          currency: 'GOV',
+          digitalStampRequired:
+            row.digital_stamp_required === true ||
+            row.digital_stamp_required === 'true',
+          processingTime: row.processing_time || ''
+        }));
       },
       error: (error) => {
-        console.error('Failed to load services', error);
+        console.error('[SERVICES DROPDOWN ERROR]', error);
         this.services = [];
       }
     });
   }
+
   loadTransactionStatuses(): void {
     this.governmentTransactionApi.getTransactionStatuses().subscribe({
       next: (response) => {
         this.transactionStatuses = response?.data || [];
-
-        if (
-          this.transactionStatuses.length > 0 &&
-          !this.transactionForm.get('transactionStatus')?.value
-        ) {
-          this.transactionForm.patchValue({
-            transactionStatus: this.transactionStatuses[0].value
-          });
-        }
       },
       error: (error) => {
-        console.error('Failed to load transaction statuses', error);
+        console.error('[TRANSACTION STATUS ERROR]', error);
         this.transactionStatuses = [];
       }
     });
@@ -277,38 +223,17 @@ export class NewTransactionComponent implements OnInit {
         this.paymentMethods = response?.data || [];
       },
       error: (error) => {
-        console.error('Failed to load payment methods', error);
+        console.error('[PAYMENT METHODS ERROR]', error);
         this.paymentMethods = [];
       }
     });
   }
-  buildMinistriesFromServices(services: ServiceOption[]): MinistryOption[] {
-    const map = new Map<string, MinistryOption>();
-
-    for (const service of services) {
-      const ministryCode =
-        service.ministryCode ||
-        service.ministryId ||
-        'UNKNOWN';
-
-      if (!map.has(ministryCode)) {
-        map.set(ministryCode, {
-          ministryCode,
-          ministryName:
-            ministryCode === 'UNKNOWN'
-              ? 'Unknown Ministry'
-              : `Ministry ${ministryCode}`
-        });
-      }
-    }
-
-    return Array.from(map.values());
-  }
 
   onResidentChange(): void {
     const residentId = this.transactionForm.get('residentId')?.value;
+
     const selectedResident = this.residents.find(
-      resident => resident.residentId === residentId
+      resident => String(resident.residentId) === String(residentId)
     );
 
     if (!selectedResident) {
@@ -318,82 +243,165 @@ export class NewTransactionComponent implements OnInit {
     this.transactionForm.patchValue({
       residentName: selectedResident.residentName,
       walletAddress: selectedResident.walletAddress,
-      currency: selectedResident.walletCurrency || 'LBP'
+      walletBalance: selectedResident.walletBalance,
+      walletStatus: selectedResident.walletStatus,
+      currency: 'GOV'
     });
-  }
-
-  onMinistryChange(): void {
-    this.transactionForm.patchValue({
-      service: '',
-      feeAmount: '',
-      currency: 'LBP',
-      digitalStampRequired: false
-    });
-
-    this.selectedServiceDetails.set(null);
   }
 
   onServiceChange(): void {
-    const serviceCode = this.transactionForm.get('service')?.value;
+    const serviceId = this.transactionForm.get('serviceId')?.value;
+
     const selectedService = this.services.find(
-      service => service.serviceCode === serviceCode
+      service => String(service.serviceId) === String(serviceId)
     );
 
     if (!selectedService) {
       this.selectedServiceDetails.set(null);
+      this.transactionForm.patchValue({
+        serviceName: '',
+        feeAmount: 0,
+        currency: 'GOV',
+        digitalStampRequired: false
+      });
       return;
     }
 
     this.selectedServiceDetails.set(selectedService);
 
     this.transactionForm.patchValue({
+      serviceName: selectedService.serviceName,
       feeAmount: selectedService.feeAmount,
-      currency: selectedService.currency,
+      currency: 'GOV',
       digitalStampRequired: selectedService.digitalStampRequired
     });
   }
 
-  saveDraft(): void {
-    this.transactionForm.patchValue({
-      transactionStatus: 'DRAFT'
-    });
+  onPaymentMethodChange(): void {
+    const paymentMethod = this.getPaymentMethod();
 
-    if (this.transactionForm.invalid) {
-      this.transactionForm.markAllAsTouched();
-      return;
+    const paymentCodeControl = this.transactionForm.get('paymentCode');
+
+    const cardholderControl = this.transactionForm.get('cardholderName');
+    const cardNumberControl = this.transactionForm.get('cardNumber');
+    const expiryControl = this.transactionForm.get('expiryDate');
+    const cvvControl = this.transactionForm.get('cvv');
+    const billingControl = this.transactionForm.get('billingReference');
+
+    paymentCodeControl?.clearValidators();
+
+    cardholderControl?.clearValidators();
+    cardNumberControl?.clearValidators();
+    expiryControl?.clearValidators();
+    cvvControl?.clearValidators();
+    billingControl?.clearValidators();
+
+    if (paymentMethod === 'DIGITAL_STAMP_WALLET') {
+      paymentCodeControl?.setValidators([Validators.required]);
     }
 
-    this.submitToApi('DRAFT');
+    if (paymentMethod === 'BANK_CARD') {
+      cardholderControl?.setValidators([Validators.required]);
+      cardNumberControl?.setValidators([
+        Validators.required,
+        Validators.minLength(12)
+      ]);
+      expiryControl?.setValidators([Validators.required]);
+      cvvControl?.setValidators([
+        Validators.required,
+        Validators.minLength(3),
+        Validators.maxLength(4)
+      ]);
+      billingControl?.setValidators([Validators.required]);
+    }
+
+    paymentCodeControl?.updateValueAndValidity();
+
+    cardholderControl?.updateValueAndValidity();
+    cardNumberControl?.updateValueAndValidity();
+    expiryControl?.updateValueAndValidity();
+    cvvControl?.updateValueAndValidity();
+    billingControl?.updateValueAndValidity();
+
+    this.transactionForm.patchValue({
+      currency: 'GOV'
+    });
+  }
+
+  getSelectedResident(): ResidentOption | null {
+    const residentId = this.transactionForm.get('residentId')?.value;
+
+    return this.residents.find(
+      resident => String(resident.residentId) === String(residentId)
+    ) || null;
+  }
+
+  getSelectedService(): ServiceOption | null {
+    const serviceId = this.transactionForm.get('serviceId')?.value;
+
+    return this.services.find(
+      service => String(service.serviceId) === String(serviceId)
+    ) || null;
+  }
+
+  getPaymentMethod(): string {
+    return String(this.transactionForm.get('paymentMethod')?.value || '').toUpperCase();
+  }
+
+  getFeeBreakdown(): FeeBreakdown {
+    const baseFee = Number(this.transactionForm.get('feeAmount')?.value || 0);
+    const paymentMethod = this.getPaymentMethod();
+
+    let feePercentage = 0;
+
+    if (paymentMethod === 'CASH_OFFICE_PAYMENT') {
+      feePercentage = 5;
+    }
+
+    if (paymentMethod === 'GOVERNMENT_PAYMENT_GATEWAY') {
+      feePercentage = 10;
+    }
+
+    const feeExtraAmount = Math.round((baseFee * feePercentage / 100) * 100) / 100;
+    const totalFee = Math.round((baseFee + feeExtraAmount) * 100) / 100;
+
+    return {
+      baseFee,
+      feePercentage,
+      feeExtraAmount,
+      totalFee,
+      currency: 'GOV'
+    };
   }
 
   submitTransaction(): void {
+    this.successMessage = '';
+    this.errorMessage = '';
+
+    const calculatedStatus = this.getCalculatedTransactionStatus();
+
     this.transactionForm.patchValue({
-      transactionStatus: 'SUBMITTED'
+      transactionStatus: calculatedStatus,
+      currency: 'GOV'
     });
 
     if (this.transactionForm.invalid) {
       this.transactionForm.markAllAsTouched();
+      this.errorMessage = 'Please fill all required fields before submitting.';
       return;
     }
 
-    this.submitToApi('SUBMITTED');
-  }
-
-  submitToApi(status: string): void {
-    const formValue = this.transactionForm.getRawValue();
-
-    const selectedResident = this.residents.find(
-      resident => resident.residentId === formValue.residentId
-    );
-
-    const selectedService = this.services.find(
-      service => service.serviceCode === formValue.service
-    );
+    const selectedResident = this.getSelectedResident();
+    const selectedService = this.getSelectedService();
 
     if (!selectedResident || !selectedService) {
-      console.error('Resident or service not selected');
+      this.errorMessage = 'Resident and service are required.';
       return;
     }
+
+    const feeBreakdown = this.getFeeBreakdown();
+    const formValue = this.transactionForm.getRawValue();
+    const paymentMethod = this.getPaymentMethod();
 
     const payload = {
       resident: {
@@ -414,17 +422,28 @@ export class NewTransactionComponent implements OnInit {
         administrationId: selectedService.administrationId,
         categoryId: selectedService.categoryId,
         fee_amount: selectedService.feeAmount,
-        currency_code: selectedService.currency
+        currency_code: 'GOV',
+        digitalStampRequired: selectedService.digitalStampRequired
       },
       transaction: {
         clientTransactionId: formValue.transactionId,
-        amount: formValue.feeAmount,
-        currencyCode: formValue.currency,
-        paymentMethod: formValue.paymentMethod,
+        amount: feeBreakdown.totalFee,
+        baseFee: feeBreakdown.baseFee,
+        feeExtraAmount: feeBreakdown.feeExtraAmount,
+        feePercentage: feeBreakdown.feePercentage,
+        currencyCode: 'GOV',
+        paymentMethod,
+        paymentCode: formValue.paymentCode,
+        bankCard: {
+          cardholderName: formValue.cardholderName,
+          cardNumber: formValue.cardNumber,
+          expiryDate: formValue.expiryDate,
+          cvv: formValue.cvv,
+          billingReference: formValue.billingReference
+        },
         transactionType: 'GOVERNMENT_SERVICE',
-        transactionStatus: status,
-        notes: formValue.notes,
-        documentHash: this.getFirstDocumentHash()
+        transactionStatus: calculatedStatus,
+        notes: formValue.notes
       },
       documents: this.uploadedDocuments(),
       createdBy: {
@@ -434,119 +453,323 @@ export class NewTransactionComponent implements OnInit {
       }
     };
 
+    this.isSubmitting = true;
+
     this.governmentTransactionApi.createTransaction(payload).subscribe({
       next: (response) => {
-        console.log('Government transaction saved:', response);
+        this.isSubmitting = false;
+
+        this.successMessage =
+          response?.message ||
+          `Transaction ${response?.transactionReference || ''} saved successfully.`;
+
+        this.errorMessage = '';
 
         if (response?.transactionReference) {
           this.transactionForm.patchValue({
             transactionId: response.transactionReference,
-            transactionStatus: response.blockchainStatus === 'SYNCED'
-              ? 'SUBMITTED'
-              : status
+            transactionStatus: response.transactionStatus || calculatedStatus
           });
         }
 
-        alert(
-          `Transaction saved successfully.\nReference: ${response?.transactionReference}\nBlockchain Status: ${response?.blockchainStatus}`
-        );
+        this.receiptData = this.buildReceiptData(response);
+        this.showReceiptPopup = true;
       },
       error: (error) => {
-        console.error('Failed to submit transaction', error);
-        alert(error?.error?.message || 'Failed to submit transaction.');
+        this.isSubmitting = false;
+        console.error('[CREATE TRANSACTION ERROR]', error);
+
+        this.errorMessage =
+          error?.error?.message ||
+          error?.message ||
+          'Failed to create government transaction.';
       }
     });
   }
 
-  uploadDocuments(): void {
-    const newDocument: UploadedDocument = {
-      id: `DOC-${String(this.uploadedDocuments().length + 1).padStart(3, '0')}`,
-      fileName: 'supporting-document.pdf',
-      documentType: 'Supporting Document',
-      size: '560 KB',
-      hash: 'Pending generation',
-      status: 'Pending Hash'
-    };
+  openUploadDocuments(): void {
+    this.successMessage = '';
+    this.errorMessage = '';
+    this.uploadMessage = '';
 
-    this.uploadedDocuments.update(documents => [
-      ...documents,
-      newDocument
-    ]);
+    const selectedResident = this.getSelectedResident();
+
+    if (!selectedResident) {
+      this.errorMessage = 'Please select a resident before uploading documents.';
+      return;
+    }
+
+    this.uploadForm.patchValue({
+      residentId: selectedResident.residentId,
+      residentName: selectedResident.residentName,
+      totalFees: this.getFeeBreakdown().totalFee,
+      currency: 'GOV'
+    });
+
+    this.selectedUploadFile = null;
+    this.showUploadModal = true;
+  }
+
+  closeUploadModal(): void {
+    this.showUploadModal = false;
+    this.uploadMessage = '';
+    this.selectedUploadFile = null;
+
+    if (this.documentFileInput?.nativeElement) {
+      this.documentFileInput.nativeElement.value = '';
+    }
+  }
+
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.selectedUploadFile = input.files && input.files.length > 0
+      ? input.files[0]
+      : null;
+  }
+
+  submitKycDocument(): void {
+    this.uploadMessage = '';
+
+    if (this.uploadForm.invalid) {
+      this.uploadForm.markAllAsTouched();
+      this.uploadMessage = 'Please fill required upload fields.';
+      return;
+    }
+
+    if (!this.selectedUploadFile) {
+      this.uploadMessage = 'Please choose a document file.';
+      return;
+    }
+
+    const uploadValue = this.uploadForm.getRawValue();
+    const formData = new FormData();
+
+    formData.append('document', this.selectedUploadFile);
+    formData.append('resident_id', uploadValue.residentId);
+    formData.append('resident_name', uploadValue.residentName);
+    formData.append('document_type', uploadValue.documentType);
+    formData.append('document_number', uploadValue.documentNumber || '');
+    formData.append('expiry_date', uploadValue.expiryDate || '');
+    formData.append('uploaded_by', uploadValue.uploadedBy || 'Officer');
+    formData.append('total_fees', String(uploadValue.totalFees || 0));
+    formData.append('currency', 'GOV');
+
+    this.isUploadingDocument = true;
+
+    this.governmentTransactionApi.uploadKycDocument(formData).subscribe({
+      next: (response) => {
+        this.isUploadingDocument = false;
+
+        const row = response?.data || {};
+        const file = this.selectedUploadFile as File;
+
+        const newDocument: UploadedDocument = {
+          id: String(row.id || `DOC-${Date.now()}`),
+          fileName: file.name,
+          documentType: uploadValue.documentType,
+          size: this.formatFileSize(file.size),
+          hash: 'Pending generation',
+          status: 'Uploaded'
+        };
+
+        this.uploadedDocuments.update((docs) => [...docs, newDocument]);
+
+        this.uploadMessage = response?.message || 'KYC document uploaded successfully.';
+        this.selectedUploadFile = null;
+
+        if (this.documentFileInput?.nativeElement) {
+          this.documentFileInput.nativeElement.value = '';
+        }
+      },
+      error: (error) => {
+        this.isUploadingDocument = false;
+        console.error('[KYC DOCUMENT UPLOAD ERROR]', error);
+
+        this.uploadMessage =
+          error?.error?.message ||
+          error?.message ||
+          'Failed to upload KYC document.';
+      }
+    });
   }
 
   generateHash(): void {
-    const documents = this.uploadedDocuments().map(document => {
-      if (document.status === 'Pending Hash') {
+    const docs = this.uploadedDocuments();
+
+    if (docs.length === 0) {
+      this.errorMessage = 'Please upload at least one document before generating hashes.';
+      return;
+    }
+
+    this.uploadedDocuments.set(
+      docs.map((doc, index) => {
+        if (doc.hash && doc.hash !== 'Pending generation') {
+          return doc;
+        }
+
         return {
-          ...document,
-          hash: this.generateMockHash(),
-          status: 'Verified' as const
+          ...doc,
+          hash: `0x${this.generatePseudoHash(doc.fileName, index)}`,
+          status: 'Verified'
         };
-      }
+      })
+    );
 
-      return document;
-    });
+    this.successMessage = 'Document hashes generated successfully.';
+    this.errorMessage = '';
+  }
 
-    this.uploadedDocuments.set(documents);
+  getCalculatedTransactionStatus(): string {
+    return this.getFeeBreakdown().totalFee < 10000000
+      ? 'APPROVED'
+      : 'PENDING_REVIEW';
+  }
+
+  getCalculatedTransactionStatusLabel(): string {
+    return this.getCalculatedTransactionStatus() === 'APPROVED'
+      ? 'Approved'
+      : 'Pending Review';
+  }
+
+  buildReceiptData(response: any): any {
+    const selectedResident = this.getSelectedResident();
+    const selectedService = this.getSelectedService();
+    const feeBreakdown = response?.feeBreakdown || this.getFeeBreakdown();
+
+    return {
+      transactionReference:
+        response?.transactionReference ||
+        response?.data?.transaction_reference ||
+        this.transactionForm.get('transactionId')?.value,
+      transactionStatus:
+        response?.transactionStatus ||
+        response?.data?.transaction_status ||
+        this.getCalculatedTransactionStatus(),
+      autoApproved:
+        response?.autoApproved ??
+        (this.getCalculatedTransactionStatus() === 'APPROVED'),
+      residentName:
+        selectedResident?.residentName ||
+        response?.data?.resident_full_name ||
+        response?.data?.resident_name ||
+        '',
+      residentId:
+        selectedResident?.residentId ||
+        response?.data?.resident_id ||
+        '',
+      walletAddress:
+        selectedResident?.walletAddress ||
+        response?.data?.resident_wallet_address ||
+        '',
+      serviceName:
+        selectedService?.serviceName ||
+        response?.data?.service_name ||
+        '',
+      serviceCode:
+        selectedService?.serviceCode ||
+        response?.data?.service_code ||
+        '',
+      paymentMethod:
+        response?.paymentMethod ||
+        response?.data?.payment_method ||
+        this.getPaymentMethod(),
+      baseFee: feeBreakdown.baseFee || response?.data?.base_fee || 0,
+      extraFee: feeBreakdown.feeExtraAmount || response?.data?.fee_extra_amount || 0,
+      feePercentage: feeBreakdown.feePercentage || response?.data?.fee_percentage || 0,
+      totalFee: feeBreakdown.totalFee || response?.data?.total_fee || 0,
+      currency: 'GOV',
+      createdAt:
+        response?.data?.created_at ||
+        new Date().toISOString(),
+      uploadedDocumentsCount: this.uploadedDocuments().length
+    };
+  }
+
+  closeReceiptPopup(): void {
+    this.showReceiptPopup = false;
+  }
+
+  printReceipt(): void {
+    window.print();
+  }
+
+  generatePseudoHash(value: string, index: number): string {
+    const source = `${value}-${index}-${Date.now()}-${Math.random()}`;
+    let hash = '';
+
+    for (let i = 0; i < source.length; i++) {
+      hash += source.charCodeAt(i).toString(16);
+    }
+
+    return hash.padEnd(64, '0').slice(0, 64);
+  }
+
+  formatFileSize(size: number): string {
+    if (size < 1024) {
+      return `${size} B`;
+    }
+
+    if (size < 1024 * 1024) {
+      return `${Math.round(size / 1024)} KB`;
+    }
+
+    return `${Math.round(size / (1024 * 1024))} MB`;
+  }
+
+  generateTransactionId(): string {
+    return `GOV-TXN-${Date.now()}`;
   }
 
   isInvalid(controlName: string): boolean {
-    const control = this.transactionForm.get(controlName);
+    const control = this.transactionForm.get(controlName) || this.uploadForm.get(controlName);
     return !!control && control.invalid && (control.dirty || control.touched);
   }
 
+  getStatusLabel(status: string): string {
+    if (status === 'APPROVED') {
+      return 'Approved';
+    }
+
+    if (status === 'PENDING_REVIEW') {
+      return 'Pending Review';
+    }
+
+    return status || this.getCalculatedTransactionStatusLabel();
+  }
+
   getStatusClass(status: string): string {
-    switch (String(status || '').toUpperCase()) {
-      case 'DRAFT':
-        return 'status-draft';
-      case 'SUBMITTED':
-        return 'status-submitted';
-      case 'PENDING_PAYMENT':
-      case 'PENDING_APPROVAL':
-        return 'status-pending';
-      case 'APPROVED':
-        return 'status-approved';
-      case 'REJECTED':
-        return 'status-rejected';
-      default:
-        return 'status-default';
-    }
-  }
-  getStatusLabel(statusValue: string): string {
-    const status = this.transactionStatuses.find(
-      item => item.value === statusValue
-    );
+    const value = String(status || '').toLowerCase().replace(/_/g, '-');
 
-    return status?.label || statusValue;
+    if (value.includes('pending')) {
+      return 'status-pending';
+    }
+
+    if (value.includes('approved')) {
+      return 'status-approved';
+    }
+
+    if (value.includes('rejected') || value.includes('failed')) {
+      return 'status-rejected';
+    }
+
+    return 'status-default';
   }
+
   getDocumentStatusClass(status: string): string {
-    switch (status) {
-      case 'Verified':
-        return 'status-approved';
-      case 'Pending Hash':
-        return 'status-pending';
-      case 'Uploaded':
-        return 'status-submitted';
-      default:
-        return 'status-default';
+    const value = String(status || '').toLowerCase();
+
+    if (value.includes('verified')) {
+      return 'status-approved';
     }
-  }
 
-  private getFirstDocumentHash(): string | null {
-    const document = this.uploadedDocuments().find(
-      item => item.hash && item.hash !== 'Pending generation'
-    );
+    if (value.includes('pending')) {
+      return 'status-pending';
+    }
 
-    return document?.hash || null;
-  }
+    if (value.includes('uploaded')) {
+      return 'status-submitted';
+    }
 
-  private generateTransactionId(): string {
-    const timestamp = new Date().getTime().toString().slice(-8);
-    return `GTRX-${timestamp}`;
-  }
-
-  private generateMockHash(): string {
-    const randomValue = Math.random().toString(16).substring(2, 34);
-    return `0x${randomValue.padEnd(40, '0')}`;
+    return 'status-default';
   }
 }
