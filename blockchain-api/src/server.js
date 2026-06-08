@@ -295,6 +295,11 @@ const governmentTransactionsRoutes = safeRoute(
   'government-transactions.routes'
 );
 
+const governmentAccountLoginRoutes = safeRoute(
+  './routes/government-account-login.routes',
+  'government-account-login.routes'
+);
+
 /**
  * Optional generic API route aggregator.
  * Keep after all specific routes.
@@ -354,6 +359,14 @@ if (governmentBlockchainAuthRoutes) {
     governmentBlockchainAuthRoutes
   );
   console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/auth');
+}
+
+if (governmentAccountLoginRoutes) {
+  app.use(
+    '/api/v1/government-blockchain/account-login',
+    governmentAccountLoginRoutes
+  );
+  console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/account-login');
 }
 
 if (governmentServicesRoutes) {

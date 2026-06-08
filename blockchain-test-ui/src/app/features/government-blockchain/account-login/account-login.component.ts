@@ -55,8 +55,8 @@ export class AccountLoginComponent {
     private router: Router
   ) {
     this.loginForm = this.fb.group({
-      accountType: ['MINISTRY', Validators.required],
-      username: ['', [Validators.required, Validators.minLength(3)]],
+      accountType: ['RESIDENT', Validators.required],
+      walletAddress: ['', [Validators.required, Validators.minLength(6)]],
       password: ['', [Validators.required, Validators.minLength(4)]]
     });
   }
@@ -66,7 +66,7 @@ export class AccountLoginComponent {
 
     if (this.loginForm.invalid) {
       this.loginForm.markAllAsTouched();
-      this.errorMessage = 'Please enter account type, username, and password.';
+      this.errorMessage = 'Please select account type, then enter wallet address and password.';
       return;
     }
 
@@ -77,17 +77,13 @@ export class AccountLoginComponent {
 
     const payload = {
       accountType: this.loginForm.value.accountType,
-      username: String(this.loginForm.value.username || '').trim(),
+      walletAddress: String(this.loginForm.value.walletAddress || '').trim(),
       password: String(this.loginForm.value.password || '').trim()
     };
-
-    console.log('[LOGIN PAYLOAD]', payload);
 
     this.authService.login(payload).subscribe({
       next: response => {
         this.isLoading = false;
-
-        console.log('[ACCOUNT LOGIN RESPONSE]', response);
 
         if (!response?.success || !response?.data) {
           this.errorMessage =
@@ -110,7 +106,9 @@ export class AccountLoginComponent {
           JSON.stringify(response.data)
         );
 
-        this.loadTransactions(response.data.accountId);
+        if (response.data.accountId) {
+          this.loadTransactions(response.data.accountId);
+        }
       },
       error: error => {
         this.isLoading = false;
@@ -118,12 +116,10 @@ export class AccountLoginComponent {
         this.loggedInAccount = null;
         this.transactions = [];
 
-        console.error('[ACCOUNT LOGIN ERROR]', error);
-
         this.errorMessage =
           error?.error?.message ||
           error?.message ||
-          'Login failed. Please check API connection, username, password, and account type.';
+          'Login failed. Please check wallet address and password.';
       }
     });
   }
@@ -142,24 +138,6 @@ export class AccountLoginComponent {
       next: response => {
         this.isTransactionsLoading = false;
 
-        console.log('[ACCOUNT TRANSACTIONS RESPONSE]', response);
-
-        /**
-         * Supports both backend response formats:
-         *
-         * Format 1:
-         * [
-         *   { transactionId: 'TX-1', ... }
-         * ]
-         *
-         * Format 2:
-         * {
-         *   success: true,
-         *   data: [
-         *     { transactionId: 'TX-1', ... }
-         *   ]
-         * }
-         */
         const responseAsAny = response as any;
 
         if (Array.isArray(responseAsAny)) {
@@ -177,17 +155,8 @@ export class AccountLoginComponent {
       },
       error: error => {
         this.isTransactionsLoading = false;
-
-        console.error('[ACCOUNT TRANSACTIONS ERROR]', error);
-
         this.transactions = [];
 
-        /**
-         * Important:
-         * Do not set isLoggedIn = false here.
-         * Login is already successful.
-         * Only the transaction grid API failed.
-         */
         this.transactionMessage =
           error?.error?.message ||
           'Login successful. Account information loaded, but transaction history is not available yet.';
@@ -222,8 +191,8 @@ export class AccountLoginComponent {
     this.transactions = [];
 
     this.loginForm.reset({
-      accountType: 'MINISTRY',
-      username: '',
+      accountType: 'RESIDENT',
+      walletAddress: '',
       password: ''
     });
 
@@ -246,7 +215,7 @@ export class AccountLoginComponent {
     this.transactionMessage = '';
   }
 
-  getStatusClass(status?: string): string {
+  getStatusClass(status?: string | null): string {
     switch ((status || '').toUpperCase()) {
       case 'ACTIVE':
       case 'SUCCESS':
@@ -263,6 +232,7 @@ export class AccountLoginComponent {
       case 'REJECTED':
       case 'BLOCKED':
       case 'INACTIVE':
+      case 'SUSPENDED':
         return 'status-danger';
 
       default:
@@ -273,13 +243,13 @@ export class AccountLoginComponent {
   getAccountTypeLabel(accountType?: string): string {
     switch ((accountType || '').toUpperCase()) {
       case 'MINISTRY':
-        return 'Ministry Account';
+        return 'Ministry';
 
       case 'PUBLIC_ADMINISTRATION':
-        return 'Public Administration Account';
+        return 'Public Administration';
 
       case 'RESIDENT':
-        return 'Resident Account';
+        return 'Resident';
 
       default:
         return accountType || '-';

@@ -8,27 +8,31 @@ export type GovernmentAccountType =
   | 'RESIDENT';
 
 export interface GovernmentLoginRequest {
-  username: string;
-  password: string;
   accountType: GovernmentAccountType;
+  walletAddress: string;
+  password: string;
 }
 
 export interface GovernmentAccountInfo {
   accountId: string;
+  accountName: string;
   accountType: GovernmentAccountType;
-  username: string;
+  username?: string;
   displayName: string;
-  arabicName?: string;
-  email?: string;
-  mobile?: string;
-  nationalId?: string;
+  arabicName?: string | null;
+  email?: string | null;
+  mobile?: string | null;
+  nationalId?: string | null;
   walletAddress: string;
   walletBalance: number;
   currency: string;
+  walletStatus: string;
   status: string;
-  createdAt: string;
-  blockchainTxId?: string;
-  couchDbDocId?: string;
+  blockchainStatus?: string | null;
+  createdAt?: string | null;
+  lastLoginAt?: string | null;
+  blockchainTxId?: string | null;
+  couchDbDocId?: string | null;
 }
 
 export interface GovernmentTransaction {
@@ -65,7 +69,7 @@ export class GovernmentAccountAuthService {
 
   login(payload: GovernmentLoginRequest): Observable<GovernmentLoginResponse> {
     return this.http.post<GovernmentLoginResponse>(
-      `${this.apiBaseUrl}/auth/login`,
+      `${this.apiBaseUrl}/account-login`,
       payload
     );
   }

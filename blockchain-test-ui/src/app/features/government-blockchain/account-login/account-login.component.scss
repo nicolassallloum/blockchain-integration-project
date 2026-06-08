@@ -18,7 +18,7 @@
 .card-title h2 {
   margin: 0;
   color: #111827;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .page-header p,
@@ -39,6 +39,10 @@
   margin-bottom: 24px;
 }
 
+.result-card {
+  border-left: 5px solid #1d4ed8;
+}
+
 .login-form {
   margin-top: 24px;
 }
@@ -47,6 +51,10 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 18px;
+}
+
+.span-2 {
+  grid-column: span 2;
 }
 
 .form-field {
@@ -58,7 +66,7 @@
 .form-field label {
   font-size: 14px;
   color: #374151;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .form-field input,
@@ -90,12 +98,13 @@
 }
 
 .primary-btn,
+.secondary-btn,
 .logout-btn {
   border: none;
   border-radius: 12px;
   height: 42px;
   padding: 0 18px;
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
 }
 
@@ -109,6 +118,11 @@
   cursor: not-allowed;
 }
 
+.secondary-btn {
+  background: #e5e7eb;
+  color: #111827;
+}
+
 .logout-btn {
   background: #fee2e2;
   color: #b91c1c;
@@ -118,7 +132,7 @@
   margin-top: 18px;
   padding: 12px 14px;
   border-radius: 12px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .alert-error {
@@ -129,6 +143,12 @@
 .alert-success {
   background: #dcfce7;
   color: #166534;
+}
+
+.alert-info {
+  background: #dbeafe;
+  color: #1e40af;
+  margin-bottom: 18px;
 }
 
 .summary-grid {
@@ -156,6 +176,7 @@
 .summary-card strong {
   color: #111827;
   font-size: 20px;
+  word-break: break-word;
 }
 
 .details-grid {
@@ -176,14 +197,19 @@
   color: #6b7280;
   font-size: 12px;
   margin-bottom: 6px;
-  font-weight: 700;
+  font-weight: 800;
   text-transform: uppercase;
 }
 
 .detail-item span {
   color: #111827;
-  font-weight: 600;
+  font-weight: 700;
   word-break: break-word;
+}
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    'Liberation Mono', 'Courier New', monospace;
 }
 
 .table-wrapper {
@@ -257,6 +283,10 @@ th {
   .summary-grid,
   .details-grid {
     grid-template-columns: 1fr;
+  }
+
+  .span-2 {
+    grid-column: span 1;
   }
 
   .page-header,

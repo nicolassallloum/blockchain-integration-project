@@ -3,7 +3,7 @@
     <div>
       <h1>Government Blockchain Account Login</h1>
       <p>
-        Test login for Ministry, Public Administration, and Resident accounts.
+        Login using account type, wallet address, and password.
       </p>
     </div>
 
@@ -19,10 +19,9 @@
 
   <section *ngIf="!isLoggedIn" class="login-card">
     <div class="card-title">
-      <h2>Login To Account</h2>
+      <h2>Account Login</h2>
       <p>
-        Use the username and password created from the previous account creation
-        screens.
+        Select the account type, then enter the wallet address and generated password created during account setup.
       </p>
     </div>
 
@@ -41,19 +40,20 @@
         </div>
 
         <div class="form-field">
-          <label>Username</label>
+          <label>Wallet Address</label>
           <input
             type="text"
-            formControlName="username"
-            placeholder="Enter username / account code"
+            formControlName="walletAddress"
+            placeholder="Enter wallet address"
+            autocomplete="username"
           />
           <small
             *ngIf="
-              loginForm.get('username')?.touched &&
-              loginForm.get('username')?.invalid
+              loginForm.get('walletAddress')?.touched &&
+              loginForm.get('walletAddress')?.invalid
             "
           >
-            Username is required.
+            Wallet address is required.
           </small>
         </div>
 
@@ -63,6 +63,7 @@
             type="password"
             formControlName="password"
             placeholder="Enter password"
+            autocomplete="current-password"
           />
           <small
             *ngIf="
@@ -85,7 +86,7 @@
 
       <div class="actions">
         <button type="submit" class="primary-btn" [disabled]="isLoading">
-          {{ isLoading ? 'Logging in...' : 'Login Account' }}
+          {{ isLoading ? 'Validating...' : 'Login Account' }}
         </button>
       </div>
     </form>
@@ -94,36 +95,36 @@
   <section *ngIf="isLoggedIn && loggedInAccount" class="account-dashboard">
     <div class="summary-grid">
       <div class="summary-card">
+        <span>Account Name</span>
+        <strong>{{ loggedInAccount.accountName || loggedInAccount.displayName }}</strong>
+      </div>
+
+      <div class="summary-card">
         <span>Account Type</span>
-        <strong>{{ loggedInAccount.accountType }}</strong>
+        <strong>{{ getAccountTypeLabel(loggedInAccount.accountType) }}</strong>
       </div>
 
       <div class="summary-card">
         <span>Wallet Balance</span>
         <strong>
           {{ loggedInAccount.walletBalance | number: '1.0-2' }}
-          {{ loggedInAccount.currency }}
+          {{ loggedInAccount.currency || 'GOV' }}
         </strong>
       </div>
 
       <div class="summary-card">
-        <span>Status</span>
-        <strong [class]="getStatusClass(loggedInAccount.status)">
-          {{ loggedInAccount.status }}
+        <span>Wallet Status</span>
+        <strong [class]="getStatusClass(loggedInAccount.walletStatus)">
+          {{ loggedInAccount.walletStatus || loggedInAccount.status }}
         </strong>
-      </div>
-
-      <div class="summary-card">
-        <span>Total Transactions</span>
-        <strong>{{ transactions.length }}</strong>
       </div>
     </div>
 
-    <div class="details-card">
+    <div class="details-card result-card">
       <div class="section-header">
         <div>
-          <h2>Account Information</h2>
-          <p>Full information of the logged-in blockchain account.</p>
+          <h2>Login Result</h2>
+          <p>Validated account and wallet information from PostgreSQL.</p>
         </div>
 
         <button type="button" class="primary-btn" (click)="startNewTransaction()">
@@ -133,23 +134,38 @@
 
       <div class="details-grid">
         <div class="detail-item">
-          <label>Account ID</label>
-          <span>{{ loggedInAccount.accountId }}</span>
+          <label>Account Name</label>
+          <span>{{ loggedInAccount.accountName || loggedInAccount.displayName }}</span>
         </div>
 
         <div class="detail-item">
-          <label>Username</label>
-          <span>{{ loggedInAccount.username }}</span>
+          <label>Account Type</label>
+          <span>{{ getAccountTypeLabel(loggedInAccount.accountType) }}</span>
         </div>
 
         <div class="detail-item">
-          <label>Display Name</label>
-          <span>{{ loggedInAccount.displayName }}</span>
+          <label>Wallet Address</label>
+          <span class="mono">{{ loggedInAccount.walletAddress }}</span>
         </div>
 
         <div class="detail-item">
-          <label>Arabic Name</label>
-          <span>{{ loggedInAccount.arabicName || '-' }}</span>
+          <label>Wallet Balance</label>
+          <span>
+            {{ loggedInAccount.walletBalance | number: '1.0-2' }}
+            {{ loggedInAccount.currency || 'GOV' }}
+          </span>
+        </div>
+
+        <div class="detail-item">
+          <label>Currency</label>
+          <span>{{ loggedInAccount.currency || 'GOV' }}</span>
+        </div>
+
+        <div class="detail-item">
+          <label>Wallet Status</label>
+          <span [class]="getStatusClass(loggedInAccount.walletStatus)">
+            {{ loggedInAccount.walletStatus || loggedInAccount.status }}
+          </span>
         </div>
 
         <div class="detail-item">
@@ -163,23 +179,25 @@
         </div>
 
         <div class="detail-item">
-          <label>Wallet Address</label>
-          <span>{{ loggedInAccount.walletAddress }}</span>
-        </div>
-
-        <div class="detail-item">
           <label>Created At</label>
-          <span>{{ loggedInAccount.createdAt | date: 'medium' }}</span>
+          <span>
+            {{
+              loggedInAccount.createdAt
+                ? (loggedInAccount.createdAt | date: 'medium')
+                : '-'
+            }}
+          </span>
         </div>
 
         <div class="detail-item">
-          <label>Blockchain TX ID</label>
-          <span>{{ loggedInAccount.blockchainTxId || '-' }}</span>
-        </div>
-
-        <div class="detail-item">
-          <label>CouchDB Document ID</label>
-          <span>{{ loggedInAccount.couchDbDocId || '-' }}</span>
+          <label>Last Login</label>
+          <span>
+            {{
+              loggedInAccount.lastLoginAt
+                ? (loggedInAccount.lastLoginAt | date: 'medium')
+                : '-'
+            }}
+          </span>
         </div>
       </div>
     </div>
@@ -188,10 +206,16 @@
       <div class="section-header">
         <div>
           <h2>Account Transactions</h2>
-          <p>
-            All blockchain transactions related to the logged-in account.
-          </p>
+          <p>Transactions related to the logged-in account.</p>
         </div>
+
+        <button type="button" class="secondary-btn" (click)="refreshTransactions()">
+          Refresh
+        </button>
+      </div>
+
+      <div *ngIf="transactionMessage" class="alert alert-info">
+        {{ transactionMessage }}
       </div>
 
       <div class="table-wrapper">
@@ -215,10 +239,10 @@
             <tr *ngFor="let tx of transactions">
               <td>{{ tx.transactionId }}</td>
               <td>{{ tx.transactionType }}</td>
-              <td>{{ tx.fromWalletAddress }}</td>
-              <td>{{ tx.toWalletAddress }}</td>
+              <td class="mono">{{ tx.fromWalletAddress }}</td>
+              <td class="mono">{{ tx.toWalletAddress }}</td>
               <td>{{ tx.amount | number: '1.0-2' }}</td>
-              <td>{{ tx.currency }}</td>
+              <td>{{ tx.currency || 'GOV' }}</td>
               <td>
                 <span [class]="getStatusClass(tx.transactionStatus)">
                   {{ tx.transactionStatus }}
