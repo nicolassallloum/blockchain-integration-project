@@ -10,7 +10,6 @@ function normalizeEmpty(value) {
   }
 
   const text = String(value).trim();
-
   return text === '' ? null : text;
 }
 
@@ -20,6 +19,7 @@ function normalizeWalletStatus(status) {
   if (value === 'active') return 'Active';
   if (value === 'suspended') return 'Suspended';
   if (value === 'blocked') return 'Blocked';
+  if (value === 'pending') return 'Pending';
   if (value === 'not created') return 'Not Created';
 
   return 'Pending';
@@ -28,127 +28,225 @@ function normalizeWalletStatus(status) {
 function normalizeBlockchainStatus(status) {
   const value = String(status || '').trim().toLowerCase();
 
-  if (value === 'synced') return 'Synced';
-  if (value === 'confirmed') return 'Synced';
-  if (value === 'sync') return 'Synced';
-  if (value === 'success') return 'Synced';
-  if (value === 'failed') return 'Failed';
-  if (value === 'error') return 'Failed';
+  if (
+    value === 'synced' ||
+    value === 'confirmed' ||
+    value === 'fabric_confirmed' ||
+    value === 'success' ||
+    value === 'completed'
+  ) {
+    return 'Synced';
+  }
+
+  if (
+    value === 'failed' ||
+    value === 'error' ||
+    value === 'rejected'
+  ) {
+    return 'Failed';
+  }
 
   return 'Pending';
 }
 
-router.get('/resident-wallets', async (req, res) => {
-  try {
-    const walletAddress = normalizeEmpty(req.query.walletAddress);
-    const residentId = normalizeEmpty(req.query.residentId);
-    const residentName = normalizeEmpty(req.query.residentName);
-    const walletStatus = normalizeEmpty(req.query.walletStatus);
-    const blockchainStatus = normalizeEmpty(req.query.blockchainStatus);
+function buildWalletFilterValues(query) {
+  return [
+    normalizeEmpty(query.walletAddress),
+    normalizeEmpty(query.residentId),
+    normalizeEmpty(query.residentName),
+    normalizeEmpty(query.walletStatus),
+    normalizeEmpty(query.blockchainStatus),
+  ];
+}
 
-    const sql = `
+function buildResidentWalletBaseSql() {
+  return `
+    WITH resident_wallet_data AS (
       SELECT
-          r.id,
-          COALESCE(NULLIF(TRIM(r.wallet_address), ''), '-') AS wallet_address,
-          r.resident_id,
+          rw.id,
+          rw.wallet_address,
+          rw.resident_id,
           COALESCE(
               NULLIF(TRIM(r.full_name), ''),
-              TRIM(CONCAT_WS(' ', r.first_name, r.father_name, r.last_name))
+              TRIM(CONCAT_WS(' ', r.first_name, r.father_name, r.last_name)),
+              '-'
           ) AS resident_name,
-          COALESCE(NULLIF(TRIM(r.wallet_currency), ''), 'LBP') AS currency,
-          COALESCE(r.monthly_income, 0) AS current_balance,
-          COALESCE(NULLIF(TRIM(r.wallet_status), ''), 'Not Created') AS wallet_status,
-          COALESCE(NULLIF(TRIM(r.blockchain_status), ''), 'PENDING') AS blockchain_status,
-          r.created_at
-      FROM blockchain.residents r
+          COALESCE(NULLIF(TRIM(rw.wallet_currency), ''), 'GOV') AS currency,
+          COALESCE(w.current_balance, 0) AS balance,
+          COALESCE(NULLIF(TRIM(rw.wallet_status), ''), 'Pending') AS wallet_status,
+          COALESCE(NULLIF(TRIM(rw.blockchain_status), ''), 'PENDING') AS blockchain_status,
+          rw.fabric_tx_id,
+          rw.created_at
+      FROM blockchain.resident_wallets rw
+      LEFT JOIN blockchain.residents r
+          ON r.resident_id = rw.resident_id
+      LEFT JOIN blockchain.wallets w
+          ON (
+              w.wallet_address = rw.wallet_address
+              OR w.customer_id = rw.resident_id
+          )
       WHERE 1 = 1
         AND (
               $1::text IS NULL
-              OR UPPER(COALESCE(r.wallet_address, '')) LIKE UPPER('%' || $1 || '%')
+              OR UPPER(COALESCE(rw.wallet_address, '')) LIKE UPPER('%' || $1 || '%')
             )
         AND (
               $2::text IS NULL
-              OR UPPER(COALESCE(r.resident_id, '')) LIKE UPPER('%' || $2 || '%')
+              OR UPPER(COALESCE(rw.resident_id, '')) LIKE UPPER('%' || $2 || '%')
             )
         AND (
               $3::text IS NULL
               OR UPPER(
                   COALESCE(
                       NULLIF(TRIM(r.full_name), ''),
-                      TRIM(CONCAT_WS(' ', r.first_name, r.father_name, r.last_name))
+                      TRIM(CONCAT_WS(' ', r.first_name, r.father_name, r.last_name)),
+                      ''
                   )
               ) LIKE UPPER('%' || $3 || '%')
             )
         AND (
               $4::text IS NULL
-              OR UPPER(COALESCE(r.wallet_status, 'Not Created')) = UPPER($4)
+              OR UPPER(COALESCE(rw.wallet_status, 'Pending')) = UPPER($4)
             )
         AND (
               $5::text IS NULL
-              OR UPPER(COALESCE(r.blockchain_status, 'PENDING')) = UPPER($5)
+              OR UPPER(COALESCE(rw.blockchain_status, 'PENDING')) = UPPER($5)
+              OR (
+                  UPPER($5) = 'SYNCED'
+                  AND UPPER(COALESCE(rw.blockchain_status, '')) IN ('CONFIRMED', 'FABRIC_CONFIRMED', 'SUCCESS', 'COMPLETED')
+              )
             )
-      ORDER BY r.created_at DESC NULLS LAST, r.id DESC
-    `;
+    )
+  `;
+}
 
-    const values = [
-      walletAddress,
-      residentId,
-      residentName,
-      walletStatus,
-      blockchainStatus
-    ];
+function mapWalletRow(row) {
+  const walletStatus = normalizeWalletStatus(row.wallet_status);
+  const blockchainStatus = normalizeBlockchainStatus(row.blockchain_status);
 
-    const result = await pool.query(sql, values);
+  return {
+    id: row.id,
+    walletAddress: row.wallet_address || '-',
+    wallet_address: row.wallet_address || '-',
 
-    const data = result.rows.map((row) => ({
-      id: row.id,
-      walletAddress: row.wallet_address,
-      wallet_address: row.wallet_address,
-      residentId: row.resident_id,
-      resident_id: row.resident_id,
-      residentName: row.resident_name,
-      resident_name: row.resident_name,
-      currency: row.currency,
-      currentBalance: Number(row.current_balance || 0),
-      current_balance: Number(row.current_balance || 0),
-      walletStatus: normalizeWalletStatus(row.wallet_status),
-      wallet_status: normalizeWalletStatus(row.wallet_status),
-      blockchainStatus: normalizeBlockchainStatus(row.blockchain_status),
-      blockchain_status: normalizeBlockchainStatus(row.blockchain_status),
-      createdAt: row.created_at,
-      created_at: row.created_at
-    }));
+    residentId: row.resident_id || '-',
+    resident_id: row.resident_id || '-',
 
-    const summary = {
-      totalWallets: data.length,
-      activeWallets: data.filter((wallet) => wallet.walletStatus === 'Active').length,
-      suspendedWallets: data.filter((wallet) => wallet.walletStatus === 'Suspended').length,
-      blockedWallets: data.filter((wallet) => wallet.walletStatus === 'Blocked').length,
-      blockchainSynced: data.filter((wallet) => wallet.blockchainStatus === 'Synced').length
-    };
+    residentName: row.resident_name || '-',
+    resident_name: row.resident_name || '-',
+
+    balance: Number(row.balance || 0),
+    currentBalance: Number(row.balance || 0),
+    current_balance: Number(row.balance || 0),
+
+    currency: 'GOV',
+    walletCurrency: 'GOV',
+    wallet_currency: 'GOV',
+
+    walletStatus,
+    wallet_status: walletStatus,
+
+    blockchainStatus,
+    blockchain_status: blockchainStatus,
+
+    fabricTxId: row.fabric_tx_id || null,
+    fabric_tx_id: row.fabric_tx_id || null,
+
+    createdAt: row.created_at,
+    created_at: row.created_at,
+  };
+}
+
+function calculateSummary(wallets) {
+  return {
+    totalWallets: wallets.length,
+    activeWallets: wallets.filter((wallet) => wallet.walletStatus === 'Active').length,
+    suspendedWallets: wallets.filter((wallet) => wallet.walletStatus === 'Suspended').length,
+    blockedWallets: wallets.filter((wallet) => wallet.walletStatus === 'Blocked').length,
+    blockchainSynced: wallets.filter((wallet) => wallet.blockchainStatus === 'Synced').length,
+  };
+}
+
+async function getResidentWalletRows(filters) {
+  const sql = `
+    ${buildResidentWalletBaseSql()}
+    SELECT
+        id,
+        wallet_address,
+        resident_id,
+        resident_name,
+        currency,
+        balance,
+        wallet_status,
+        blockchain_status,
+        fabric_tx_id,
+        created_at
+    FROM resident_wallet_data
+    ORDER BY created_at DESC NULLS LAST, id DESC
+  `;
+
+  const result = await pool.query(sql, filters);
+  return result.rows.map(mapWalletRow);
+}
+
+router.get('/resident-wallets/summary', async (req, res) => {
+  try {
+    const filters = buildWalletFilterValues(req.query);
+    const wallets = await getResidentWalletRows(filters);
+    const summary = calculateSummary(wallets);
 
     return res.status(200).json({
       success: true,
-      message: 'Resident wallets loaded successfully.',
+      message: 'Resident wallet summary loaded successfully.',
       summary,
-      count: data.length,
-      data
+    });
+  } catch (error) {
+    console.error('[RESIDENT WALLETS SUMMARY ERROR]', error);
+
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to load resident wallet summary from PostgreSQL.',
+      error: error.message,
+      summary: {
+        totalWallets: 0,
+        activeWallets: 0,
+        suspendedWallets: 0,
+        blockedWallets: 0,
+        blockchainSynced: 0,
+      },
+    });
+  }
+});
+
+router.get('/resident-wallets', async (req, res) => {
+  try {
+    const filters = buildWalletFilterValues(req.query);
+    const wallets = await getResidentWalletRows(filters);
+    const summary = calculateSummary(wallets);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Resident wallets loaded successfully from PostgreSQL.',
+      summary,
+      count: wallets.length,
+      data: wallets,
     });
   } catch (error) {
     console.error('[RESIDENT WALLETS ERROR]', error);
 
     return res.status(500).json({
       success: false,
-      message: 'Failed to load resident wallets from database.',
+      message: 'Failed to load resident wallets from PostgreSQL.',
       error: error.message,
-      data: [],
       summary: {
         totalWallets: 0,
         activeWallets: 0,
         suspendedWallets: 0,
         blockedWallets: 0,
-        blockchainSynced: 0
-      }
+        blockchainSynced: 0,
+      },
+      count: 0,
+      data: [],
     });
   }
 });

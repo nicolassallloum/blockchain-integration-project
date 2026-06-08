@@ -4,17 +4,19 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpClientModule, HttpParams } from '@angular/common/http';
 import { finalize, timeout } from 'rxjs/operators';
 
-type WalletStatus = 'Active' | 'Pending' | 'Suspended' | 'Blocked';
+type WalletStatus = 'Active' | 'Pending' | 'Suspended' | 'Blocked' | 'Not Created';
 type BlockchainStatus = 'Synced' | 'Pending' | 'Failed';
 
 interface ResidentWallet {
+  id: string | number;
   walletAddress: string;
   residentId: string;
   residentName: string;
+  balance: number;
   currency: string;
-  currentBalance: number;
   walletStatus: WalletStatus;
   blockchainStatus: BlockchainStatus;
+  fabricTxId?: string | null;
   createdAt: string;
 }
 
@@ -30,6 +32,7 @@ interface ResidentWalletApiResponse {
   success: boolean;
   message: string;
   summary?: ResidentWalletSummary;
+  count?: number;
   data?: any[];
 }
 
@@ -41,8 +44,7 @@ interface ResidentWalletApiResponse {
   styleUrl: './resident-wallets.component.scss'
 })
 export class ResidentWalletsComponent implements OnInit {
-  private readonly apiUrl =
-    '/api/v1/government-blockchain/digital-kyc/resident-wallets';
+  private readonly apiUrl = '/api/v1/government-blockchain/resident-wallets';
 
   filters = {
     walletAddress: '',
@@ -52,21 +54,16 @@ export class ResidentWalletsComponent implements OnInit {
     blockchainStatus: ''
   };
 
-  walletStatuses: WalletStatus[] = ['Active', 'Pending', 'Suspended', 'Blocked'];
+  walletStatuses: WalletStatus[] = ['Active', 'Pending', 'Suspended', 'Blocked', 'Not Created'];
   blockchainStatuses: BlockchainStatus[] = ['Synced', 'Pending', 'Failed'];
 
   wallets: ResidentWallet[] = [];
 
-  summary: ResidentWalletSummary = {
-    totalWallets: 0,
-    activeWallets: 0,
-    suspendedWallets: 0,
-    blockedWallets: 0,
-    blockchainSynced: 0
-  };
+  summary: ResidentWalletSummary = this.emptySummary();
 
   isLoading = false;
   errorMessage = '';
+  successMessage = '';
 
   constructor(private http: HttpClient) {}
 
@@ -77,28 +74,17 @@ export class ResidentWalletsComponent implements OnInit {
   loadResidentWallets(): void {
     this.isLoading = true;
     this.errorMessage = '';
+    this.successMessage = '';
 
     let params = new HttpParams();
 
-    if (this.filters.walletAddress.trim()) {
-      params = params.set('walletAddress', this.filters.walletAddress.trim());
-    }
+    Object.entries(this.filters).forEach(([key, value]) => {
+      const cleanValue = String(value || '').trim();
 
-    if (this.filters.residentId.trim()) {
-      params = params.set('residentId', this.filters.residentId.trim());
-    }
-
-    if (this.filters.residentName.trim()) {
-      params = params.set('residentName', this.filters.residentName.trim());
-    }
-
-    if (this.filters.walletStatus) {
-      params = params.set('walletStatus', this.filters.walletStatus);
-    }
-
-    if (this.filters.blockchainStatus) {
-      params = params.set('blockchainStatus', this.filters.blockchainStatus);
-    }
+      if (cleanValue) {
+        params = params.set(key, cleanValue);
+      }
+    });
 
     this.http
       .get<ResidentWalletApiResponse>(this.apiUrl, { params })
@@ -110,8 +96,6 @@ export class ResidentWalletsComponent implements OnInit {
       )
       .subscribe({
         next: (response) => {
-          console.log('Resident wallets API response:', response);
-
           const apiData = response.data || [];
 
           this.wallets = apiData.map((wallet) => this.mapWalletFromApi(wallet));
@@ -120,8 +104,10 @@ export class ResidentWalletsComponent implements OnInit {
             ? this.normalizeSummary(response.summary)
             : this.calculateSummary(this.wallets);
 
-          if (!response.success && response.message) {
-            this.errorMessage = response.message;
+          if (response.success) {
+            this.successMessage = response.message || 'Resident wallets loaded successfully.';
+          } else {
+            this.errorMessage = response.message || 'Failed to load resident wallets.';
           }
         },
         error: (error) => {
@@ -131,37 +117,97 @@ export class ResidentWalletsComponent implements OnInit {
           this.summary = this.emptySummary();
 
           if (error.name === 'TimeoutError') {
-            this.errorMessage =
-              'API timeout. The backend did not respond within 15 seconds.';
+            this.errorMessage = 'API timeout. The backend did not respond within 15 seconds.';
             return;
           }
 
           if (error.status === 0) {
-            this.errorMessage =
-              'API connection failed. Check backend URL, CORS, and port 3001.';
+            this.errorMessage = 'API connection failed. Check backend URL, CORS, proxy, and port 3001.';
             return;
           }
 
           if (error.status === 404) {
-            this.errorMessage =
-              'API endpoint not found. Check the resident-wallets backend route.';
-            return;
-          }
-
-          if (error.status === 500) {
-            this.errorMessage =
-              error.error?.message || 'Backend error while reading resident wallets from database.';
+            this.errorMessage = 'Resident wallets API endpoint not found.';
             return;
           }
 
           this.errorMessage =
-            error.error?.message || 'Failed to load resident wallets from database.';
+            error.error?.message || 'Failed to load resident wallets from PostgreSQL.';
         }
       });
   }
 
-  get filteredWallets(): ResidentWallet[] {
-    return this.wallets;
+  resetFilters(): void {
+    this.filters = {
+      walletAddress: '',
+      residentId: '',
+      residentName: '',
+      walletStatus: '',
+      blockchainStatus: ''
+    };
+
+    this.loadResidentWallets();
+  }
+
+  refreshWallets(): void {
+    this.loadResidentWallets();
+  }
+
+  exportCsv(): void {
+    const headers = [
+      'Wallet Address',
+      'Resident ID',
+      'Resident Name',
+      'Balance',
+      'Currency',
+      'Wallet Status',
+      'Blockchain Status',
+      'Created Date'
+    ];
+
+    const rows = this.wallets.map((wallet) => [
+      wallet.walletAddress,
+      wallet.residentId,
+      wallet.residentName,
+      this.formatBalance(wallet.balance),
+      'GOV',
+      wallet.walletStatus,
+      wallet.blockchainStatus,
+      this.formatDate(wallet.createdAt)
+    ]);
+
+    const csvContent = [headers, ...rows]
+      .map((row) =>
+        row
+          .map((value) => `"${String(value ?? '').replace(/"/g, '""')}"`)
+          .join(',')
+      )
+      .join('\n');
+
+    const blob = new Blob([csvContent], {
+      type: 'text/csv;charset=utf-8;'
+    });
+
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    link.href = url;
+    link.download = `resident-wallets-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+
+    window.URL.revokeObjectURL(url);
+  }
+
+  viewWallet(wallet: ResidentWallet): void {
+    console.log('View Wallet:', wallet);
+  }
+
+  viewTransactions(wallet: ResidentWallet): void {
+    console.log('View Transactions:', wallet);
+  }
+
+  viewBlockchainProof(wallet: ResidentWallet): void {
+    console.log('View Blockchain Proof:', wallet);
   }
 
   get totalWallets(): number {
@@ -184,60 +230,47 @@ export class ResidentWalletsComponent implements OnInit {
     return this.summary.blockchainSynced;
   }
 
-  resetFilters(): void {
-    this.filters = {
-      walletAddress: '',
-      residentId: '',
-      residentName: '',
-      walletStatus: '',
-      blockchainStatus: ''
-    };
-
-    this.loadResidentWallets();
-  }
-
-  refreshWallets(): void {
-    this.loadResidentWallets();
-  }
-
-  viewWallet(wallet: ResidentWallet): void {
-    console.log('View Wallet:', wallet);
-  }
-
-  activateWallet(wallet: ResidentWallet): void {
-    console.log('Activate Wallet:', wallet);
-  }
-
-  suspendWallet(wallet: ResidentWallet): void {
-    console.log('Suspend Wallet:', wallet);
-  }
-
-  blockWallet(wallet: ResidentWallet): void {
-    console.log('Block Wallet:', wallet);
-  }
-
-  viewTransactions(wallet: ResidentWallet): void {
-    console.log('View Transactions:', wallet);
-  }
-
-  viewBlockchainProof(wallet: ResidentWallet): void {
-    console.log('View Blockchain Proof:', wallet);
+  get hasFilters(): boolean {
+    return Object.values(this.filters).some((value) => String(value || '').trim() !== '');
   }
 
   getWalletStatusClass(status: WalletStatus): string {
-    return `wallet-status-${status.toLowerCase()}`;
+    return `wallet-status-${String(status || 'pending').toLowerCase().replace(/\s+/g, '-')}`;
   }
 
   getBlockchainStatusClass(status: BlockchainStatus): string {
-    return `blockchain-status-${status.toLowerCase()}`;
+    return `blockchain-status-${String(status || 'pending').toLowerCase()}`;
   }
 
   formatBalance(amount: number): string {
-    return Number(amount || 0).toLocaleString('en-US');
+    return Number(amount || 0).toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  }
+
+  formatDate(value: string): string {
+    if (!value) {
+      return '-';
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return value;
+    }
+
+    return date.toLocaleString();
+  }
+
+  trackByWalletAddress(index: number, wallet: ResidentWallet): string {
+    return wallet.walletAddress || String(index);
   }
 
   private mapWalletFromApi(wallet: any): ResidentWallet {
     return {
+      id: wallet.id || wallet.wallet_id || wallet.walletAddress || wallet.wallet_address || '-',
+
       walletAddress:
         wallet.walletAddress ||
         wallet.wallet_address ||
@@ -258,23 +291,14 @@ export class ResidentWalletsComponent implements OnInit {
         wallet.full_name ||
         '-',
 
-      currency:
-        wallet.currency ||
-        wallet.walletCurrency ||
-        wallet.wallet_currency ||
-        wallet.currencyCode ||
-        wallet.currency_code ||
-        'LBP',
+      balance: Number(
+        wallet.balance ??
+        wallet.currentBalance ??
+        wallet.current_balance ??
+        0
+      ),
 
-      currentBalance:
-        Number(
-          wallet.currentBalance ??
-          wallet.current_balance ??
-          wallet.walletBalance ??
-          wallet.wallet_balance ??
-          wallet.balance ??
-          0
-        ),
+      currency: 'GOV',
 
       walletStatus: this.normalizeWalletStatus(
         wallet.walletStatus ||
@@ -285,45 +309,51 @@ export class ResidentWalletsComponent implements OnInit {
       blockchainStatus: this.normalizeBlockchainStatus(
         wallet.blockchainStatus ||
         wallet.blockchain_status ||
-        wallet.syncStatus ||
-        wallet.sync_status
+        wallet.fabricStatus ||
+        wallet.fabric_status
       ),
+
+      fabricTxId:
+        wallet.fabricTxId ||
+        wallet.fabric_tx_id ||
+        null,
 
       createdAt:
         wallet.createdAt ||
         wallet.created_at ||
-        wallet.creationDate ||
-        wallet.creation_date ||
         ''
     };
   }
 
-  private normalizeWalletStatus(status: string): WalletStatus {
-    const value = String(status || '').toLowerCase();
+  private normalizeWalletStatus(status: any): WalletStatus {
+    const value = String(status || '').trim().toLowerCase();
 
-    if (value === 'active') {
-      return 'Active';
-    }
-
-    if (value === 'suspended') {
-      return 'Suspended';
-    }
-
-    if (value === 'blocked') {
-      return 'Blocked';
-    }
+    if (value === 'active') return 'Active';
+    if (value === 'suspended') return 'Suspended';
+    if (value === 'blocked') return 'Blocked';
+    if (value === 'not created') return 'Not Created';
 
     return 'Pending';
   }
 
-  private normalizeBlockchainStatus(status: string): BlockchainStatus {
-    const value = String(status || '').toLowerCase();
+  private normalizeBlockchainStatus(status: any): BlockchainStatus {
+    const value = String(status || '').trim().toLowerCase();
 
-    if (value === 'synced' || value === 'sync' || value === 'success') {
+    if (
+      value === 'synced' ||
+      value === 'confirmed' ||
+      value === 'fabric_confirmed' ||
+      value === 'success' ||
+      value === 'completed'
+    ) {
       return 'Synced';
     }
 
-    if (value === 'failed' || value === 'error') {
+    if (
+      value === 'failed' ||
+      value === 'error' ||
+      value === 'rejected'
+    ) {
       return 'Failed';
     }
 
@@ -343,10 +373,10 @@ export class ResidentWalletsComponent implements OnInit {
   private calculateSummary(wallets: ResidentWallet[]): ResidentWalletSummary {
     return {
       totalWallets: wallets.length,
-      activeWallets: wallets.filter(wallet => wallet.walletStatus === 'Active').length,
-      suspendedWallets: wallets.filter(wallet => wallet.walletStatus === 'Suspended').length,
-      blockedWallets: wallets.filter(wallet => wallet.walletStatus === 'Blocked').length,
-      blockchainSynced: wallets.filter(wallet => wallet.blockchainStatus === 'Synced').length
+      activeWallets: wallets.filter((wallet) => wallet.walletStatus === 'Active').length,
+      suspendedWallets: wallets.filter((wallet) => wallet.walletStatus === 'Suspended').length,
+      blockedWallets: wallets.filter((wallet) => wallet.walletStatus === 'Blocked').length,
+      blockchainSynced: wallets.filter((wallet) => wallet.blockchainStatus === 'Synced').length
     };
   }
 

@@ -1,10 +1,8 @@
 {
   "/api": {
-    "target": "http://172.31.13.90:3001",
+    "target": "http://localhost:3001",
     "secure": false,
     "changeOrigin": true,
-    "logLevel": "debug",
-    "timeout": 600000,
-    "proxyTimeout": 600000
+    "logLevel": "debug"
   }
 }

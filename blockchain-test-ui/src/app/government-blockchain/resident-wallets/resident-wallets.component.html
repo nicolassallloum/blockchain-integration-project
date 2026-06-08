@@ -1,53 +1,66 @@
 <div class="resident-wallets-page">
-  <section class="page-header">
-    <div>
-      <p class="eyebrow">Government Blockchain Services Platform</p>
-      <h1>Resident Wallets</h1>
-      <p class="subtitle">
-        Manage resident blockchain wallets, wallet status, balances, transactions, and blockchain proof records.
-      </p>
-    </div>
+  <section class="header-card">
+    <div class="header-content">
+      <div>
+        <p class="eyebrow">Government Blockchain Services Platform</p>
+        <h1>Resident Wallets</h1>
+        <p class="subtitle">
+          View resident wallets from PostgreSQL, monitor wallet balances, GOV currency,
+          wallet status, and blockchain synchronization.
+        </p>
+      </div>
 
-    <div class="header-actions">
-      <button class="btn btn-secondary" type="button">
-        Export
-      </button>
+      <div class="header-actions">
+        <button
+          class="btn btn-secondary"
+          type="button"
+          (click)="exportCsv()"
+          [disabled]="isLoading || wallets.length === 0"
+        >
+          Export CSV
+        </button>
 
-      <button
-        class="btn btn-primary"
-        type="button"
-        (click)="refreshWallets()"
-        [disabled]="isLoading"
-      >
-        {{ isLoading ? 'Loading...' : 'Refresh Wallets' }}
-      </button>
+        <button
+          class="btn btn-primary"
+          type="button"
+          (click)="refreshWallets()"
+          [disabled]="isLoading"
+        >
+          {{ isLoading ? 'Refreshing...' : 'Refresh' }}
+        </button>
+      </div>
     </div>
   </section>
 
-  <section class="kpi-grid">
-    <div class="kpi-card">
+  <section class="summary-grid">
+    <div class="summary-card total">
       <span>Total Wallets</span>
       <strong>{{ totalWallets }}</strong>
+      <small>All resident wallets</small>
     </div>
 
-    <div class="kpi-card">
+    <div class="summary-card active">
       <span>Active Wallets</span>
       <strong>{{ activeWallets }}</strong>
+      <small>Ready to use</small>
     </div>
 
-    <div class="kpi-card">
+    <div class="summary-card suspended">
       <span>Suspended Wallets</span>
       <strong>{{ suspendedWallets }}</strong>
+      <small>Temporarily disabled</small>
     </div>
 
-    <div class="kpi-card">
+    <div class="summary-card blocked">
       <span>Blocked Wallets</span>
       <strong>{{ blockedWallets }}</strong>
+      <small>Blocked by compliance</small>
     </div>
 
-    <div class="kpi-card">
+    <div class="summary-card synced">
       <span>Blockchain Synced</span>
       <strong>{{ syncedWallets }}</strong>
+      <small>Confirmed on blockchain</small>
     </div>
   </section>
 
@@ -56,18 +69,29 @@
       <div>
         <h2>Wallet Filters</h2>
         <p>
-          Filter resident wallets by wallet address, resident identity, wallet status, and blockchain status.
+          Search by wallet address, resident ID, resident name, wallet status, or blockchain status.
         </p>
       </div>
 
-      <button
-        class="btn btn-light"
-        type="button"
-        (click)="resetFilters()"
-        [disabled]="isLoading"
-      >
-        Reset Filters
-      </button>
+      <div class="section-actions">
+        <button
+          class="btn btn-light"
+          type="button"
+          (click)="resetFilters()"
+          [disabled]="isLoading || !hasFilters"
+        >
+          Reset Filters
+        </button>
+
+        <button
+          class="btn btn-primary"
+          type="button"
+          (click)="loadResidentWallets()"
+          [disabled]="isLoading"
+        >
+          Search
+        </button>
+      </div>
     </div>
 
     <div class="filters-grid">
@@ -75,7 +99,7 @@
         <label>Wallet Address</label>
         <input
           type="text"
-          placeholder="Search wallet address"
+          placeholder="Example: 0xRES..."
           [(ngModel)]="filters.walletAddress"
           (keyup.enter)="loadResidentWallets()"
         />
@@ -85,7 +109,7 @@
         <label>Resident ID</label>
         <input
           type="text"
-          placeholder="Search resident ID"
+          placeholder="Example: RES-20260525"
           [(ngModel)]="filters.residentId"
           (keyup.enter)="loadResidentWallets()"
         />
@@ -127,38 +151,36 @@
         </select>
       </div>
     </div>
-
-    <div class="filter-actions">
-      <button
-        class="btn btn-primary"
-        type="button"
-        (click)="loadResidentWallets()"
-        [disabled]="isLoading"
-      >
-        Search Wallets
-      </button>
-    </div>
   </section>
 
   <section class="table-card">
-    <div class="section-title">
+    <div class="section-title table-title">
       <div>
-        <h2>Resident Wallet List</h2>
+        <h2>Wallet Table</h2>
         <p *ngIf="!isLoading">
-          Showing {{ filteredWallets.length }} of {{ totalWallets }} wallets.
+          Showing {{ wallets.length }} wallet records from PostgreSQL.
         </p>
         <p *ngIf="isLoading">
-          Loading resident wallets from database...
+          Loading wallet data from PostgreSQL...
         </p>
       </div>
+
+      <span class="data-source-badge">
+        PostgreSQL · blockchain.resident_wallets
+      </span>
     </div>
 
-    <div *ngIf="errorMessage" class="error-message">
+    <div *ngIf="errorMessage" class="alert alert-error">
       {{ errorMessage }}
     </div>
 
+    <div *ngIf="successMessage && !errorMessage && !isLoading" class="alert alert-success">
+      {{ successMessage }}
+    </div>
+
     <div *ngIf="isLoading" class="loading-state">
-      Loading resident wallets...
+      <div class="loader"></div>
+      <span>Loading resident wallets...</span>
     </div>
 
     <div class="table-wrapper" *ngIf="!isLoading">
@@ -168,22 +190,22 @@
             <th>Wallet Address</th>
             <th>Resident ID</th>
             <th>Resident Name</th>
-            <th>Currency</th>
-            <th>Current Balance</th>
+            <th>Balance</th>
+            <th>Currency GOV</th>
             <th>Wallet Status</th>
             <th>Blockchain Status</th>
-            <th>Created At</th>
+            <th>Created Date</th>
             <th>Actions</th>
           </tr>
         </thead>
 
         <tbody>
-          <tr *ngFor="let wallet of filteredWallets">
+          <tr *ngFor="let wallet of wallets; trackBy: trackByWalletAddress">
             <td class="wallet-address">
               {{ wallet.walletAddress }}
             </td>
 
-            <td>
+            <td class="resident-id">
               {{ wallet.residentId }}
             </td>
 
@@ -191,12 +213,12 @@
               <strong>{{ wallet.residentName }}</strong>
             </td>
 
-            <td>
-              {{ wallet.currency }}
+            <td class="balance-cell">
+              {{ formatBalance(wallet.balance) }}
             </td>
 
             <td>
-              {{ formatBalance(wallet.currentBalance) }}
+              <span class="currency-badge">GOV</span>
             </td>
 
             <td>
@@ -223,39 +245,15 @@
 
             <td class="actions-cell">
               <button
-                class="action-btn view"
+                class="action-btn"
                 type="button"
                 (click)="viewWallet(wallet)"
               >
-                View Wallet
+                View
               </button>
 
               <button
-                class="action-btn activate"
-                type="button"
-                (click)="activateWallet(wallet)"
-              >
-                Activate
-              </button>
-
-              <button
-                class="action-btn suspend"
-                type="button"
-                (click)="suspendWallet(wallet)"
-              >
-                Suspend
-              </button>
-
-              <button
-                class="action-btn block"
-                type="button"
-                (click)="blockWallet(wallet)"
-              >
-                Block
-              </button>
-
-              <button
-                class="action-btn transactions"
+                class="action-btn"
                 type="button"
                 (click)="viewTransactions(wallet)"
               >
@@ -263,7 +261,7 @@
               </button>
 
               <button
-                class="action-btn proof"
+                class="action-btn"
                 type="button"
                 (click)="viewBlockchainProof(wallet)"
               >
@@ -272,9 +270,9 @@
             </td>
           </tr>
 
-          <tr *ngIf="filteredWallets.length === 0 && !errorMessage">
+          <tr *ngIf="wallets.length === 0 && !errorMessage">
             <td colspan="9" class="empty-state">
-              No resident wallets found.
+              No resident wallets found for the selected filters.
             </td>
           </tr>
         </tbody>
