@@ -21,9 +21,33 @@ const cors = require('cors');
 const crypto = require('crypto');
 const os = require('os');
 const residentWalletsRoutes = require('./routes/resident-wallets.routes');
-
+const paymentsDigitalStampsRoutes = require('./routes/payments-digital-stamps.routes');
+const documentsKycRoutes = require('./routes/documents-kyc.routes');
 const app = express();
 
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+const documentsKycCors = cors({
+  origin: [
+    'http://localhost:4200',
+    'http://127.0.0.1:4200',
+    'http://172.31.13.90:4200'
+  ],
+  methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  credentials: true
+});
+
+app.use('/api/v1/government-blockchain/documents-kyc', documentsKycCors);
+app.options(/^\/api\/v1\/government-blockchain\/documents-kyc(\/.*)?$/, documentsKycCors);
+
+app.use('/api/v1/government-blockchain/documents-kyc', documentsKycRoutes);
+
+
+
+
+app.use('/uploads', express.static('uploads'));
 /**
  * Optional packages.
  */
@@ -61,7 +85,6 @@ const HOST = process.env.HOST || '0.0.0.0';
 const SERVICE_NAME = process.env.SERVICE_NAME || 'Blockchain API Middleware';
 const SERVICE_VERSION = process.env.SERVICE_VERSION || '1.0.0';
 const NODE_ENV = process.env.NODE_ENV || 'production';
-
 /**
  * CORS configuration.
  */
@@ -177,9 +200,8 @@ if (helmet) {
 /**
  * Body parsers.
  */
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
+app.use('/api/v1/government-blockchain/payments-digital-stamps', paymentsDigitalStampsRoutes);
+console.log('[ROUTE LOADED] /api/v1/government-blockchain/payments-digital-stamps');
 /**
  * Request ID / Correlation ID middleware.
  */

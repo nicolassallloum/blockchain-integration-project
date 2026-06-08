@@ -18,7 +18,7 @@ const referenceRoutes = require('./routes/reference.routes');
 const blockchainKycRoutes = require('./routes/blockchain-kyc.routes');
 const app = express();
 const governmentReferenceRoutes = require('./routes/government-blockchain/reference.routes');
-
+const paymentsDigitalStampsRoutes = require('./routes/payments-digital-stamps.routes');
 /**
  * ---------------------------------------------------------
  * 1. CORS CONFIGURATION
@@ -88,7 +88,7 @@ app.use((req, res, next) => {
 
   return next();
 });
-
+app.use('/api/v1/government-blockchain/payments-digital-stamps', paymentsDigitalStampsRoutes);
 /**
  * Normal CORS middleware for non-OPTIONS requests.
  */

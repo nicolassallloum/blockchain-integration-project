@@ -1,86 +1,192 @@
 <div class="page-container">
+
   <div class="page-header">
     <div>
       <h1>Documents & KYC</h1>
       <p>Review resident KYC documents, verification status, and compliance validation.</p>
     </div>
 
-    <button class="primary-btn">Upload Document</button>
+    <button class="primary-btn" (click)="openUploadModal()">Upload Document</button>
+  </div>
+
+  <div *ngIf="errorMessage" class="alert alert-error">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="successMessage" class="alert alert-success">
+    {{ successMessage }}
   </div>
 
   <div class="cards-grid">
     <div class="summary-card">
       <h3>Total Documents</h3>
-      <strong>21,900</strong>
+      <strong>{{ summary.total_documents | number }}</strong>
       <span>Uploaded KYC files</span>
     </div>
 
     <div class="summary-card">
       <h3>Verified</h3>
-      <strong>18,430</strong>
+      <strong>{{ summary.verified | number }}</strong>
       <span>Approved documents</span>
     </div>
 
     <div class="summary-card">
       <h3>Pending</h3>
-      <strong>2,145</strong>
+      <strong>{{ summary.pending | number }}</strong>
       <span>Waiting review</span>
     </div>
 
     <div class="summary-card">
       <h3>Rejected</h3>
-      <strong>392</strong>
+      <strong>{{ summary.rejected | number }}</strong>
       <span>Invalid or expired</span>
     </div>
   </div>
 
   <div class="table-card">
-    <h2>KYC Document Queue</h2>
+    <div class="table-header">
+      <h2>KYC Document Queue</h2>
 
-    <table>
-      <thead>
-        <tr>
-          <th>Resident ID</th>
-          <th>Full Name</th>
-          <th>Document Type</th>
-          <th>Document No.</th>
-          <th>Expiry Date</th>
-          <th>KYC Status</th>
-          <th>Action</th>
-        </tr>
-      </thead>
+      <div class="filters">
+        <input
+          type="text"
+          placeholder="Search resident, document, file..."
+          [(ngModel)]="searchText"
+          (ngModelChange)="applyFilters()"
+        />
 
-      <tbody>
-        <tr>
-          <td>RES-000043</td>
-          <td>Nicolas Bernard Salloum</td>
-          <td>National ID</td>
-          <td>1234567890</td>
-          <td>2031-12-31</td>
-          <td><span class="badge success">Verified</span></td>
-          <td><button class="small-btn">View</button></td>
-        </tr>
+        <select [(ngModel)]="statusFilter" (ngModelChange)="applyFilters()">
+          <option value="All">All Statuses</option>
+          <option value="Pending">Pending</option>
+          <option value="Verified">Verified</option>
+          <option value="Rejected">Rejected</option>
+          <option value="Expired">Expired</option>
+        </select>
+      </div>
+    </div>
 
-        <tr>
-          <td>RES-000044</td>
-          <td>Sarah Nassar</td>
-          <td>Passport</td>
-          <td>RL987654</td>
-          <td>2028-05-20</td>
-          <td><span class="badge warning">Pending</span></td>
-          <td><button class="small-btn">Review</button></td>
-        </tr>
+    <div *ngIf="loading" class="loading">
+      Loading KYC documents...
+    </div>
 
-        <tr>
-          <td>RES-000045</td>
-          <td>Fadi Khoury</td>
-          <td>Residency Document</td>
-          <td>DOC-778899</td>
-          <td>2023-10-01</td>
-          <td><span class="badge danger">Expired</span></td>
-          <td><button class="small-btn">Review</button></td>
-        </tr>
-      </tbody>
-    </table>
+    <div *ngIf="!loading" class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Resident ID</th>
+            <th>Full Name</th>
+            <th>Document Type</th>
+            <th>Document No.</th>
+            <th>Expiry Date</th>
+            <th>File</th>
+            <th>Size</th>
+            <th>KYC Status</th>
+            <th>Uploaded At</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let doc of filteredDocuments">
+            <td>{{ doc.resident_id }}</td>
+            <td>{{ doc.resident_name }}</td>
+            <td>{{ doc.document_type }}</td>
+            <td>{{ doc.document_number || '-' }}</td>
+            <td>{{ doc.expiry_date ? (doc.expiry_date | date:'yyyy-MM-dd') : '-' }}</td>
+            <td>
+              <button class="file-link" (click)="downloadDocument(doc)">
+                {{ doc.original_file_name }}
+              </button>
+            </td>
+            <td>{{ formatFileSize(doc.file_size) }}</td>
+            <td>
+              <span [class]="getStatusClass(doc.kyc_status)">
+                {{ doc.kyc_status }}
+              </span>
+            </td>
+            <td>{{ doc.created_at | date:'yyyy-MM-dd HH:mm' }}</td>
+            <td>
+              <div class="action-buttons">
+                <button class="small-btn view" (click)="downloadDocument(doc)">View</button>
+
+                <button
+                  class="small-btn approve"
+                  *ngIf="doc.kyc_status !== 'Verified'"
+                  (click)="updateStatus(doc, 'Verified')">
+                  Verify
+                </button>
+
+                <button
+                  class="small-btn reject"
+                  *ngIf="doc.kyc_status !== 'Rejected'"
+                  (click)="updateStatus(doc, 'Rejected')">
+                  Reject
+                </button>
+              </div>
+            </td>
+          </tr>
+
+          <tr *ngIf="filteredDocuments.length === 0">
+            <td colspan="10" class="empty">
+              No KYC documents found.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
+
+  <div class="modal-backdrop" *ngIf="showUploadModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Upload KYC Document</h2>
+        <button class="close-btn" (click)="closeUploadModal()">×</button>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Resident ID</label>
+          <input type="text" [(ngModel)]="uploadForm.resident_id" placeholder="RES-00043" />
+        </div>
+
+        <div class="form-group">
+          <label>Resident Name</label>
+          <input type="text" [(ngModel)]="uploadForm.resident_name" placeholder="Nicolas Bernard Salloum" />
+        </div>
+
+        <div class="form-group">
+          <label>Document Type</label>
+          <select [(ngModel)]="uploadForm.document_type">
+            <option value="">Select document type</option>
+            <option *ngFor="let type of documentTypes" [value]="type">
+              {{ type }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Document Number</label>
+          <input type="text" [(ngModel)]="uploadForm.document_number" placeholder="1234567890" />
+        </div>
+
+        <div class="form-group">
+          <label>Expiry Date</label>
+          <input type="date" [(ngModel)]="uploadForm.expiry_date" />
+        </div>
+
+        <div class="form-group">
+          <label>Document File</label>
+          <input type="file" (change)="onFileSelected($event)" />
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="secondary-btn" (click)="closeUploadModal()">Cancel</button>
+        <button class="primary-btn" (click)="uploadDocument()" [disabled]="uploading">
+          {{ uploading ? 'Uploading...' : 'Save Document' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
 </div>

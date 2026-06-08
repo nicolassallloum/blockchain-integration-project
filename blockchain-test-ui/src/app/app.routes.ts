@@ -20,8 +20,8 @@ import { CreateResidentAccountComponent } from './pages/government-blockchain/cr
 import { NewTransactionComponent } from './pages/government-blockchain/new-transaction/new-transaction.component';
 import { TransactionList } from './government-blockchain/transaction-list/transaction-list';
 import { ApprovalQueue } from './government-blockchain/approval-queue/approval-queue';
-import { PaymentsDigitalStamps } from './government-blockchain/payments-digital-stamps/payments-digital-stamps';
-import { DocumentsKyc } from './government-blockchain/documents-kyc/documents-kyc';
+import { PaymentsDigitalStampsComponent } from './government-blockchain/payments-digital-stamps/payments-digital-stamps';
+import { DocumentsKycComponent } from './government-blockchain/documents-kyc/documents-kyc';
 import { BlockchainProof } from './government-blockchain/blockchain-proof/blockchain-proof';
 import { HashVerification } from './government-blockchain/hash-verification/hash-verification';
 import { RiskFraudScreening } from './government-blockchain/risk-fraud-screening/risk-fraud-screening';
@@ -37,7 +37,10 @@ export const routes: Routes = [
     redirectTo: 'digital-kyc/dashboard',
     pathMatch: 'full'
   },
-
+  {
+    path: 'government-blockchain/payments-digital-stamps',
+    component: PaymentsDigitalStampsComponent
+  },
   /*
    * Existing Digital KYC Routes
    */
@@ -104,13 +107,13 @@ export const routes: Routes = [
     path: 'government-blockchain/approval-queue',
     component: ApprovalQueue
   },
-  {
-    path: 'government-blockchain/payments-digital-stamps',
-    component: PaymentsDigitalStamps
-  },
+  // {
+  //   path: 'government-blockchain/payments-digital-stamps',
+  //   component: PaymentsDigitalStamps
+  // },
   {
     path: 'government-blockchain/documents-kyc',
-    component: DocumentsKyc
+    component: DocumentsKycComponent
   },
   {
     path: 'government-blockchain/blockchain-proof',
