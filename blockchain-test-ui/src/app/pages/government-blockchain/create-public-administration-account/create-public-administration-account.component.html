@@ -218,11 +218,12 @@
 
       <div class="form-control">
         <label>Wallet Currency</label>
-        <select formControlName="walletCurrency">
-          <option *ngFor="let currency of walletCurrencies" [value]="currency">
-            {{ currency }}
-          </option>
-        </select>
+        <input
+          formControlName="walletCurrency"
+          value="GOV"
+          readonly
+        />
+        <small>Currency is fixed to GOV for all public administration wallets.</small>
       </div>
 
       <div class="form-control">
@@ -331,6 +332,7 @@
             <th>Governorate</th>
             <th>Municipality</th>
             <th>Wallet</th>
+            <th>Currency</th>
             <th>Status</th>
           </tr>
         </thead>
@@ -344,6 +346,7 @@
             <td>{{ row.governorate }}</td>
             <td>{{ row.municipality }}</td>
             <td>{{ row.walletAddress }}</td>
+            <td>{{ row.walletCurrency }}</td>
             <td>
               <span class="status">{{ row.walletStatus }}</span>
             </td>

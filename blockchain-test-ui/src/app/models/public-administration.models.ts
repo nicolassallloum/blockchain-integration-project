@@ -1,5 +1,5 @@
 export type WalletStatus = 'ACTIVE' | 'INACTIVE' | 'PENDING' | 'SUSPENDED';
-export type WalletCurrency = 'LBP' | 'USD' | 'EUR';
+export type WalletCurrency = 'GOV';
 export type AdministrationType =
   | 'DIRECTORATE'
   | 'DEPARTMENT'

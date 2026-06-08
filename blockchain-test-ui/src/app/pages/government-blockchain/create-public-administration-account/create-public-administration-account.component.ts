@@ -143,7 +143,7 @@ export class CreatePublicAdministrationAccountComponent implements OnInit {
     ]
   };
 
-  walletCurrencies: WalletCurrency[] = ['LBP', 'USD', 'EUR'];
+  walletCurrencies: WalletCurrency[] = ['GOV'];
   walletStatuses: WalletStatus[] = ['ACTIVE', 'INACTIVE', 'PENDING', 'SUSPENDED'];
 
   constructor(
@@ -187,7 +187,7 @@ export class CreatePublicAdministrationAccountComponent implements OnInit {
           Validators.pattern(/^GOV-ADM-[0-9]+$/)
         ]
       ],
-      walletCurrency: ['LBP', Validators.required],
+      walletCurrency: ['GOV', Validators.required],
       walletStatus: ['PENDING', Validators.required]
     });
   }
@@ -281,7 +281,7 @@ export class CreatePublicAdministrationAccountComponent implements OnInit {
     this.administrationForm.reset({
       country: 'Lebanon',
       administrationType: 'DIRECTORATE',
-      walletCurrency: 'LBP',
+      walletCurrency: 'GOV',
       walletStatus: 'PENDING'
     });
 
@@ -406,7 +406,7 @@ export class CreatePublicAdministrationAccountComponent implements OnInit {
       'Beirut Municipality',
       '"Beirut, Lebanon"',
       'GOV-ADM-1',
-      'LBP',
+      'GOV',
       'PENDING'
     ].join(',');
 
@@ -465,7 +465,8 @@ export class CreatePublicAdministrationAccountComponent implements OnInit {
         this.administrationForm.patchValue({
           administrationId: data.administrationId,
           administrationCode: data.administrationCode,
-          walletAddress: data.walletAddress
+          walletAddress: data.walletAddress,
+          walletCurrency: 'GOV'
         });
       },
       error: (err) => {
@@ -536,8 +537,7 @@ export class CreatePublicAdministrationAccountComponent implements OnInit {
       walletCurrency:
         data.wallet_currency ||
         data.walletCurrency ||
-        formValue.walletCurrency ||
-        'LBP',
+        'GOV',
       walletStatus:
         data.wallet_status ||
         data.walletStatus ||
@@ -573,7 +573,7 @@ export class CreatePublicAdministrationAccountComponent implements OnInit {
       municipality: this.clean(value.municipality),
       address: this.clean(value.address),
       walletAddress: this.clean(value.walletAddress),
-      walletCurrency: this.clean(value.walletCurrency) as WalletCurrency,
+      walletCurrency: 'GOV' as WalletCurrency,
       walletStatus: this.clean(value.walletStatus) as WalletStatus,
       saveToBlockchain: true,
       saveToPostgresql: true
@@ -618,7 +618,7 @@ export class CreatePublicAdministrationAccountComponent implements OnInit {
         municipality: this.clean(row.municipality),
         address: this.clean(row.address),
         walletAddress: this.clean(row.walletAddress),
-        walletCurrency: (this.clean(row.walletCurrency) || 'LBP') as WalletCurrency,
+        walletCurrency: 'GOV' as WalletCurrency,
         walletStatus: (this.clean(row.walletStatus) || 'PENDING') as WalletStatus,
         saveToBlockchain: true,
         saveToPostgresql: true
