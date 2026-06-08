@@ -72,9 +72,10 @@ async function resolveAdministrationId(administrationValue) {
 
   const result = await pool.query(
     `
-    SELECT administration_id
+    SELECT id
     FROM blockchain.public_administrations
-    WHERE administration_id::TEXT = $1
+    WHERE id::TEXT = $1
+       OR administration_id::TEXT = $1
        OR UPPER(COALESCE(administration_code, '')) = UPPER($1)
        OR UPPER(COALESCE(administration_name, '')) = UPPER($1)
     LIMIT 1
@@ -82,7 +83,7 @@ async function resolveAdministrationId(administrationValue) {
     [String(administrationValue).trim()]
   );
 
-  return result.rows[0]?.administration_id || null;
+  return result.rows[0]?.id || null;
 }
 
 router.get('/summary', async (req, res) => {
@@ -204,7 +205,7 @@ router.get('/', async (req, res) => {
       LEFT JOIN blockchain.government_ministries gm
           ON gm.ministry_id::TEXT = gs.ministry_id::TEXT
       LEFT JOIN blockchain.public_administrations pa
-          ON pa.administration_id::TEXT = gs.administration_id::TEXT
+          ON pa.id::TEXT = gs.administration_id::TEXT
       WHERE
           (
               $1::TEXT IS NULL

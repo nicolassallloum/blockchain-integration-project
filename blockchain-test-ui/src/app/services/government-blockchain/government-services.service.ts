@@ -61,6 +61,8 @@ export interface GovernmentServiceReferenceMinistry {
 }
 
 export interface GovernmentServiceReferenceAdministration {
+  id: string;
+  name: string;
   administrationId: string;
   administrationName: string;
 }
@@ -170,14 +172,9 @@ export class GovernmentServicesService {
   }
 
   getAdministrations(): Observable<ApiResponse<any[]>> {
-    return new Observable((observer) => {
-      observer.next({
-        success: true,
-        data: [],
-      });
-
-      observer.complete();
-    });
+    return this.http.get<ApiResponse<any[]>>(
+      `${this.administrationsUrl}/dropdown`
+    );
   }
 
   extractArray(response: any): any[] {
@@ -334,40 +331,29 @@ export class GovernmentServicesService {
   }
 
   mapAdministrations(rows: any[]): GovernmentServiceReferenceAdministration[] {
-    return rows
-      .map((row) => ({
-        administrationId: this.toStringValue(
+    return rows.map((row) => {
+      const id = this.toStringValue(
+        row.id ??
           row.administration_id ??
-            row.administrationId ??
-            row.id
-        ),
-        administrationName: this.toStringValue(
+          row.administrationId
+      );
+
+      const name = this.toStringValue(
+        row.name ??
           row.administration_name ??
-            row.administrationName ??
-            row.name ??
-            row.administration_english_name ??
-            row.english_name ??
-            row.englishName ??
-            row.administration_code ??
-            row.administrationCode
-        ),
-      }))
-      .filter((item) => item.administrationId && item.administrationName);
+          row.administrationName ??
+          'Unnamed Administration'
+      );
+
+      return {
+        id,
+        name,
+        administrationId: id,
+        administrationName: name,
+      };
+    });
   }
 
-  private normalizeStatus(value: any): ServiceStatus {
-    const status = this.toStringValue(value).toUpperCase();
-
-    if (status === 'ACTIVE' || status === 'ACTIVE SERVICES' || status === 'Active') {
-      return 'ACTIVE';
-    }
-
-    if (status === 'INACTIVE' || status === 'Inactive') {
-      return 'INACTIVE';
-    }
-
-    return 'DRAFT';
-  }
 
   private toBoolean(value: any): boolean {
     return (
@@ -380,6 +366,16 @@ export class GovernmentServicesService {
       value === '1' ||
       value === 1
     );
+  }
+
+  private normalizeStatus(value: any): ServiceStatus {
+    const status = String(value || 'DRAFT').toUpperCase();
+
+    if (status === 'ACTIVE' || status === 'INACTIVE' || status === 'DRAFT') {
+      return status as ServiceStatus;
+    }
+
+    return 'DRAFT';
   }
 
   private toStringValue(value: any): string {

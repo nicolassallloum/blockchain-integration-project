@@ -290,6 +290,12 @@ const governmentServicesRoutes = safeRoute(
   'government-services.routes'
 );
 
+
+const publicAdministrationRoutes = safeRoute(
+  './routes/publicAdministration.routes',
+  'publicAdministration.routes'
+);
+
 const governmentTransactionsRoutes = safeRoute(
   './routes/government-transactions.routes',
   'government-transactions.routes'
@@ -375,6 +381,15 @@ if (governmentServicesRoutes) {
     governmentServicesRoutes
   );
   console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/services');
+}
+
+
+if (publicAdministrationRoutes) {
+  app.use(
+    '/api/v1/government-blockchain/public-administrations',
+    publicAdministrationRoutes
+  );
+  console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/public-administrations');
 }
 
 if (governmentTransactionsRoutes) {
