@@ -109,7 +109,7 @@ export class CreateMinistryAccountComponent implements OnInit {
     'South Lebanon',
   ];
 
-  walletCurrencies: string[] = ['LBP', 'USD', 'GOV'];
+  walletCurrencies: string[] = ['GOV'];
 
   walletStatuses: string[] = [
     'PENDING_CREATION',
@@ -158,7 +158,7 @@ export class CreateMinistryAccountComponent implements OnInit {
       address: ['', Validators.required],
 
       walletAddress: [''],
-      walletCurrency: ['LBP', Validators.required],
+      walletCurrency: [{ value: 'GOV', disabled: true }, Validators.required],
       walletStatus: ['PENDING_CREATION', Validators.required],
 
       blockchainNetwork: ['Hyperledger Fabric', Validators.required],
@@ -214,7 +214,7 @@ export class CreateMinistryAccountComponent implements OnInit {
 
     this.isSubmitting = true;
 
-    const formValue = this.ministryAccountForm.getRawValue();
+    const formValue = { ...this.ministryAccountForm.getRawValue(), walletCurrency: 'GOV' };
 
     const payload = {
       ministry: {
@@ -253,7 +253,7 @@ export class CreateMinistryAccountComponent implements OnInit {
       },
       wallet: {
         walletAddress: formValue.walletAddress || null,
-        walletCurrency: formValue.walletCurrency || 'LBP',
+        walletCurrency: 'GOV',
         walletInitialBalance: 0,
         walletType: 'MINISTRY_WALLET',
         walletStatus:
@@ -300,11 +300,7 @@ export class CreateMinistryAccountComponent implements OnInit {
             formValue.walletAddress ||
             '';
 
-          this.createdWalletCurrency =
-            wallet?.wallet_currency ||
-            wallet?.walletCurrency ||
-            formValue.walletCurrency ||
-            'LBP';
+          this.createdWalletCurrency = 'GOV';
 
           this.createdWalletBalance =
             wallet?.wallet_current_balance ||
@@ -466,7 +462,7 @@ export class CreateMinistryAccountComponent implements OnInit {
     this.ministryAccountForm.reset({
       parentMinistry: 'None',
       country: 'Lebanon',
-      walletCurrency: 'LBP',
+      walletCurrency: 'GOV',
       walletStatus: 'PENDING_CREATION',
       blockchainNetwork: 'Hyperledger Fabric',
       blockchainChannel: 'kycchannelnix1',
@@ -586,7 +582,7 @@ export class CreateMinistryAccountComponent implements OnInit {
         governorate: rowObject['governorate'],
         address: rowObject['address'],
         walletAddress: rowObject['walletAddress'],
-        walletCurrency: rowObject['walletCurrency'] || 'LBP',
+        walletCurrency: 'GOV',
         walletStatus: rowObject['walletStatus'] || 'PENDING_CREATION',
         blockchainStatus: rowObject['blockchainStatus'] || 'NOT_SUBMITTED',
         errors: [],
@@ -641,7 +637,7 @@ export class CreateMinistryAccountComponent implements OnInit {
 
         address: row.address,
         walletAddress: row.walletAddress || null,
-        walletCurrency: row.walletCurrency || 'LBP',
+        walletCurrency: 'GOV',
         walletStatus:
           row.walletStatus === 'PENDING_CREATION'
             ? 'ACTIVE'
@@ -811,9 +807,7 @@ export class CreateMinistryAccountComponent implements OnInit {
       errors.push('Invalid email format');
     }
 
-    if (row.walletCurrency && !this.walletCurrencies.includes(row.walletCurrency)) {
-      errors.push(`Invalid wallet currency: ${row.walletCurrency}`);
-    }
+    row.walletCurrency = 'GOV';
 
     if (row.walletStatus && !this.walletStatuses.includes(row.walletStatus)) {
       errors.push(`Invalid wallet status: ${row.walletStatus}`);

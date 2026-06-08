@@ -190,10 +190,13 @@
 
         <div class="form-field">
           <label for="walletCurrency">Wallet Currency</label>
-          <select id="walletCurrency" formControlName="walletCurrency">
-            <option *ngFor="let currency of walletCurrencies" [value]="currency">{{ currency }}</option>
-          </select>
-          <small *ngIf="isInvalid('walletCurrency')">{{ getErrorMessage('walletCurrency') }}</small>
+          <div class="readonly-currency-field">
+            GOV
+          </div>
+          <input type="hidden" formControlName="walletCurrency" />
+          <small class="currency-note">
+            Ministry wallet currency is fixed to GOV and cannot be changed.
+          </small>
         </div>
 
         <div class="form-field">

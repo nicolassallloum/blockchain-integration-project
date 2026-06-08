@@ -1,4 +1,5 @@
 const express = require('express');
+const multer = require('multer');
 
 const {
   getNextMinistryId,
@@ -13,9 +14,16 @@ const {
 
 const router = express.Router();
 
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024
+  }
+});
+
 router.post('/login', loginMinistry);
 router.post('/draft', saveMinistryDraft);
-router.post('/bulk', bulkCreateMinistries);
+router.post('/bulk', upload.single('file'), bulkCreateMinistries);
 router.get('/reference/next-ministry-id', getNextMinistryId);
 router.post('/', createMinistryAccount);
 router.get('/', getMinistries);

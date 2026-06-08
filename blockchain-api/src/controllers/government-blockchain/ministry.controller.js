@@ -1,6 +1,19 @@
 const db = require('../../config/database');
 const bcrypt = require('bcryptjs');
 const fabricService = require('../../services/fabric.service');
+const MINISTRY_WALLET_CURRENCY = 'GOV';
+
+function forceMinistryGovCurrency(inputCurrency) {
+  const normalized = String(inputCurrency || '').trim().toUpperCase();
+
+  if (normalized && normalized !== MINISTRY_WALLET_CURRENCY) {
+    console.warn(
+      `[MINISTRY GOV CURRENCY ENFORCED] Received currency "${inputCurrency}", forced to GOV`
+    );
+  }
+
+  return MINISTRY_WALLET_CURRENCY;
+}
 function generateWalletAddress(ministryCode) {
   const cleanCode = String(ministryCode || 'MIN')
     .replace(/[^A-Z0-9]/gi, '')
@@ -66,7 +79,7 @@ function buildMinistryBlockchainDocument(savedMinistry, savedWallet) {
     governorateName: savedMinistry.governorate_name,
     address: savedMinistry.address,
     walletAddress: savedWallet ? savedWallet.wallet_address : null,
-    walletCurrency: savedWallet ? savedWallet.wallet_currency : null,
+    walletCurrency: MINISTRY_WALLET_CURRENCY,
     walletStatus: savedWallet ? savedWallet.wallet_status : savedMinistry.wallet_status,
     institutionStatus: savedMinistry.institution_status,
     blockchainStatus: 'CONFIRMED',
@@ -166,7 +179,7 @@ async function createMinistryAccount(req, res, next) {
         updated_at;
       `,
       [
-        ministry.ministryId,
+        ministry.ministryReferenceId || ministry.ministryId,
         ministry.ministryCode,
         ministry.ministryName,
         ministry.arabicName,
@@ -222,7 +235,7 @@ async function createMinistryAccount(req, res, next) {
         [
           savedMinistry.ministry_id,
           walletAddress,
-          wallet.walletCurrency || 'LBP',
+          MINISTRY_WALLET_CURRENCY,
           Number(wallet.walletInitialBalance || 0),
           Number(wallet.walletInitialBalance || 0),
           wallet.walletType || 'MINISTRY_WALLET',
@@ -547,7 +560,7 @@ async function loginMinistry(req, res, next) {
         wallet: {
           walletId: ministry.wallet_id,
           walletAddress: ministry.wallet_address,
-          walletCurrency: ministry.wallet_currency,
+          walletCurrency: MINISTRY_WALLET_CURRENCY,
           walletCurrentBalance: ministry.wallet_current_balance,
           walletType: ministry.wallet_type,
           walletStatus: ministry.ministry_wallet_status
@@ -648,7 +661,7 @@ async function createMinistryWallet(req, res, next) {
       [
         ministry.ministry_id,
         walletAddress,
-        wallet.walletCurrency || 'LBP',
+        MINISTRY_WALLET_CURRENCY,
         Number(wallet.walletInitialBalance || 0),
         Number(wallet.walletInitialBalance || 0),
         wallet.walletType || 'MINISTRY_WALLET',
@@ -805,15 +818,212 @@ async function getMinistryById(req, res, next) {
   }
 }
 
+
+function parseCsvMinistriesFromBuffer(fileBuffer) {
+  const content = fileBuffer.toString('utf8').replace(/^\uFEFF/, '').trim();
+
+  if (!content) {
+    return [];
+  }
+
+  const lines = content.split(/\r?\n/).filter(Boolean);
+
+  if (lines.length < 2) {
+    return [];
+  }
+
+  const parseLine = (line) => {
+    const values = [];
+    let current = '';
+    let insideQuotes = false;
+
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      const next = line[i + 1];
+
+      if (char === '"' && insideQuotes && next === '"') {
+        current += '"';
+        i++;
+      } else if (char === '"') {
+        insideQuotes = !insideQuotes;
+      } else if (char === ',' && !insideQuotes) {
+        values.push(current.trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+
+    values.push(current.trim());
+    return values;
+  };
+
+  const headers = parseLine(lines[0]).map((h) => h.trim());
+  const rows = [];
+
+  for (const line of lines.slice(1)) {
+    const values = parseLine(line);
+    const row = {};
+
+    headers.forEach((header, index) => {
+      row[header] = values[index] || '';
+    });
+
+    rows.push(row);
+  }
+
+  return rows;
+}
+
+function normalizeMinistryBulkRow(row) {
+  const ministryCode =
+    row.ministryCode ||
+    row.ministry_code ||
+    null;
+
+  return {
+    ministryReferenceId:
+      row.ministryReferenceId ||
+      row.ministry_reference_id ||
+      row.ministryId ||
+      row.ministry_id ||
+      null,
+
+    ministryCode,
+
+    ministryName:
+      row.ministryName ||
+      row.ministry_name ||
+      null,
+
+    arabicName:
+      row.arabicName ||
+      row.arabic_name ||
+      row.ministryName ||
+      row.ministry_name ||
+      'غير محدد',
+
+    ministryType:
+      row.ministryType ||
+      row.ministry_type ||
+      'CENTRAL_MINISTRY',
+
+    parentMinistry:
+      row.parentMinistry ||
+      row.parent_ministry ||
+      null,
+
+    ministerName:
+      row.ministerName ||
+      row.minister_name ||
+      'Not Provided',
+
+    contactPerson:
+      row.contactPerson ||
+      row.contact_person ||
+      'Not Provided',
+
+    contactEmail:
+      row.contactEmail ||
+      row.contact_email ||
+      row.email ||
+      `${ministryCode || 'ministry'}@example.gov`,
+
+    contactMobile:
+      row.contactMobile ||
+      row.contact_mobile ||
+      row.phone ||
+      '+96100000000',
+
+    address:
+      row.address ||
+      'Not Provided',
+
+    countryId:
+      row.countryId ||
+      row.country_id ||
+      null,
+
+    countryCode:
+      row.countryCode ||
+      row.country_code ||
+      'LB',
+
+    countryName:
+      row.countryName ||
+      row.country_name ||
+      row.country ||
+      'Lebanon',
+
+    governorateId:
+      row.governorateId ||
+      row.governorate_id ||
+      null,
+
+    governorateCode:
+      row.governorateCode ||
+      row.governorate_code ||
+      null,
+
+    governorateName:
+      row.governorateName ||
+      row.governorate_name ||
+      row.governorate ||
+      null,
+
+    governorateNameAr:
+      row.governorateNameAr ||
+      row.governorate_name_ar ||
+      null,
+
+    website:
+      row.website ||
+      null,
+
+    walletAddress:
+      row.walletAddress ||
+      row.wallet_address ||
+      null,
+
+    walletCurrency: MINISTRY_WALLET_CURRENCY,
+    walletInitialBalance: row.walletInitialBalance || row.wallet_initial_balance || 0,
+    walletType: row.walletType || row.wallet_type || 'MINISTRY_WALLET',
+    walletStatus: row.walletStatus || row.wallet_status || 'ACTIVE',
+    blockchainStatus: row.blockchainStatus || row.blockchain_status || 'NOT_SUBMITTED',
+    loginUsername: row.loginUsername || row.login_username || ministryCode || null,
+    password: row.password || null
+  };
+}
+
 async function bulkCreateMinistries(req, res, next) {
   try {
-    const { ministries } = req.body;
+    console.log('[BULK_CREATE_MINISTRIES_INPUT]', {
+      body: req.body,
+      file: req.file
+        ? {
+            originalname: req.file.originalname,
+            mimetype: req.file.mimetype,
+            size: req.file.size
+          }
+        : null,
+      files: req.files
+    });
+
+    let ministries = [];
+
+    if (req.file && req.file.buffer) {
+      ministries = parseCsvMinistriesFromBuffer(req.file.buffer).map(normalizeMinistryBulkRow);
+    } else if (req.body && Array.isArray(req.body.ministries)) {
+      ministries = req.body.ministries.map(normalizeMinistryBulkRow);
+    } else if (req.body && typeof req.body.ministries === 'string') {
+      ministries = JSON.parse(req.body.ministries).map(normalizeMinistryBulkRow);
+    }
 
     if (!Array.isArray(ministries) || ministries.length === 0) {
       return res.status(400).json({
         success: false,
-        message: 'ministries array is required.',
-        errorCode: 'MINISTRIES_ARRAY_REQUIRED',
+        message: 'ministries array or CSV file is required.',
+        errorCode: 'MINISTRIES_ARRAY_OR_CSV_REQUIRED',
         data: null
       });
     }
@@ -927,14 +1137,14 @@ async function bulkCreateMinistries(req, res, next) {
           ministryReferenceId,
           ministryCode,
           ministry.ministryName,
-          ministry.arabicName || null,
-          ministry.ministryType || 'Central Government Ministry',
+          ministry.arabicName || 'غير محدد',
+          ministry.ministryType || 'CENTRAL_MINISTRY',
           ministry.parentMinistry || null,
-          ministry.ministerName || null,
-          ministry.contactPerson || null,
-          ministry.contactEmail || null,
-          ministry.contactMobile || null,
-          ministry.address || null,
+          ministry.ministerName || 'Not Provided',
+          ministry.contactPerson || 'Not Provided',
+          ministry.contactEmail || 'not-provided@example.gov',
+          ministry.contactMobile || '+96100000000',
+          ministry.address || 'Not Provided',
           ministry.countryId || null,
           ministry.countryCode || null,
           ministry.countryName || ministry.country || null,
@@ -985,7 +1195,7 @@ async function bulkCreateMinistries(req, res, next) {
         [
           savedMinistry.ministry_id,
           walletAddress,
-          ministry.walletCurrency || 'LBP',
+          MINISTRY_WALLET_CURRENCY,
           Number(ministry.walletInitialBalance || 0),
           Number(ministry.walletInitialBalance || 0),
           ministry.walletType || 'MINISTRY_WALLET',
@@ -1034,7 +1244,13 @@ async function bulkCreateMinistries(req, res, next) {
   } catch (error) {
     await db.query('ROLLBACK');
 
-    console.error('Bulk ministry upload error:', error);
+    console.error('[BULK_CREATE_MINISTRIES_ERROR]', {
+      message: error.message,
+      stack: error.stack,
+      requestId: req.requestId,
+      body: req.body,
+      file: req.file
+    });
 
     if (error.code === '23505') {
       return res.status(409).json({
