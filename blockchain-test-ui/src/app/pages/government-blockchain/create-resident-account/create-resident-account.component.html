@@ -330,10 +330,11 @@
 
         <div class="form-field">
           <label>Wallet Currency <span>*</span></label>
-          <select formControlName="walletCurrency">
-            <option *ngFor="let item of walletCurrencies" [value]="item.id">{{ item.name }}</option>
-          </select>
-          <small *ngIf="hasFieldError('walletCurrency')">{{ getFieldError('walletCurrency') }}</small>
+          <input type="text" value="GOV - Government Digital Token" readonly />
+          <input type="hidden" formControlName="walletCurrency" />
+          <small>
+            Resident wallet currency is fixed to GOV and cannot be changed.
+          </small>
         </div>
 
         <div class="form-field">

@@ -68,7 +68,7 @@ async function createResident(payload) {
     payload.kycStatus || 'Draft',
     payload.riskCategory || 'Low',
     payload.walletAddress || null,
-    payload.walletCurrency || 'LBP',
+    'GOV',
     payload.walletStatus || 'Not Created',
     payload.recordStatus || 'ACTIVE',
   ];
@@ -176,7 +176,7 @@ async function createOrUpdateDraft(payload) {
     payload.kycStatus || 'Draft',
     payload.riskCategory || 'Low',
     payload.walletAddress || null,
-    payload.walletCurrency || 'LBP',
+    'GOV',
     payload.walletStatus || 'Not Created',
   ];
 
@@ -219,7 +219,7 @@ async function createWallet(residentId, walletData) {
       [
         residentId,
         walletData.walletAddress,
-        walletData.walletCurrency || 'LBP',
+        'GOV',
         walletData.walletStatus || 'Active',
         walletData.blockchainStatus || 'PENDING',
         walletData.fabricTxId || null,
@@ -240,7 +240,7 @@ async function createWallet(residentId, walletData) {
       [
         residentId,
         walletData.walletAddress,
-        walletData.walletCurrency || 'LBP',
+        'GOV',
         walletData.walletStatus || 'Active',
       ]
     );

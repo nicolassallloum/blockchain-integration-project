@@ -137,8 +137,6 @@ export class CreateResidentAccountComponent implements OnInit {
   riskCategories: ResidentLookupItem[] = [];
 
   walletCurrencies: LookupItem[] = [
-    { id: 'LBP', name: 'LBP - Lebanese Pound' },
-    { id: 'USD', name: 'USD - US Dollar' },
     { id: 'GOV', name: 'GOV - Government Digital Token' },
   ];
 
@@ -212,7 +210,7 @@ export class CreateResidentAccountComponent implements OnInit {
         riskCategory: ['LOW', Validators.required],
 
         walletAddress: [{ value: '', disabled: false }, [Validators.maxLength(150)]],
-        walletCurrency: ['LBP', Validators.required],
+        walletCurrency: [{ value: 'GOV', disabled: true }, Validators.required],
         walletStatus: ['Not Created', Validators.required],
 
         /*
@@ -364,7 +362,7 @@ export class CreateResidentAccountComponent implements OnInit {
       kycStatus: 'DRAFT',
       riskCategory: 'LOW',
       walletAddress: '',
-      walletCurrency: 'LBP',
+      walletCurrency: 'GOV',
       walletStatus: 'Not Created',
       walletPassword: '',
       confirmWalletPassword: '',
@@ -477,7 +475,7 @@ export class CreateResidentAccountComponent implements OnInit {
     this.isWalletCreating.set(true);
 
     const payload = {
-      walletCurrency: this.residentForm.get('walletCurrency')?.value || 'LBP',
+      walletCurrency: 'GOV',
     };
 
     this.residentApi.createWallet(residentId, payload).subscribe({
@@ -610,7 +608,7 @@ export class CreateResidentAccountComponent implements OnInit {
       kycStatus: 'DRAFT',
       riskCategory: 'LOW',
       nationality: 'Lebanese',
-      walletCurrency: 'LBP',
+      walletCurrency: 'GOV',
       walletStatus: 'Not Created',
       walletPassword: '',
       confirmWalletPassword: '',
@@ -691,7 +689,7 @@ export class CreateResidentAccountComponent implements OnInit {
       kycStatus: selectedKycStatus?.name || rawValue.kycStatus || '-',
       riskCategory: selectedRiskCategory?.name || rawValue.riskCategory || '-',
       walletAddress: rawValue.walletAddress || 'Not Created Yet',
-      walletCurrency: rawValue.walletCurrency || '-',
+      walletCurrency: 'GOV',
       walletStatus: rawValue.walletStatus || '-',
       walletPassword: rawValue.walletPassword || 'Generated password not returned by backend',
       createdAt: new Date().toLocaleString(),
@@ -751,7 +749,7 @@ export class CreateResidentAccountComponent implements OnInit {
       kycStatus: selectedKycStatus?.code || rawValue.kycStatus,
       riskCategory: selectedRiskCategory?.code || rawValue.riskCategory,
       walletAddress: rawValue.walletAddress,
-      walletCurrency: rawValue.walletCurrency,
+      walletCurrency: 'GOV',
       walletStatus: rawValue.walletStatus,
       walletPassword: rawValue.walletPassword,
       confirmWalletPassword: rawValue.confirmWalletPassword,

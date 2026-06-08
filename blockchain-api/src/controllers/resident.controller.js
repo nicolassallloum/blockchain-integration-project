@@ -49,7 +49,7 @@ function buildResidentPayload(body) {
         kycStatus: body.kycStatus || 'Draft',
         riskCategory: body.riskCategory || 'Low Risk',
 
-        walletCurrency: body.walletCurrency || 'LBP',
+        walletCurrency: 'GOV',
         walletStatus: body.walletStatus || 'Not Created'
     };
 }
@@ -293,7 +293,7 @@ exports.createResidentWallet = async (req, res) => {
 
     try {
         const { residentId } = req.params;
-        const currency = req.body.currency || req.body.walletCurrency || 'LBP';
+        const currency = 'GOV';
 
         await client.query('BEGIN');
 
@@ -345,7 +345,7 @@ exports.createResidentWallet = async (req, res) => {
             [
                 residentId,
                 walletObject.walletAddress,
-                walletObject.walletCurrency || currency,
+                'GOV',
                 walletObject.walletStatus || 'Created',
                 'Committed'
             ]
@@ -729,7 +729,7 @@ async function syncResidentToBlockchain(req, res) {
       riskCategory: resident.risk_category || 'Low',
 
       walletAddress: resident.wallet_address || '',
-      walletCurrency: resident.wallet_currency || 'LBP',
+      walletCurrency: 'GOV',
       walletStatus: resident.wallet_status || 'Not Created'
     };
 
@@ -834,7 +834,7 @@ async function syncResidentToBlockchain(req, res) {
             'CreateResidentWallet',
             [
               residentId,
-              wallet.wallet_currency || 'LBP',
+              'GOV',
               officialWalletAddress
             ]
           );
@@ -1022,7 +1022,11 @@ async function walletLogin(req, res) {
           r.risk_category,
           r.record_status,
           rw.wallet_address,
-          rw.wallet_currency,
+          'GOV'::text AS wallet_currency,
+          'GOV'::text AS currency,
+          'GOV'::text AS currency_code,
+          0::numeric AS wallet_balance,
+          0::numeric AS balance,
           rw.wallet_status,
           rw.blockchain_status,
           rw.fabric_tx_id,

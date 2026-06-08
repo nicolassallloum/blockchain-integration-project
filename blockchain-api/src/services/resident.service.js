@@ -103,7 +103,7 @@ async function createWallet(residentId, payload) {
 
   const walletResult = await residentRepository.createWallet(residentId, {
     walletAddress,
-    walletCurrency: payload.walletCurrency || resident.wallet_currency || 'LBP',
+    walletCurrency: 'GOV',
     walletStatus: 'Active',
     blockchainStatus: 'PENDING',
     fabricTxId: null,
