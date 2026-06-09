@@ -3,15 +3,15 @@
   <div class="page-header">
     <div>
       <h1>Transaction Approval Queue</h1>
-      <p>Review all government transactions and apply approval rules before blockchain submission.</p>
+      <p>Pending Review government transactions ready for officer approval and Blockchain proof submission.</p>
     </div>
 
     <button
       class="primary-btn"
-      [disabled]="!hasSelectedPending()"
+      [disabled]="!hasSelectedPending() || approvingCount() > 0"
       (click)="approveSelected()"
     >
-      Approve Selected
+      {{ approvingCount() > 0 ? 'Approving...' : 'Approve Selected' }}
     </button>
   </div>
 
@@ -19,40 +19,44 @@
     {{ errorMessage() }}
   </div>
 
+  <div *ngIf="successMessage()" class="alert success-alert">
+    {{ successMessage() }}
+  </div>
+
   <div class="cards-grid">
     <div class="summary-card">
       <div class="card-icon blue-icon">▤</div>
       <div>
-        <h3>Total Transactions</h3>
+        <h3>Pending Queue</h3>
         <strong>{{ totalTransactions() }}</strong>
-        <span>All time transactions</span>
+        <span>Transactions loaded from PostgreSQL</span>
       </div>
     </div>
 
     <div class="summary-card">
       <div class="card-icon yellow-icon">◷</div>
       <div>
-        <h3>Requires Approval</h3>
-        <strong>{{ requiresApproval() }}</strong>
-        <span>Pending manual review</span>
+        <h3>Pending Review</h3>
+        <strong>{{ pendingCount() }}</strong>
+        <span>Waiting officer action</span>
       </div>
     </div>
 
     <div class="summary-card">
       <div class="card-icon green-icon">✓</div>
       <div>
-        <h3>Auto Approved</h3>
-        <strong>{{ autoApproved() }}</strong>
-        <span>Automatically approved</span>
+        <h3>Approving Now</h3>
+        <strong>{{ approvingCount() }}</strong>
+        <span>Rows currently processing</span>
       </div>
     </div>
 
     <div class="summary-card">
       <div class="card-icon red-icon">✕</div>
       <div>
-        <h3>Rejected Today</h3>
-        <strong>{{ rejectedToday() }}</strong>
-        <span>Manually rejected</span>
+        <h3>Blockchain Failed</h3>
+        <strong>{{ failedBlockchainCount() }}</strong>
+        <span>Failures in current queue</span>
       </div>
     </div>
   </div>
@@ -62,68 +66,23 @@
       <label>Search Transactions</label>
       <input
         type="text"
-        placeholder="Search by ID, resident, or service..."
+        placeholder="Search by ID, resident, service, or payment method..."
         [ngModel]="searchText()"
         (ngModelChange)="searchText.set($event)"
       />
     </div>
 
     <div class="filter-control">
-      <label>Ministry</label>
+      <label>Payment Method</label>
       <select
-        [ngModel]="ministryFilter()"
-        (ngModelChange)="ministryFilter.set($event)"
+        [ngModel]="paymentMethodFilter()"
+        (ngModelChange)="paymentMethodFilter.set($event)"
       >
-        <option value="ALL">All Ministries</option>
-        <option *ngFor="let ministry of ministries()" [value]="ministry">
-          {{ ministry }}
+        <option value="ALL">All Payment Methods</option>
+        <option *ngFor="let method of paymentMethods()" [value]="method">
+          {{ paymentMethodLabel(method) }}
         </option>
       </select>
-    </div>
-
-    <div class="filter-control">
-      <label>Status</label>
-      <select
-        [ngModel]="statusFilter()"
-        (ngModelChange)="statusFilter.set($event)"
-      >
-        <option value="ALL">All Statuses</option>
-        <option value="AUTO_APPROVED">Auto Approved</option>
-        <option value="APPROVED">Approved</option>
-        <option value="PENDING_REVIEW">Pending Review</option>
-        <option value="REJECTED">Rejected</option>
-      </select>
-    </div>
-
-    <div class="filter-control">
-      <label>Approval Type</label>
-      <select
-        [ngModel]="approvalTypeFilter()"
-        (ngModelChange)="approvalTypeFilter.set($event)"
-      >
-        <option value="ALL">All Approval Types</option>
-        <option value="AUTO_APPROVE">Auto Approve</option>
-        <option value="MANUAL_REVIEW">Manual Review</option>
-      </select>
-    </div>
-
-    <div class="filter-control amount-control">
-      <label>Amount Range (GOV)</label>
-      <div class="amount-inputs">
-        <input
-          type="number"
-          placeholder="Min amount"
-          [ngModel]="minAmount()"
-          (ngModelChange)="minAmount.set($event === '' ? null : +$event)"
-        />
-        <span>-</span>
-        <input
-          type="number"
-          placeholder="Max amount"
-          [ngModel]="maxAmount()"
-          (ngModelChange)="maxAmount.set($event === '' ? null : +$event)"
-        />
-      </div>
     </div>
 
     <button class="clear-btn" (click)="clearFilters()">
@@ -133,7 +92,7 @@
 
   <div class="table-card">
     <div class="table-header">
-      <h2>All Transactions</h2>
+      <h2>Pending Review Transactions</h2>
 
       <button class="secondary-btn" (click)="loadTransactions()" [disabled]="loading()">
         {{ loading() ? 'Loading...' : 'Refresh' }}
@@ -148,23 +107,25 @@
               <input type="checkbox" (change)="toggleAll($event)" />
             </th>
             <th>Transaction ID</th>
-            <th>Resident</th>
-            <th>Service</th>
-            <th>Ministry</th>
-            <th>Amount (GOV)</th>
-            <th>Approval Rule</th>
+            <th>Resident Name</th>
+            <th>Service Name</th>
+            <th>Total Fees</th>
+            <th>Currency</th>
+            <th>Payment Method</th>
+            <th>Submitted Date</th>
             <th>Status</th>
-            <th>Action</th>
+            <th>Blockchain</th>
+            <th>Actions</th>
           </tr>
         </thead>
 
         <tbody>
           <tr *ngIf="loading()">
-            <td colspan="9" class="empty-row">Loading transactions...</td>
+            <td colspan="11" class="empty-row">Loading approval queue...</td>
           </tr>
 
           <tr *ngIf="!loading() && filteredTransactions().length === 0">
-            <td colspan="9" class="empty-row">No transactions found.</td>
+            <td colspan="11" class="empty-row">No Pending Review transactions found.</td>
           </tr>
 
           <tr *ngFor="let tx of filteredTransactions()">
@@ -172,33 +133,23 @@
               <input
                 type="checkbox"
                 [(ngModel)]="tx.selected"
-                [disabled]="tx.status !== 'PENDING_REVIEW'"
+                [disabled]="tx.status !== 'PENDING_REVIEW' || isApproving(tx)"
               />
             </td>
 
             <td class="strong-text">{{ tx.transactionId }}</td>
             <td>{{ tx.residentName }}</td>
             <td>{{ tx.serviceName }}</td>
-            <td>{{ tx.ministryName }}</td>
-            <td class="amount-text">{{ formatAmount(tx.amountGov) }}</td>
+            <td class="amount-text">{{ formatAmount(tx.totalFees) }}</td>
+            <td>GOV</td>
+            <td>{{ paymentMethodLabel(tx.paymentMethod) }}</td>
+            <td>{{ formatDate(tx.submittedDate) }}</td>
 
             <td>
               <span
                 class="badge"
                 [ngClass]="{
-                  'info': tx.approvalRule === 'AUTO_APPROVE',
-                  'manual': tx.approvalRule === 'MANUAL_REVIEW'
-                }"
-              >
-                {{ approvalRuleLabel(tx.approvalRule) }}
-              </span>
-            </td>
-
-            <td>
-              <span
-                class="badge"
-                [ngClass]="{
-                  'success': tx.status === 'AUTO_APPROVED' || tx.status === 'APPROVED',
+                  'success': tx.status === 'APPROVED',
                   'warning': tx.status === 'PENDING_REVIEW',
                   'danger': tx.status === 'REJECTED'
                 }"
@@ -208,19 +159,37 @@
             </td>
 
             <td>
-              <div class="action-buttons" *ngIf="tx.status === 'PENDING_REVIEW'; else noAction">
-                <button class="small-btn success-btn" (click)="approve(tx)">
-                  Approve
+              <span
+                class="badge"
+                [ngClass]="blockchainBadgeClass(tx.blockchainStatus)"
+                [title]="tx.blockchainError || tx.blockchainTxId || ''"
+              >
+                {{ tx.blockchainStatus || 'PENDING' }}
+              </span>
+            </td>
+
+            <td>
+              <div class="action-buttons">
+                <button class="small-btn" (click)="viewDetails(tx)">
+                  View Details
                 </button>
 
-                <button class="small-btn danger-btn" (click)="reject(tx)">
-                  Reject
+                <button
+                  class="small-btn success-btn"
+                  (click)="approve(tx)"
+                  [disabled]="isApproving(tx) || isRejecting(tx)"
+                >
+                  {{ isApproving(tx) ? 'Approving...' : 'Approve' }}
+                </button>
+
+                <button
+                  class="small-btn danger-btn"
+                  (click)="reject(tx)"
+                  [disabled]="isApproving(tx) || isRejecting(tx)"
+                >
+                  {{ isRejecting(tx) ? 'Rejecting...' : 'Reject' }}
                 </button>
               </div>
-
-              <ng-template #noAction>
-                <span class="no-action">—</span>
-              </ng-template>
             </td>
           </tr>
         </tbody>
@@ -229,11 +198,71 @@
   </div>
 
   <div class="rule-card">
-    <strong>Approval Rules:</strong>
-    Transactions below <strong>10,000,000 GOV</strong> are automatically approved.
-    Transactions above <strong>10,000,000 GOV</strong>, or any transaction from
-    <strong>Ministry of Interior</strong> or <strong>Ministry of Defence</strong>,
-    require manual approval or rejection.
+    <strong>Approval Flow:</strong>
+    Every transaction with status <strong>Pending Review</strong> appears here.
+    Approving a row updates PostgreSQL to <strong>Approved</strong>, submits proof to
+    <strong>Hyperledger Fabric</strong>, saves the Blockchain status, and removes the row from this queue.
+  </div>
+
+  <div class="details-backdrop" *ngIf="selectedTransaction()" (click)="closeDetails()">
+    <div class="details-modal" (click)="$event.stopPropagation()">
+      <div class="table-header">
+        <h2>Transaction Details</h2>
+        <button class="secondary-btn" (click)="closeDetails()">Close</button>
+      </div>
+
+      <div class="details-grid">
+        <div>
+          <label>Transaction ID</label>
+          <strong>{{ selectedTransaction()?.transactionId }}</strong>
+        </div>
+
+        <div>
+          <label>Resident Name</label>
+          <strong>{{ selectedTransaction()?.residentName }}</strong>
+        </div>
+
+        <div>
+          <label>Service Name</label>
+          <strong>{{ selectedTransaction()?.serviceName }}</strong>
+        </div>
+
+        <div>
+          <label>Total Fees</label>
+          <strong>{{ formatAmount(selectedTransaction()?.totalFees || 0) }} GOV</strong>
+        </div>
+
+        <div>
+          <label>Payment Method</label>
+          <strong>{{ paymentMethodLabel(selectedTransaction()?.paymentMethod || '-') }}</strong>
+        </div>
+
+        <div>
+          <label>Submitted Date</label>
+          <strong>{{ formatDate(selectedTransaction()?.submittedDate || '') }}</strong>
+        </div>
+
+        <div>
+          <label>Status</label>
+          <strong>{{ statusLabel(selectedTransaction()?.status || 'PENDING_REVIEW') }}</strong>
+        </div>
+
+        <div>
+          <label>Blockchain Status</label>
+          <strong>{{ selectedTransaction()?.blockchainStatus || 'PENDING' }}</strong>
+        </div>
+
+        <div *ngIf="selectedTransaction()?.blockchainTxId">
+          <label>Blockchain Tx ID</label>
+          <strong>{{ selectedTransaction()?.blockchainTxId }}</strong>
+        </div>
+
+        <div *ngIf="selectedTransaction()?.blockchainError">
+          <label>Blockchain Error</label>
+          <strong>{{ selectedTransaction()?.blockchainError }}</strong>
+        </div>
+      </div>
+    </div>
   </div>
 
 </div>

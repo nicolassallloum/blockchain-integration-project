@@ -306,6 +306,12 @@ const governmentTransactionsRoutes = safeRoute(
   'government-transactions.routes'
 );
 
+
+const governmentApprovalQueueRoutes = safeRoute(
+  './routes/government-approval-queue.routes',
+  'government-approval-queue.routes'
+);
+
 const governmentAccountLoginRoutes = safeRoute(
   './routes/government-account-login.routes',
   'government-account-login.routes'
@@ -405,6 +411,14 @@ if (governmentTransactionsRoutes) {
   console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/transactions');
 }
 
+
+if (governmentApprovalQueueRoutes) {
+  app.use(
+    '/api/v1/government-blockchain/approval-queue',
+    governmentApprovalQueueRoutes
+  );
+  console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/approval-queue');
+}
 
 /**
  * Resident Wallets route.

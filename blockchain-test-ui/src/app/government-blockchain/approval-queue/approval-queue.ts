@@ -3,19 +3,29 @@ import { Component, OnInit, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 
-type ApprovalStatus = 'AUTO_APPROVED' | 'APPROVED' | 'PENDING_REVIEW' | 'REJECTED';
-type ApprovalRule = 'AUTO_APPROVE' | 'MANUAL_REVIEW';
+type ApprovalStatus = 'APPROVED' | 'PENDING_REVIEW' | 'REJECTED';
+type BlockchainStatus =
+  | 'PENDING'
+  | 'Submitting to Blockchain'
+  | 'Blockchain Confirmed'
+  | 'Submitted to Blockchain'
+  | 'Blockchain Failed'
+  | 'Not Submitted'
+  | string;
 
 interface ApprovalTransaction {
   id: string;
   transactionId: string;
   residentName: string;
   serviceName: string;
-  ministryName: string;
-  amountGov: number;
+  totalFees: number;
   currency: string;
-  approvalRule: ApprovalRule;
+  paymentMethod: string;
+  submittedDate: string;
   status: ApprovalStatus;
+  blockchainStatus: BlockchainStatus;
+  blockchainTxId?: string | null;
+  blockchainError?: string | null;
   selected?: boolean;
 }
 
@@ -28,20 +38,20 @@ interface ApprovalTransaction {
 })
 export class ApprovalQueue implements OnInit {
   private readonly API_BASE = 'http://172.31.13.90:3001/api/v1';
-
-  readonly manualApprovalAmountLimit = 10000000;
+  private readonly APPROVAL_QUEUE_URL =
+    `${this.API_BASE}/government-blockchain/approval-queue`;
 
   loading = signal(false);
   errorMessage = signal('');
+  successMessage = signal('');
 
   searchText = signal('');
-  ministryFilter = signal('ALL');
-  statusFilter = signal('ALL');
-  approvalTypeFilter = signal('ALL');
-  minAmount = signal<number | null>(null);
-  maxAmount = signal<number | null>(null);
+  paymentMethodFilter = signal('ALL');
 
   transactions = signal<ApprovalTransaction[]>([]);
+  approvingIds = signal<Record<string, boolean>>({});
+  rejectingIds = signal<Record<string, boolean>>({});
+  selectedTransaction = signal<ApprovalTransaction | null>(null);
 
   constructor(private http: HttpClient) {}
 
@@ -52,257 +62,104 @@ export class ApprovalQueue implements OnInit {
   loadTransactions(): void {
     this.loading.set(true);
     this.errorMessage.set('');
+    this.successMessage.set('');
 
-    this.http
-      .get<any>(`${this.API_BASE}/government-blockchain/transactions`)
-      .subscribe({
-        next: (res) => {
-          const rows = Array.isArray(res)
-            ? res
-            : Array.isArray(res?.data)
-              ? res.data
-              : Array.isArray(res?.transactions)
-                ? res.transactions
-                : Array.isArray(res?.rows)
-                  ? res.rows
-                  : [];
+    this.http.get<any>(this.APPROVAL_QUEUE_URL).subscribe({
+      next: (res) => {
+        const rows = Array.isArray(res)
+          ? res
+          : Array.isArray(res?.data)
+            ? res.data
+            : [];
 
-          const mapped = rows.map((row: any, index: number) =>
-            this.mapTransaction(row, index)
-          );
+        this.transactions.set(
+          rows.map((row: any, index: number) => this.mapTransaction(row, index))
+        );
 
-          this.transactions.set(mapped);
-          this.loading.set(false);
-        },
-        error: (err) => {
-          console.error('[APPROVAL QUEUE LOAD ERROR]', err);
-          this.errorMessage.set(
-            'Failed to load transactions from database. Showing sample data.'
-          );
-
-          this.transactions.set(this.sampleTransactions());
-          this.loading.set(false);
-        },
-      });
+        this.loading.set(false);
+      },
+      error: (err) => {
+        console.error('[APPROVAL QUEUE LOAD ERROR]', err);
+        this.errorMessage.set(
+          err?.error?.message ||
+            'Failed to load approval queue from PostgreSQL.'
+        );
+        this.transactions.set([]);
+        this.loading.set(false);
+      },
+    });
   }
 
   private mapTransaction(row: any, index: number): ApprovalTransaction {
-    const serviceName =
-      row.service_name ??
-      row.government_service_name ??
-      row.serviceName ??
-      row.service?.service_name ??
-      row.service?.serviceName ??
-      row.service?.name ??
-      row.service_title ??
-      row.description ??
-      'Government Service';
-
-    const amount =
-      Number(
-        row.amount_gov ??
-          row.amountGov ??
-          row.gov_amount ??
-          row.transaction_amount ??
-          row.transactionAmount ??
-          row.total_amount ??
-          row.totalAmount ??
-          row.payment_amount ??
-          row.paymentAmount ??
-          row.fee_amount ??
-          row.feeAmount ??
-          row.amount ??
-          row.service?.fee_amount ??
-          0
-      ) || 0;
-
-    const ministry = this.resolveMinistryName(row, serviceName);
-    const rule = this.getApprovalRule(amount, ministry);
-
-    const backendStatus = String(
-      row.approval_status ??
-        row.approvalStatus ??
-        row.status ??
-        row.transaction_status ??
-        row.transactionStatus ??
-        ''
-    ).toUpperCase();
-
-    let status: ApprovalStatus;
-
-    if (backendStatus.includes('REJECT')) {
-      status = 'REJECTED';
-    } else if (backendStatus.includes('PENDING') || backendStatus.includes('REVIEW')) {
-      status = rule === 'AUTO_APPROVE' ? 'AUTO_APPROVED' : 'PENDING_REVIEW';
-    } else if (backendStatus.includes('APPROVED') || backendStatus.includes('SUCCESS')) {
-      status = rule === 'AUTO_APPROVE' ? 'AUTO_APPROVED' : 'APPROVED';
-    } else {
-      status = rule === 'AUTO_APPROVE' ? 'AUTO_APPROVED' : 'PENDING_REVIEW';
-    }
+    const id = String(
+      row.transaction_id ??
+        row.id ??
+        row.transactionId ??
+        row.transaction_reference ??
+        index + 1
+    );
 
     return {
-      id: String(
-        row.id ??
-          row.transaction_id ??
-          row.transactionId ??
-          row.transaction_public_id ??
-          row.transaction_code ??
-          index + 1
-      ),
+      id,
       transactionId:
+        row.transaction_reference ??
+        row.transactionReference ??
         row.transaction_public_id ??
         row.transaction_code ??
-        row.transaction_reference ??
-        row.transactionRef ??
-        row.transactionId ??
-        row.transaction_id ??
-        `TXN-${String(index + 1).padStart(6, '0')}`,
+        id,
       residentName:
         row.resident_full_name ??
         row.resident_name ??
         row.full_name ??
         row.fullName ??
         row.residentName ??
-        row.resident?.full_name ??
-        row.resident?.fullName ??
         'Unknown Resident',
-      serviceName,
-      ministryName: ministry,
-      amountGov: amount,
-      currency: row.currency_code ?? row.currencyCode ?? row.currency ?? 'GOV',
-      approvalRule: rule,
-      status,
+      serviceName:
+        row.service_name ??
+        row.government_service_name ??
+        row.serviceName ??
+        row.service_code ??
+        'Government Service',
+      totalFees:
+        Number(
+          row.total_fees ??
+            row.total_fee ??
+            row.totalFees ??
+            row.amount ??
+            row.transaction_amount ??
+            0
+        ) || 0,
+      currency: 'GOV',
+      paymentMethod: row.payment_method ?? row.paymentMethod ?? '-',
+      submittedDate: row.created_at ?? row.submitted_date ?? row.createdAt ?? '',
+      status: this.normalizeStatus(row.transaction_status ?? row.status),
+      blockchainStatus: row.blockchain_status ?? 'PENDING',
+      blockchainTxId: row.blockchain_tx_id ?? null,
+      blockchainError: row.blockchain_error ?? null,
       selected: false,
     };
   }
 
-  private resolveMinistryName(row: any, serviceName: string): string {
-    const directMinistry =
-      row.ministry_name ??
-      row.ministryName ??
-      row.ministry ??
-      row.ministry_english_name ??
-      row.english_name ??
-      row.government_ministry_name ??
-      row.government_ministry ??
-      row.organization_name ??
-      row.organizationName ??
-      row.service_ministry_name ??
-      row.serviceMinistryName ??
-      row.service?.ministry_name ??
-      row.service?.ministryName ??
-      row.service?.ministry ??
-      row.service?.government_ministry_name ??
-      row.service?.government_ministry?.ministry_name ??
-      row.service?.government_ministry?.english_name ??
-      row.service?.governmentMinistry?.ministryName ??
-      row.service?.governmentMinistry?.englishName ??
-      row.ministry_data?.ministry_name ??
-      row.ministry_data?.english_name ??
-      row.ministryData?.ministryName ??
-      row.ministryData?.englishName;
-
-    if (directMinistry && String(directMinistry).trim() !== '') {
-      return String(directMinistry).trim();
-    }
-
-    return this.extractMinistryFromServiceName(serviceName) ?? 'Unknown Ministry';
-  }
-
-  private extractMinistryFromServiceName(serviceName: string): string | null {
-    const value = String(serviceName || '')
-      .replace(/[_-]+/g, ' ')
-      .replace(/\s+/g, ' ')
+  private normalizeStatus(value: any): ApprovalStatus {
+    const status = String(value || '')
       .trim()
-      .toUpperCase();
+      .toUpperCase()
+      .replace(/\s+/g, '_');
 
-    if (!value) {
-      return null;
+    if (status === 'APPROVED') {
+      return 'APPROVED';
     }
 
-    if (value.includes('MINISTRY OF FINANCE') || value.includes('FINANCE TAX')) {
-      return 'Ministry of Finance';
+    if (status === 'REJECTED') {
+      return 'REJECTED';
     }
 
-    if (
-      value.includes('MINISTRY OF INTERIOR') ||
-      value.includes('MINISTRY OF INTERN') ||
-      value.includes('INTERIOR')
-    ) {
-      return 'Ministry of Interior';
-    }
-
-    if (
-      value.includes('MINISTRY OF DEFENCE') ||
-      value.includes('MINISTRY OF DEFENSE') ||
-      value.includes('DEFENCE') ||
-      value.includes('DEFENSE')
-    ) {
-      return 'Ministry of Defence';
-    }
-
-    if (value.includes('MINISTRY OF HEALTH') || value.includes('HEALTH')) {
-      return 'Ministry of Health';
-    }
-
-    if (value.includes('MINISTRY OF EDUCATION') || value.includes('EDUCATION')) {
-      return 'Ministry of Education';
-    }
-
-    if (value.includes('MINISTRY OF LABOUR') || value.includes('MINISTRY OF LABOR')) {
-      return 'Ministry of Labour';
-    }
-
-    if (value.includes('MINISTRY OF JUSTICE') || value.includes('JUSTICE')) {
-      return 'Ministry of Justice';
-    }
-
-    if (
-      value.includes('MINISTRY OF ENVIRONMENT') ||
-      value.includes('ENVIRONMENT')
-    ) {
-      return 'Ministry of Environment';
-    }
-
-    if (value.includes('GENERAL SECURITY')) {
-      return 'General Security';
-    }
-
-    if (value.includes('MUNICIPAL') || value.includes('MUNICIPALITIES')) {
-      return 'Department of Municipalities';
-    }
-
-    return null;
-  }
-
-  private getApprovalRule(amount: number, ministryName: string): ApprovalRule {
-    const normalizedMinistry = ministryName.toLowerCase();
-
-    const isInterior =
-      normalizedMinistry.includes('ministry of interior') ||
-      normalizedMinistry.includes('intern') ||
-      normalizedMinistry.includes('interior');
-
-    const isDefence =
-      normalizedMinistry.includes('ministry of defence') ||
-      normalizedMinistry.includes('ministry of defense') ||
-      normalizedMinistry.includes('defence') ||
-      normalizedMinistry.includes('defense');
-
-    if (amount > this.manualApprovalAmountLimit || isInterior || isDefence) {
-      return 'MANUAL_REVIEW';
-    }
-
-    return 'AUTO_APPROVE';
+    return 'PENDING_REVIEW';
   }
 
   filteredTransactions = computed(() => {
     const search = this.searchText().trim().toLowerCase();
-    const ministry = this.ministryFilter();
-    const status = this.statusFilter();
-    const approvalType = this.approvalTypeFilter();
-    const min = this.minAmount();
-    const max = this.maxAmount();
+    const paymentMethod = this.paymentMethodFilter();
 
     return this.transactions().filter((tx) => {
       const matchesSearch =
@@ -310,52 +167,40 @@ export class ApprovalQueue implements OnInit {
         tx.transactionId.toLowerCase().includes(search) ||
         tx.residentName.toLowerCase().includes(search) ||
         tx.serviceName.toLowerCase().includes(search) ||
-        tx.ministryName.toLowerCase().includes(search);
+        tx.paymentMethod.toLowerCase().includes(search);
 
-      const matchesMinistry =
-        ministry === 'ALL' || tx.ministryName === ministry;
+      const matchesPayment =
+        paymentMethod === 'ALL' || tx.paymentMethod === paymentMethod;
 
-      const matchesStatus = status === 'ALL' || tx.status === status;
-
-      const matchesApprovalType =
-        approvalType === 'ALL' || tx.approvalRule === approvalType;
-
-      const matchesMinAmount = min === null || tx.amountGov >= min;
-      const matchesMaxAmount = max === null || tx.amountGov <= max;
-
-      return (
-        matchesSearch &&
-        matchesMinistry &&
-        matchesStatus &&
-        matchesApprovalType &&
-        matchesMinAmount &&
-        matchesMaxAmount
-      );
+      return matchesSearch && matchesPayment;
     });
   });
 
-  ministries = computed(() => {
+  paymentMethods = computed(() => {
     return Array.from(
-      new Set(this.transactions().map((tx) => tx.ministryName))
+      new Set(
+        this.transactions()
+          .map((tx) => tx.paymentMethod)
+          .filter((value) => value && value !== '-')
+      )
     ).sort();
   });
 
   totalTransactions = computed(() => this.transactions().length);
 
-  requiresApproval = computed(
-    () =>
-      this.transactions().filter((tx) => tx.status === 'PENDING_REVIEW').length
+  pendingCount = computed(
+    () => this.transactions().filter((tx) => tx.status === 'PENDING_REVIEW').length
   );
 
-  autoApproved = computed(
+  approvingCount = computed(
+    () => Object.values(this.approvingIds()).filter(Boolean).length
+  );
+
+  failedBlockchainCount = computed(
     () =>
       this.transactions().filter(
-        (tx) => tx.status === 'AUTO_APPROVED' || tx.status === 'APPROVED'
+        (tx) => String(tx.blockchainStatus).toLowerCase() === 'blockchain failed'
       ).length
-  );
-
-  rejectedToday = computed(
-    () => this.transactions().filter((tx) => tx.status === 'REJECTED').length
   );
 
   hasSelectedPending = computed(() =>
@@ -364,51 +209,143 @@ export class ApprovalQueue implements OnInit {
     )
   );
 
+  isApproving(tx: ApprovalTransaction): boolean {
+    return Boolean(this.approvingIds()[tx.id]);
+  }
+
+  isRejecting(tx: ApprovalTransaction): boolean {
+    return Boolean(this.rejectingIds()[tx.id]);
+  }
+
   toggleAll(event: Event): void {
     const checked = (event.target as HTMLInputElement).checked;
     const visibleIds = new Set(this.filteredTransactions().map((tx) => tx.id));
 
     this.transactions.update((items) =>
-      items.map((tx) => {
-        if (visibleIds.has(tx.id) && tx.status === 'PENDING_REVIEW') {
-          return { ...tx, selected: checked };
-        }
-
-        return tx;
-      })
+      items.map((tx) =>
+        visibleIds.has(tx.id) && tx.status === 'PENDING_REVIEW'
+          ? { ...tx, selected: checked }
+          : tx
+      )
     );
   }
 
-  approve(tx: ApprovalTransaction): void {
-    if (tx.status !== 'PENDING_REVIEW') return;
+  viewDetails(tx: ApprovalTransaction): void {
+    this.selectedTransaction.set(tx);
+  }
 
-    this.updateLocalStatus(tx.id, 'APPROVED');
+  closeDetails(): void {
+    this.selectedTransaction.set(null);
+  }
+
+  approve(tx: ApprovalTransaction): void {
+    if (tx.status !== 'PENDING_REVIEW' || this.isApproving(tx)) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Approve transaction ${tx.transactionId} and submit proof to Blockchain?`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    this.errorMessage.set('');
+    this.successMessage.set('');
+    this.approvingIds.update((state) => ({ ...state, [tx.id]: true }));
 
     this.http
-      .patch(`${this.API_BASE}/government-blockchain/transactions/${tx.id}/approval`, {
-        approvalStatus: 'APPROVED',
-        approvalDecision: 'APPROVE',
+      .post<any>(`${this.APPROVAL_QUEUE_URL}/${encodeURIComponent(tx.id)}/approve`, {
+        approvedBy: 'approval-officer',
+        officerUsername: 'approval-officer',
       })
       .subscribe({
+        next: (res) => {
+          if (res?.warning) {
+            this.successMessage.set(
+              res.message ||
+                'Transaction approved, but Blockchain submission failed.'
+            );
+          } else {
+            this.successMessage.set(
+              res?.message ||
+                'Transaction approved and submitted to Blockchain successfully.'
+            );
+          }
+
+          this.approvingIds.update((state) => {
+            const copy = { ...state };
+            delete copy[tx.id];
+            return copy;
+          });
+
+          this.loadTransactions();
+        },
         error: (err) => {
-          console.warn('[APPROVE API WARNING]', err);
+          console.error('[APPROVAL QUEUE APPROVE ERROR]', err);
+
+          this.errorMessage.set(
+            err?.error?.message || 'Failed to approve transaction.'
+          );
+
+          this.approvingIds.update((state) => {
+            const copy = { ...state };
+            delete copy[tx.id];
+            return copy;
+          });
         },
       });
   }
 
   reject(tx: ApprovalTransaction): void {
-    if (tx.status !== 'PENDING_REVIEW') return;
+    if (tx.status !== 'PENDING_REVIEW' || this.isRejecting(tx)) {
+      return;
+    }
 
-    this.updateLocalStatus(tx.id, 'REJECTED');
+    const reason = window.prompt(
+      `Reject transaction ${tx.transactionId}. Enter rejection reason:`,
+      'Rejected by approval officer'
+    );
+
+    if (reason === null) {
+      return;
+    }
+
+    this.errorMessage.set('');
+    this.successMessage.set('');
+    this.rejectingIds.update((state) => ({ ...state, [tx.id]: true }));
 
     this.http
-      .patch(`${this.API_BASE}/government-blockchain/transactions/${tx.id}/approval`, {
-        approvalStatus: 'REJECTED',
-        approvalDecision: 'REJECT',
+      .post<any>(`${this.APPROVAL_QUEUE_URL}/${encodeURIComponent(tx.id)}/reject`, {
+        reason: reason || 'Rejected by approval officer',
       })
       .subscribe({
+        next: (res) => {
+          this.successMessage.set(
+            res?.message || 'Transaction rejected successfully.'
+          );
+
+          this.rejectingIds.update((state) => {
+            const copy = { ...state };
+            delete copy[tx.id];
+            return copy;
+          });
+
+          this.loadTransactions();
+        },
         error: (err) => {
-          console.warn('[REJECT API WARNING]', err);
+          console.error('[APPROVAL QUEUE REJECT ERROR]', err);
+
+          this.errorMessage.set(
+            err?.error?.message || 'Failed to reject transaction.'
+          );
+
+          this.rejectingIds.update((state) => {
+            const copy = { ...state };
+            delete copy[tx.id];
+            return copy;
+          });
         },
       });
   }
@@ -418,154 +355,108 @@ export class ApprovalQueue implements OnInit {
       (tx) => tx.selected && tx.status === 'PENDING_REVIEW'
     );
 
-    selected.forEach((tx) => this.approve(tx));
+    if (selected.length === 0) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Approve ${selected.length} selected transaction(s)?`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    selected.forEach((tx) => this.approveWithoutPrompt(tx));
   }
 
-  private updateLocalStatus(id: string, status: ApprovalStatus): void {
-    this.transactions.update((items) =>
-      items.map((tx) =>
-        tx.id === id
-          ? {
-              ...tx,
-              status,
-              selected: false,
-            }
-          : tx
-      )
-    );
+  private approveWithoutPrompt(tx: ApprovalTransaction): void {
+    if (tx.status !== 'PENDING_REVIEW' || this.isApproving(tx)) {
+      return;
+    }
+
+    this.approvingIds.update((state) => ({ ...state, [tx.id]: true }));
+
+    this.http
+      .post<any>(`${this.APPROVAL_QUEUE_URL}/${encodeURIComponent(tx.id)}/approve`, {
+        approvedBy: 'approval-officer',
+        officerUsername: 'approval-officer',
+      })
+      .subscribe({
+        next: () => {
+          this.approvingIds.update((state) => {
+            const copy = { ...state };
+            delete copy[tx.id];
+            return copy;
+          });
+
+          this.loadTransactions();
+        },
+        error: (err) => {
+          console.error('[APPROVAL QUEUE BULK APPROVE ERROR]', err);
+          this.errorMessage.set(
+            err?.error?.message || 'One selected transaction failed approval.'
+          );
+
+          this.approvingIds.update((state) => {
+            const copy = { ...state };
+            delete copy[tx.id];
+            return copy;
+          });
+        },
+      });
   }
 
   clearFilters(): void {
     this.searchText.set('');
-    this.ministryFilter.set('ALL');
-    this.statusFilter.set('ALL');
-    this.approvalTypeFilter.set('ALL');
-    this.minAmount.set(null);
-    this.maxAmount.set(null);
+    this.paymentMethodFilter.set('ALL');
   }
 
   formatAmount(value: number): string {
     return new Intl.NumberFormat('en-US').format(value);
   }
 
-  approvalRuleLabel(rule: ApprovalRule): string {
-    return rule === 'AUTO_APPROVE' ? 'Auto Approve' : 'Manual Review';
+  formatDate(value: string): string {
+    if (!value) {
+      return '-';
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return value;
+    }
+
+    return date.toLocaleString();
   }
 
   statusLabel(status: ApprovalStatus): string {
-    switch (status) {
-      case 'AUTO_APPROVED':
-        return 'Auto Approved';
-      case 'APPROVED':
-        return 'Approved';
-      case 'PENDING_REVIEW':
-        return 'Pending Review';
-      case 'REJECTED':
-        return 'Rejected';
-      default:
-        return status;
+    if (status === 'PENDING_REVIEW') {
+      return 'Pending Review';
     }
+
+    return status.charAt(0) + status.slice(1).toLowerCase();
   }
 
-  private sampleTransactions(): ApprovalTransaction[] {
-    const rows = [
-      {
-        id: '1',
-        transactionId: 'TXN-0002451',
-        residentName: 'Rami Haddad',
-        serviceName: 'Driving License Renewal',
-        ministryName: 'Ministry of Health',
-        amountGov: 4250000,
-      },
-      {
-        id: '2',
-        transactionId: 'TXN-0002452',
-        residentName: 'Nour Salem',
-        serviceName: 'Birth Certificate',
-        ministryName: 'Ministry of Education',
-        amountGov: 2150000,
-      },
-      {
-        id: '3',
-        transactionId: 'TXN-0002453',
-        residentName: 'Karim Mansour',
-        serviceName: 'Business License',
-        ministryName: 'Department of Economic Development',
-        amountGov: 12750000,
-      },
-      {
-        id: '4',
-        transactionId: 'TXN-0002454',
-        residentName: 'Layla Khoury',
-        serviceName: 'Passport Renewal',
-        ministryName: 'Ministry of Interior',
-        amountGov: 3200000,
-      },
-      {
-        id: '5',
-        transactionId: 'TXN-0002455',
-        residentName: 'Khalil Haddad',
-        serviceName: 'Residence Visa',
-        ministryName: 'Ministry of Labour',
-        amountGov: 6800000,
-      },
-      {
-        id: '6',
-        transactionId: 'TXN-0002456',
-        residentName: 'Hasan Bloushi',
-        serviceName: 'Contract Registration',
-        ministryName: 'Housing Authority',
-        amountGov: 950000,
-      },
-      {
-        id: '7',
-        transactionId: 'TXN-0002457',
-        residentName: 'Saeed Maktoum',
-        serviceName: 'Vehicle Registration',
-        ministryName: 'Ministry of Defence',
-        amountGov: 2450000,
-      },
-      {
-        id: '8',
-        transactionId: 'TXN-0002458',
-        residentName: 'Noora Muhairi',
-        serviceName: 'Land Ownership Transfer',
-        ministryName: 'Department of Municipalities',
-        amountGov: 15900000,
-      },
-      {
-        id: '9',
-        transactionId: 'TXN-0002459',
-        residentName: 'Yousef Kaabi',
-        serviceName: 'Professional License',
-        ministryName: 'Department of Economic Development',
-        amountGov: 8750000,
-      },
-      {
-        id: '10',
-        transactionId: 'TXN-0002460',
-        residentName: 'Mariam Shamsi',
-        serviceName: 'Import Permit',
-        ministryName: 'Ministry of Environment',
-        amountGov: 11200000,
-      },
-    ];
+  paymentMethodLabel(value: string): string {
+    return String(value || '-').replace(/_/g, ' ');
+  }
 
-    return rows.map((row, index) => {
-      const rule = this.getApprovalRule(row.amountGov, row.ministryName);
+  blockchainBadgeClass(value: string): string {
+    const normalized = String(value || '').toLowerCase();
 
-      return {
-        ...row,
-        currency: 'GOV',
-        approvalRule: rule,
-        status:
-          index === 9
-            ? 'REJECTED'
-            : rule === 'AUTO_APPROVE'
-              ? 'AUTO_APPROVED'
-              : 'PENDING_REVIEW',
-        selected: false,
-      };
-    });
+    if (normalized.includes('confirmed') || normalized.includes('submitted')) {
+      return 'success';
+    }
+
+    if (normalized.includes('failed')) {
+      return 'danger';
+    }
+
+    if (normalized.includes('submitting')) {
+      return 'warning';
+    }
+
+    return 'info';
   }
 }
