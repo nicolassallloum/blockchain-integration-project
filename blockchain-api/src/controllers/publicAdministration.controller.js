@@ -1,6 +1,7 @@
 'use strict';
 
 const crypto = require('crypto');
+const bcrypt = require('bcryptjs');
 const pool = require('../config/database');
 const fabricService = require('../services/fabric.service');
 
@@ -156,6 +157,8 @@ async function saveAdministrationToPostgres(payload, blockchainTxId) {
       governorate,
       municipality,
       address,
+      login_username,
+      password_hash,
       wallet_address,
       wallet_currency,
       wallet_status,
@@ -168,8 +171,9 @@ async function saveAdministrationToPostgres(payload, blockchainTxId) {
       $1, $2, $3, $4, $5, $6,
       $7, $8, $9, $10,
       $11, $12, $13, $14,
-      $15, $16, $17,
-      $18, $19,
+      $15, $16,
+      $17, $18, $19,
+      $20, $21,
       CURRENT_TIMESTAMP,
       CURRENT_TIMESTAMP
     )
@@ -188,6 +192,8 @@ async function saveAdministrationToPostgres(payload, blockchainTxId) {
       governorate = EXCLUDED.governorate,
       municipality = EXCLUDED.municipality,
       address = EXCLUDED.address,
+      login_username = EXCLUDED.login_username,
+      password_hash = EXCLUDED.password_hash,
       wallet_address = EXCLUDED.wallet_address,
       wallet_currency = EXCLUDED.wallet_currency,
       wallet_status = EXCLUDED.wallet_status,
@@ -198,6 +204,14 @@ async function saveAdministrationToPostgres(payload, blockchainTxId) {
   `;
 
   payload.walletCurrency = PUBLIC_ADMINISTRATION_WALLET_CURRENCY;
+
+  if (!payload.loginUsername) {
+    payload.loginUsername = payload.contactEmail || payload.administrationCode;
+  }
+
+  if (payload.generatedPassword && !payload.passwordHash) {
+    payload.passwordHash = await bcrypt.hash(String(payload.generatedPassword), 10);
+  }
 
   const values = [
     payload.administrationId,
@@ -214,6 +228,8 @@ async function saveAdministrationToPostgres(payload, blockchainTxId) {
     payload.governorate,
     payload.municipality,
     payload.address,
+    payload.loginUsername,
+    payload.passwordHash || null,
     payload.walletAddress,
     payload.walletCurrency,
     payload.walletStatus,

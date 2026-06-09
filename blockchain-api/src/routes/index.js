@@ -107,4 +107,124 @@ router.get('/health', (req, res) => {
 });
 router.use('/government-blockchain/resident-reference', residentReferenceRoutes);
 
+
+/*
+|--------------------------------------------------------------------------
+| Account Transactions
+|--------------------------------------------------------------------------
+| Used by Government Blockchain Account Login screen after successful login.
+| GET /api/v1/government-blockchain/accounts/:accountId/transactions
+|
+| SAFE VERSION:
+| Uses to_jsonb(gt)->>'column_name' so the query does not fail if optional
+| columns do not exist in blockchain.government_transactions.
+*/
+router.get('/government-blockchain/accounts/:accountId/transactions', async (req, res) => {
+  try {
+    const pool = require('../config/database');
+    const { accountId } = req.params;
+
+    const result = await pool.query(
+      `
+      WITH tx AS (
+        SELECT
+          gt.created_at,
+          to_jsonb(gt) AS j
+        FROM blockchain.government_transactions gt
+      )
+      SELECT
+        COALESCE(
+          j->>'transaction_reference',
+          j->>'transaction_id',
+          j->>'client_transaction_id',
+          ''
+        ) AS "transactionId",
+
+        COALESCE(
+          j->>'transaction_type',
+          'GOVERNMENT_SERVICE'
+        ) AS "type",
+
+        COALESCE(
+          j->>'from_wallet_address',
+          j->>'from_wallet',
+          j->>'payer_wallet_address',
+          ''
+        ) AS "fromWallet",
+
+        COALESCE(
+          j->>'to_wallet_address',
+          j->>'to_wallet',
+          j->>'receiver_wallet_address',
+          ''
+        ) AS "toWallet",
+
+        COALESCE(
+          j->>'amount',
+          j->>'fee_amount',
+          j->>'total_amount',
+          j->>'total_fee',
+          '0'
+        ) AS "amount",
+
+        COALESCE(
+          j->>'currency_code',
+          j->>'currency',
+          'GOV'
+        ) AS "currency",
+
+        COALESCE(
+          j->>'transaction_status',
+          j->>'status',
+          'PENDING'
+        ) AS "status",
+
+        COALESCE(
+          j->>'service_name',
+          j->>'service_code',
+          j->>'service_public_id',
+          ''
+        ) AS "service",
+
+        COALESCE(
+          j->>'blockchain_tx_id',
+          j->>'fabric_tx_id',
+          j->>'tx_id',
+          ''
+        ) AS "blockchainTx",
+
+        created_at AS "createdAt"
+      FROM tx
+      WHERE
+        COALESCE(j->>'created_by_account_id', '') = $1
+        OR COALESCE(j->>'created_by_wallet_address', '') = $1
+        OR COALESCE(j->>'administration_id', '') = $1
+        OR COALESCE(j->>'ministry_id', '') = $1
+        OR COALESCE(j->>'resident_id', '') = $1
+        OR COALESCE(j->>'from_wallet_address', '') = $1
+        OR COALESCE(j->>'to_wallet_address', '') = $1
+        OR COALESCE(j->>'payer_wallet_address', '') = $1
+        OR COALESCE(j->>'receiver_wallet_address', '') = $1
+      ORDER BY created_at DESC NULLS LAST
+      LIMIT 100
+      `,
+      [accountId]
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: 'Account transactions loaded successfully.',
+      data: result.rows
+    });
+  } catch (error) {
+    console.error('[ACCOUNT_TRANSACTIONS_ERROR]', error);
+
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to load account transactions.',
+      error: error.message
+    });
+  }
+});
+
 module.exports = router;
