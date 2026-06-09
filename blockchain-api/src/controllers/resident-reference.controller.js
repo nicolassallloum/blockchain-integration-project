@@ -85,32 +85,37 @@ async function getDistricts(req, res) {
       return res.status(400).json({
         success: false,
         message: 'governorateId is required.',
-        timestamp: new Date().toISOString(),
+        timestamp: new Date().toISOString()
       });
     }
-
-    const normalizedCode = normalizeGovernorateCodeSql('g');
 
     const result = await pool.query(
       `
       WITH selected_governorate AS (
         SELECT
-          ${normalizedCode} AS governorate_code
+          g.governorate_id,
+          g.governorate_code
         FROM blockchain.governorates g
         WHERE g.governorate_id::TEXT = $1::TEXT
+           OR UPPER(g.governorate_code::TEXT) = UPPER($1::TEXT)
         LIMIT 1
       )
       SELECT
-          d.district_id::TEXT AS id,
-          d.district_code AS code,
-          d.district_name AS name,
-          d.district_name_ar AS "arabicName",
-          d.governorate_code AS "governorateCode"
+        d.district_id::TEXT AS id,
+        d.district_code AS code,
+        d.district_name AS name,
+        COALESCE(d.district_name_ar, d.arabic_name) AS "arabicName",
+        d.governorate_id::TEXT AS "governorateId",
+        d.governorate_code AS "governorateCode"
       FROM blockchain.districts d
-      JOIN selected_governorate sg
-        ON sg.governorate_code = d.governorate_code
-      WHERE d.is_active = TRUE
-      ORDER BY d.display_order, d.district_name
+      LEFT JOIN selected_governorate sg ON TRUE
+      WHERE COALESCE(d.is_active, true) = true
+        AND (
+          UPPER(d.governorate_code::TEXT) = UPPER($1::TEXT)
+          OR d.governorate_id::TEXT = $1::TEXT
+          OR UPPER(d.governorate_code::TEXT) = UPPER(sg.governorate_code::TEXT)
+        )
+      ORDER BY COALESCE(d.display_order, d.sort_order, d.district_id), d.district_name
       `,
       [governorateId]
     );
@@ -129,32 +134,28 @@ async function getMunicipalities(req, res) {
       return res.status(400).json({
         success: false,
         message: 'districtId is required.',
-        timestamp: new Date().toISOString(),
+        timestamp: new Date().toISOString()
       });
     }
 
     const result = await pool.query(
       `
-      WITH selected_district AS (
-        SELECT
-          district_code,
-          governorate_code
-        FROM blockchain.districts
-        WHERE district_id::TEXT = $1::TEXT
-        LIMIT 1
-      )
       SELECT
-          m.id::TEXT AS id,
-          m.municipality_code AS code,
-          m.municipality_name AS name,
-          NULL::TEXT AS "arabicName",
-          sd.district_code AS "districtCode",
-          sd.governorate_code AS "governorateCode"
+        m.municipality_id::TEXT AS id,
+        m.municipality_code AS code,
+        m.municipality_name AS name,
+        m.arabic_name AS "arabicName",
+        m.district_id::TEXT AS "districtId",
+        m.district_code AS "districtCode",
+        m.governorate_id::TEXT AS "governorateId",
+        m.governorate_code AS "governorateCode"
       FROM blockchain.municipalities m
-      JOIN selected_district sd
-        ON sd.district_code = m.district_code
-      WHERE m.is_active = TRUE
-      ORDER BY m.display_order, m.municipality_name
+      WHERE COALESCE(m.is_active, true) = true
+        AND (
+          m.district_id::TEXT = $1::TEXT
+          OR UPPER(m.district_code::TEXT) = UPPER($1::TEXT)
+        )
+      ORDER BY COALESCE(m.display_order, m.sort_order, m.municipality_id), m.municipality_name
       `,
       [districtId]
     );
