@@ -26,6 +26,7 @@ const residentWalletsRoutes = require('./routes/resident-wallets.routes');
 const paymentsDigitalStampsRoutes = require('./routes/payments-digital-stamps.routes');
 const documentsKycRoutes = require('./routes/documents-kyc.routes');
 const governmentDocumentsRoutes = require('./routes/government-documents.routes');
+const hashVerificationRoutes = require('./routes/hash-verification.routes');
 const app = express();
 
 app.use(express.json({ limit: '50mb' }));
@@ -49,6 +50,9 @@ app.use('/api/v1/government-blockchain/documents-kyc', documentsKycRoutes);
 
 app.use('/api/v1/government-blockchain/documents', governmentDocumentsRoutes);
 console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/documents');
+
+app.use('/api/v1/government-blockchain/hash-verification', hashVerificationRoutes);
+console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/hash-verification');
 
 
 

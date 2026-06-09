@@ -2,61 +2,138 @@
   <div class="page-header">
     <div>
       <h1>Hash Verification</h1>
-      <p>Validate document hashes, transaction hashes, and blockchain integrity records.</p>
+      <p>Verify document hashes, government transaction hashes, blockchain proof hashes, and Fabric transaction IDs.</p>
     </div>
 
-    <button class="primary-btn">Run Verification</button>
+    <button class="primary-btn" type="button" (click)="verifyHash()" [disabled]="loading">
+      {{ loading ? 'Verifying...' : 'Run Verification' }}
+    </button>
   </div>
 
   <div class="form-card">
-    <h2>Verify Hash</h2>
+    <div class="section-title">
+      <div>
+        <h2>Verify Hash</h2>
+        <p>Paste a document hash or blockchain proof hash. The backend will search PostgreSQL and optional CouchDB.</p>
+      </div>
+
+      <span class="badge" [ngClass]="statusClass">{{ statusLabel }}</span>
+    </div>
 
     <div class="form-grid">
-      <div class="form-group">
-        <label>Hash Type</label>
-        <select>
-          <option>Transaction Hash</option>
-          <option>Document Hash</option>
-          <option>Wallet Hash</option>
-          <option>KYC Proof Hash</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>Reference Number</label>
-        <input type="text" placeholder="Example: GOV-TXN-000001" />
-      </div>
-
       <div class="form-group full-width">
         <label>Hash Value</label>
-        <textarea rows="4" placeholder="Paste hash value here..."></textarea>
+        <textarea
+          rows="5"
+          [(ngModel)]="hashValue"
+          placeholder="Example: 0x696d616765202832292e706e672d302d313738303931393134333630352d302e"
+          [disabled]="loading"
+        ></textarea>
       </div>
     </div>
+
+    <div class="actions-row">
+      <button class="primary-btn" type="button" (click)="verifyHash()" [disabled]="loading">
+        {{ loading ? 'Checking PostgreSQL...' : 'Verify Hash' }}
+      </button>
+
+      <button class="secondary-btn" type="button" (click)="clearForm()" [disabled]="loading">
+        Clear
+      </button>
+    </div>
+
+    <div class="message success-message" *ngIf="successMessage && isVerified">
+      {{ successMessage }}
+    </div>
+
+    <div class="message warning-message" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </div>
+  </div>
+
+  <div class="result-card" *ngIf="result">
+    <div class="result-header">
+      <div>
+        <h2>Verification Result</h2>
+        <p>{{ isVerified ? 'Hash matched successfully.' : 'No matching record was found.' }}</p>
+      </div>
+
+      <span class="badge" [ngClass]="statusClass">
+        {{ isVerified ? 'Verified' : 'Not Found' }}
+      </span>
+    </div>
+
+    <div class="result-grid">
+      <div class="result-item">
+        <label>Verification Status</label>
+        <strong>{{ result.verificationStatus || '-' }}</strong>
+      </div>
+
+      <div class="result-item">
+        <label>Entity Type</label>
+        <strong>{{ result.entityType || '-' }}</strong>
+      </div>
+
+      <div class="result-item">
+        <label>Entity ID</label>
+        <strong>{{ result.entityId || '-' }}</strong>
+      </div>
+
+      <div class="result-item">
+        <label>Blockchain Status</label>
+        <strong>{{ result.blockchainStatus || '-' }}</strong>
+      </div>
+
+      <div class="result-item">
+        <label>Created Date</label>
+        <strong>{{ createdDateFormatted }}</strong>
+      </div>
+
+      <div class="result-item">
+        <label>Source</label>
+        <strong>{{ result.source || '-' }}</strong>
+      </div>
+
+      <div class="result-item full-width">
+        <label>Hash</label>
+        <code>{{ result.hash }}</code>
+      </div>
+
+      <div class="result-item full-width">
+        <label>Related Proof</label>
+        <code>{{ relatedProofText }}</code>
+      </div>
+    </div>
+
+    <details class="details-box" *ngIf="result.details">
+      <summary>View Details</summary>
+      <pre>{{ formatValue(result.details) }}</pre>
+    </details>
   </div>
 
   <div class="cards-grid">
     <div class="summary-card">
-      <h3>Checks Today</h3>
-      <strong>420</strong>
-      <span>Hash validations</span>
+      <h3>Last Result</h3>
+      <strong>{{ result ? statusLabel : '-' }}</strong>
+      <span>Current verification status</span>
     </div>
 
     <div class="summary-card">
-      <h3>Valid Hashes</h3>
-      <strong>397</strong>
-      <span>Matched successfully</span>
+      <h3>Entity Type</h3>
+      <strong>{{ result?.entityType || '-' }}</strong>
+      <span>Matched source entity</span>
     </div>
 
     <div class="summary-card">
-      <h3>Invalid Hashes</h3>
-      <strong>12</strong>
-      <span>Mismatch detected</span>
+      <h3>Blockchain Status</h3>
+      <strong>{{ result?.blockchainStatus || '-' }}</strong>
+      <span>Ledger submission status</span>
     </div>
 
     <div class="summary-card">
-      <h3>Pending</h3>
-      <strong>11</strong>
-      <span>Awaiting ledger check</span>
+      <h3>Source</h3>
+      <strong>{{ result?.source || '-' }}</strong>
+      <span>PostgreSQL / CouchDB</span>
     </div>
   </div>
 
@@ -66,32 +143,31 @@
     <table>
       <thead>
         <tr>
-          <th>Verification ID</th>
-          <th>Reference</th>
-          <th>Hash Type</th>
-          <th>Hash Preview</th>
           <th>Result</th>
-          <th>Date</th>
+          <th>Entity Type</th>
+          <th>Entity ID</th>
+          <th>Hash Preview</th>
+          <th>Blockchain Status</th>
+          <th>Source</th>
         </tr>
       </thead>
 
       <tbody>
-        <tr>
-          <td>HV-000001</td>
-          <td>GOV-TXN-000001</td>
-          <td>Transaction Hash</td>
-          <td>0xA98F...12BC</td>
-          <td><span class="badge success">Valid</span></td>
-          <td>2026-06-04</td>
+        <tr *ngIf="recentVerifications.length === 0">
+          <td colspan="6" class="empty-row">No verification executed yet.</td>
         </tr>
 
-        <tr>
-          <td>HV-000002</td>
-          <td>DOC-000339</td>
-          <td>Document Hash</td>
-          <td>0xFF10...89DA</td>
-          <td><span class="badge danger">Mismatch</span></td>
-          <td>2026-06-04</td>
+        <tr *ngFor="let item of recentVerifications">
+          <td>
+            <span class="badge" [ngClass]="item.verified ? 'success' : 'warning'">
+              {{ item.verified ? 'Verified' : 'Not Found' }}
+            </span>
+          </td>
+          <td>{{ item.entityType || '-' }}</td>
+          <td>{{ item.entityId || '-' }}</td>
+          <td><code>{{ previewHash(item.hash) }}</code></td>
+          <td>{{ item.blockchainStatus || '-' }}</td>
+          <td>{{ item.source || '-' }}</td>
         </tr>
       </tbody>
     </table>
