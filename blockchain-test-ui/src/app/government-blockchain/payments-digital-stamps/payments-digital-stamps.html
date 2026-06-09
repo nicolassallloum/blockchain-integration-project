@@ -3,7 +3,7 @@
   <div class="page-header">
     <div>
       <h1>Payments / Digital Stamps</h1>
-      <p>Monitor service payments, digital stamp issuance, usage, and redemption status.</p>
+      <p>Issue GOV digital stamps for residents using government services from PostgreSQL.</p>
     </div>
 
     <button class="primary-btn" type="button" (click)="issueDigitalStamp()">
@@ -44,19 +44,21 @@
       <table>
         <thead>
           <tr>
-            <th>Payment Ref</th>
+            <th>Payment Code</th>
             <th>Resident</th>
             <th>Service</th>
             <th>Stamp ID</th>
-            <th>Amount</th>
+            <th>Fees</th>
             <th>Payment Status</th>
             <th>Stamp Status</th>
           </tr>
         </thead>
 
         <tbody>
-          <tr *ngFor="let record of records">
-            <td>{{ record.paymentRef }}</td>
+          <tr *ngFor="let record of records; trackBy: trackByPaymentRef">
+            <td>
+              <strong>{{ record.paymentRef }}</strong>
+            </td>
             <td>{{ record.resident }}</td>
             <td>{{ record.service }}</td>
             <td>{{ record.stampId }}</td>
@@ -89,7 +91,7 @@
       <div class="modal-header">
         <div>
           <h2>Issue Digital Stamp</h2>
-          <p>Create a new paid digital stamp record and save it in PostgreSQL.</p>
+          <p>Select resident and service. Fees and GOV currency are controlled by PostgreSQL/backend rules.</p>
         </div>
 
         <button class="close-btn" type="button" (click)="closeIssueStampModal()">×</button>
@@ -97,45 +99,83 @@
 
       <div class="modal-body">
 
+        <div class="loading-box" *ngIf="loadingDropdowns">
+          Loading residents and services...
+        </div>
+
         <div class="form-grid">
           <div class="form-field">
             <label>Resident Name</label>
-            <input
-              type="text"
-              [(ngModel)]="newStamp.resident"
-              placeholder="Enter resident name">
-          </div>
-
-          <div class="form-field">
-            <label>Service</label>
-            <select [(ngModel)]="newStamp.service">
-              <option value="">Select service</option>
-              <option value="Vehicle Registration">Vehicle Registration</option>
-              <option value="Passport Renewal">Passport Renewal</option>
-              <option value="Legal Document Stamp">Legal Document Stamp</option>
-              <option value="Residence Certificate">Residence Certificate</option>
-              <option value="Civil Status Extract">Civil Status Extract</option>
+            <select
+              [(ngModel)]="newStamp.residentId"
+              [disabled]="saving || loadingDropdowns">
+              <option value="">Select resident</option>
+              <option
+                *ngFor="let resident of residents; trackBy: trackById"
+                [value]="resident.id">
+                {{ resident.name }}
+              </option>
             </select>
           </div>
 
-          <div class="form-field full-width">
-            <label>Amount LBP</label>
-            <input
-              type="number"
-              [(ngModel)]="newStamp.amount"
-              placeholder="Enter amount">
+          <div class="form-field">
+            <label>Government Service</label>
+            <select
+              [(ngModel)]="newStamp.serviceId"
+              (ngModelChange)="onServiceChange()"
+              [disabled]="saving || loadingDropdowns">
+              <option value="">Select service</option>
+              <option
+                *ngFor="let service of services; trackBy: trackById"
+                [value]="service.id">
+                {{ service.name }}
+              </option>
+            </select>
           </div>
+
+          <div class="form-field">
+            <label>Fees</label>
+            <input
+              type="text"
+              [value]="loadingFees ? 'Loading fees...' : (newStamp.fees ? (newStamp.fees + ' GOV') : '')"
+              placeholder="Auto-filled from selected service"
+              readonly>
+          </div>
+
+          <div class="form-field">
+            <label>Currency</label>
+            <input
+              type="text"
+              [(ngModel)]="newStamp.currencyCode"
+              readonly>
+          </div>
+
+          <div class="form-field full-width">
+            <label>Digital Stamp Status</label>
+            <select [(ngModel)]="newStamp.stampStatus" [disabled]="saving">
+              <option value="Issued">Issued</option>
+              <option value="Active">Active</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="alert success" *ngIf="issuedPaymentCode">
+          Generated Payment Code: {{ issuedPaymentCode }}
         </div>
 
       </div>
 
       <div class="modal-actions">
-        <button class="secondary-btn" type="button" (click)="closeIssueStampModal()">
+        <button class="secondary-btn" type="button" (click)="closeIssueStampModal()" [disabled]="saving">
           Cancel
         </button>
 
-        <button class="primary-btn" type="button" (click)="saveDigitalStamp()" [disabled]="saving">
-          {{ saving ? 'Saving...' : 'Save Digital Stamp' }}
+        <button
+          class="primary-btn"
+          type="button"
+          (click)="saveDigitalStamp()"
+          [disabled]="saving || loadingFees || !newStamp.residentId || !newStamp.serviceId">
+          {{ saving ? 'Issuing...' : 'Issue GOV Digital Stamp' }}
         </button>
       </div>
 

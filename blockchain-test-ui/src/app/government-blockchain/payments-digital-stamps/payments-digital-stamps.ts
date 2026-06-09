@@ -3,6 +3,17 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 
+interface DropdownItem {
+  id: number | string;
+  name: string;
+}
+
+interface ServiceFees {
+  id: number | string;
+  name: string;
+  fees: number | string;
+}
+
 interface PaymentStampRecord {
   id?: number;
   paymentRef: string;
@@ -11,7 +22,7 @@ interface PaymentStampRecord {
   stampId: string;
   amount: string;
   paymentStatus: 'Paid' | 'Failed' | 'Pending';
-  stampStatus: 'Redeemed' | 'Issued' | 'Not Issued';
+  stampStatus: 'Redeemed' | 'Issued' | 'Active' | 'Not Issued';
 }
 
 @Component({
@@ -22,19 +33,33 @@ interface PaymentStampRecord {
   styleUrl: './payments-digital-stamps.scss'
 })
 export class PaymentsDigitalStampsComponent implements OnInit {
-  private apiUrl = 'http://172.31.13.90:3001/api/v1/government-blockchain/payments-digital-stamps';
+  /**
+   * Use relative API path so Angular proxy.conf.json handles backend calls.
+   * This avoids CORS issues if Angular runs on 4200 or another fallback port.
+   */
+  private apiUrl = '/api/v1/government-blockchain/payments-digital-stamps';
 
   loading = false;
+  loadingDropdowns = false;
+  loadingFees = false;
   saving = false;
+
   errorMessage = '';
   successMessage = '';
+  issuedPaymentCode = '';
 
   showIssueStampModal = false;
 
+  residents: DropdownItem[] = [];
+  services: DropdownItem[] = [];
+
   newStamp = {
-    resident: '',
-    service: '',
-    amount: ''
+    residentId: '',
+    serviceId: '',
+    serviceName: '',
+    fees: '',
+    currencyCode: 'GOV',
+    stampStatus: 'Issued'
   };
 
   summaryCards = [
@@ -45,13 +70,13 @@ export class PaymentsDigitalStampsComponent implements OnInit {
     },
     {
       title: 'Total Amount',
-      value: '0 LBP',
+      value: '0 GOV',
       subtitle: 'Collected fees'
     },
     {
       title: 'Digital Stamps',
       value: '0',
-      subtitle: 'Issued stamps'
+      subtitle: 'Issued / active stamps'
     },
     {
       title: 'Redeemed',
@@ -67,6 +92,7 @@ export class PaymentsDigitalStampsComponent implements OnInit {
   ngOnInit(): void {
     this.loadSummary();
     this.loadRecords();
+    this.loadDropdowns();
   }
 
   loadSummary(): void {
@@ -76,7 +102,8 @@ export class PaymentsDigitalStampsComponent implements OnInit {
           return;
         }
 
-        const data = response.data;
+        const data = response.data || {};
+        const currencyCode = data.currencyCode || 'GOV';
 
         this.summaryCards = [
           {
@@ -86,13 +113,13 @@ export class PaymentsDigitalStampsComponent implements OnInit {
           },
           {
             title: 'Total Amount',
-            value: `${this.formatShortAmount(data.totalAmount || 0)} LBP`,
+            value: `${this.formatShortAmount(data.totalAmount || 0)} ${currencyCode}`,
             subtitle: 'Collected fees'
           },
           {
             title: 'Digital Stamps',
             value: Number(data.digitalStamps || 0).toLocaleString(),
-            subtitle: 'Issued stamps'
+            subtitle: 'Issued / active stamps'
           },
           {
             title: 'Redeemed',
@@ -120,13 +147,13 @@ export class PaymentsDigitalStampsComponent implements OnInit {
           return;
         }
 
-        this.records = response.data.map((row: any) => ({
+        this.records = (response.data || []).map((row: any) => ({
           id: row.id,
           paymentRef: row.payment_ref,
           resident: row.resident_name,
           service: row.service_name,
           stampId: row.stamp_id,
-          amount: `${Number(row.amount || 0).toLocaleString()} ${row.currency_code || 'LBP'}`,
+          amount: `${Number(row.amount || 0).toLocaleString()} ${row.currency_code || 'GOV'}`,
           paymentStatus: row.payment_status,
           stampStatus: row.stamp_status
         }));
@@ -139,15 +166,49 @@ export class PaymentsDigitalStampsComponent implements OnInit {
     });
   }
 
+  loadDropdowns(): void {
+    this.loadingDropdowns = true;
+
+    this.http.get<any>(`${this.apiUrl}/residents/dropdown`).subscribe({
+      next: (response) => {
+        this.residents = response?.success ? response.data || [] : [];
+      },
+      error: (error) => {
+        this.errorMessage = 'Failed to load residents dropdown.';
+        console.error('Residents dropdown error:', error);
+      }
+    });
+
+    this.http.get<any>(`${this.apiUrl}/services/dropdown`).subscribe({
+      next: (response) => {
+        this.services = response?.success ? response.data || [] : [];
+        this.loadingDropdowns = false;
+      },
+      error: (error) => {
+        this.loadingDropdowns = false;
+        this.errorMessage = 'Failed to load services dropdown.';
+        console.error('Services dropdown error:', error);
+      }
+    });
+  }
+
   issueDigitalStamp(): void {
     this.successMessage = '';
     this.errorMessage = '';
+    this.issuedPaymentCode = '';
 
     this.newStamp = {
-      resident: '',
-      service: '',
-      amount: ''
+      residentId: '',
+      serviceId: '',
+      serviceName: '',
+      fees: '',
+      currencyCode: 'GOV',
+      stampStatus: 'Issued'
     };
+
+    if (this.residents.length === 0 || this.services.length === 0) {
+      this.loadDropdowns();
+    }
 
     this.showIssueStampModal = true;
   }
@@ -156,25 +217,71 @@ export class PaymentsDigitalStampsComponent implements OnInit {
     this.showIssueStampModal = false;
   }
 
+  onServiceChange(): void {
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.issuedPaymentCode = '';
+
+    this.newStamp.fees = '';
+    this.newStamp.serviceName = '';
+
+    if (!this.newStamp.serviceId) {
+      return;
+    }
+
+    const selectedService = this.services.find(
+      (service) => String(service.id) === String(this.newStamp.serviceId)
+    );
+
+    this.newStamp.serviceName = selectedService?.name || '';
+
+    this.loadingFees = true;
+
+    this.http.get<any>(`${this.apiUrl}/services/${this.newStamp.serviceId}/fees`).subscribe({
+      next: (response) => {
+        this.loadingFees = false;
+
+        if (!response?.success) {
+          this.errorMessage = response?.message || 'Failed to load service fees.';
+          return;
+        }
+
+        const feesData: ServiceFees = response.data;
+        this.newStamp.fees = String(feesData.fees || '');
+        this.newStamp.serviceName = feesData.name || this.newStamp.serviceName;
+      },
+      error: (error) => {
+        this.loadingFees = false;
+        this.errorMessage = error?.error?.message || 'Failed to load service fees.';
+        console.error('Service fees error:', error);
+      }
+    });
+  }
+
   saveDigitalStamp(): void {
     this.errorMessage = '';
     this.successMessage = '';
+    this.issuedPaymentCode = '';
 
-    if (!this.newStamp.resident || !this.newStamp.service || !this.newStamp.amount) {
-      this.errorMessage = 'Please fill resident, service, and amount.';
+    if (!this.newStamp.residentId || !this.newStamp.serviceId) {
+      this.errorMessage = 'Please select resident and service.';
+      return;
+    }
+
+    if (!this.newStamp.fees) {
+      this.errorMessage = 'Fees are required. Please select a valid service.';
       return;
     }
 
     this.saving = true;
 
     const payload = {
-      residentName: this.newStamp.resident,
-      serviceName: this.newStamp.service,
-      amount: Number(this.newStamp.amount),
-      currencyCode: 'LBP'
+      residentId: Number(this.newStamp.residentId),
+      serviceId: Number(this.newStamp.serviceId),
+      stampStatus: this.newStamp.stampStatus || 'Issued'
     };
 
-    this.http.post<any>(this.apiUrl, payload).subscribe({
+    this.http.post<any>(`${this.apiUrl}/issue`, payload).subscribe({
       next: (response) => {
         this.saving = false;
 
@@ -183,8 +290,17 @@ export class PaymentsDigitalStampsComponent implements OnInit {
           return;
         }
 
+        const paymentCode =
+          response?.data?.payment_code ||
+          response?.data?.payment_ref ||
+          response?.data?.stamp_id ||
+          '';
+
+        this.issuedPaymentCode = paymentCode;
         this.showIssueStampModal = false;
-        this.successMessage = 'Digital stamp issued successfully.';
+        this.successMessage = paymentCode
+          ? `Digital stamp issued successfully. Payment Code: ${paymentCode}`
+          : 'Digital stamp issued successfully.';
 
         this.loadSummary();
         this.loadRecords();
@@ -216,10 +332,18 @@ export class PaymentsDigitalStampsComponent implements OnInit {
   }
 
   getPaymentStatusClass(status: string): string {
-    return status.toLowerCase();
+    return String(status || '').toLowerCase();
   }
 
   getStampStatusClass(status: string): string {
-    return status.toLowerCase().replace(' ', '-');
+    return String(status || '').toLowerCase().replace(' ', '-');
+  }
+
+  trackById(index: number, item: DropdownItem): number | string {
+    return item.id || index;
+  }
+
+  trackByPaymentRef(index: number, item: PaymentStampRecord): string | number {
+    return item.paymentRef || item.id || index;
   }
 }
