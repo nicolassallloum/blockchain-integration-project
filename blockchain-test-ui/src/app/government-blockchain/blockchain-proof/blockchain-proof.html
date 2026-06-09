@@ -1,82 +1,286 @@
-<div class="page-container">
+<section class="proof-page">
   <div class="page-header">
     <div>
+      <p class="eyebrow">Government Blockchain</p>
       <h1>Blockchain Proof</h1>
-      <p>Track blockchain transaction proofs, block hashes, ledger references, and verification evidence.</p>
+      <p>
+        Display blockchain proofs saved from wallets, transactions, documents, and digital stamps.
+      </p>
     </div>
 
-    <button class="primary-btn">Verify Proof</button>
+    <button class="primary-btn" type="button" (click)="refreshProofs()" [disabled]="isLoading">
+      {{ isLoading ? 'Loading...' : 'Refresh Proofs' }}
+    </button>
   </div>
 
-  <div class="cards-grid">
-    <div class="summary-card">
-      <h3>Total Proofs</h3>
-      <strong>11,320</strong>
-      <span>Stored on blockchain</span>
+  <div class="stats-grid">
+    <article class="stat-card">
+      <span>Total Proofs</span>
+      <strong>{{ totalProofs }}</strong>
+      <p>All proof records from PostgreSQL</p>
+    </article>
+
+    <article class="stat-card success">
+      <span>Verified / Confirmed</span>
+      <strong>{{ confirmedProofs }}</strong>
+      <p>Confirmed, active, issued, redeemed</p>
+    </article>
+
+    <article class="stat-card warning">
+      <span>Pending</span>
+      <strong>{{ pendingProofs }}</strong>
+      <p>Pending or not submitted proofs</p>
+    </article>
+
+    <article class="stat-card danger">
+      <span>Failed / Invalid</span>
+      <strong>{{ failedProofs }}</strong>
+      <p>Failed blockchain submissions</p>
+    </article>
+  </div>
+
+  <form class="filters-card" (ngSubmit)="applyFilters()">
+    <div class="filters-header">
+      <div>
+        <h2>Filters</h2>
+        <p>Search by entity type, entity ID, blockchain status, and submitted date range.</p>
+      </div>
+
+      <button class="secondary-btn" type="button" (click)="resetFilters()" [disabled]="isLoading">
+        Reset
+      </button>
     </div>
 
-    <div class="summary-card">
-      <h3>Verified Proofs</h3>
-      <strong>10,984</strong>
-      <span>Valid ledger records</span>
+    <div class="filters-grid">
+      <label>
+        Entity Type
+        <select [(ngModel)]="filters.entityType" name="entityType">
+          <option *ngFor="let option of entityTypeOptions" [value]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </label>
+
+      <label>
+        Entity ID
+        <input
+          type="text"
+          [(ngModel)]="filters.entityId"
+          name="entityId"
+          placeholder="Example: GOV-TXN or RES"
+        />
+      </label>
+
+      <label>
+        Blockchain Status
+        <select [(ngModel)]="filters.blockchainStatus" name="blockchainStatus">
+          <option *ngFor="let option of blockchainStatusOptions" [value]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </label>
+
+      <label>
+        Date From
+        <input type="date" [(ngModel)]="filters.dateFrom" name="dateFrom" />
+      </label>
+
+      <label>
+        Date To
+        <input type="date" [(ngModel)]="filters.dateTo" name="dateTo" />
+      </label>
+
+      <div class="filter-actions">
+        <button class="primary-btn" type="submit" [disabled]="isLoading">
+          Apply Filters
+        </button>
+      </div>
+    </div>
+  </form>
+
+  <div *ngIf="errorMessage" class="alert error-alert">
+    {{ errorMessage }}
+  </div>
+
+  <div class="records-card">
+    <div class="records-header">
+      <div>
+        <h2>Blockchain Proof Records</h2>
+        <p>
+          Showing {{ proofs.length }} of {{ totalRecords }} records.
+        </p>
+      </div>
+
+      <div class="pager">
+        <button type="button" class="secondary-btn" (click)="previousPage()" [disabled]="!hasPreviousPage() || isLoading">
+          Previous
+        </button>
+        <button type="button" class="secondary-btn" (click)="nextPage()" [disabled]="!hasNextPage() || isLoading">
+          Next
+        </button>
+      </div>
     </div>
 
-    <div class="summary-card">
-      <h3>Pending Proofs</h3>
-      <strong>289</strong>
-      <span>Waiting confirmation</span>
+    <div *ngIf="isLoading" class="loading-state">
+      Loading blockchain proofs from PostgreSQL...
     </div>
 
-    <div class="summary-card">
-      <h3>Invalid Proofs</h3>
-      <strong>47</strong>
-      <span>Failed validation</span>
+    <div *ngIf="!isLoading && proofs.length === 0" class="empty-state">
+      No blockchain proofs found for the selected filters.
+    </div>
+
+    <div *ngIf="!isLoading && proofs.length > 0" class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Proof ID</th>
+            <th>Entity Type</th>
+            <th>Entity ID</th>
+            <th>Blockchain Transaction Hash</th>
+            <th>Blockchain Status</th>
+            <th>Submitted Date</th>
+            <th>Created By</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let proof of proofs">
+            <td>
+              <button class="link-btn" type="button" (click)="viewProof(proof)">
+                {{ proof.proofId }}
+              </button>
+              <small>{{ proof.proofType }}</small>
+            </td>
+
+            <td>
+              <span class="entity-pill">{{ proof.entityType }}</span>
+            </td>
+
+            <td>{{ proof.entityId || '-' }}</td>
+
+            <td>
+              <button
+                *ngIf="proof.blockchainTransactionHash"
+                class="hash-btn"
+                type="button"
+                title="Copy hash"
+                (click)="copyValue(proof.blockchainTransactionHash)"
+              >
+                {{ shortValue(proof.blockchainTransactionHash, 10) }}
+              </button>
+              <span *ngIf="!proof.blockchainTransactionHash">-</span>
+            </td>
+
+            <td>
+              <span class="status-badge" [ngClass]="statusClass(proof.blockchainStatus)">
+                {{ proof.blockchainStatus || 'UNKNOWN' }}
+              </span>
+            </td>
+
+            <td>{{ formatDate(proof.submittedDate) }}</td>
+
+            <td>{{ proof.createdBy || '-' }}</td>
+
+            <td>
+              <div class="row-actions">
+                <button class="secondary-btn small" type="button" (click)="viewProof(proof)">
+                  View Proof
+                </button>
+
+                <button
+                  class="secondary-btn small"
+                  type="button"
+                  [disabled]="!proof.couchDbDocumentId"
+                  (click)="openCouchDbDocument(proof)"
+                >
+                  Open CouchDB
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 
-  <div class="table-card">
-    <h2>Blockchain Proof Records</h2>
+  <div class="modal-backdrop" *ngIf="selectedProof" (click)="closeProofDetails()">
+    <article class="proof-modal" (click)="$event.stopPropagation()">
+      <header>
+        <div>
+          <p class="eyebrow">Proof Details</p>
+          <h2>{{ selectedProof.proofId }}</h2>
+        </div>
 
-    <table>
-      <thead>
-        <tr>
-          <th>Proof ID</th>
-          <th>Transaction Ref</th>
-          <th>Block Number</th>
-          <th>Transaction Hash</th>
-          <th>Channel</th>
-          <th>Status</th>
-        </tr>
-      </thead>
+        <button class="close-btn" type="button" (click)="closeProofDetails()">×</button>
+      </header>
 
-      <tbody>
-        <tr>
-          <td>PROOF-000001</td>
-          <td>GOV-TXN-000001</td>
-          <td>15892</td>
-          <td>0xA98F...12BC</td>
-          <td>kycchannelnix1</td>
-          <td><span class="badge success">Verified</span></td>
-        </tr>
+      <div class="details-grid">
+        <div>
+          <span>Proof Type</span>
+          <strong>{{ selectedProof.proofType }}</strong>
+        </div>
 
-        <tr>
-          <td>PROOF-000002</td>
-          <td>GOV-TXN-000002</td>
-          <td>15893</td>
-          <td>0xBF22...88AA</td>
-          <td>kycchannelnix1</td>
-          <td><span class="badge warning">Pending</span></td>
-        </tr>
+        <div>
+          <span>Entity Type</span>
+          <strong>{{ selectedProof.entityType }}</strong>
+        </div>
 
-        <tr>
-          <td>PROOF-000003</td>
-          <td>GOV-TXN-000003</td>
-          <td>15894</td>
-          <td>0xCC91...77EF</td>
-          <td>kycchannelnix1</td>
-          <td><span class="badge danger">Invalid</span></td>
-        </tr>
-      </tbody>
-    </table>
+        <div>
+          <span>Entity ID</span>
+          <strong>{{ selectedProof.entityId || '-' }}</strong>
+        </div>
+
+        <div>
+          <span>Blockchain Status</span>
+          <strong>{{ selectedProof.blockchainStatus || 'UNKNOWN' }}</strong>
+        </div>
+
+        <div>
+          <span>Submitted Date</span>
+          <strong>{{ formatDate(selectedProof.submittedDate) }}</strong>
+        </div>
+
+        <div>
+          <span>Created By</span>
+          <strong>{{ selectedProof.createdBy || '-' }}</strong>
+        </div>
+
+        <div class="full-width">
+          <span>Blockchain Transaction Hash</span>
+          <code>{{ selectedProof.blockchainTransactionHash || '-' }}</code>
+        </div>
+
+        <div class="full-width">
+          <span>CouchDB Document ID</span>
+          <code>{{ selectedProof.couchDbDocumentId || '-' }}</code>
+        </div>
+
+        <div>
+          <span>Source Table</span>
+          <strong>{{ selectedProof.sourceTable }}</strong>
+        </div>
+      </div>
+
+      <footer>
+        <button
+          class="secondary-btn"
+          type="button"
+          [disabled]="!selectedProof.blockchainTransactionHash"
+          (click)="copyValue(selectedProof.blockchainTransactionHash)"
+        >
+          Copy Hash
+        </button>
+
+        <button
+          class="primary-btn"
+          type="button"
+          [disabled]="!selectedProof.couchDbDocumentId"
+          (click)="openCouchDbDocument(selectedProof)"
+        >
+          Open CouchDB Document
+        </button>
+      </footer>
+    </article>
   </div>
-</div>
+</section>

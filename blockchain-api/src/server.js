@@ -17,6 +17,8 @@
 require('dotenv').config();
 
 const express = require('express');
+const blockchainProofsRoutes = require('./routes/government-blockchain-proofs.routes');
+
 const cors = require('cors');
 const crypto = require('crypto');
 const os = require('os');
@@ -206,6 +208,13 @@ if (helmet) {
  * Body parsers.
  */
 app.use('/api/v1/government-blockchain/payments-digital-stamps', paymentsDigitalStampsRoutes);
+
+try {
+  app.use('/api/v1/government-blockchain/blockchain-proofs', blockchainProofsRoutes);
+  console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/blockchain-proofs');
+} catch (error) {
+  console.error('[ROUTE ERROR] blockchain-proofs route failed to mount:', error.message);
+}
 console.log('[ROUTE LOADED] /api/v1/government-blockchain/payments-digital-stamps');
 /**
  * Request ID / Correlation ID middleware.
