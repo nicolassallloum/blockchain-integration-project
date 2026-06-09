@@ -84,13 +84,32 @@ function getClientDetails(req) {
 
 /**
  * GET /api/v1/government-blockchain/transactions
+ *
+ * Query filters supported:
+ * - search
+ * - transactionId
+ * - residentName
+ * - service
+ * - paymentMethod
+ * - status
+ * - blockchainStatus
+ * - dateFrom
+ * - dateTo
+ * - limit
+ * - offset
  */
 router.get('/', async (req, res) => {
   try {
     const {
       search = '',
+      transactionId = '',
+      residentName = '',
+      service = '',
+      paymentMethod = 'ALL',
       status = 'ALL',
       blockchainStatus = 'ALL',
+      dateFrom = '',
+      dateTo = '',
       limit = 50,
       offset = 0
     } = req.query;
@@ -99,34 +118,95 @@ router.get('/', async (req, res) => {
     const values = [];
     let index = 1;
 
-    if (search && String(search).trim() !== '') {
+    const addIlikeCondition = (sqlExpression, value) => {
+      const cleanValue = cleanText(value);
+      if (!cleanValue) {
+        return;
+      }
+
+      conditions.push(`${sqlExpression} ILIKE $${index}`);
+      values.push(`%${cleanValue}%`);
+      index++;
+    };
+
+    if (cleanText(search)) {
       conditions.push(`
         (
           COALESCE(gt.transaction_reference::text, '') ILIKE $${index}
+          OR COALESCE(gt.transaction_id::text, '') ILIKE $${index}
           OR COALESCE(gt.resident_full_name::text, '') ILIKE $${index}
           OR COALESCE(gt.resident_name::text, '') ILIKE $${index}
+          OR COALESCE(r.full_name::text, '') ILIKE $${index}
           OR COALESCE(gt.resident_wallet_address::text, '') ILIKE $${index}
           OR COALESCE(gt.resident_national_id::text, '') ILIKE $${index}
           OR COALESCE(gt.service_code::text, '') ILIKE $${index}
           OR COALESCE(gt.service_name::text, '') ILIKE $${index}
+          OR COALESCE(gs.service_name::text, '') ILIKE $${index}
           OR COALESCE(gt.service_arabic_name::text, '') ILIKE $${index}
+          OR COALESCE(pa.administration_name::text, '') ILIKE $${index}
           OR COALESCE(gt.blockchain_tx_id::text, '') ILIKE $${index}
         )
       `);
 
-      values.push(`%${String(search).trim()}%`);
+      values.push(`%${cleanText(search)}%`);
+      index++;
+    }
+
+    addIlikeCondition(`COALESCE(gt.transaction_reference::text, gt.transaction_id::text, '')`, transactionId);
+
+    if (cleanText(residentName)) {
+      conditions.push(`
+        (
+          COALESCE(gt.resident_full_name::text, '') ILIKE $${index}
+          OR COALESCE(gt.resident_name::text, '') ILIKE $${index}
+          OR COALESCE(r.full_name::text, '') ILIKE $${index}
+        )
+      `);
+      values.push(`%${cleanText(residentName)}%`);
+      index++;
+    }
+
+    if (cleanText(service)) {
+      conditions.push(`
+        (
+          COALESCE(gt.service_name::text, '') ILIKE $${index}
+          OR COALESCE(gt.service_code::text, '') ILIKE $${index}
+          OR COALESCE(gs.service_name::text, '') ILIKE $${index}
+          OR COALESCE(gs.service_code::text, '') ILIKE $${index}
+          OR COALESCE(gs.service_public_id::text, '') ILIKE $${index}
+        )
+      `);
+      values.push(`%${cleanText(service)}%`);
+      index++;
+    }
+
+    if (paymentMethod && paymentMethod !== 'ALL') {
+      conditions.push(`UPPER(COALESCE(gt.payment_method::text, '')) = UPPER($${index})`);
+      values.push(cleanText(paymentMethod));
       index++;
     }
 
     if (status && status !== 'ALL') {
       conditions.push(`UPPER(COALESCE(gt.transaction_status::text, '')) = UPPER($${index})`);
-      values.push(status);
+      values.push(cleanText(status));
       index++;
     }
 
     if (blockchainStatus && blockchainStatus !== 'ALL') {
       conditions.push(`UPPER(COALESCE(gt.blockchain_status::text, '')) = UPPER($${index})`);
-      values.push(blockchainStatus);
+      values.push(cleanText(blockchainStatus));
+      index++;
+    }
+
+    if (cleanText(dateFrom)) {
+      conditions.push(`gt.created_at::date >= $${index}::date`);
+      values.push(cleanText(dateFrom));
+      index++;
+    }
+
+    if (cleanText(dateTo)) {
+      conditions.push(`gt.created_at::date <= $${index}::date`);
+      values.push(cleanText(dateTo));
       index++;
     }
 
@@ -134,55 +214,134 @@ router.get('/', async (req, res) => {
       ? `WHERE ${conditions.join(' AND ')}`
       : '';
 
+    const fromJoinClause = `
+      FROM blockchain.government_transactions gt
+
+      LEFT JOIN LATERAL (
+        SELECT
+          r.id,
+          r.resident_id,
+          r.full_name,
+          r.wallet_address,
+          r.national_id_number,
+          r.mobile_number,
+          r.email
+        FROM blockchain.residents r
+        WHERE
+          r.id = gt.resident_db_id
+          OR r.resident_id = gt.resident_id
+          OR UPPER(COALESCE(r.wallet_address, '')) = UPPER(COALESCE(gt.resident_wallet_address, ''))
+        ORDER BY r.id DESC
+        LIMIT 1
+      ) r ON TRUE
+
+      LEFT JOIN LATERAL (
+        SELECT
+          gs.service_id,
+          gs.service_public_id,
+          gs.service_code,
+          gs.service_name,
+          gs.arabic_name,
+          gs.category_id,
+          gs.ministry_id,
+          gs.administration_id,
+          gs.fee_amount
+        FROM blockchain.government_services gs
+        WHERE
+          gs.service_id = gt.service_id
+          OR gs.service_public_id = gt.service_public_id
+          OR gs.service_code = gt.service_code
+        ORDER BY gs.service_id DESC
+        LIMIT 1
+      ) gs ON TRUE
+
+      LEFT JOIN LATERAL (
+        SELECT
+          pa.administration_id,
+          pa.administration_name
+        FROM blockchain.public_administrations pa
+        WHERE pa.administration_id::text = COALESCE(gt.administration_id::text, gs.administration_id::text)
+        ORDER BY pa.administration_id DESC
+        LIMIT 1
+      ) pa ON TRUE
+    `;
+
     const dataQuery = `
       SELECT
         gt.transaction_id,
-        gt.transaction_reference,
+
+        COALESCE(gt.transaction_reference, gt.transaction_id::text) AS transaction_reference,
+
         gt.resident_id,
         gt.resident_db_id,
         gt.resident_wallet_address,
-        gt.resident_full_name,
-        gt.resident_name,
-        gt.resident_national_id,
-        gt.resident_mobile,
-        gt.resident_email,
+        COALESCE(gt.resident_full_name, gt.resident_name, r.full_name, '-') AS resident_name,
+        COALESCE(gt.resident_full_name, gt.resident_name, r.full_name, '-') AS resident_full_name,
+        COALESCE(gt.resident_national_id, r.national_id_number) AS resident_national_id,
+        COALESCE(gt.resident_mobile, r.mobile_number) AS resident_mobile,
+        COALESCE(gt.resident_email, r.email) AS resident_email,
+
         gt.service_id,
-        gt.service_public_id,
-        gt.service_code,
-        gt.service_name,
-        gt.service_arabic_name,
+        COALESCE(gt.service_public_id, gs.service_public_id) AS service_public_id,
+        COALESCE(gt.service_code, gs.service_code) AS service_code,
+        COALESCE(gt.service_name, gs.service_name, '-') AS service_name,
+        COALESCE(gt.service_arabic_name, gs.arabic_name) AS service_arabic_name,
         gt.service_category,
-        gt.category_id,
-        gt.ministry_id,
+        COALESCE(gt.category_id::text, gs.category_id::text) AS category_id,
+
+        COALESCE(gt.ministry_id::text, gs.ministry_id::text) AS ministry_id,
         gt.ministry_name,
-        gt.administration_id,
-        gt.amount,
-        gt.base_fee,
-        gt.fee_extra_amount,
-        gt.fee_percentage,
-        gt.total_fee,
-        COALESCE(gt.currency_code, gt.currency, 'GOV') AS currency_code,
+
+        COALESCE(gt.administration_id::text, gs.administration_id::text) AS administration_id,
+        COALESCE(pa.administration_name, '-') AS administration_name,
+
+        COALESCE(gt.amount, 0)::NUMERIC AS amount,
+        COALESCE(gt.base_fee, gt.amount, 0)::NUMERIC AS base_fee,
+        COALESCE(gt.fee_extra_amount, 0)::NUMERIC AS fee_extra_amount,
+        COALESCE(gt.fee_percentage, 0)::NUMERIC AS fee_percentage,
+
+        COALESCE(
+          NULLIF(gt.total_fee, 0),
+          gt.amount,
+          gs.fee_amount,
+          0
+        )::NUMERIC AS total_fees,
+
+        COALESCE(
+          NULLIF(gt.total_fee, 0),
+          gt.amount,
+          gs.fee_amount,
+          0
+        )::NUMERIC AS total_fee,
+
+        'GOV' AS currency_code,
         'GOV' AS currency,
-        gt.payment_method,
+
+        COALESCE(gt.payment_method, '-') AS payment_method,
         gt.payment_details,
         gt.digital_stamp_payment_ref,
         gt.digital_stamp_id,
-        gt.transaction_type,
-        gt.transaction_status,
+
+        COALESCE(gt.transaction_type, 'GOVERNMENT_SERVICE') AS transaction_type,
+        COALESCE(gt.transaction_status, 'PENDING') AS transaction_status,
+
         gt.notes,
         gt.document_hash,
         gt.digital_stamp_required,
         gt.uploaded_documents_count,
+
         gt.created_by_account_type,
         gt.created_by_login_username,
         gt.created_by_wallet_address,
+
         gt.blockchain_tx_id,
-        gt.blockchain_status,
+        COALESCE(gt.blockchain_status, 'PENDING') AS blockchain_status,
         gt.blockchain_error,
         gt.blockchain_submitted_at,
+
         gt.created_at,
         gt.updated_at
-      FROM blockchain.government_transactions gt
+      ${fromJoinClause}
       ${whereClause}
       ORDER BY gt.created_at DESC NULLS LAST, gt.transaction_id DESC
       LIMIT $${index}
@@ -193,7 +352,7 @@ router.get('/', async (req, res) => {
 
     const countQuery = `
       SELECT COUNT(*) AS total
-      FROM blockchain.government_transactions gt
+      ${fromJoinClause}
       ${whereClause}
     `;
 
@@ -201,19 +360,19 @@ router.get('/', async (req, res) => {
       SELECT
         COUNT(*) AS total_transactions,
         COUNT(*) FILTER (
-          WHERE UPPER(COALESCE(transaction_status::text, '')) IN
+          WHERE UPPER(COALESCE(gt.transaction_status::text, '')) IN
           ('APPROVED', 'COMPLETED', 'SUCCESS', 'PAID')
         ) AS approved_transactions,
         COUNT(*) FILTER (
-          WHERE UPPER(COALESCE(transaction_status::text, '')) IN
+          WHERE UPPER(COALESCE(gt.transaction_status::text, '')) IN
           ('PENDING', 'WAITING_APPROVAL', 'WAITING', 'DRAFT', 'SUBMITTED', 'PROCESSING', 'PENDING_REVIEW', 'PENDING_APPROVAL')
         ) AS pending_transactions,
         COUNT(*) FILTER (
-          WHERE UPPER(COALESCE(transaction_status::text, '')) IN
+          WHERE UPPER(COALESCE(gt.transaction_status::text, '')) IN
           ('FAILED', 'REJECTED', 'CANCELLED')
-          OR UPPER(COALESCE(blockchain_status::text, '')) = 'FAILED'
+          OR UPPER(COALESCE(gt.blockchain_status::text, '')) = 'FAILED'
         ) AS failed_transactions
-      FROM blockchain.government_transactions
+      FROM blockchain.government_transactions gt
     `;
 
     const dataResult = await pool.query(dataQuery, dataValues);
@@ -234,6 +393,17 @@ router.get('/', async (req, res) => {
         approved: Number(statsResult.rows[0].approved_transactions || 0),
         pending: Number(statsResult.rows[0].pending_transactions || 0),
         failed: Number(statsResult.rows[0].failed_transactions || 0)
+      },
+      filters: {
+        search,
+        transactionId,
+        residentName,
+        service,
+        paymentMethod,
+        status,
+        blockchainStatus,
+        dateFrom,
+        dateTo
       }
     });
   } catch (error) {

@@ -3,11 +3,11 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 export interface GovernmentTransaction {
-  transaction_id: number;
+  transaction_id: number | string;
   transaction_reference: string;
 
   resident_id?: string;
-  resident_db_id?: number;
+  resident_db_id?: number | string;
   resident_wallet_address?: string;
   resident_full_name?: string;
   resident_name?: string;
@@ -15,7 +15,7 @@ export interface GovernmentTransaction {
   resident_mobile?: string;
   resident_email?: string;
 
-  service_id?: number;
+  service_id?: number | string;
   service_public_id?: string;
   service_code?: string;
   service_name?: string;
@@ -26,13 +26,20 @@ export interface GovernmentTransaction {
   ministry_id?: string;
   ministry_name?: string;
   administration_id?: string;
+  administration_name?: string;
 
-  amount?: number;
-  total_fee?: number;
+  amount?: number | string;
+  base_fee?: number | string;
+  fee_extra_amount?: number | string;
+  fee_percentage?: number | string;
+  total_fee?: number | string;
+  total_fees?: number | string;
+
   currency_code?: string;
   currency?: string;
 
   payment_method?: string;
+  payment_details?: any;
   transaction_type?: string;
   transaction_status?: string;
 
@@ -61,16 +68,33 @@ export interface GovernmentTransactionStats {
   failed: number;
 }
 
+export interface GovernmentTransactionPagination {
+  total: number;
+  limit: number;
+  offset: number;
+}
+
 export interface GovernmentTransactionResponse {
   success: boolean;
   message: string;
   data: GovernmentTransaction[];
-  pagination: {
-    total: number;
-    limit: number;
-    offset: number;
-  };
+  pagination: GovernmentTransactionPagination;
   stats: GovernmentTransactionStats;
+  filters?: any;
+}
+
+export interface GovernmentTransactionFilters {
+  search?: string;
+  transactionId?: string;
+  residentName?: string;
+  service?: string;
+  paymentMethod?: string;
+  status?: string;
+  blockchainStatus?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  limit?: number;
+  offset?: number;
 }
 
 @Injectable({
@@ -82,26 +106,24 @@ export class GovernmentTransactionsService {
 
   constructor(private http: HttpClient) {}
 
-  getTransactions(filters?: {
-    search?: string;
-    status?: string;
-    blockchainStatus?: string;
-    limit?: number;
-    offset?: number;
-  }): Observable<GovernmentTransactionResponse> {
+  getTransactions(filters?: GovernmentTransactionFilters): Observable<GovernmentTransactionResponse> {
     let params = new HttpParams();
 
-    if (filters?.search) {
-      params = params.set('search', filters.search);
-    }
+    const setParam = (key: keyof GovernmentTransactionFilters, value: any) => {
+      if (value !== undefined && value !== null && String(value).trim() !== '' && value !== 'ALL') {
+        params = params.set(String(key), String(value).trim());
+      }
+    };
 
-    if (filters?.status && filters.status !== 'ALL') {
-      params = params.set('status', filters.status);
-    }
-
-    if (filters?.blockchainStatus && filters.blockchainStatus !== 'ALL') {
-      params = params.set('blockchainStatus', filters.blockchainStatus);
-    }
+    setParam('search', filters?.search);
+    setParam('transactionId', filters?.transactionId);
+    setParam('residentName', filters?.residentName);
+    setParam('service', filters?.service);
+    setParam('paymentMethod', filters?.paymentMethod);
+    setParam('status', filters?.status);
+    setParam('blockchainStatus', filters?.blockchainStatus);
+    setParam('dateFrom', filters?.dateFrom);
+    setParam('dateTo', filters?.dateTo);
 
     params = params.set('limit', String(filters?.limit ?? 50));
     params = params.set('offset', String(filters?.offset ?? 0));
