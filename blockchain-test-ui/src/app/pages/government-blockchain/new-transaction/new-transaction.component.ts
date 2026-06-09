@@ -544,6 +544,19 @@ export class NewTransactionComponent implements OnInit {
     const uploadValue = this.uploadForm.getRawValue();
     const formData = new FormData();
 
+    const transactionReference =
+      this.receiptData?.transactionReference ||
+      this.receiptData?.transaction_reference ||
+      this.transactionForm?.get('transactionId')?.value ||
+      this.transactionForm?.get('transactionReference')?.value ||
+      this.transactionForm?.get('transaction_reference')?.value ||
+      '';
+
+    if (transactionReference) {
+      formData.append('transaction_id', String(transactionReference));
+      formData.append('transaction_reference', String(transactionReference));
+    }
+
     formData.append('document', this.selectedUploadFile);
     formData.append('resident_id', uploadValue.residentId);
     formData.append('resident_name', uploadValue.residentName);
@@ -553,6 +566,7 @@ export class NewTransactionComponent implements OnInit {
     formData.append('uploaded_by', uploadValue.uploadedBy || 'Officer');
     formData.append('total_fees', String(uploadValue.totalFees || 0));
     formData.append('currency', 'GOV');
+    formData.append('status', 'Pending Review');
 
     this.isUploadingDocument = true;
 
@@ -568,7 +582,7 @@ export class NewTransactionComponent implements OnInit {
           fileName: file.name,
           documentType: uploadValue.documentType,
           size: this.formatFileSize(file.size),
-          hash: 'Pending generation',
+          hash: row.document_hash || row.hash || 'Generated',
           status: 'Uploaded'
         };
 

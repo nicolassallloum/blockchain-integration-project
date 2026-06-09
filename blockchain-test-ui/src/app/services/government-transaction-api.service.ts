@@ -11,8 +11,7 @@ export class GovernmentTransactionApiService {
   private readonly transactionsUrl =
     `${this.governmentBaseUrl}/transactions`;
 
-  private readonly documentsKycUrl =
-    `${this.governmentBaseUrl}/documents-kyc`;
+  private readonly documentsUrl = `${this.governmentBaseUrl}/documents`;
 
   constructor(private http: HttpClient) {}
 
@@ -45,6 +44,6 @@ export class GovernmentTransactionApiService {
   }
 
   uploadKycDocument(formData: FormData) {
-    return this.http.post<any>(`${this.documentsKycUrl}/upload`, formData);
+    return this.http.post<any>(`${this.documentsUrl}/upload`, formData);
   }
 }
