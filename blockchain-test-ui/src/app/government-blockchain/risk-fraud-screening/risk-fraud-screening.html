@@ -1,86 +1,219 @@
-<div class="page-container">
+<section class="risk-screening-page">
   <div class="page-header">
     <div>
+      <span class="eyebrow">Government Blockchain</span>
       <h1>Risk / Fraud Screening</h1>
-      <p>Monitor suspicious transactions, abnormal behavior, blacklist matches, and fraud indicators.</p>
+      <p>
+        Monitor fraud and AML screening results related to residents, transactions,
+        wallets, and payment activities.
+      </p>
     </div>
 
-    <button class="primary-btn">Run Risk Scan</button>
+    <button type="button" class="primary-btn" (click)="loadRiskFraudScreening()" [disabled]="isLoading">
+      {{ isLoading ? 'Refreshing...' : 'Refresh Screening' }}
+    </button>
   </div>
 
-  <div class="cards-grid">
-    <div class="summary-card">
-      <h3>Total Screened</h3>
-      <strong>18,950</strong>
-      <span>Transactions scanned</span>
+  <div class="summary-grid">
+    <article class="summary-card total">
+      <span>Total Alerts</span>
+      <strong>{{ summary.totalAlerts | number }}</strong>
+      <small>All risk and fraud alerts</small>
+    </article>
+
+    <article class="summary-card high">
+      <span>High Risk</span>
+      <strong>{{ summary.highRisk | number }}</strong>
+      <small>Critical screening results</small>
+    </article>
+
+    <article class="summary-card medium">
+      <span>Medium Risk</span>
+      <strong>{{ summary.mediumRisk | number }}</strong>
+      <small>Requires compliance review</small>
+    </article>
+
+    <article class="summary-card low">
+      <span>Low Risk</span>
+      <strong>{{ summary.lowRisk | number }}</strong>
+      <small>Normal screening results</small>
+    </article>
+
+    <article class="summary-card resolved">
+      <span>Resolved Alerts</span>
+      <strong>{{ summary.resolvedAlerts | number }}</strong>
+      <small>Closed or allowed cases</small>
+    </article>
+  </div>
+
+  <div class="filters-card">
+    <div class="filters-header">
+      <div>
+        <h2>Filters</h2>
+        <p>Filter by risk level, status, resident, transaction, or date range.</p>
+      </div>
     </div>
 
-    <div class="summary-card">
-      <h3>Low Risk</h3>
-      <strong>17,880</strong>
-      <span>Normal activity</span>
+    <div class="filters-grid">
+      <label>
+        Risk Level
+        <select [(ngModel)]="filters.riskLevel">
+          <option *ngFor="let item of riskLevels" [value]="item.value">{{ item.label }}</option>
+        </select>
+      </label>
+
+      <label>
+        Status
+        <select [(ngModel)]="filters.status">
+          <option *ngFor="let item of statuses" [value]="item.value">{{ item.label }}</option>
+        </select>
+      </label>
+
+      <label>
+        Resident Name
+        <input type="text" [(ngModel)]="filters.residentName" placeholder="Search resident name" />
+      </label>
+
+      <label>
+        Transaction ID
+        <input type="text" [(ngModel)]="filters.transactionId" placeholder="Transaction / request ID" />
+      </label>
+
+      <label>
+        Date From
+        <input type="date" [(ngModel)]="filters.dateFrom" />
+      </label>
+
+      <label>
+        Date To
+        <input type="date" [(ngModel)]="filters.dateTo" />
+      </label>
     </div>
 
-    <div class="summary-card">
-      <h3>Medium Risk</h3>
-      <strong>720</strong>
-      <span>Needs monitoring</span>
-    </div>
-
-    <div class="summary-card">
-      <h3>High Risk</h3>
-      <strong>91</strong>
-      <span>Immediate review</span>
+    <div class="filter-actions">
+      <button type="button" class="primary-btn" (click)="applyFilters()" [disabled]="isLoading">
+        Apply Filters
+      </button>
+      <button type="button" class="secondary-btn" (click)="resetFilters()" [disabled]="isLoading">
+        Reset
+      </button>
     </div>
   </div>
 
-  <div class="table-card">
-    <h2>Risk Screening Results</h2>
-
-    <table>
-      <thead>
-        <tr>
-          <th>Screening ID</th>
-          <th>Resident</th>
-          <th>Transaction</th>
-          <th>Risk Score</th>
-          <th>Risk Level</th>
-          <th>Reason</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-
-      <tbody>
-        <tr>
-          <td>RISK-000001</td>
-          <td>Ali Hassan</td>
-          <td>GOV-TXN-000001</td>
-          <td>18</td>
-          <td><span class="badge success">Low</span></td>
-          <td>Normal payment pattern</td>
-          <td><span class="badge success">Cleared</span></td>
-        </tr>
-
-        <tr>
-          <td>RISK-000002</td>
-          <td>Maya Khoury</td>
-          <td>GOV-TXN-000002</td>
-          <td>62</td>
-          <td><span class="badge warning">Medium</span></td>
-          <td>Multiple requests in short period</td>
-          <td><span class="badge warning">Review</span></td>
-        </tr>
-
-        <tr>
-          <td>RISK-000003</td>
-          <td>Unknown Wallet</td>
-          <td>GOV-TXN-000003</td>
-          <td>91</td>
-          <td><span class="badge danger">High</span></td>
-          <td>Blacklist wallet match</td>
-          <td><span class="badge danger">Blocked</span></td>
-        </tr>
-      </tbody>
-    </table>
+  <div class="state-card loading" *ngIf="isLoading">
+    Loading risk / fraud screening data...
   </div>
-</div>
+
+  <div class="state-card error" *ngIf="!isLoading && errorMessage">
+    {{ errorMessage }}
+  </div>
+
+  <div class="table-card" *ngIf="!isLoading && !errorMessage">
+    <div class="table-header">
+      <div>
+        <h2>Risk Screening Results</h2>
+        <p>{{ alerts.length | number }} record(s) returned from AML and fraud screening tables.</p>
+      </div>
+    </div>
+
+    <div class="table-wrapper" *ngIf="alerts.length > 0; else emptyState">
+      <table>
+        <thead>
+          <tr>
+            <th>Alert ID</th>
+            <th>Resident Name</th>
+            <th>Transaction ID</th>
+            <th>Risk Score</th>
+            <th>Risk Level</th>
+            <th>Reason</th>
+            <th>Status</th>
+            <th>Created Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let alert of alerts; trackBy: trackByAlertId">
+            <td class="mono">{{ alert.alertId }}</td>
+            <td>{{ alert.residentName }}</td>
+            <td class="mono">{{ alert.transactionId }}</td>
+            <td>{{ alert.riskScore | number }}</td>
+            <td>
+              <span class="risk-badge" [ngClass]="getRiskClass(alert.riskLevel)">
+                {{ alert.riskLevel }}
+              </span>
+            </td>
+            <td class="reason-cell">{{ alert.reason }}</td>
+            <td>
+              <span class="status-badge" [ngClass]="getStatusClass(alert.status)">
+                {{ alert.status }}
+              </span>
+            </td>
+            <td>{{ alert.createdDate | date:'yyyy-MM-dd HH:mm' }}</td>
+            <td>
+              <button type="button" class="link-btn" (click)="viewDetails(alert)">
+                View Details
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <ng-template #emptyState>
+      <div class="empty-state">
+        No risk / fraud screening records found for the selected filters.
+      </div>
+    </ng-template>
+  </div>
+
+  <div class="details-backdrop" *ngIf="selectedAlert" (click)="closeDetails()">
+    <div class="details-modal" (click)="$event.stopPropagation()">
+      <div class="details-header">
+        <div>
+          <span class="eyebrow">Alert Details</span>
+          <h2>{{ selectedAlert.alertId }}</h2>
+        </div>
+
+        <button type="button" class="close-btn" (click)="closeDetails()">×</button>
+      </div>
+
+      <div class="details-grid">
+        <div>
+          <span>Resident Name</span>
+          <strong>{{ selectedAlert.residentName }}</strong>
+        </div>
+        <div>
+          <span>Transaction ID</span>
+          <strong>{{ selectedAlert.transactionId }}</strong>
+        </div>
+        <div>
+          <span>Risk Score</span>
+          <strong>{{ selectedAlert.riskScore }}</strong>
+        </div>
+        <div>
+          <span>Risk Level</span>
+          <strong>{{ selectedAlert.riskLevel }}</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>{{ selectedAlert.status }}</strong>
+        </div>
+        <div>
+          <span>Source</span>
+          <strong>{{ selectedAlert.sourceType || '-' }}</strong>
+        </div>
+      </div>
+
+      <div class="details-section">
+        <h3>Reason</h3>
+        <p>{{ selectedAlert.reason }}</p>
+      </div>
+
+      <div class="details-section">
+        <h3>Raw Details</h3>
+        <pre>{{ selectedAlert.details | json }}</pre>
+      </div>
+    </div>
+  </div>
+</section>

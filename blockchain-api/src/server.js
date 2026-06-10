@@ -18,6 +18,7 @@ require('dotenv').config();
 
 const express = require('express');
 const blockchainProofsRoutes = require('./routes/government-blockchain-proofs.routes');
+const riskFraudScreeningRoutes = require('./routes/government-risk-fraud-screening.routes');
 
 const cors = require('cors');
 const crypto = require('crypto');
@@ -53,6 +54,10 @@ console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/documents');
 
 app.use('/api/v1/government-blockchain/hash-verification', hashVerificationRoutes);
 console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/hash-verification');
+
+app.use('/api/v1/government-blockchain/risk-fraud-screening', riskFraudScreeningRoutes);
+console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/risk-fraud-screening');
+
 
 
 
