@@ -32,6 +32,7 @@ const governmentAmlAlertsQueueRoutes = require('./routes/government-aml-alerts-q
 const governmentAmlCasesRoutes = require('./routes/government-aml-cases.routes');
 const governmentReportsRoutes = require('./routes/government-reports.routes');
 const hashVerificationRoutes = require('./routes/hash-verification.routes');
+const governmentAuditLogsRoutes = require('./routes/government-audit-logs.routes');
 const app = express();
 
 app.use(express.json({ limit: '50mb' }));
@@ -61,6 +62,9 @@ console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/hash-verification');
 
 app.use('/api/v1/government-blockchain/risk-fraud-screening', riskFraudScreeningRoutes);
 console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/risk-fraud-screening');
+
+app.use('/api/v1/government-blockchain/audit-logs', governmentAuditLogsRoutes);
+console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/audit-logs');
 
 
 

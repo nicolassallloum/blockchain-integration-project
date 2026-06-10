@@ -2,62 +2,85 @@
   <div class="page-header">
     <div>
       <h1>Audit Logs</h1>
-      <p>Track all user actions, API events, blockchain operations, and system security logs.</p>
+      <p>Track all user actions, API events, blockchain operations, and system security logs from PostgreSQL.</p>
     </div>
 
-    <button class="primary-btn">Export Logs</button>
+    <button class="primary-btn" type="button" (click)="exportLogs()" [disabled]="logs.length === 0">
+      Export Logs
+    </button>
   </div>
 
   <div class="cards-grid">
     <div class="summary-card">
       <h3>Total Logs</h3>
-      <strong>92,410</strong>
-      <span>Recorded events</span>
+      <strong>{{ summary.totalLogs | number }}</strong>
+      <span>{{ isLoadingSummary ? 'Loading...' : 'Recorded events' }}</span>
     </div>
 
     <div class="summary-card">
       <h3>User Actions</h3>
-      <strong>44,290</strong>
-      <span>Frontend activities</span>
+      <strong>{{ summary.userActions | number }}</strong>
+      <span>{{ isLoadingSummary ? 'Loading...' : 'Frontend activities' }}</span>
     </div>
 
     <div class="summary-card">
       <h3>API Events</h3>
-      <strong>38,102</strong>
-      <span>Backend requests</span>
+      <strong>{{ summary.apiEvents | number }}</strong>
+      <span>{{ isLoadingSummary ? 'Loading...' : 'Backend requests' }}</span>
     </div>
 
     <div class="summary-card">
       <h3>Security Alerts</h3>
-      <strong>64</strong>
-      <span>Suspicious activity</span>
+      <strong>{{ summary.securityAlerts | number }}</strong>
+      <span>{{ isLoadingSummary ? 'Loading...' : 'Suspicious activity' }}</span>
     </div>
   </div>
 
   <div class="filter-card">
-    <input type="text" placeholder="Search by username, action, or reference..." />
+    <input
+      type="text"
+      placeholder="Search by username, action, reference, IP, request ID, or error..."
+      [(ngModel)]="search"
+      (keyup.enter)="applyFilters()"
+    />
 
-    <select>
-      <option>All Log Types</option>
-      <option>User Action</option>
-      <option>API Request</option>
-      <option>Blockchain Event</option>
-      <option>Security Alert</option>
+    <select [(ngModel)]="logType" (change)="applyFilters()">
+      <option *ngFor="let option of logTypeOptions" [value]="option.value">
+        {{ option.label }}
+      </option>
     </select>
 
-    <select>
-      <option>All Severities</option>
-      <option>Info</option>
-      <option>Warning</option>
-      <option>Error</option>
-      <option>Critical</option>
+    <select [(ngModel)]="severity" (change)="applyFilters()">
+      <option *ngFor="let option of severityOptions" [value]="option.value">
+        {{ option.label }}
+      </option>
     </select>
 
-    <button class="secondary-btn">Search</button>
+    <button class="secondary-btn" type="button" (click)="applyFilters()">
+      Search
+    </button>
+
+    <button class="secondary-btn" type="button" (click)="resetFilters()">
+      Reset
+    </button>
   </div>
 
   <div class="table-card">
-    <h2>Latest Audit Logs</h2>
+    <div class="table-title-row">
+      <div>
+        <h2>Latest Audit Logs</h2>
+        <p *ngIf="pagination.total">
+          Showing page {{ pagination.page }} of {{ pagination.totalPages }}
+          · {{ pagination.total | number }} real PostgreSQL logs
+        </p>
+      </div>
+
+      <span *ngIf="isLoadingLogs" class="loading-text">Loading logs...</span>
+    </div>
+
+    <div *ngIf="errorMessage" class="error-box">
+      {{ errorMessage }}
+    </div>
 
     <table>
       <thead>
@@ -73,36 +96,40 @@
       </thead>
 
       <tbody>
-        <tr>
-          <td>LOG-000001</td>
-          <td>admin@gov.lb</td>
-          <td>Create Transaction</td>
-          <td>New Transaction</td>
-          <td>172.31.13.90</td>
-          <td><span class="badge info">Info</span></td>
-          <td>2026-06-04 10:15</td>
+        <tr *ngFor="let log of logs">
+          <td [title]="log.logId">{{ shortenLogId(log.logId) }}</td>
+          <td>{{ log.userName || 'unknown' }}</td>
+          <td [title]="log.action">{{ formatAction(log.action) }}</td>
+          <td>{{ formatAction(log.moduleName) }}</td>
+          <td>{{ log.ipAddress || 'N/A' }}</td>
+          <td>
+            <span class="badge" [ngClass]="getSeverityClass(log.severity)">
+              {{ log.severity || 'INFO' }}
+            </span>
+          </td>
+          <td>{{ log.eventDate | date:'yyyy-MM-dd HH:mm' }}</td>
         </tr>
 
-        <tr>
-          <td>LOG-000002</td>
-          <td>officer@gov.lb</td>
-          <td>Approve Request</td>
-          <td>Approval Queue</td>
-          <td>172.31.13.91</td>
-          <td><span class="badge success">Success</span></td>
-          <td>2026-06-04 10:19</td>
-        </tr>
-
-        <tr>
-          <td>LOG-000003</td>
-          <td>unknown</td>
-          <td>Failed Login Attempt</td>
-          <td>Authentication</td>
-          <td>45.12.88.10</td>
-          <td><span class="badge danger">Critical</span></td>
-          <td>2026-06-04 10:22</td>
+        <tr *ngIf="!isLoadingLogs && logs.length === 0">
+          <td colspan="7" class="empty-state">
+            No audit logs found for the selected filters.
+          </td>
         </tr>
       </tbody>
     </table>
+
+    <div class="pagination-row" *ngIf="pagination.totalPages > 1">
+      <button class="secondary-btn" type="button" (click)="previousPage()" [disabled]="pagination.page <= 1">
+        Previous
+      </button>
+
+      <span>
+        Page {{ pagination.page }} / {{ pagination.totalPages }}
+      </span>
+
+      <button class="secondary-btn" type="button" (click)="nextPage()" [disabled]="pagination.page >= pagination.totalPages">
+        Next
+      </button>
+    </div>
   </div>
 </div>
