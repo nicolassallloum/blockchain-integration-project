@@ -1,5 +1,7 @@
 import { CommonModule, DecimalPipe, NgClass } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { forkJoin } from 'rxjs';
+import { GovernmentDashboardService } from '../../../services/government-dashboard.service';
 
 type KpiTone =
   | 'blue'
@@ -9,25 +11,6 @@ type KpiTone =
   | 'purple'
   | 'cyan'
   | 'dark';
-
-type TransactionStatus =
-  | 'PENDING'
-  | 'APPROVED'
-  | 'REJECTED'
-  | 'COMPLETED'
-  | 'UNDER_REVIEW';
-
-type BlockchainStatus =
-  | 'SUBMITTED'
-  | 'CONFIRMED'
-  | 'FAILED'
-  | 'PENDING';
-
-type HealthStatus =
-  | 'ONLINE'
-  | 'HEALTHY'
-  | 'WARNING'
-  | 'OFFLINE';
 
 interface DashboardKpi {
   title: string;
@@ -42,18 +25,20 @@ interface DashboardKpi {
 interface SimpleChartItem {
   label: string;
   value: number;
+  total?: number;
   tone?: KpiTone;
 }
 
 interface TimelineChartItem {
   label: string;
   value: number;
+  total?: number;
 }
 
 interface HealthItem {
   title: string;
-  value: string;
-  status: HealthStatus;
+  value: string | number;
+  status: string;
   description: string;
 }
 
@@ -64,8 +49,8 @@ interface RecentTransaction {
   service: string;
   amount: number;
   currency: string;
-  status: TransactionStatus;
-  blockchainStatus: BlockchainStatus;
+  status: string;
+  blockchainStatus: string;
   createdAt: string;
 }
 
@@ -76,316 +61,351 @@ interface RecentTransaction {
   templateUrl: './government-blockchain-dashboard.component.html',
   styleUrl: './government-blockchain-dashboard.component.scss',
 })
-export class GovernmentBlockchainDashboardComponent {
+export class GovernmentBlockchainDashboardComponent implements OnInit {
   readonly pageTitle = 'Government Blockchain Dashboard';
   readonly pageSubtitle =
     'Full operational overview of residents, ministries, wallets, transactions, blockchain proof, payments, digital stamps, AML alerts, fraud alerts, and system health.';
 
-  readonly lastUpdated = new Date();
+  loading = false;
+  dashboardError = '';
+  lastUpdated = new Date();
 
-  readonly kpis: DashboardKpi[] = [
-    {
-      title: 'Total Residents',
-      value: 1254800,
-      subtitle: 'Registered resident accounts',
-      icon: '👥',
-      tone: 'blue',
-      trend: '+4.8%',
-    },
-    {
-      title: 'Total Ministries',
-      value: 24,
-      subtitle: 'Central ministries onboarded',
-      icon: '🏛️',
-      tone: 'purple',
-      trend: '+2',
-    },
-    {
-      title: 'Public Administrations',
-      value: 186,
-      subtitle: 'Connected public entities',
-      icon: '🏢',
-      tone: 'cyan',
-      trend: '+11',
-    },
-    {
-      title: 'Total Wallets',
-      value: 1530000,
-      subtitle: 'Blockchain wallets created',
-      icon: '👛',
-      tone: 'green',
-      trend: '+6.2%',
-    },
-    {
-      title: 'Active Wallets',
-      value: 1428700,
-      subtitle: 'Wallets active in last 30 days',
-      icon: '✅',
-      tone: 'green',
-      trend: '+3.9%',
-    },
-    {
-      title: 'Total Transactions',
-      value: 2500000,
-      subtitle: 'Government blockchain transactions',
-      icon: '🔁',
-      tone: 'blue',
-      trend: '+8.1%',
-    },
-    {
-      title: 'Pending Transactions',
-      value: 18420,
-      subtitle: 'Waiting for review or approval',
-      icon: '⏳',
-      tone: 'orange',
-      trend: '-1.4%',
-    },
-    {
-      title: 'Approved Transactions',
-      value: 2316400,
-      subtitle: 'Validated government transactions',
-      icon: '✔️',
-      tone: 'green',
-      trend: '+7.7%',
-    },
-    {
-      title: 'Rejected Transactions',
-      value: 27480,
-      subtitle: 'Rejected or invalid requests',
-      icon: '❌',
-      tone: 'red',
-      trend: '+0.8%',
-    },
-    {
-      title: 'Total Payments',
-      value: 428500000,
-      suffix: ' LBP',
-      subtitle: 'Collected through digital services',
-      icon: '💳',
-      tone: 'purple',
-      trend: '+12.3%',
-    },
-    {
-      title: 'Digital Stamp Transactions',
-      value: 864200,
-      subtitle: 'Digital stamp usage records',
-      icon: '🎫',
-      tone: 'cyan',
-      trend: '+5.6%',
-    },
-    {
-      title: 'Blockchain Proof Records',
-      value: 2491200,
-      subtitle: 'Hash proof records stored',
-      icon: '⛓️',
-      tone: 'dark',
-      trend: '+8.0%',
-    },
-    {
-      title: 'Fraud Alerts',
-      value: 312,
-      subtitle: 'Suspicious fraud indicators',
-      icon: '🚨',
-      tone: 'red',
-      trend: '-3.2%',
-    },
-    {
-      title: 'AML Alerts',
-      value: 146,
-      subtitle: 'AML screening alerts',
-      icon: '🛡️',
-      tone: 'orange',
-      trend: '+1.1%',
-    },
-    {
-      title: 'Today Transactions',
-      value: 12840,
-      subtitle: 'Transactions created today',
-      icon: '📅',
-      tone: 'blue',
-      trend: '+2.4%',
-    },
-    {
-      title: 'Today Payments',
-      value: 18650000,
-      suffix: ' LBP',
-      subtitle: 'Payments collected today',
-      icon: '💰',
-      tone: 'green',
-      trend: '+9.5%',
-    },
-  ];
+  summary: any = {};
+  cards: any = {};
+  charts: any = {};
+  health: any = {};
 
-  readonly transactionsByStatus: SimpleChartItem[] = [
-    { label: 'Approved', value: 72, tone: 'green' },
-    { label: 'Pending', value: 14, tone: 'orange' },
-    { label: 'Rejected', value: 6, tone: 'red' },
-    { label: 'Under Review', value: 8, tone: 'purple' },
-  ];
+  kpis: DashboardKpi[] = [];
+  transactionsByStatus: SimpleChartItem[] = [];
+  transactionsByMinistry: SimpleChartItem[] = [];
+  walletGrowth: TimelineChartItem[] = [];
+  blockchainSubmissionStatus: SimpleChartItem[] = [];
+  paymentsTimeline: TimelineChartItem[] = [];
+  amlAlertsDistribution: SimpleChartItem[] = [];
+  blockchainHealth: HealthItem[] = [];
+  recentTransactions: RecentTransaction[] = [];
 
-  readonly transactionsByMinistry: SimpleChartItem[] = [
-    { label: 'Interior', value: 34, tone: 'blue' },
-    { label: 'Finance', value: 27, tone: 'green' },
-    { label: 'Justice', value: 18, tone: 'purple' },
-    { label: 'Health', value: 13, tone: 'cyan' },
-    { label: 'Transport', value: 8, tone: 'orange' },
-  ];
+  constructor(private dashboardService: GovernmentDashboardService) {}
 
-  readonly walletGrowth: TimelineChartItem[] = [
-    { label: 'Jan', value: 42 },
-    { label: 'Feb', value: 58 },
-    { label: 'Mar', value: 77 },
-    { label: 'Apr', value: 92 },
-    { label: 'May', value: 118 },
-    { label: 'Jun', value: 146 },
-  ];
-
-  readonly blockchainSubmissionStatus: SimpleChartItem[] = [
-    { label: 'Confirmed', value: 82, tone: 'green' },
-    { label: 'Submitted', value: 11, tone: 'blue' },
-    { label: 'Pending', value: 5, tone: 'orange' },
-    { label: 'Failed', value: 2, tone: 'red' },
-  ];
-
-  readonly paymentsTimeline: TimelineChartItem[] = [
-    { label: 'Mon', value: 18 },
-    { label: 'Tue', value: 24 },
-    { label: 'Wed', value: 21 },
-    { label: 'Thu', value: 32 },
-    { label: 'Fri', value: 29 },
-    { label: 'Sat', value: 15 },
-    { label: 'Sun', value: 12 },
-  ];
-
-  readonly amlAlertsDistribution: SimpleChartItem[] = [
-    { label: 'Low Risk', value: 46, tone: 'green' },
-    { label: 'Medium Risk', value: 34, tone: 'orange' },
-    { label: 'High Risk', value: 14, tone: 'red' },
-    { label: 'Critical', value: 6, tone: 'dark' },
-  ];
-
-  readonly blockchainHealth: HealthItem[] = [
-    {
-      title: 'Peer Status',
-      value: 'ONLINE',
-      status: 'ONLINE',
-      description: 'Org1 and Org2 peers are reachable',
-    },
-    {
-      title: 'Orderer Status',
-      value: 'HEALTHY',
-      status: 'HEALTHY',
-      description: 'Ordering service is processing blocks',
-    },
-    {
-      title: 'CouchDB Status',
-      value: 'ONLINE',
-      status: 'ONLINE',
-      description: 'State database is available',
-    },
-    {
-      title: 'PostgreSQL Status',
-      value: 'ONLINE',
-      status: 'ONLINE',
-      description: 'Off-chain database connection is active',
-    },
-    {
-      title: 'Chaincode Status',
-      value: 'COMMITTED',
-      status: 'HEALTHY',
-      description: 'Government blockchain chaincode is active',
-    },
-    {
-      title: 'Last Block Number',
-      value: '2,846,193',
-      status: 'HEALTHY',
-      description: 'Latest block committed to channel',
-    },
-  ];
-
-  readonly recentTransactions: RecentTransaction[] = [
-    {
-      transactionId: 'GTX-20260521-0001',
-      residentName: 'Nicolas Salloum',
-      ministry: 'Ministry of Interior',
-      service: 'Civil Registry Extract',
-      amount: 150000,
-      currency: 'LBP',
-      status: 'APPROVED',
-      blockchainStatus: 'CONFIRMED',
-      createdAt: '2026-05-21 09:15',
-    },
-    {
-      transactionId: 'GTX-20260521-0002',
-      residentName: 'Maya Haddad',
-      ministry: 'Ministry of Finance',
-      service: 'Tax Clearance Certificate',
-      amount: 350000,
-      currency: 'LBP',
-      status: 'PENDING',
-      blockchainStatus: 'SUBMITTED',
-      createdAt: '2026-05-21 09:07',
-    },
-    {
-      transactionId: 'GTX-20260521-0003',
-      residentName: 'Karim Khoury',
-      ministry: 'Ministry of Justice',
-      service: 'Judicial Record Request',
-      amount: 250000,
-      currency: 'LBP',
-      status: 'UNDER_REVIEW',
-      blockchainStatus: 'PENDING',
-      createdAt: '2026-05-21 08:52',
-    },
-    {
-      transactionId: 'GTX-20260521-0004',
-      residentName: 'Lea Mansour',
-      ministry: 'Ministry of Public Health',
-      service: 'Health Coverage Document',
-      amount: 0,
-      currency: 'LBP',
-      status: 'APPROVED',
-      blockchainStatus: 'CONFIRMED',
-      createdAt: '2026-05-21 08:34',
-    },
-    {
-      transactionId: 'GTX-20260521-0005',
-      residentName: 'Rami Daher',
-      ministry: 'Ministry of Transport',
-      service: 'Vehicle Registration Renewal',
-      amount: 750000,
-      currency: 'LBP',
-      status: 'REJECTED',
-      blockchainStatus: 'FAILED',
-      createdAt: '2026-05-21 08:21',
-    },
-  ];
-
-  getMaxValue(items: TimelineChartItem[] | SimpleChartItem[]): number {
-    return Math.max(...items.map((item) => item.value), 1);
+  ngOnInit(): void {
+    this.loadDashboardRealData();
   }
 
-  getBarWidth(value: number, items: TimelineChartItem[] | SimpleChartItem[]): number {
-    return Math.round((value / this.getMaxValue(items)) * 100);
+  refreshDashboard(): void {
+    this.loadDashboardRealData();
   }
 
-  getTotal(items: SimpleChartItem[]): number {
-    return items.reduce((total, item) => total + item.value, 0);
+  loadDashboardRealData(): void {
+    this.loading = true;
+    this.dashboardError = '';
+
+    forkJoin({
+      summary: this.dashboardService.getSummary(),
+      charts: this.dashboardService.getCharts(),
+      health: this.dashboardService.getHealth(),
+      recentTransactions: this.dashboardService.getRecentTransactions(),
+    }).subscribe({
+      next: (res) => {
+        this.summary = res.summary.data || {};
+        this.cards = this.summary.cards || {};
+        this.charts = res.charts.data || {};
+        this.health = res.health.data || {};
+        this.lastUpdated = this.summary.lastUpdated
+          ? new Date(this.summary.lastUpdated)
+          : new Date();
+
+        this.kpis = this.buildKpis();
+        this.transactionsByStatus = this.withPercent(
+          this.charts.transactionsByStatus || [],
+          ['green', 'orange', 'purple', 'red', 'blue']
+        );
+        this.transactionsByMinistry = this.withPercent(
+          this.charts.transactionsByMinistry || [],
+          ['blue', 'green', 'purple', 'cyan', 'orange']
+        );
+        this.walletGrowth = this.buildTimeline(this.charts.walletGrowth || []);
+        this.blockchainSubmissionStatus = this.withPercent(
+          this.charts.blockchainSubmissionStatus || [],
+          ['green', 'blue', 'orange', 'red', 'purple']
+        );
+        this.paymentsTimeline = this.buildTimeline(this.charts.paymentsTimeline || []);
+        this.amlAlertsDistribution = this.withPercent(
+          this.charts.amlAlertsDistribution || [],
+          ['orange', 'red', 'purple', 'dark', 'green']
+        );
+        this.blockchainHealth = this.buildHealth();
+        this.recentTransactions = this.buildRecentTransactions(
+          res.recentTransactions.data || []
+        );
+
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Government dashboard real data load failed', error);
+        this.dashboardError = 'Failed to load dashboard real data.';
+        this.loading = false;
+      },
+    });
   }
 
-  getStatusClass(status: TransactionStatus | BlockchainStatus | HealthStatus): string {
-    return String(status).toLowerCase().replaceAll('_', '-');
+  private buildKpis(): DashboardKpi[] {
+    return [
+      {
+        title: 'Total Residents',
+        value: Number(this.cards.totalResidents || 0),
+        subtitle: 'Registered resident accounts',
+        icon: '👥',
+        tone: 'blue',
+        trend: 'Real',
+      },
+      {
+        title: 'Total Ministries',
+        value: Number(this.cards.totalMinistries || 0),
+        subtitle: 'Central ministries onboarded',
+        icon: '🏛️',
+        tone: 'purple',
+        trend: 'Real',
+      },
+      {
+        title: 'Public Administrations',
+        value: Number(this.cards.totalPublicAdministrations || 0),
+        subtitle: 'Connected public entities',
+        icon: '🏢',
+        tone: 'cyan',
+        trend: 'Real',
+      },
+      {
+        title: 'Total Wallets',
+        value: Number(this.cards.totalWallets || 0),
+        subtitle: 'Blockchain wallets created',
+        icon: '👛',
+        tone: 'green',
+        trend: 'Real',
+      },
+      {
+        title: 'Active Wallets',
+        value: Number(this.cards.activeWallets || 0),
+        subtitle: 'Wallets currently active',
+        icon: '✅',
+        tone: 'green',
+        trend: 'Real',
+      },
+      {
+        title: 'Total Transactions',
+        value: Number(this.cards.totalTransactions || 0),
+        subtitle: 'Government blockchain transactions',
+        icon: '🔁',
+        tone: 'blue',
+        trend: 'Real',
+      },
+      {
+        title: 'Pending Transactions',
+        value: Number(this.cards.pendingTransactions || 0),
+        subtitle: 'Waiting for review or approval',
+        icon: '⏳',
+        tone: 'orange',
+        trend: 'Real',
+      },
+      {
+        title: 'Approved Transactions',
+        value: Number(this.cards.approvedTransactions || 0),
+        subtitle: 'Validated government transactions',
+        icon: '✔️',
+        tone: 'green',
+        trend: 'Real',
+      },
+      {
+        title: 'Rejected Transactions',
+        value: Number(this.cards.rejectedTransactions || 0),
+        subtitle: 'Rejected or invalid requests',
+        icon: '❌',
+        tone: 'red',
+        trend: 'Real',
+      },
+      {
+        title: 'Total Payments',
+        value: Number(this.cards.totalPayments || 0),
+        suffix: ' GOV',
+        subtitle: 'Collected through digital services',
+        icon: '💳',
+        tone: 'purple',
+        trend: 'Real',
+      },
+      {
+        title: 'Digital Stamp Transactions',
+        value: Number(this.cards.digitalStampTransactions || 0),
+        subtitle: 'Digital stamp usage records',
+        icon: '🎫',
+        tone: 'cyan',
+        trend: 'Real',
+      },
+      {
+        title: 'Blockchain Proof Records',
+        value: Number(this.cards.blockchainProofRecords || 0),
+        subtitle: 'Hash proof records stored',
+        icon: '⛓️',
+        tone: 'dark',
+        trend: 'Real',
+      },
+      {
+        title: 'Fraud Alerts',
+        value: Number(this.cards.fraudAlerts || 0),
+        subtitle: 'Suspicious fraud indicators',
+        icon: '🚨',
+        tone: 'red',
+        trend: 'Real',
+      },
+      {
+        title: 'AML Alerts',
+        value: Number(this.cards.amlAlerts || 0),
+        subtitle: 'AML screening alerts',
+        icon: '🛡️',
+        tone: 'orange',
+        trend: 'Real',
+      },
+      {
+        title: 'Today Transactions',
+        value: Number(this.cards.todayTransactions || 0),
+        subtitle: 'Transactions created today',
+        icon: '📅',
+        tone: 'blue',
+        trend: 'Real',
+      },
+      {
+        title: 'Today Payments',
+        value: Number(this.cards.todayPayments || 0),
+        suffix: ' GOV',
+        subtitle: 'Payments collected today',
+        icon: '💰',
+        tone: 'green',
+        trend: 'Real',
+      },
+    ];
   }
 
-  trackByTitle(_: number, item: DashboardKpi | HealthItem): string {
-    return item.title;
+  private buildHealth(): HealthItem[] {
+    return [
+      {
+        title: 'Peer Status',
+        value: this.health.peerStatus || 'UNKNOWN',
+        status: this.health.peerStatus || 'UNKNOWN',
+        description: 'Org1 and Org2 peers are reachable',
+      },
+      {
+        title: 'Orderer Status',
+        value: this.health.ordererStatus || 'UNKNOWN',
+        status: this.health.ordererStatus || 'UNKNOWN',
+        description: 'Ordering service is processing blocks',
+      },
+      {
+        title: 'CouchDB Status',
+        value: this.health.couchDbStatus || 'UNKNOWN',
+        status: this.health.couchDbStatus || 'UNKNOWN',
+        description: 'State database is available',
+      },
+      {
+        title: 'PostgreSQL Status',
+        value: this.health.postgresqlStatus || 'UNKNOWN',
+        status: this.health.postgresqlStatus || 'UNKNOWN',
+        description: 'Off-chain database connection is active',
+      },
+      {
+        title: 'Chaincode Status',
+        value: this.health.chaincodeStatus || 'UNKNOWN',
+        status: this.health.chaincodeStatus || 'UNKNOWN',
+        description: 'Government blockchain chaincode is active',
+      },
+      {
+        title: 'Last Block Number',
+        value: Number(this.health.lastBlockNumber || 0),
+        status: 'ONLINE',
+        description: 'Latest block committed to channel',
+      },
+    ];
   }
 
-  trackByLabel(_: number, item: SimpleChartItem | TimelineChartItem): string {
-    return item.label;
+  private buildRecentTransactions(rows: any[]): RecentTransaction[] {
+    return rows.map((tx) => ({
+      transactionId: tx.transaction_id || '-',
+      residentName: tx.resident_name || 'Unknown Resident',
+      ministry: tx.ministry || 'Unknown Ministry',
+      service: tx.service || 'Government Service',
+      amount: Number(tx.amount || 0),
+      currency: tx.currency || 'GOV',
+      status: tx.status || 'PENDING',
+      blockchainStatus: tx.blockchain_status || 'PENDING',
+      createdAt: tx.created_at || '',
+    }));
   }
 
-  trackByTransactionId(_: number, item: RecentTransaction): string {
-    return item.transactionId;
+  private withPercent(items: any[], tones: KpiTone[]): SimpleChartItem[] {
+    const total = items.reduce((sum, item) => sum + Number(item.total || 0), 0);
+
+    return items.map((item, index) => {
+      const count = Number(item.total || 0);
+      const percent = total > 0 ? Math.round((count / total) * 100) : 0;
+
+      return {
+        label: this.normalizeLabel(item.label),
+        value: percent,
+        total: count,
+        tone: tones[index] || 'blue',
+      };
+    });
   }
+
+  private buildTimeline(items: any[]): TimelineChartItem[] {
+    return items.map((item) => ({
+      label: this.normalizeLabel(item.label),
+      value: Number(item.total || 0),
+      total: Number(item.total || 0),
+    }));
+  }
+
+  private normalizeLabel(value: any): string {
+    if (!value) return 'Unknown';
+
+    return String(value)
+      .replace(/_/g, ' ')
+      .replace(/\b\w/g, (char) => char.toUpperCase());
+  }
+
+  getBarWidth(value: number, items: Array<{ value: number }>): number {
+    const max = Math.max(...items.map((item) => Number(item.value || 0)), 1);
+    return Math.max(4, Math.round((Number(value || 0) / max) * 100));
+  }
+
+  getTotal(items: Array<{ value: number }>): number {
+    return items.reduce((sum, item) => sum + Number(item.value || 0), 0);
+  }
+
+  getStatusClass(status: string): string {
+    const normalized = String(status || '').toUpperCase();
+
+    if (['ONLINE', 'HEALTHY', 'COMMITTED', 'CONFIRMED', 'SYNCED', 'APPROVED', 'COMPLETED'].includes(normalized)) {
+      return 'status-success';
+    }
+
+    if (['PENDING', 'SUBMITTED', 'PENDING_REVIEW', 'UNDER_REVIEW', 'WARNING', 'NOT SUBMITTED'].includes(normalized)) {
+      return 'status-warning';
+    }
+
+    if (['FAILED', 'REJECTED', 'OFFLINE', 'BLOCKCHAIN FAILED'].includes(normalized)) {
+      return 'status-danger';
+    }
+
+    return 'status-neutral';
+  }
+
+  trackByTitle(index: number, item: { title?: string; label?: string }): string {
+    return item?.title || item?.label || index.toString();
+  }
+
+  trackByTransactionId(index: number, item: RecentTransaction): string {
+    return item?.transactionId || index.toString();
+  }
+  trackByLabel(index: number, item: { label?: string; title?: string }): string {
+    return item?.label || item?.title || index.toString();
+  }
+
 }

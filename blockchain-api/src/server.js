@@ -19,6 +19,7 @@ require('dotenv').config();
 const express = require('express');
 const blockchainProofsRoutes = require('./routes/government-blockchain-proofs.routes');
 const governmentSettingsRoutes = require('./routes/government-blockchain/settings.routes');
+const governmentDashboardRoutes = require('./routes/government-dashboard.routes');
 const riskFraudScreeningRoutes = require('./routes/government-risk-fraud-screening.routes');
 
 const cors = require('cors');
@@ -69,6 +70,14 @@ console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/audit-logs');
 
 app.use('/api/v1/government-blockchain/settings', governmentSettingsRoutes);
 console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/settings');
+
+try {
+  app.use('/api/v1/government-blockchain/dashboard', governmentDashboardRoutes);
+  console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/dashboard');
+} catch (error) {
+  console.error('[ROUTE ERROR] government dashboard route failed to mount:', error.message);
+}
+
 
 
 
