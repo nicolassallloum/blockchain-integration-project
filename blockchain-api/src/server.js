@@ -30,6 +30,7 @@ const governmentDocumentsRoutes = require('./routes/government-documents.routes'
 const governmentAmlDashboardRoutes = require('./routes/government-aml-dashboard.routes');
 const governmentAmlAlertsQueueRoutes = require('./routes/government-aml-alerts-queue.routes');
 const governmentAmlCasesRoutes = require('./routes/government-aml-cases.routes');
+const governmentReportsRoutes = require('./routes/government-reports.routes');
 const hashVerificationRoutes = require('./routes/hash-verification.routes');
 const app = express();
 
@@ -242,6 +243,13 @@ try {
   console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/aml-cases');
 } catch (error) {
   console.error('[ROUTE ERROR] aml-cases route failed to mount:', error.message);
+}
+
+try {
+  app.use('/api/v1/government-blockchain/reports', governmentReportsRoutes);
+  console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/reports');
+} catch (error) {
+  console.error('[ROUTE ERROR] reports route failed to mount:', error.message);
 }
 
 try {
