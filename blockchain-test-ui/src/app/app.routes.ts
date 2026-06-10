@@ -34,7 +34,7 @@ import { Settings } from './government-blockchain/settings/settings';
 export const routes: Routes = [
   {
     path: '',
-    redirectTo: 'digital-kyc/dashboard',
+    redirectTo: 'government-blockchain/dashboard',
     pathMatch: 'full'
   },
   {
@@ -180,16 +180,6 @@ export const routes: Routes = [
         .then(m => m.GovernmentBlockchainDashboardComponent),
   },
 
-  {
-    path: '',
-    redirectTo: 'government-blockchain/dashboard',
-    pathMatch: 'full',
-  },
-
-  {
-    path: '**',
-    redirectTo: 'government-blockchain/dashboard',
-  },
   {
     path: 'digital-kyc/wallet-information',
     component: WalletInformationComponent
@@ -340,7 +330,7 @@ export const routes: Routes = [
    */
   {
     path: 'dashboard',
-    redirectTo: 'digital-kyc/dashboard',
+    redirectTo: 'government-blockchain/dashboard',
     pathMatch: 'full'
   },
   {
@@ -399,6 +389,6 @@ export const routes: Routes = [
    */
   {
     path: '**',
-    redirectTo: 'digital-kyc/dashboard'
+    redirectTo: 'government-blockchain/dashboard'
   }
 ];

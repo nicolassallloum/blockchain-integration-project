@@ -76,77 +76,7 @@
         <span class="menu-text">Back</span>
       </a>
 
-      <!-- KYC Blockchain Main Menu -->
-      <button
-        type="button"
-        class="government-main-menu"
-        [class.active]="kycMenuOpen"
-        (click)="toggleKycMenu()"
-      >
-        <span class="nav-dot"></span>
-        <span class="menu-text">KYC Blockchain</span>
-        <span class="menu-arrow menu-text">
-          {{ kycMenuOpen ? '▾' : '▸' }}
-        </span>
-      </button>
 
-      <div class="government-submenu" *ngIf="kycMenuOpen">
-        <a routerLink="/digital-kyc/dashboard" routerLinkActive="active">
-          <span class="nav-dot"></span>
-          <span class="menu-text">Dashboard</span>
-        </a>
-
-        <a routerLink="/digital-kyc/wallet-create" routerLinkActive="active">
-          <span class="nav-dot"></span>
-          <span class="menu-text">Wallet Create</span>
-        </a>
-
-        <a routerLink="/digital-kyc/blockchain-kyc" routerLinkActive="active">
-          <span class="nav-dot"></span>
-          <span class="menu-text">BlockChain Wallet Create (FOR TEST)</span>
-        </a>
-
-        <a routerLink="/digital-kyc/wallet-login" routerLinkActive="active">
-          <span class="nav-dot"></span>
-          <span class="menu-text">Wallet Login</span>
-        </a>
-
-        <a routerLink="/digital-kyc/wallet-query" routerLinkActive="active">
-          <span class="nav-dot"></span>
-          <span class="menu-text">Wallet Query</span>
-        </a>
-
-        <a routerLink="/digital-kyc/fabric-test" routerLinkActive="active">
-          <span class="nav-dot"></span>
-          <span class="menu-text">Fabric Test</span>
-        </a>
-
-        <a routerLink="/digital-kyc/wallet-transfer" routerLinkActive="active">
-          <span class="nav-dot"></span>
-          <span class="menu-text">Wallet Transfer</span>
-        </a>
-
-        <a routerLink="/digital-kyc/organization-transfer" routerLinkActive="active">
-          <span class="nav-dot"></span>
-          <span class="menu-text">Organization Transfer</span>
-        </a>
-
-        <a routerLink="/digital-kyc/transaction-history" routerLinkActive="active">
-          <span class="nav-dot"></span>
-          <span class="menu-text">Transaction History</span>
-        </a>
-
-        <a
-          routerLink="/data-generation-engine"
-          routerLinkActive="active"
-          class="sidebar-link"
-        >
-          <span class="nav-dot"></span>
-          <span class="menu-text">Data Generation Engine</span>
-        </a>
-      </div>
-
-      <div class="menu-divider"></div>
 
       <!-- Government Blockchain Services Main Menu -->
       <button
@@ -294,7 +224,18 @@
       <div class="breadcrumb">
         <span>Government Blockchain Services</span>
         <span class="breadcrumb-separator">›</span>
-        <span>Digital KYC</span>
+        <span>Government Portal</span>
+      </div>
+
+      <div class="header-actions" aria-label="Header actions">
+        <span class="header-icon" title="Notifications">
+          🔔
+          <span class="header-badge">3</span>
+        </span>
+
+        <span class="header-icon" title="Help">?</span>
+
+        <span class="user-avatar" title="User">N</span>
       </div>
     </header>
 

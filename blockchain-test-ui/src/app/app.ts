@@ -30,8 +30,6 @@ export class App {
 
   isSidebarCollapsed = false;
   sidebarSearchText = '';
-
-  kycMenuOpen = true;
   governmentMenuOpen = true;
 
   menuItems: SidebarMenuItem[] = [
@@ -41,69 +39,6 @@ export class App {
       icon: '↩',
       group: 'Navigation'
     },
-
-    // KYC Blockchain
-    {
-      label: 'Dashboard',
-      route: '/digital-kyc/dashboard',
-      icon: '●',
-      group: 'KYC Blockchain'
-    },
-    {
-      label: 'Wallet Create',
-      route: '/digital-kyc/wallet-create',
-      icon: '●',
-      group: 'KYC Blockchain'
-    },
-    {
-      label: 'BlockChain Wallet Create (FOR TEST)',
-      route: '/digital-kyc/blockchain-kyc',
-      icon: '●',
-      group: 'KYC Blockchain'
-    },
-    {
-      label: 'Wallet Login',
-      route: '/digital-kyc/wallet-login',
-      icon: '●',
-      group: 'KYC Blockchain'
-    },
-    {
-      label: 'Wallet Query',
-      route: '/digital-kyc/wallet-query',
-      icon: '●',
-      group: 'KYC Blockchain'
-    },
-    {
-      label: 'Fabric Test',
-      route: '/digital-kyc/fabric-test',
-      icon: '●',
-      group: 'KYC Blockchain'
-    },
-    {
-      label: 'Wallet Transfer',
-      route: '/digital-kyc/wallet-transfer',
-      icon: '●',
-      group: 'KYC Blockchain'
-    },
-    {
-      label: 'Organization Transfer',
-      route: '/digital-kyc/organization-transfer',
-      icon: '●',
-      group: 'KYC Blockchain'
-    },
-    {
-      label: 'Transaction History',
-      route: '/digital-kyc/transaction-history',
-      icon: '●',
-      group: 'KYC Blockchain'
-    },
-    {
-      label: 'Data Generation Engine',
-      route: '/data-generation-engine',
-      icon: '●',
-      group: 'KYC Blockchain'
-    },
-
     // Government Blockchain
     {
       label: 'Government Dashboard',
@@ -246,20 +181,7 @@ export class App {
 
     if (this.isSidebarCollapsed) {
       this.sidebarSearchText = '';
-      this.kycMenuOpen = false;
       this.governmentMenuOpen = false;
-    }
-  }
-
-  toggleKycMenu(): void {
-    if (this.isSidebarCollapsed) {
-      this.isSidebarCollapsed = false;
-    }
-
-    this.kycMenuOpen = !this.kycMenuOpen;
-
-    if (this.kycMenuOpen) {
-      this.router.navigate(['/digital-kyc/dashboard']);
     }
   }
 
@@ -299,9 +221,6 @@ export class App {
     }
 
     if (item.route) { 
-      if (item.route.startsWith('/digital-kyc') || item.route === '/data-generation-engine') {
-        this.kycMenuOpen = true;
-      }
 
       if (item.route.startsWith('/government-blockchain')) {
         this.governmentMenuOpen = true;
