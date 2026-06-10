@@ -837,3 +837,44 @@
   max-height: calc(100vh - 58px - 38px);
   overflow-y: auto;
 }
+
+/* Government Blockchain professional Material Icons */
+.menu-icon,
+.result-icon {
+  font-family: 'Material Icons';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 20px;
+  width: 22px;
+  min-width: 22px;
+  height: 22px;
+  line-height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #4b5563;
+  vertical-align: middle;
+  transition: color 0.2s ease;
+}
+
+.government-main-menu .menu-icon,
+.government-submenu a .menu-icon {
+  color: #4b5563;
+}
+
+.government-main-menu:hover .menu-icon,
+.government-submenu a:hover .menu-icon,
+.sidebar-search-result:hover .result-icon {
+  color: #1d4ed8;
+}
+
+.government-main-menu.active .menu-icon,
+.government-submenu a.active .menu-icon,
+.menu a.active .menu-icon {
+  color: #2563eb;
+}
+
+.government-submenu a.active .menu-text,
+.government-main-menu.active .menu-text {
+  color: #2563eb;
+}

@@ -43,133 +43,133 @@ export class App {
     {
       label: 'Government Dashboard',
       route: '/government-blockchain/dashboard',
-      icon: '●',
+      icon: 'dashboard',
       group: 'Government Blockchain'
     },
     {
       label: 'Create Ministry Account',
       route: '/government-blockchain/create-ministry-account',
-      icon: '●',
+      icon: 'account_balance',
       group: 'Government Blockchain'
     },
     {
       label: 'Create Public Administration',
       route: '/government-blockchain/create-public-administration-account',
-      icon: '●',
+      icon: 'business',
       group: 'Government Blockchain'
     },
     {
       label: 'Create Resident Account',
       route: '/government-blockchain/create-resident-account',
-      icon: '●',
+      icon: 'person_add',
       group: 'Government Blockchain'
     },
     {
       label: 'Account Login',
       route: '/government-blockchain/account-login',
-      icon: '🔐',
+      icon: 'lock',
       group: 'Government Blockchain'
     },
     {
       label: 'Resident Wallets',
       route: '/government-blockchain/resident-wallets',
-      icon: '●',
+      icon: 'account_balance_wallet',
       group: 'Government Blockchain'
     },
     {
       label: 'Government Services',
       route: '/government-blockchain/government-services',
-      icon: '●',
+      icon: 'miscellaneous_services',
       group: 'Government Blockchain'
     },
     {
       label: 'CouchDB Explorer',
       route: '/government-blockchain/couchdb-explorer',
-      icon: '●',
+      icon: 'storage',
       group: 'Government Blockchain'
     },
     {
       label: 'New Transaction',
       route: '/government-blockchain/new-transaction',
-      icon: '●',
+      icon: 'add_card',
       group: 'Government Blockchain'
     },
     {
       label: 'Transaction List',
       route: '/government-blockchain/transaction-list',
-      icon: '●',
+      icon: 'receipt_long',
       group: 'Government Blockchain'
     },
     {
       label: 'Approval Queue',
       route: '/government-blockchain/approval-queue',
-      icon: '●',
+      icon: 'task_alt',
       group: 'Government Blockchain'
     },
     {
       label: 'Payments / Digital Stamps',
       route: '/government-blockchain/payments-digital-stamps',
-      icon: '●',
+      icon: 'payments',
       group: 'Government Blockchain'
     },
     {
       label: 'Documents & KYC',
       route: '/government-blockchain/documents-kyc',
-      icon: '●',
+      icon: 'description',
       group: 'Government Blockchain'
     },
     {
       label: 'Blockchain Proof',
       route: '/government-blockchain/blockchain-proof',
-      icon: '●',
+      icon: 'verified',
       group: 'Government Blockchain'
     },
     {
       label: 'Hash Verification',
       route: '/government-blockchain/hash-verification',
-      icon: '●',
+      icon: 'fingerprint',
       group: 'Government Blockchain'
     },
     {
       label: 'Risk / Fraud Screening',
       route: '/government-blockchain/risk-fraud-screening',
-      icon: '●',
+      icon: 'security',
       group: 'Government Blockchain'
     },
     {
       label: 'AML Dashboard',
       route: '/government-blockchain/aml-dashboard',
-      icon: '●',
+      icon: 'analytics',
       group: 'Government Blockchain'
     },
     {
       label: 'AML Alerts Queue',
       route: '/government-blockchain/aml-alerts-queue',
-      icon: '●',
+      icon: 'notification_important',
       group: 'Government Blockchain'
     },
     {
       label: 'AML Case Management',
       route: '/government-blockchain/aml-case-management',
-      icon: '●',
+      icon: 'folder_special',
       group: 'Government Blockchain'
     },
     {
       label: 'Reports',
       route: '/government-blockchain/reports',
-      icon: '●',
+      icon: 'bar_chart',
       group: 'Government Blockchain'
     },
     {
       label: 'Audit Logs',
       route: '/government-blockchain/audit-logs',
-      icon: '●',
+      icon: 'history',
       group: 'Government Blockchain'
     },
     {
       label: 'Settings',
       route: '/government-blockchain/settings',
-      icon: '●',
+      icon: 'settings',
       group: 'Government Blockchain'
     }
   ];
