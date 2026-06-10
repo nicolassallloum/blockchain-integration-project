@@ -27,6 +27,7 @@ const residentWalletsRoutes = require('./routes/resident-wallets.routes');
 const paymentsDigitalStampsRoutes = require('./routes/payments-digital-stamps.routes');
 const documentsKycRoutes = require('./routes/documents-kyc.routes');
 const governmentDocumentsRoutes = require('./routes/government-documents.routes');
+const governmentAmlDashboardRoutes = require('./routes/government-aml-dashboard.routes');
 const hashVerificationRoutes = require('./routes/hash-verification.routes');
 const app = express();
 
@@ -217,6 +218,13 @@ if (helmet) {
  * Body parsers.
  */
 app.use('/api/v1/government-blockchain/payments-digital-stamps', paymentsDigitalStampsRoutes);
+
+try {
+  app.use('/api/v1/government-blockchain/aml-dashboard', governmentAmlDashboardRoutes);
+  console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/aml-dashboard');
+} catch (error) {
+  console.error('[ROUTE ERROR] aml-dashboard route failed to mount:', error.message);
+}
 
 try {
   app.use('/api/v1/government-blockchain/blockchain-proofs', blockchainProofsRoutes);

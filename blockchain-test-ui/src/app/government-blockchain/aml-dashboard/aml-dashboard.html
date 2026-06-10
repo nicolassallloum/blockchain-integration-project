@@ -2,109 +2,135 @@
   <div class="page-header">
     <div>
       <h1>AML Dashboard</h1>
-      <p>Anti-money laundering overview for alerts, rules, cases, and suspicious blockchain activity.</p>
+      <p>PostgreSQL-powered anti-money laundering overview for alerts, rules, and suspicious blockchain activity.</p>
+      <small *ngIf="lastUpdated" class="last-updated">Last updated: {{ lastUpdated }}</small>
     </div>
 
-    <button class="primary-btn">Generate AML Report</button>
+    <button class="primary-btn" type="button" (click)="loadDashboard()" [disabled]="loading">
+      {{ loading ? 'Refreshing...' : 'Refresh AML Data' }}
+    </button>
   </div>
 
-  <div class="cards-grid">
-    <div class="summary-card">
-      <h3>Total AML Alerts</h3>
-      <strong>315</strong>
-      <span>Detected by rules engine</span>
-    </div>
+  <div *ngIf="errorMessage" class="alert-card error-card">
+    <strong>Unable to load AML Dashboard</strong>
+    <span>{{ errorMessage }}</span>
+    <button class="secondary-btn" type="button" (click)="loadDashboard()">Retry</button>
+  </div>
 
-    <div class="summary-card">
-      <h3>Open Cases</h3>
-      <strong>48</strong>
-      <span>Under investigation</span>
-    </div>
+  <div *ngIf="loading" class="alert-card loading-card">
+    <strong>Loading AML Dashboard...</strong>
+    <span>Reading summary cards and chart data from PostgreSQL.</span>
+  </div>
 
-    <div class="summary-card">
-      <h3>Closed Cases</h3>
-      <strong>204</strong>
-      <span>Resolved investigations</span>
-    </div>
-
-    <div class="summary-card">
-      <h3>High Risk Alerts</h3>
-      <strong>22</strong>
-      <span>Critical AML review</span>
+  <div class="cards-grid aml-cards-grid">
+    <div
+      class="summary-card metric-card"
+      *ngFor="let card of cards"
+      [ngClass]="card.className"
+    >
+      <h3>{{ card.title }}</h3>
+      <strong>{{ card.value | number }}</strong>
+      <span>{{ card.description }}</span>
     </div>
   </div>
 
   <div class="dashboard-grid">
     <div class="chart-card">
-      <h2>AML Alerts by Risk Level</h2>
+      <div class="card-title-row">
+        <h2>Alerts by Risk Level</h2>
+        <span>{{ charts.alertsByRiskLevel.length }} levels</span>
+      </div>
 
-      <div class="static-chart">
-        <div class="chart-row">
-          <span>Low</span>
-          <div class="bar"><div class="bar-fill low" style="width: 70%;"></div></div>
-          <strong>180</strong>
-        </div>
+      <div class="empty-state" *ngIf="!charts.alertsByRiskLevel.length && !loading">
+        No risk level data available.
+      </div>
 
-        <div class="chart-row">
-          <span>Medium</span>
-          <div class="bar"><div class="bar-fill medium" style="width: 45%;"></div></div>
-          <strong>113</strong>
-        </div>
-
-        <div class="chart-row">
-          <span>High</span>
-          <div class="bar"><div class="bar-fill high" style="width: 18%;"></div></div>
-          <strong>22</strong>
+      <div class="static-chart" *ngIf="charts.alertsByRiskLevel.length">
+        <div
+          class="chart-row"
+          *ngFor="let row of charts.alertsByRiskLevel; trackBy: trackByLabel"
+        >
+          <span>{{ row.label }}</span>
+          <div class="bar">
+            <div
+              class="bar-fill"
+              [ngClass]="getRiskClass(row.label)"
+              [style.width]="getBarWidth(row.value, charts.alertsByRiskLevel)"
+            ></div>
+          </div>
+          <strong>{{ row.value | number }}</strong>
         </div>
       </div>
     </div>
 
     <div class="chart-card">
-      <h2>Active AML Rules</h2>
+      <div class="card-title-row">
+        <h2>Alerts by Status</h2>
+        <span>{{ charts.alertsByStatus.length }} statuses</span>
+      </div>
 
-      <ul class="status-list">
-        <li><span>Large transaction amount</span><strong>Active</strong></li>
-        <li><span>Multiple failed transactions</span><strong>Active</strong></li>
-        <li><span>Blacklist wallet match</span><strong>Active</strong></li>
-        <li><span>Unusual location behavior</span><strong>Active</strong></li>
+      <div class="empty-state" *ngIf="!charts.alertsByStatus.length && !loading">
+        No status data available.
+      </div>
+
+      <ul class="status-list" *ngIf="charts.alertsByStatus.length">
+        <li *ngFor="let row of charts.alertsByStatus; trackBy: trackByLabel">
+          <span>
+            <span class="badge" [ngClass]="getStatusBadgeClass(row.label)">
+              {{ row.label }}
+            </span>
+          </span>
+          <strong>{{ row.value | number }}</strong>
+        </li>
       </ul>
     </div>
-  </div>
 
-  <div class="table-card">
-    <h2>Latest AML Alerts</h2>
+    <div class="chart-card">
+      <div class="card-title-row">
+        <h2>Alerts by Date</h2>
+        <span>Last 30 days</span>
+      </div>
 
-    <table>
-      <thead>
-        <tr>
-          <th>Alert ID</th>
-          <th>Rule</th>
-          <th>Wallet</th>
-          <th>Risk Level</th>
-          <th>Case Status</th>
-          <th>Date</th>
-        </tr>
-      </thead>
+      <div class="empty-state" *ngIf="!charts.alertsByDate.length && !loading">
+        No daily alert data available.
+      </div>
 
-      <tbody>
-        <tr>
-          <td>AML-000001</td>
-          <td>Large Transaction</td>
-          <td>0xRES...4726</td>
-          <td><span class="badge warning">Medium</span></td>
-          <td><span class="badge warning">Open</span></td>
-          <td>2026-06-04</td>
-        </tr>
+      <div class="static-chart" *ngIf="charts.alertsByDate.length">
+        <div
+          class="chart-row date-chart-row"
+          *ngFor="let row of charts.alertsByDate; trackBy: trackByLabel"
+        >
+          <span>{{ row.label }}</span>
+          <div class="bar">
+            <div
+              class="bar-fill neutral"
+              [style.width]="getBarWidth(row.value, charts.alertsByDate)"
+            ></div>
+          </div>
+          <strong>{{ row.value | number }}</strong>
+        </div>
+      </div>
+    </div>
 
-        <tr>
-          <td>AML-000002</td>
-          <td>Blacklist Match</td>
-          <td>0xBAD...9901</td>
-          <td><span class="badge danger">High</span></td>
-          <td><span class="badge danger">Escalated</span></td>
-          <td>2026-06-04</td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="chart-card">
+      <div class="card-title-row">
+        <h2>Top AML Rules Triggered</h2>
+        <span>Top 10</span>
+      </div>
+
+      <div class="empty-state" *ngIf="!charts.topAmlRulesTriggered.length && !loading">
+        No rule trigger data available.
+      </div>
+
+      <ul class="status-list rules-list" *ngIf="charts.topAmlRulesTriggered.length">
+        <li *ngFor="let row of charts.topAmlRulesTriggered; trackBy: trackByLabel">
+          <span>
+            <strong class="rule-name">{{ row.label }}</strong>
+            <small *ngIf="row.ruleCode">{{ row.ruleCode }}</small>
+          </span>
+          <strong>{{ row.value | number }}</strong>
+        </li>
+      </ul>
+    </div>
   </div>
 </div>
