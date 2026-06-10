@@ -1,124 +1,195 @@
-<div class="page-container">
+<div class="settings-page">
   <div class="page-header">
     <div>
-      <h1>Settings</h1>
-      <p>Configure government blockchain platform settings, security, integrations, and system parameters.</p>
+      <span class="eyebrow">Government Blockchain</span>
+      <h1>Platform Settings</h1>
+      <p>Configure blockchain parameters, API behavior, security settings, and live service health.</p>
     </div>
 
-    <button class="primary-btn">Save Settings</button>
+    <div class="header-actions">
+      <button class="secondary-btn" type="button" (click)="refreshAll()" [disabled]="loading || refreshingStatus">
+        {{ loading || refreshingStatus ? 'Refreshing...' : 'Refresh' }}
+      </button>
+
+      <button class="primary-btn" type="button" (click)="saveSettings()" [disabled]="saving || loading">
+        {{ saving ? 'Saving...' : 'Save Settings' }}
+      </button>
+    </div>
   </div>
 
-  <div class="settings-grid">
-    <div class="settings-card">
-      <h2>Blockchain Configuration</h2>
+  <div *ngIf="successMessage" class="alert success-alert">
+    {{ successMessage }}
+  </div>
 
-      <div class="form-group">
-        <label>Blockchain Network</label>
-        <input type="text" value="Hyperledger Fabric" />
+  <div *ngIf="errorMessage" class="alert error-alert">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="loading" class="loading-card">
+    Loading settings from PostgreSQL...
+  </div>
+
+  <div class="settings-grid" *ngIf="!loading">
+    <section class="settings-card">
+      <div class="card-title">
+        <div>
+          <h2>Blockchain Configuration</h2>
+          <p>Values are loaded from PostgreSQL and used by the Fabric integration layer.</p>
+        </div>
       </div>
 
-      <div class="form-group">
-        <label>Channel Name</label>
-        <input type="text" value="kycchannelnix1" />
+      <label>
+        <span>Blockchain Network</span>
+        <input type="text" [(ngModel)]="settings.blockchain.blockchainNetwork" />
+      </label>
+
+      <label>
+        <span>Channel Name</span>
+        <input type="text" [(ngModel)]="settings.blockchain.channelName" />
+      </label>
+
+      <label>
+        <span>Chaincode Name</span>
+        <input type="text" [(ngModel)]="settings.blockchain.chaincodeName" />
+      </label>
+
+      <label>
+        <span>Organization MSP</span>
+        <input type="text" [(ngModel)]="settings.blockchain.organizationMsp" />
+      </label>
+    </section>
+
+    <section class="settings-card">
+      <div class="card-title">
+        <div>
+          <h2>API Configuration</h2>
+          <p>Controls backend endpoint behavior and environment configuration.</p>
+        </div>
       </div>
 
-      <div class="form-group">
-        <label>Chaincode Name</label>
-        <input type="text" value="kyc-wallet-chaincode-js" />
-      </div>
+      <label>
+        <span>API Base URL</span>
+        <input type="text" [(ngModel)]="settings.api.apiBaseUrl" />
+      </label>
 
-      <div class="form-group">
-        <label>Organization MSP</label>
-        <input type="text" value="Org1MSP" />
-      </div>
-    </div>
-
-    <div class="settings-card">
-      <h2>API Configuration</h2>
-
-      <div class="form-group">
-        <label>API Base URL</label>
-        <input type="text" value="http://172.31.13.90:3001/api/v1" />
-      </div>
-
-      <div class="form-group">
-        <label>Environment</label>
-        <select>
-          <option selected>Production</option>
-          <option>Development</option>
-          <option>Testing</option>
+      <label>
+        <span>Environment</span>
+        <select [(ngModel)]="settings.api.environment">
+          <option *ngFor="let option of environmentOptions" [value]="option">{{ option }}</option>
         </select>
-      </div>
+      </label>
 
-      <div class="form-group">
-        <label>Request Timeout</label>
-        <input type="text" value="30000 ms" />
-      </div>
+      <label>
+        <span>Request Timeout</span>
+        <input type="number" min="1" [(ngModel)]="settings.api.requestTimeoutMs" />
+      </label>
 
-      <div class="form-group">
-        <label>CORS Status</label>
-        <input type="text" value="Enabled" />
-      </div>
-    </div>
-
-    <div class="settings-card">
-      <h2>Security Settings</h2>
-
-      <div class="form-group">
-        <label>Password Policy</label>
-        <select>
-          <option selected>Strong</option>
-          <option>Medium</option>
-          <option>Basic</option>
+      <label>
+        <span>CORS Status</span>
+        <select [(ngModel)]="settings.api.corsStatus">
+          <option *ngFor="let option of enabledDisabledOptions" [value]="option">{{ option }}</option>
         </select>
+      </label>
+    </section>
+
+    <section class="settings-card">
+      <div class="card-title">
+        <div>
+          <h2>Security Settings</h2>
+          <p>Controls platform security policy and audit behavior.</p>
+        </div>
       </div>
 
-      <div class="form-group">
-        <label>JWT Expiry</label>
-        <input type="text" value="24 Hours" />
-      </div>
-
-      <div class="form-group">
-        <label>Two-Factor Authentication</label>
-        <select>
-          <option selected>Enabled</option>
-          <option>Disabled</option>
+      <label>
+        <span>Password Policy</span>
+        <select [(ngModel)]="settings.security.passwordPolicy">
+          <option *ngFor="let option of passwordPolicyOptions" [value]="option">{{ option }}</option>
         </select>
-      </div>
+      </label>
 
-      <div class="form-group">
-        <label>Audit Logging</label>
-        <select>
-          <option selected>Enabled</option>
-          <option>Disabled</option>
+      <label>
+        <span>JWT Expiry</span>
+        <select [(ngModel)]="settings.security.jwtExpiry">
+          <option *ngFor="let option of jwtExpiryOptions" [value]="option">{{ option }}</option>
         </select>
+      </label>
+
+      <label>
+        <span>Two-Factor Authentication</span>
+        <select [(ngModel)]="settings.security.twoFactorAuthentication">
+          <option *ngFor="let option of enabledDisabledOptions" [value]="option">{{ option }}</option>
+        </select>
+      </label>
+
+      <label>
+        <span>Audit Logging</span>
+        <select [(ngModel)]="settings.security.auditLogging">
+          <option *ngFor="let option of enabledDisabledOptions" [value]="option">{{ option }}</option>
+        </select>
+      </label>
+    </section>
+
+    <section class="settings-card system-status-card">
+      <div class="card-title with-action">
+        <div>
+          <h2>System Status</h2>
+          <p>Live health check from backend, PostgreSQL, CouchDB, and Fabric configuration.</p>
+        </div>
+
+        <button class="mini-btn" type="button" (click)="loadSystemStatus()" [disabled]="refreshingStatus">
+          {{ refreshingStatus ? 'Checking...' : 'Refresh Status' }}
+        </button>
       </div>
-    </div>
 
-    <div class="settings-card">
-      <h2>System Status</h2>
+      <div class="status-list">
+        <div class="status-row">
+          <div>
+            <strong>{{ systemStatus.postgresqlDatabase.label }}</strong>
+            <small *ngIf="systemStatus.postgresqlDatabase.error">{{ systemStatus.postgresqlDatabase.error }}</small>
+          </div>
+          <span class="status-pill" [ngClass]="getStatusClass(systemStatus.postgresqlDatabase.status)">
+            {{ getStatusIcon(systemStatus.postgresqlDatabase.status) }} {{ systemStatus.postgresqlDatabase.status }}
+          </span>
+        </div>
 
-      <ul class="status-list">
-        <li>
-          <span>PostgreSQL Database</span>
-          <strong class="status-green">Connected</strong>
-        </li>
+        <div class="status-row">
+          <div>
+            <strong>{{ systemStatus.fabricPeer.label }}</strong>
+            <small>
+              {{ systemStatus.fabricPeer.channel || settings.blockchain.channelName }}
+              /
+              {{ systemStatus.fabricPeer.chaincode || settings.blockchain.chaincodeName }}
+            </small>
+            <small *ngIf="systemStatus.fabricPeer.error">{{ systemStatus.fabricPeer.error }}</small>
+          </div>
+          <span class="status-pill" [ngClass]="getStatusClass(systemStatus.fabricPeer.status)">
+            {{ getStatusIcon(systemStatus.fabricPeer.status) }} {{ systemStatus.fabricPeer.status }}
+          </span>
+        </div>
 
-        <li>
-          <span>Fabric Peer</span>
-          <strong class="status-green">Online</strong>
-        </li>
+        <div class="status-row">
+          <div>
+            <strong>{{ systemStatus.couchDb.label }}</strong>
+            <small *ngIf="systemStatus.couchDb.error">{{ systemStatus.couchDb.error }}</small>
+          </div>
+          <span class="status-pill" [ngClass]="getStatusClass(systemStatus.couchDb.status)">
+            {{ getStatusIcon(systemStatus.couchDb.status) }} {{ systemStatus.couchDb.status }}
+          </span>
+        </div>
 
-        <li>
-          <span>CouchDB</span>
-          <strong class="status-green">Online</strong>
-        </li>
+        <div class="status-row">
+          <div>
+            <strong>{{ systemStatus.apiMiddleware.label }}</strong>
+          </div>
+          <span class="status-pill" [ngClass]="getStatusClass(systemStatus.apiMiddleware.status)">
+            {{ getStatusIcon(systemStatus.apiMiddleware.status) }} {{ systemStatus.apiMiddleware.status }}
+          </span>
+        </div>
+      </div>
 
-        <li>
-          <span>API Middleware</span>
-          <strong class="status-green">Running</strong>
-        </li>
-      </ul>
-    </div>
+      <div class="last-checked" *ngIf="lastCheckedAt">
+        Last checked: {{ lastCheckedAt | date:'yyyy-MM-dd HH:mm:ss' }}
+      </div>
+    </section>
   </div>
 </div>
