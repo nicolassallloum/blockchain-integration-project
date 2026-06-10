@@ -1,86 +1,223 @@
-<div class="page-container">
+<section class="aml-alerts-queue-page">
   <div class="page-header">
     <div>
+      <p class="eyebrow">AML Compliance</p>
       <h1>AML Alerts Queue</h1>
       <p>Review AML alerts generated from transactions, wallets, and blockchain activity.</p>
     </div>
 
-    <button class="primary-btn">Assign Alerts</button>
+    <button type="button" class="primary-btn" (click)="loadAlerts()" [disabled]="isLoading">
+      {{ isLoading ? 'Refreshing...' : 'Refresh Queue' }}
+    </button>
   </div>
 
   <div class="cards-grid">
     <div class="summary-card">
-      <h3>New Alerts</h3>
-      <strong>39</strong>
-      <span>Unassigned alerts</span>
+      <span>Total Queue</span>
+      <strong>{{ summary.totalOpen | number }}</strong>
+      <small>Open and pending review alerts</small>
     </div>
 
     <div class="summary-card">
-      <h3>In Review</h3>
-      <strong>74</strong>
-      <span>Assigned to officers</span>
+      <span>Open Alerts</span>
+      <strong>{{ summary.openAlerts | number }}</strong>
+      <small>Require first officer action</small>
     </div>
 
     <div class="summary-card">
-      <h3>Escalated</h3>
-      <strong>16</strong>
-      <span>High-risk cases</span>
+      <span>Pending Review</span>
+      <strong>{{ summary.pendingReview | number }}</strong>
+      <small>Already reviewed by officer</small>
     </div>
 
-    <div class="summary-card">
-      <h3>Closed Today</h3>
-      <strong>28</strong>
-      <span>Completed reviews</span>
+    <div class="summary-card danger">
+      <span>High Risk</span>
+      <strong>{{ summary.highRisk | number }}</strong>
+      <small>High severity alerts</small>
     </div>
   </div>
 
-  <div class="table-card">
-    <h2>AML Alert Queue</h2>
-
-    <table>
-      <thead>
-        <tr>
-          <th>Alert ID</th>
-          <th>Rule Triggered</th>
-          <th>Resident / Wallet</th>
-          <th>Risk Score</th>
-          <th>Risk Level</th>
-          <th>Assigned To</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-
-      <tbody>
-        <tr>
-          <td>AML-ALERT-001</td>
-          <td>Large Transaction Amount</td>
-          <td>0xRES...4726</td>
-          <td>76</td>
-          <td><span class="badge warning">Medium</span></td>
-          <td>Officer Karim</td>
-          <td><span class="badge warning">In Review</span></td>
-        </tr>
-
-        <tr>
-          <td>AML-ALERT-002</td>
-          <td>Blacklist Wallet Match</td>
-          <td>0xBAD...1190</td>
-          <td>98</td>
-          <td><span class="badge danger">High</span></td>
-          <td>Compliance Team</td>
-          <td><span class="badge danger">Escalated</span></td>
-        </tr>
-
-        <tr>
-          <td>AML-ALERT-003</td>
-          <td>Repeated Failed Payments</td>
-          <td>0xRES...8821</td>
-          <td>55</td>
-          <td><span class="badge warning">Medium</span></td>
-          <td>Not Assigned</td>
-          <td><span class="badge info">New</span></td>
-        </tr>
-      </tbody>
-    </table>
+  <div class="state-message error" *ngIf="errorMessage">
+    {{ errorMessage }}
   </div>
-</div>
+
+  <div class="state-message success" *ngIf="successMessage">
+    {{ successMessage }}
+  </div>
+
+  <div class="loading-card" *ngIf="isLoading">
+    Loading AML alerts queue...
+  </div>
+
+  <div class="table-card" *ngIf="!isLoading">
+    <div class="table-header">
+      <div>
+        <h2>AML Alerts Needing Review</h2>
+        <p>{{ alerts.length | number }} alert(s) returned from PostgreSQL.</p>
+      </div>
+    </div>
+
+    <div class="empty-state" *ngIf="!alerts.length">
+      No open or pending review AML alerts found.
+    </div>
+
+    <div class="table-wrapper" *ngIf="alerts.length">
+      <table>
+        <thead>
+          <tr>
+            <th>Alert ID</th>
+            <th>Resident Name</th>
+            <th>Transaction ID</th>
+            <th>Risk Level</th>
+            <th>Risk Score</th>
+            <th>Rule Name</th>
+            <th>Status</th>
+            <th>Created Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let alert of alerts; trackBy: trackByAlertId">
+            <td>
+              <span class="mono">{{ alert.alertId }}</span>
+            </td>
+            <td>{{ alert.residentName || '-' }}</td>
+            <td>
+              <span class="mono">{{ alert.transactionId || '-' }}</span>
+            </td>
+            <td>
+              <span class="badge risk" [ngClass]="getRiskClass(alert.riskLevel)">
+                {{ alert.riskLevel || 'LOW' }}
+              </span>
+            </td>
+            <td>{{ alert.riskScore | number }}</td>
+            <td>{{ alert.ruleName || '-' }}</td>
+            <td>
+              <span class="badge status" [ngClass]="getStatusClass(alert.status)">
+                {{ alert.status }}
+              </span>
+            </td>
+            <td>{{ alert.createdDate | date:'medium' }}</td>
+            <td>
+              <div class="actions">
+                <button type="button" class="ghost-btn" (click)="viewDetails(alert)">
+                  View
+                </button>
+
+                <button
+                  type="button"
+                  class="secondary-btn"
+                  (click)="viewDetails(alert)"
+                  [disabled]="isSaving"
+                >
+                  Review
+                </button>
+
+                <button
+                  type="button"
+                  class="danger-btn"
+                  (click)="selectedAlert = alert; notes = alert.reviewNotes || ''; closeAlert(alert)"
+                  [disabled]="isSaving"
+                >
+                  Close
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" *ngIf="selectedAlert">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <p class="eyebrow">Alert Details</p>
+          <h2>{{ selectedAlert.alertId }}</h2>
+        </div>
+
+        <button type="button" class="icon-btn" (click)="closeDetails()" [disabled]="isSaving">
+          ×
+        </button>
+      </div>
+
+      <div class="details-grid">
+        <div>
+          <span>Resident Name</span>
+          <strong>{{ selectedAlert.residentName || '-' }}</strong>
+        </div>
+
+        <div>
+          <span>Transaction ID</span>
+          <strong>{{ selectedAlert.transactionId || '-' }}</strong>
+        </div>
+
+        <div>
+          <span>Risk Level</span>
+          <strong>{{ selectedAlert.riskLevel || '-' }}</strong>
+        </div>
+
+        <div>
+          <span>Risk Score</span>
+          <strong>{{ selectedAlert.riskScore | number }}</strong>
+        </div>
+
+        <div>
+          <span>Rule Name</span>
+          <strong>{{ selectedAlert.ruleName || '-' }}</strong>
+        </div>
+
+        <div>
+          <span>Status</span>
+          <strong>{{ selectedAlert.status || '-' }}</strong>
+        </div>
+
+        <div>
+          <span>Reviewed By</span>
+          <strong>{{ selectedAlert.reviewedBy || '-' }}</strong>
+        </div>
+
+        <div>
+          <span>Reviewed At</span>
+          <strong>{{ selectedAlert.reviewedAt ? (selectedAlert.reviewedAt | date:'medium') : '-' }}</strong>
+        </div>
+      </div>
+
+      <div class="reason-box">
+        <span>Reason</span>
+        <p>{{ selectedAlert.reason || '-' }}</p>
+      </div>
+
+      <label class="notes-field">
+        Officer Notes
+        <textarea
+          [(ngModel)]="notes"
+          rows="4"
+          placeholder="Add officer notes before reviewing or closing this alert..."
+          [disabled]="isSaving"
+        ></textarea>
+      </label>
+
+      <details class="raw-details">
+        <summary>Technical Details</summary>
+        <pre>{{ formatJson(selectedAlert.details) }}</pre>
+      </details>
+
+      <div class="modal-actions">
+        <button type="button" class="ghost-btn" (click)="closeDetails()" [disabled]="isSaving">
+          Cancel
+        </button>
+
+        <button type="button" class="secondary-btn" (click)="markAsReviewed()" [disabled]="isSaving">
+          {{ isSaving ? 'Saving...' : 'Mark as Reviewed' }}
+        </button>
+
+        <button type="button" class="danger-btn" (click)="closeAlert()" [disabled]="isSaving">
+          {{ isSaving ? 'Saving...' : 'Close Alert' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</section>

@@ -28,6 +28,7 @@ const paymentsDigitalStampsRoutes = require('./routes/payments-digital-stamps.ro
 const documentsKycRoutes = require('./routes/documents-kyc.routes');
 const governmentDocumentsRoutes = require('./routes/government-documents.routes');
 const governmentAmlDashboardRoutes = require('./routes/government-aml-dashboard.routes');
+const governmentAmlAlertsQueueRoutes = require('./routes/government-aml-alerts-queue.routes');
 const hashVerificationRoutes = require('./routes/hash-verification.routes');
 const app = express();
 
@@ -224,6 +225,14 @@ try {
   console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/aml-dashboard');
 } catch (error) {
   console.error('[ROUTE ERROR] aml-dashboard route failed to mount:', error.message);
+}
+
+
+try {
+  app.use('/api/v1/government-blockchain/aml-alerts-queue', governmentAmlAlertsQueueRoutes);
+  console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/aml-alerts-queue');
+} catch (error) {
+  console.error('[ROUTE ERROR] aml-alerts-queue route failed to mount:', error.message);
 }
 
 try {
