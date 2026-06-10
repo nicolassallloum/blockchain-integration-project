@@ -48,7 +48,10 @@
           *ngFor="let item of filteredSidebarItems"
           (click)="selectSidebarItem(item)"
         >
-          <span class="material-icons result-icon">
+          <span
+            class="result-icon"
+            [class.result-dot]="item.icon === '●'"
+          >
             {{ item.icon }}
           </span>
 
@@ -82,7 +85,7 @@
         [class.active]="governmentMenuOpen"
         (click)="toggleGovernmentMenu()"
       >
-        <span class="material-icons menu-icon">account_balance</span>
+        <span class="nav-dot"></span>
         <span class="menu-text">Government Blockchain</span>
         <span class="menu-arrow menu-text">
           {{ governmentMenuOpen ? '▾' : '▸' }}
@@ -91,22 +94,22 @@
 
       <div class="government-submenu" *ngIf="governmentMenuOpen">
         <a routerLink="/government-blockchain/dashboard" routerLinkActive="active">
-          <span class="material-icons menu-icon">dashboard</span>
+          <span class="nav-dot"></span>
           <span class="menu-text">Dashboard</span>
         </a>
 
         <a routerLink="/government-blockchain/create-ministry-account" routerLinkActive="active">
-          <span class="material-icons menu-icon">account_balance</span>
+          <span class="nav-dot"></span>
           <span class="menu-text">Create Ministry Account</span>
         </a>
 
         <a routerLink="/government-blockchain/create-public-administration-account" routerLinkActive="active">
-          <span class="material-icons menu-icon">business</span>
+          <span class="nav-dot"></span>
           <span class="menu-text">Create Public Administration</span>
         </a>
 
         <a routerLink="/government-blockchain/create-resident-account" routerLinkActive="active">
-          <span class="material-icons menu-icon">person_add</span>
+          <span class="nav-dot"></span>
           <span class="menu-text">Create Resident Account</span>
         </a>
 
@@ -115,17 +118,17 @@
           routerLinkActive="active"
           class="sidebar-link"
         >
-          <span class="material-icons menu-icon">lock</span>
+          <span class="sidebar-icon">🔐</span>
           <span class="menu-text">Account Login</span>
         </a>
 
         <a routerLink="/government-blockchain/resident-wallets" routerLinkActive="active">
-          <span class="material-icons menu-icon">account_balance_wallet</span>
+          <span class="nav-dot"></span>
           <span class="menu-text">Resident Wallets</span>
         </a>
 
         <a routerLink="/government-blockchain/government-services" routerLinkActive="active">
-          <span class="material-icons menu-icon">miscellaneous_services</span>
+          <span class="nav-dot"></span>
           <span class="menu-text">Government Services</span>
         </a>
 
@@ -134,77 +137,77 @@
           routerLinkActive="active"
           class="nav-item"
         >
-          <span class="material-icons menu-icon">storage</span>
+          <span class="nav-dot"></span>
           <span class="menu-text">CouchDB Explorer</span>
         </a>
 
         <a routerLink="/government-blockchain/new-transaction" routerLinkActive="active">
-          <span class="material-icons menu-icon">add_card</span>
+          <span class="nav-dot"></span>
           <span class="menu-text">New Transaction</span>
         </a>
 
         <a routerLink="/government-blockchain/transaction-list" routerLinkActive="active">
-          <span class="material-icons menu-icon">receipt_long</span>
+          <span class="nav-dot"></span>
           <span class="menu-text">Transaction List</span>
         </a>
 
         <a routerLink="/government-blockchain/approval-queue" routerLinkActive="active">
-          <span class="material-icons menu-icon">task_alt</span>
+          <span class="nav-dot"></span>
           <span class="menu-text">Approval Queue</span>
         </a>
 
         <a routerLink="/government-blockchain/payments-digital-stamps" routerLinkActive="active">
-          <span class="material-icons menu-icon">payments</span>
+          <span class="nav-dot"></span>
           <span class="menu-text">Payments / Digital Stamps</span>
         </a>
 
         <a routerLink="/government-blockchain/documents-kyc" routerLinkActive="active">
-          <span class="material-icons menu-icon">description</span>
+          <span class="nav-dot"></span>
           <span class="menu-text">Documents & KYC</span>
         </a>
 
         <a routerLink="/government-blockchain/blockchain-proof" routerLinkActive="active">
-          <span class="material-icons menu-icon">verified</span>
+          <span class="nav-dot"></span>
           <span class="menu-text">Blockchain Proof</span>
         </a>
 
         <a routerLink="/government-blockchain/hash-verification" routerLinkActive="active">
-          <span class="material-icons menu-icon">fingerprint</span>
+          <span class="nav-dot"></span>
           <span class="menu-text">Hash Verification</span>
         </a>
 
         <a routerLink="/government-blockchain/risk-fraud-screening" routerLinkActive="active">
-          <span class="material-icons menu-icon">security</span>
+          <span class="nav-dot"></span>
           <span class="menu-text">Risk / Fraud Screening</span>
         </a>
 
         <a routerLink="/government-blockchain/aml-dashboard" routerLinkActive="active">
-          <span class="material-icons menu-icon">analytics</span>
+          <span class="nav-dot"></span>
           <span class="menu-text">AML Dashboard</span>
         </a>
 
         <a routerLink="/government-blockchain/aml-alerts-queue" routerLinkActive="active">
-          <span class="material-icons menu-icon">notification_important</span>
+          <span class="nav-dot"></span>
           <span class="menu-text">AML Alerts Queue</span>
         </a>
 
         <a routerLink="/government-blockchain/aml-case-management" routerLinkActive="active">
-          <span class="material-icons menu-icon">folder_special</span>
+          <span class="nav-dot"></span>
           <span class="menu-text">AML Case Management</span>
         </a>
 
         <a routerLink="/government-blockchain/reports" routerLinkActive="active">
-          <span class="material-icons menu-icon">bar_chart</span>
+          <span class="nav-dot"></span>
           <span class="menu-text">Reports</span>
         </a>
 
         <a routerLink="/government-blockchain/audit-logs" routerLinkActive="active">
-          <span class="material-icons menu-icon">history</span>
+          <span class="nav-dot"></span>
           <span class="menu-text">Audit Logs</span>
         </a>
 
         <a routerLink="/government-blockchain/settings" routerLinkActive="active">
-          <span class="material-icons menu-icon">settings</span>
+          <span class="nav-dot"></span>
           <span class="menu-text">Settings</span>
         </a>
       </div>
