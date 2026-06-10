@@ -2,85 +2,215 @@
   <div class="page-header">
     <div>
       <h1>AML Case Management</h1>
-      <p>Create, assign, investigate, escalate, and close AML compliance cases.</p>
+      <p>Create, assign, investigate, escalate, and close AML compliance cases from PostgreSQL.</p>
     </div>
 
-    <button class="primary-btn">Create Case</button>
+    <div class="header-actions">
+      <button class="secondary-btn" type="button" (click)="refresh()" [disabled]="loading || actionLoading">
+        Refresh
+      </button>
+
+      <button class="primary-btn" type="button" (click)="createCase()" [disabled]="loading || actionLoading">
+        Create Case
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="errorMessage" class="state-message error">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="successMessage" class="state-message success">
+    {{ successMessage }}
+  </div>
+
+  <div *ngIf="loading" class="state-message info">
+    Loading AML cases from PostgreSQL...
+  </div>
+
+  <div *ngIf="actionLoading" class="state-message info">
+    Saving AML case action...
   </div>
 
   <div class="cards-grid">
     <div class="summary-card">
       <h3>Total Cases</h3>
-      <strong>270</strong>
+      <strong>{{ summary.totalCases }}</strong>
       <span>AML investigations</span>
     </div>
 
     <div class="summary-card">
       <h3>Open</h3>
-      <strong>48</strong>
+      <strong>{{ summary.openCases }}</strong>
       <span>Active cases</span>
     </div>
 
     <div class="summary-card">
       <h3>Escalated</h3>
-      <strong>19</strong>
+      <strong>{{ summary.escalatedCases }}</strong>
       <span>Critical investigations</span>
     </div>
 
     <div class="summary-card">
       <h3>Closed</h3>
-      <strong>203</strong>
+      <strong>{{ summary.closedCases }}</strong>
       <span>Resolved cases</span>
     </div>
   </div>
 
   <div class="table-card">
-    <h2>AML Cases</h2>
+    <div class="table-header">
+      <div>
+        <h2>AML Cases</h2>
+        <p>Real operational case list loaded from blockchain.aml_cases.</p>
+      </div>
+    </div>
 
-    <table>
-      <thead>
-        <tr>
-          <th>Case ID</th>
-          <th>Alert ID</th>
-          <th>Resident / Wallet</th>
-          <th>Investigator</th>
-          <th>Priority</th>
-          <th>Status</th>
-          <th>Opened Date</th>
-        </tr>
-      </thead>
+    <div *ngIf="!loading && cases.length === 0" class="empty-state">
+      No AML cases found in PostgreSQL.
+    </div>
 
-      <tbody>
-        <tr>
-          <td>CASE-AML-0001</td>
-          <td>AML-ALERT-001</td>
-          <td>0xRES...4726</td>
-          <td>Officer Karim</td>
-          <td><span class="badge warning">Medium</span></td>
-          <td><span class="badge warning">In Review</span></td>
-          <td>2026-06-04</td>
-        </tr>
+    <div class="table-wrapper" *ngIf="cases.length > 0">
+      <table>
+        <thead>
+          <tr>
+            <th>Case ID</th>
+            <th>Alert ID</th>
+            <th>Resident / Wallet</th>
+            <th>Investigator</th>
+            <th>Priority</th>
+            <th>Status</th>
+            <th>Risk</th>
+            <th>Opened Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
 
-        <tr>
-          <td>CASE-AML-0002</td>
-          <td>AML-ALERT-002</td>
-          <td>0xBAD...1190</td>
-          <td>Compliance Team</td>
-          <td><span class="badge danger">High</span></td>
-          <td><span class="badge danger">Escalated</span></td>
-          <td>2026-06-03</td>
-        </tr>
+        <tbody>
+          <tr *ngFor="let item of cases">
+            <td>
+              <strong>{{ item.caseNumber }}</strong>
+            </td>
 
-        <tr>
-          <td>CASE-AML-0003</td>
-          <td>AML-ALERT-004</td>
-          <td>0xRES...5561</td>
-          <td>Officer Maya</td>
-          <td><span class="badge info">Low</span></td>
-          <td><span class="badge success">Closed</span></td>
-          <td>2026-06-01</td>
-        </tr>
-      </tbody>
-    </table>
+            <td>
+              <span class="mono-text">{{ item.alertId || 'N/A' }}</span>
+            </td>
+
+            <td>
+              <span>{{ getResidentWalletText(item) }}</span>
+            </td>
+
+            <td>
+              <span>{{ item.assignedTo || item.assignedTeam || 'Unassigned' }}</span>
+            </td>
+
+            <td>
+              <span class="badge" [ngClass]="getBadgeClass(item.priority)">
+                {{ item.priority || 'N/A' }}
+              </span>
+            </td>
+
+            <td>
+              <span class="badge" [ngClass]="getBadgeClass(item.status)">
+                {{ item.status || 'N/A' }}
+              </span>
+            </td>
+
+            <td>
+              <span>{{ item.riskScore || 0 }}</span>
+              <small>{{ item.riskLevel || item.alert?.severity || '' }}</small>
+            </td>
+
+            <td>{{ formatDate(item.openedAt || item.createdAt) }}</td>
+
+            <td>
+              <div class="row-actions">
+                <button type="button" class="link-btn" (click)="viewCase(item)" [disabled]="actionLoading">
+                  View
+                </button>
+
+                <button type="button" class="link-btn" (click)="assignCase(item)" [disabled]="actionLoading || item.status === 'Closed'">
+                  Assign
+                </button>
+
+                <button type="button" class="link-btn danger-text" (click)="escalateCase(item)" [disabled]="actionLoading || !canEscalate(item)">
+                  Escalate
+                </button>
+
+                <button type="button" class="link-btn success-text" (click)="closeCase(item)" [disabled]="actionLoading || !canClose(item)">
+                  Close
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="table-card" *ngIf="selectedCase">
+    <div class="table-header">
+      <div>
+        <h2>Selected Case Details</h2>
+        <p>{{ selectedCase.caseNumber }} / {{ selectedCase.status }}</p>
+      </div>
+    </div>
+
+    <div class="details-grid">
+      <div>
+        <label>Case Description</label>
+        <p>{{ selectedCase.description || 'N/A' }}</p>
+      </div>
+
+      <div>
+        <label>Wallet Address</label>
+        <p class="mono-text">{{ selectedCase.walletAddress || selectedCase.wallet?.walletAddress || 'N/A' }}</p>
+      </div>
+
+      <div>
+        <label>Alert Rule</label>
+        <p>{{ selectedCase.alert?.ruleCode || 'N/A' }}</p>
+      </div>
+
+      <div>
+        <label>Alert Reason</label>
+        <p>{{ selectedCase.alert?.reason || 'N/A' }}</p>
+      </div>
+
+      <div>
+        <label>Transaction Amount</label>
+        <p>
+          {{ selectedCase.alert?.transactionAmount || selectedCase.alert?.amount || 'N/A' }}
+          {{ selectedCase.alert?.currencyCode || selectedCase.alert?.currency || '' }}
+        </p>
+      </div>
+
+      <div>
+        <label>Closed At</label>
+        <p>{{ formatDate(selectedCase.closedAt) }}</p>
+      </div>
+    </div>
+
+    <h3 class="history-title">Action History</h3>
+
+    <div *ngIf="!selectedCase.actions || selectedCase.actions.length === 0" class="empty-state">
+      No action history found for this case.
+    </div>
+
+    <div class="history-list" *ngIf="selectedCase.actions?.length">
+      <div class="history-item" *ngFor="let action of selectedCase.actions">
+        <strong>{{ action.action_type || action.actionType }}</strong>
+        <span>
+          {{ action.old_status || action.oldStatus || 'N/A' }}
+          →
+          {{ action.new_status || action.newStatus || 'N/A' }}
+        </span>
+        <p>{{ action.action_note || action.actionNote || 'No notes' }}</p>
+        <small>
+          By {{ action.action_by || action.actionBy || 'System' }}
+          at {{ formatDate(action.created_at || action.createdAt) }}
+        </small>
+      </div>
+    </div>
   </div>
 </div>
