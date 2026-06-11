@@ -48,6 +48,87 @@ function addFilter(filters, values, sqlCondition, value) {
   filters.push(sqlCondition.replace('?', `$${values.length}`));
 }
 
+
+/**
+ * GET /api/v1/government-blockchain/blockchain-proofs/summary
+ */
+router.get('/summary', async (req, res) => {
+  const query = `
+    WITH proofs AS (
+      SELECT
+        COALESCE(blockchain_status, wallet_status, 'UNKNOWN') AS blockchain_status
+      FROM blockchain.government_ministry_wallets
+      WHERE COALESCE(tx_id, ledger_reference, blockchain_status) IS NOT NULL
+
+      UNION ALL
+
+      SELECT
+        COALESCE(blockchain_status, wallet_status, 'UNKNOWN') AS blockchain_status
+      FROM blockchain.resident_wallets
+      WHERE COALESCE(fabric_tx_id, blockchain_status) IS NOT NULL
+
+      UNION ALL
+
+      SELECT
+        COALESCE(blockchain_status, transaction_status, 'UNKNOWN') AS blockchain_status
+      FROM blockchain.government_transactions
+      WHERE COALESCE(blockchain_tx_id, blockchain_status) IS NOT NULL
+
+      UNION ALL
+
+      SELECT
+        COALESCE(status, 'DOCUMENT_HASHED') AS blockchain_status
+      FROM blockchain.transaction_documents
+      WHERE COALESCE(document_hash, status) IS NOT NULL
+
+      UNION ALL
+
+      SELECT
+        COALESCE(stamp_status, payment_status, 'UNKNOWN') AS blockchain_status
+      FROM blockchain.digital_stamp_payments
+      WHERE COALESCE(stamp_id, payment_ref, stamp_status, payment_status) IS NOT NULL
+    )
+    SELECT
+      COUNT(*)::int AS total_proofs,
+      COUNT(*) FILTER (
+        WHERE UPPER(blockchain_status) IN ('CONFIRMED', 'SYNCED', 'VERIFIED', 'ACTIVE', 'ISSUED', 'REDEEMED')
+      )::int AS verified_confirmed,
+      COUNT(*) FILTER (
+        WHERE UPPER(blockchain_status) IN ('PENDING', 'NOT_SUBMITTED', 'NOT SUBMITTED', 'DOCUMENT_HASHED')
+      )::int AS pending,
+      COUNT(*) FILTER (
+        WHERE UPPER(blockchain_status) IN ('FAILED', 'INVALID', 'BLOCKCHAIN FAILED', 'NOT ISSUED')
+      )::int AS failed_invalid
+    FROM proofs;
+  `;
+
+  try {
+    const result = await pool.query(query);
+    const row = result.rows[0] || {};
+
+    return res.json({
+      success: true,
+      message: 'Blockchain proofs summary loaded successfully.',
+      data: {
+        totalProofs: Number(row.total_proofs || 0),
+        verifiedConfirmed: Number(row.verified_confirmed || 0),
+        pending: Number(row.pending || 0),
+        failedInvalid: Number(row.failed_invalid || 0)
+      },
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('[BLOCKCHAIN PROOFS SUMMARY ERROR]', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to load blockchain proofs summary.',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+
 /**
  * GET /api/v1/government-blockchain/blockchain-proofs
  *

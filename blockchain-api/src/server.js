@@ -258,6 +258,8 @@ try {
 try {
   app.use('/api/v1/government-blockchain/aml-cases', governmentAmlCasesRoutes);
   console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/aml-cases');
+  app.use('/api/v1/government-blockchain/aml-case-management', governmentAmlCasesRoutes);
+  console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/aml-case-management');
 } catch (error) {
   console.error('[ROUTE ERROR] aml-cases route failed to mount:', error.message);
 }

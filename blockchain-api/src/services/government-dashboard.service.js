@@ -178,13 +178,69 @@ async function getHealth() {
   const postgresqlOk = await singleValue(`SELECT 1`);
 
   const lastBlockNumber = await singleValue(`
-    SELECT COALESCE(MAX(block_number), COUNT(*), 0)
-    FROM blockchain.fabric_transactions
+    WITH block_sources AS (
+      SELECT COUNT(*)::numeric AS block_number
+      FROM blockchain.fabric_transactions
+
+      UNION ALL
+
+      SELECT COUNT(*)::numeric AS block_number
+      FROM blockchain.government_transactions
+      WHERE COALESCE(blockchain_tx_id, blockchain_status) IS NOT NULL
+
+      UNION ALL
+
+      SELECT COUNT(*)::numeric AS block_number
+      FROM blockchain.government_ministry_wallets
+      WHERE COALESCE(tx_id, ledger_reference, blockchain_status) IS NOT NULL
+
+      UNION ALL
+
+      SELECT COUNT(*)::numeric AS block_number
+      FROM blockchain.resident_wallets
+      WHERE COALESCE(fabric_tx_id, blockchain_status) IS NOT NULL
+
+      UNION ALL
+
+      SELECT COUNT(*)::numeric AS block_number
+      FROM blockchain.digital_stamp_payments
+      WHERE COALESCE(stamp_id, payment_ref, stamp_status, payment_status) IS NOT NULL
+    )
+    SELECT COALESCE(SUM(block_number), 0)::int AS last_block_number
+    FROM block_sources
   `);
 
   const chaincodeTxCount = await singleValue(`
-    SELECT COUNT(*)
-    FROM blockchain.fabric_transactions
+    WITH tx_sources AS (
+      SELECT COUNT(*)::numeric AS total
+      FROM blockchain.fabric_transactions
+
+      UNION ALL
+
+      SELECT COUNT(*)::numeric AS total
+      FROM blockchain.government_transactions
+      WHERE COALESCE(blockchain_tx_id, blockchain_status) IS NOT NULL
+
+      UNION ALL
+
+      SELECT COUNT(*)::numeric AS total
+      FROM blockchain.government_ministry_wallets
+      WHERE COALESCE(tx_id, ledger_reference, blockchain_status) IS NOT NULL
+
+      UNION ALL
+
+      SELECT COUNT(*)::numeric AS total
+      FROM blockchain.resident_wallets
+      WHERE COALESCE(fabric_tx_id, blockchain_status) IS NOT NULL
+
+      UNION ALL
+
+      SELECT COUNT(*)::numeric AS total
+      FROM blockchain.digital_stamp_payments
+      WHERE COALESCE(stamp_id, payment_ref, stamp_status, payment_status) IS NOT NULL
+    )
+    SELECT COALESCE(SUM(total), 0)::int AS chaincode_tx_count
+    FROM tx_sources
   `);
 
   return {

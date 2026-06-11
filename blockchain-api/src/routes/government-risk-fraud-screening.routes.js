@@ -83,6 +83,82 @@ function buildFilters(query) {
   };
 }
 
+
+/**
+ * GET /api/v1/government-blockchain/risk-fraud-screening/summary
+ */
+router.get('/summary', async (req, res) => {
+  const query = `
+    WITH risk_rows AS (
+      SELECT
+        CASE
+          WHEN UPPER(COALESCE(a.severity, '')) IN ('CRITICAL', 'HIGH') THEN 'HIGH'
+          WHEN UPPER(COALESCE(a.severity, '')) = 'MEDIUM' THEN 'MEDIUM'
+          WHEN UPPER(COALESCE(a.severity, '')) = 'LOW' THEN 'LOW'
+          WHEN COALESCE(a.risk_score, 0) >= 71 THEN 'HIGH'
+          WHEN COALESCE(a.risk_score, 0) >= 31 THEN 'MEDIUM'
+          ELSE 'LOW'
+        END AS risk_level,
+        CASE
+          WHEN UPPER(COALESCE(a.alert_status, 'OPEN')) IN ('RESOLVED', 'CLOSED', 'APPROVED', 'REJECTED', 'COMPLETED') THEN 'RESOLVED'
+          WHEN UPPER(COALESCE(a.alert_status, 'OPEN')) IN ('REVIEW', 'PENDING_REVIEW', 'PENDING', 'IN_REVIEW') THEN 'IN_REVIEW'
+          ELSE UPPER(COALESCE(a.alert_status, 'OPEN'))
+        END AS status
+      FROM blockchain.aml_alerts a
+
+      UNION ALL
+
+      SELECT
+        CASE
+          WHEN COALESCE(l.final_risk_score, 0) >= 71 THEN 'HIGH'
+          WHEN COALESCE(l.final_risk_score, 0) >= 31 THEN 'MEDIUM'
+          ELSE 'LOW'
+        END AS risk_level,
+        CASE
+          WHEN UPPER(COALESCE(l.final_decision, 'OPEN')) = 'ALLOW' THEN 'RESOLVED'
+          WHEN UPPER(COALESCE(l.final_decision, 'OPEN')) = 'REVIEW' THEN 'IN_REVIEW'
+          WHEN UPPER(COALESCE(l.final_decision, 'OPEN')) = 'BLOCK' THEN 'OPEN'
+          ELSE UPPER(COALESCE(l.final_decision, 'OPEN'))
+        END AS status
+      FROM blockchain.aml_rule_execution_logs l
+    )
+    SELECT
+      COUNT(*)::int AS total_alerts,
+      COUNT(*) FILTER (WHERE risk_level = 'HIGH')::int AS high_risk,
+      COUNT(*) FILTER (WHERE risk_level = 'MEDIUM')::int AS medium_risk,
+      COUNT(*) FILTER (WHERE risk_level = 'LOW')::int AS low_risk,
+      COUNT(*) FILTER (WHERE status = 'RESOLVED')::int AS resolved_alerts
+    FROM risk_rows;
+  `;
+
+  try {
+    const result = await pool.query(query);
+    const row = result.rows[0] || {};
+
+    return res.json({
+      success: true,
+      message: 'Risk and fraud screening summary loaded successfully.',
+      data: {
+        totalAlerts: Number(row.total_alerts || 0),
+        highRisk: Number(row.high_risk || 0),
+        mediumRisk: Number(row.medium_risk || 0),
+        lowRisk: Number(row.low_risk || 0),
+        resolvedAlerts: Number(row.resolved_alerts || 0)
+      },
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('[RISK FRAUD SUMMARY ERROR]', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to load risk and fraud screening summary.',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+
 /**
  * GET /api/v1/government-blockchain/risk-fraud-screening
  */

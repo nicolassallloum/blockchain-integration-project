@@ -23,6 +23,13 @@ router.get('/templates', controller.getTemplates);
  */
 router.get('/recent', controller.getRecentReports);
 
+
+/**
+ * GET /api/v1/government-blockchain/reports/summary
+ * Reports dashboard summary payload.
+ */
+router.get('/summary', controller.getDashboard);
+
 /**
  * GET /api/v1/government-blockchain/reports/:reportCode
  * Real operational data for one report card.
