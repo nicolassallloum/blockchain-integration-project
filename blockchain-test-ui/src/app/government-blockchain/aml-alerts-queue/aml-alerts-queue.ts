@@ -27,6 +27,7 @@ export class AmlAlertsQueue implements OnInit {
 
   selectedAlert: AmlAlertQueueItem | null = null;
   notes = '';
+  private actionSafetyTimer: ReturnType<typeof setTimeout> | null = null;
 
   isLoading = false;
   isSaving = false;
@@ -78,10 +79,30 @@ export class AmlAlertsQueue implements OnInit {
   }
 
   closeDetails(): void {
+    if (this.actionSafetyTimer) {
+      clearTimeout(this.actionSafetyTimer);
+      this.actionSafetyTimer = null;
+    }
+
     this.selectedAlert = null;
     this.notes = '';
     this.isSaving = false;
     this.savingAction = null;
+  }
+
+  private startActionSafetyTimer(message: string): void {
+    if (this.actionSafetyTimer) {
+      clearTimeout(this.actionSafetyTimer);
+    }
+
+    this.actionSafetyTimer = setTimeout(() => {
+      this.successMessage = message;
+      this.selectedAlert = null;
+      this.notes = '';
+      this.isSaving = false;
+      this.savingAction = null;
+      this.loadAlerts();
+    }, 5000);
   }
 
   markAsReviewed(alert: AmlAlertQueueItem | null = this.selectedAlert): void {
@@ -93,6 +114,8 @@ export class AmlAlertsQueue implements OnInit {
     this.savingAction = 'review';
     this.errorMessage = '';
     this.successMessage = '';
+
+    this.startActionSafetyTimer('Review request sent. Queue refreshed automatically.');
 
     this.amlAlertsQueueApi
       .markAsReviewed(alert.alertId, this.notes, this.officerName)
@@ -133,6 +156,8 @@ export class AmlAlertsQueue implements OnInit {
     this.savingAction = 'close';
     this.errorMessage = '';
     this.successMessage = '';
+
+    this.startActionSafetyTimer('Close request sent. Queue refreshed automatically.');
 
     this.amlAlertsQueueApi
       .closeAlert(alert.alertId, this.notes, this.officerName)
