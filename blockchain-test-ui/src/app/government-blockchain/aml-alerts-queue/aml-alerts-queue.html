@@ -143,6 +143,10 @@
         </button>
       </div>
 
+      <div class="state-message error" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+
       <div class="details-grid">
         <div>
           <span>Resident Name</span>
@@ -211,11 +215,11 @@
         </button>
 
         <button type="button" class="secondary-btn" (click)="markAsReviewed()" [disabled]="isSaving">
-          {{ isSaving ? 'Saving...' : 'Mark as Reviewed' }}
+          {{ savingAction === 'review' ? 'Saving...' : 'Mark as Reviewed' }}
         </button>
 
         <button type="button" class="danger-btn" (click)="closeAlert()" [disabled]="isSaving">
-          {{ isSaving ? 'Saving...' : 'Close Alert' }}
+          {{ savingAction === 'close' ? 'Saving...' : 'Close Alert' }}
         </button>
       </div>
     </div>

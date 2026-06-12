@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { finalize, timeout } from 'rxjs';
 import {
   AmlAlertQueueItem,
   AmlAlertsQueueSummary,
@@ -29,6 +30,7 @@ export class AmlAlertsQueue implements OnInit {
 
   isLoading = false;
   isSaving = false;
+  savingAction: 'review' | 'close' | null = null;
   errorMessage = '';
   successMessage = '';
 
@@ -79,6 +81,7 @@ export class AmlAlertsQueue implements OnInit {
     this.selectedAlert = null;
     this.notes = '';
     this.isSaving = false;
+    this.savingAction = null;
   }
 
   markAsReviewed(alert: AmlAlertQueueItem | null = this.selectedAlert): void {
@@ -87,25 +90,38 @@ export class AmlAlertsQueue implements OnInit {
     }
 
     this.isSaving = true;
+    this.savingAction = 'review';
     this.errorMessage = '';
     this.successMessage = '';
 
-    this.amlAlertsQueueApi.markAsReviewed(alert.alertId, this.notes, this.officerName).subscribe({
-      next: (response) => {
-        this.successMessage = response.message || 'AML alert marked as reviewed successfully.';
-        this.isSaving = false;
-        this.closeDetails();
-        this.loadAlerts();
-      },
-      error: (error) => {
-        console.error('Failed to mark AML alert as reviewed:', error);
-        this.errorMessage =
-          error?.error?.message ||
-          error?.message ||
-          'Failed to mark AML alert as reviewed.';
-        this.isSaving = false;
-      }
-    });
+    this.amlAlertsQueueApi
+      .markAsReviewed(alert.alertId, this.notes, this.officerName)
+      .pipe(
+        timeout(15000),
+        finalize(() => {
+          this.isSaving = false;
+          this.savingAction = null;
+        })
+      )
+      .subscribe({
+        next: (response) => {
+          this.successMessage = response.message || 'AML alert marked as reviewed successfully.';
+          this.closeDetails();
+          this.loadAlerts();
+        },
+        error: (error) => {
+          console.error('Failed to mark AML alert as reviewed:', error);
+          this.errorMessage =
+            error?.name === 'TimeoutError'
+              ? 'The review request timed out in the browser. The queue was refreshed to confirm the latest status.'
+              : error?.error?.message ||
+                error?.message ||
+                'Failed to mark AML alert as reviewed.';
+
+          this.closeDetails();
+          this.loadAlerts();
+        }
+      });
   }
 
   closeAlert(alert: AmlAlertQueueItem | null = this.selectedAlert): void {
@@ -114,25 +130,38 @@ export class AmlAlertsQueue implements OnInit {
     }
 
     this.isSaving = true;
+    this.savingAction = 'close';
     this.errorMessage = '';
     this.successMessage = '';
 
-    this.amlAlertsQueueApi.closeAlert(alert.alertId, this.notes, this.officerName).subscribe({
-      next: (response) => {
-        this.successMessage = response.message || 'AML alert closed successfully.';
-        this.isSaving = false;
-        this.closeDetails();
-        this.loadAlerts();
-      },
-      error: (error) => {
-        console.error('Failed to close AML alert:', error);
-        this.errorMessage =
-          error?.error?.message ||
-          error?.message ||
-          'Failed to close AML alert.';
-        this.isSaving = false;
-      }
-    });
+    this.amlAlertsQueueApi
+      .closeAlert(alert.alertId, this.notes, this.officerName)
+      .pipe(
+        timeout(15000),
+        finalize(() => {
+          this.isSaving = false;
+          this.savingAction = null;
+        })
+      )
+      .subscribe({
+        next: (response) => {
+          this.successMessage = response.message || 'AML alert closed successfully.';
+          this.closeDetails();
+          this.loadAlerts();
+        },
+        error: (error) => {
+          console.error('Failed to close AML alert:', error);
+          this.errorMessage =
+            error?.name === 'TimeoutError'
+              ? 'The close request timed out in the browser. The queue was refreshed to confirm the latest status.'
+              : error?.error?.message ||
+                error?.message ||
+                'Failed to close AML alert.';
+
+          this.closeDetails();
+          this.loadAlerts();
+        }
+      });
   }
 
   getRiskClass(riskLevel: string): string {
