@@ -45,7 +45,8 @@ export interface RiskFraudScreeningResponse {
   providedIn: 'root'
 })
 export class GovernmentRiskFraudScreeningApiService {
-  private readonly apiUrl = '/api/v1/government-blockchain/risk-fraud-screening';
+  private readonly apiUrl =
+    `${window.location.protocol}//${window.location.hostname}:3001/api/v1/government-blockchain/risk-fraud-screening`;
 
   constructor(private readonly http: HttpClient) {}
 

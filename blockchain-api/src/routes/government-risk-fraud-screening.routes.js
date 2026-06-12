@@ -3,6 +3,34 @@ const { Pool } = require('pg');
 
 const router = express.Router();
 
+const allowedOrigins = new Set([
+  'http://localhost:4200',
+  'http://127.0.0.1:4200',
+  'http://172.31.13.90:4200',
+  'http://172.31.3.90:4200',
+]);
+
+router.use((req, res, next) => {
+  const origin = req.headers.origin;
+
+  if (origin && allowedOrigins.has(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  } else {
+    res.header('Access-Control-Allow-Origin', '*');
+  }
+
+  res.header('Vary', 'Origin');
+  res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+
+  return next();
+});
+
+
 const pool = new Pool({
   host: process.env.PGHOST || process.env.DB_HOST || '172.31.13.133',
   port: Number(process.env.PGPORT || process.env.DB_PORT || 5444),
