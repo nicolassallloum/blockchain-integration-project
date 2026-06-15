@@ -1,0 +1,115 @@
+<div class="fabric-history-page">
+  <div class="page-header">
+    <div>
+      <h1>Fabric Ledger History</h1>
+      <p>Search immutable Hyperledger Fabric history by ledger key.</p>
+    </div>
+  </div>
+
+  <section class="search-card">
+    <label for="fabricKey">Fabric Ledger Key</label>
+
+    <div class="search-row">
+      <input
+        id="fabricKey"
+        name="fabricKey"
+        type="text"
+        [(ngModel)]="fabricKey"
+        placeholder="Example: RESIDENT_RES-BLOCKCHAIN-226"
+        (keyup.enter)="searchHistory()"
+      />
+
+      <button type="button" (click)="searchHistory()" [disabled]="loading">
+        {{ loading ? 'Loading...' : 'Search History' }}
+      </button>
+    </div>
+
+    <div class="examples">
+      <span>Examples:</span>
+      <button
+        type="button"
+        *ngFor="let key of exampleKeys"
+        (click)="useExampleKey(key)"
+      >
+        {{ key }}
+      </button>
+    </div>
+
+    <div class="hint">
+      The key must match the exact key used by chaincode putState().
+    </div>
+
+    <div class="error-message" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </div>
+  </section>
+
+  <section class="summary-grid" *ngIf="searched">
+    <div class="summary-card">
+      <span>Total History Records</span>
+      <strong>{{ historyRecords.length }}</strong>
+    </div>
+
+    <div class="summary-card">
+      <span>Fabric Function</span>
+      <strong>GetHistoryForKey</strong>
+    </div>
+
+    <div class="summary-card">
+      <span>Search Key</span>
+      <strong>{{ fabricKey || '-' }}</strong>
+    </div>
+  </section>
+
+  <section
+    class="empty-state"
+    *ngIf="searched && !loading && !errorMessage && historyRecords.length === 0"
+  >
+    <h3>No history found</h3>
+    <p>
+      The function is working, but no ledger history exists for this exact key.
+      Try another key used by chaincode putState().
+    </p>
+  </section>
+
+  <section class="history-list" *ngIf="historyRecords.length > 0">
+    <article class="history-card" *ngFor="let record of historyRecords; let i = index">
+      <div class="history-header">
+        <div>
+          <h3>History Record #{{ i + 1 }}</h3>
+          <p>{{ record.txId || '-' }}</p>
+        </div>
+
+        <span class="badge" [class.deleted]="record.isDelete">
+          {{ record.isDelete ? 'Deleted State' : 'State Update' }}
+        </span>
+      </div>
+
+      <div class="meta-grid">
+        <div>
+          <label>Transaction ID</label>
+          <span>{{ record.txId || '-' }}</span>
+        </div>
+
+        <div>
+          <label>Timestamp</label>
+          <span>{{ formatTimestamp(record.timestamp) }}</span>
+        </div>
+
+        <div>
+          <label>Delete Flag</label>
+          <span>{{ record.isDelete ? 'true' : 'false' }}</span>
+        </div>
+      </div>
+
+      <div class="json-panel">
+        <div class="json-title">
+          <label>Saved Ledger Value</label>
+          <button type="button" (click)="copyValue(record.value)">Copy JSON</button>
+        </div>
+
+        <pre>{{ formatValue(record.value) }}</pre>
+      </div>
+    </article>
+  </section>
+</div>

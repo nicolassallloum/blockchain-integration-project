@@ -31,6 +31,7 @@ import { AmlCaseManagement } from './government-blockchain/aml-case-management/a
 import { Reports } from './government-blockchain/reports/reports';
 import { AuditLogs } from './government-blockchain/audit-logs/audit-logs';
 import { Settings } from './government-blockchain/settings/settings';
+import { FabricHistory } from './government-blockchain/fabric-history/fabric-history';
 export const routes: Routes = [
   {
     path: '',
@@ -122,6 +123,10 @@ export const routes: Routes = [
   {
     path: 'government-blockchain/hash-verification',
     component: HashVerification
+  },
+  {
+    path: 'government-blockchain/fabric-history',
+    component: FabricHistory
   },
   {
     path: 'government-blockchain/risk-fraud-screening',

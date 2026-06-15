@@ -1459,6 +1459,55 @@ class KycWalletContract extends Contract {
             data
         };
     }
+
+    async GetHistoryForKey(ctx, key) {
+        if (!key || String(key).trim() === '') {
+            throw new Error('Fabric history key is required');
+        }
+
+        const iterator = await ctx.stub.getHistoryForKey(String(key).trim());
+        const results = [];
+
+        try {
+            while (true) {
+                const response = await iterator.next();
+
+                if (response.value) {
+                    const historyItem = {
+                        txId: response.value.txId,
+                        timestamp: response.value.timestamp,
+                        isDelete: response.value.isDelete,
+                        value: null
+                    };
+
+                    if (
+                        response.value.value &&
+                        response.value.value.length > 0
+                    ) {
+                        const rawValue = response.value.value.toString('utf8');
+
+                        try {
+                            historyItem.value = JSON.parse(rawValue);
+                        } catch (error) {
+                            historyItem.value = rawValue;
+                        }
+                    }
+
+                    results.push(historyItem);
+                }
+
+                if (response.done) {
+                    break;
+                }
+            }
+        } finally {
+            await iterator.close();
+        }
+
+        return JSON.stringify(results);
+    }
+
+
 }
 
 module.exports = KycWalletContract;
