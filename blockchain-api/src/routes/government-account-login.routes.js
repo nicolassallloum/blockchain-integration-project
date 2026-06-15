@@ -1,5 +1,6 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const pool = require('../config/postgres');
 
 const router = express.Router();
@@ -30,6 +31,7 @@ function removeSensitiveFields(row) {
   delete copy.password_hash;
   delete copy.passwordhash;
   delete copy.walletPasswordHash;
+  delete copy.walletPasswordSalt;
   delete copy.wallet_password_hash;
   delete copy.wallet_password_salt;
   delete copy.passwordSalt;
@@ -37,12 +39,45 @@ function removeSensitiveFields(row) {
   return copy;
 }
 
-async function verifyPassword(inputPassword, storedHash) {
+function verifyPbkdf2Password(inputPassword, storedSalt, storedHash) {
+  const password = cleanText(inputPassword);
+  const salt = cleanText(storedSalt);
+  const hash = cleanText(storedHash);
+
+  if (!password || !salt || !hash) {
+    return false;
+  }
+
+  try {
+    const calculatedHash = crypto
+      .pbkdf2Sync(password, salt, 120000, 64, 'sha512')
+      .toString('hex');
+
+    const expected = Buffer.from(hash, 'hex');
+    const actual = Buffer.from(calculatedHash, 'hex');
+
+    if (expected.length !== actual.length) {
+      return false;
+    }
+
+    return crypto.timingSafeEqual(actual, expected);
+  } catch (error) {
+    console.error('[PBKDF2_PASSWORD_VERIFY_ERROR]', error.message);
+    return false;
+  }
+}
+
+async function verifyPassword(inputPassword, storedHash, storedSalt = null) {
   const password = cleanText(inputPassword);
   const hash = cleanText(storedHash);
+  const salt = cleanText(storedSalt);
 
   if (!password || !hash) {
     return false;
+  }
+
+  if (salt) {
+    return verifyPbkdf2Password(password, salt, hash);
   }
 
   return bcrypt.compare(password, hash);
@@ -146,7 +181,8 @@ async function findResidentByWallet(walletAddress) {
       NULL::text AS "couchDbDocId",
       r.created_at AS "createdAt",
       NULL::timestamp AS "lastLoginAt",
-      COALESCE(r.password_hash, rw.wallet_password_hash) AS "passwordHash"
+      COALESCE(r.password_hash, rw.wallet_password_hash) AS "passwordHash",
+      rw.wallet_password_salt AS "walletPasswordSalt"
     FROM blockchain.residents r
     LEFT JOIN blockchain.resident_wallets rw
       ON rw.resident_id = r.resident_id
@@ -248,7 +284,7 @@ router.post('/', async (req, res) => {
     }
 
     for (const account of searchResults) {
-      const isPasswordValid = await verifyPassword(password, account.passwordHash);
+      const isPasswordValid = await verifyPassword(password, account.passwordHash, account.walletPasswordSalt);
 
       if (!isPasswordValid) {
         continue;
