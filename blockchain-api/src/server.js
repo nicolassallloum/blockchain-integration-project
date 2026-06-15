@@ -40,6 +40,32 @@ const app = express();
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
+
+const earlyGovernmentCors = cors({
+  origin: [
+    'http://localhost:4200',
+    'http://127.0.0.1:4200',
+    'http://172.31.13.90:4200'
+  ],
+  methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: [
+    'Accept',
+    'Content-Type',
+    'Authorization',
+    'x-api-key',
+    'x-request-id',
+    'x-correlation-id',
+    'x-source-system',
+    'x-request-source'
+  ],
+  exposedHeaders: ['x-request-id', 'x-correlation-id'],
+  credentials: false,
+  optionsSuccessStatus: 204
+});
+
+app.use('/api/v1/government-blockchain', earlyGovernmentCors);
+app.options(/^\/api\/v1\/government-blockchain(\/.*)?$/, earlyGovernmentCors);
+
 const documentsKycCors = cors({
   origin: [
     'http://localhost:4200',
