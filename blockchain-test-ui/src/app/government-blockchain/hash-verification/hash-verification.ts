@@ -42,7 +42,7 @@ export class HashVerification {
   result: HashVerificationResult | null = null;
   recentVerifications: HashVerificationResult[] = [];
 
-  private readonly apiUrl = '/api/v1/government-blockchain/hash-verification';
+  private readonly apiUrl = 'http://172.31.13.90:3001/api/v1/government-blockchain/hash-verification';
 
   constructor(private readonly http: HttpClient) {}
 

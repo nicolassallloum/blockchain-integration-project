@@ -39,6 +39,11 @@ export class GovernmentTransactionApiService {
     return this.http.post<any>(`${this.transactionsUrl}/fee-preview`, payload);
   }
 
+
+  getNextTransactionReference(): any {
+    return this.http.get<any>(`${this.transactionsUrl}/next-reference`);
+  }
+
   createTransaction(payload: any) {
     return this.http.post<any>(this.transactionsUrl, payload);
   }

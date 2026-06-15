@@ -427,6 +427,49 @@ router.get('/', async (req, res) => {
   }
 });
 
+
+/**
+ * GET /api/v1/government-blockchain/transactions/next-reference
+ * Preview next GOV transaction reference.
+ */
+router.get('/next-reference', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT
+        'GOV-TXN-' ||
+        LPAD(
+          (
+            COALESCE(
+              (SELECT last_value FROM blockchain.gov_txn_reference_seq),
+              0
+            ) + 1
+          )::TEXT,
+          6,
+          '0'
+        ) AS transaction_reference
+    `);
+
+    return res.json({
+      success: true,
+      data: {
+        transactionReference: result.rows[0].transaction_reference
+      }
+    });
+  } catch (error) {
+    console.error('[NEXT GOVERNMENT TRANSACTION REFERENCE ERROR]', {
+      message: error.message,
+      code: error.code,
+      detail: error.detail
+    });
+
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to load next transaction reference.',
+      data: null
+    });
+  }
+});
+
 /**
  * GET /api/v1/government-blockchain/transactions/reference/transaction-status
  */
@@ -888,10 +931,11 @@ router.post('/', async (req, res) => {
         ? 'APPROVED'
         : 'PENDING_REVIEW';
 
-    const transactionReference =
-      transaction.clientTransactionId && String(transaction.clientTransactionId).startsWith('GOV-TXN-')
-        ? transaction.clientTransactionId
-        : `GOV-TXN-${Date.now()}`;
+    const transactionReferenceResult = await client.query(`
+      SELECT 'GOV-TXN-' || LPAD(nextval('blockchain.gov_txn_reference_seq')::TEXT, 6, '0') AS transaction_reference
+    `);
+
+    const transactionReference = transactionReferenceResult.rows[0].transaction_reference;
 
     const documentHash =
       transaction.documentHash ||

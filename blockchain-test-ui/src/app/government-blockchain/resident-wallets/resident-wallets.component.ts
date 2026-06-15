@@ -44,7 +44,7 @@ interface ResidentWalletApiResponse {
   styleUrl: './resident-wallets.component.scss'
 })
 export class ResidentWalletsComponent implements OnInit {
-  private readonly apiUrl = '/api/v1/government-blockchain/resident-wallets';
+  private readonly apiUrl = 'http://172.31.13.90:3001/api/v1/government-blockchain/resident-wallets';
 
   filters = {
     walletAddress: '',

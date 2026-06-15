@@ -1,6 +1,6 @@
 export const environment = {
   production: false,
-  apiBaseUrl: '/api/v1',
+  apiBaseUrl: 'http://172.31.13.90:3001/api/v1',
 
   /**
    * Backend protected service key.

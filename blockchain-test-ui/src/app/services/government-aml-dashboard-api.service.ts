@@ -35,7 +35,7 @@ export interface AmlDashboardCharts {
   providedIn: 'root'
 })
 export class GovernmentAmlDashboardApiService {
-  private readonly baseUrl = '/api/v1/government-blockchain/aml-dashboard';
+  private readonly baseUrl = 'http://172.31.13.90:3001/api/v1/government-blockchain/aml-dashboard';
 
   constructor(private readonly http: HttpClient) {}
 

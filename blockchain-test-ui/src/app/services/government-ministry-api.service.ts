@@ -84,7 +84,7 @@ export interface MinistryLoginPayload {
 export class GovernmentMinistryApiService {
   private readonly http = inject(HttpClient);
 
-  private readonly baseUrl = '/api/v1/government-blockchain/ministries';
+  private readonly baseUrl = 'http://172.31.13.90:3001/api/v1/government-blockchain/ministries';
 
   createMinistryAccount(
     payload: CreateMinistryAccountPayload

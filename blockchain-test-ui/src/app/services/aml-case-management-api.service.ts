@@ -100,7 +100,7 @@ export interface AmlCaseFilters {
   providedIn: 'root'
 })
 export class AmlCaseManagementApiService {
-  private readonly baseUrl = '/api/v1/government-blockchain/aml-cases';
+  private readonly baseUrl = 'http://172.31.13.90:3001/api/v1/government-blockchain/aml-cases';
 
   constructor(private http: HttpClient) {}
 

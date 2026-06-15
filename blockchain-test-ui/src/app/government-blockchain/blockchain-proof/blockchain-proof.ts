@@ -156,7 +156,7 @@ export class BlockchainProof implements OnInit {
 
     const documentId = encodeURIComponent(proof.couchDbDocumentId);
     const database = encodeURIComponent(this.couchDbDatabase);
-    const url = `/api/v1/couchdb/${database}/documents/${documentId}`;
+    const url = `http://172.31.13.90:3001/api/v1/couchdb/${database}/documents/${documentId}`;
 
     window.open(url, '_blank', 'noopener,noreferrer');
   }

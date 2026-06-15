@@ -37,7 +37,7 @@ export class PaymentsDigitalStampsComponent implements OnInit {
    * Use relative API path so Angular proxy.conf.json handles backend calls.
    * This avoids CORS issues if Angular runs on 4200 or another fallback port.
    */
-  private apiUrl = '/api/v1/government-blockchain/payments-digital-stamps';
+  private apiUrl = 'http://172.31.13.90:3001/api/v1/government-blockchain/payments-digital-stamps';
 
   loading = false;
   loadingDropdowns = false;

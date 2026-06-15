@@ -68,7 +68,7 @@ export interface AmlAlertActionResponse {
   providedIn: 'root'
 })
 export class GovernmentAmlAlertsQueueApiService {
-  private readonly baseUrl = '/api/v1/government-blockchain/aml-alerts-queue';
+  private readonly baseUrl = 'http://172.31.13.90:3001/api/v1/government-blockchain/aml-alerts-queue';
 
   constructor(private readonly http: HttpClient) {}
 

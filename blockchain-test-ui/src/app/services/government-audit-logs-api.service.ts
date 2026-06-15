@@ -67,7 +67,7 @@ export interface GovernmentAuditLogsFilters {
   providedIn: 'root'
 })
 export class GovernmentAuditLogsApiService {
-  private readonly apiUrl = '/api/v1/government-blockchain/audit-logs';
+  private readonly apiUrl = 'http://172.31.13.90:3001/api/v1/government-blockchain/audit-logs';
 
   constructor(private readonly http: HttpClient) {}
 

@@ -141,6 +141,7 @@ export class NewTransactionComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.loadNextTransactionReference();
     this.loadResidents();
     this.loadServices();
     this.loadTransactionStatuses();
@@ -153,7 +154,7 @@ export class NewTransactionComponent implements OnInit {
 
   loadResidents(): void {
     this.governmentTransactionApi.getResidentsDropdown().subscribe({
-      next: (response) => {
+      next: (response: any) => {
         const rows = response?.data || [];
 
         this.residents = rows.map((row: any) => ({
@@ -178,7 +179,7 @@ export class NewTransactionComponent implements OnInit {
 
   loadServices(): void {
     this.governmentTransactionApi.getServices().subscribe({
-      next: (response) => {
+      next: (response: any) => {
         const rows = response?.data || [];
 
         this.services = rows.map((row: any) => ({
@@ -207,7 +208,7 @@ export class NewTransactionComponent implements OnInit {
 
   loadTransactionStatuses(): void {
     this.governmentTransactionApi.getTransactionStatuses().subscribe({
-      next: (response) => {
+      next: (response: any) => {
         this.transactionStatuses = response?.data || [];
       },
       error: (error) => {
@@ -219,7 +220,7 @@ export class NewTransactionComponent implements OnInit {
 
   loadPaymentMethods(): void {
     this.governmentTransactionApi.getPaymentMethods().subscribe({
-      next: (response) => {
+      next: (response: any) => {
         this.paymentMethods = response?.data || [];
       },
       error: (error) => {
@@ -374,6 +375,25 @@ export class NewTransactionComponent implements OnInit {
     };
   }
 
+
+  loadNextTransactionReference(): void {
+    this.governmentTransactionApi.getNextTransactionReference().subscribe({
+      next: (response: any) => {
+        const nextReference = response?.data?.transactionReference;
+        if (nextReference) {
+          this.transactionForm.patchValue({
+            transactionId: nextReference
+          });
+        }
+      },
+      error: () => {
+        this.transactionForm.patchValue({
+          transactionId: 'Auto-generated on submit'
+        });
+      }
+    });
+  }
+
   submitTransaction(): void {
     this.successMessage = '';
     this.errorMessage = '';
@@ -456,7 +476,7 @@ export class NewTransactionComponent implements OnInit {
     this.isSubmitting = true;
 
     this.governmentTransactionApi.createTransaction(payload).subscribe({
-      next: (response) => {
+      next: (response: any) => {
         this.isSubmitting = false;
 
         this.successMessage =
@@ -571,7 +591,7 @@ export class NewTransactionComponent implements OnInit {
     this.isUploadingDocument = true;
 
     this.governmentTransactionApi.uploadKycDocument(formData).subscribe({
-      next: (response) => {
+      next: (response: any) => {
         this.isUploadingDocument = false;
 
         const row = response?.data || {};
@@ -731,7 +751,7 @@ export class NewTransactionComponent implements OnInit {
   }
 
   generateTransactionId(): string {
-    return `GOV-TXN-${Date.now()}`;
+    return `Pending sequence...`;
   }
 
   isInvalid(controlName: string): boolean {

@@ -46,7 +46,7 @@ export interface WalletStatus {
 export class GovernmentBlockchainReferenceApiService {
   private readonly http = inject(HttpClient);
 
-  private readonly baseUrl = '/api/v1/government-blockchain/reference';
+  private readonly baseUrl = 'http://172.31.13.90:3001/api/v1/government-blockchain/reference';
 
   getCountries(): Observable<ApiResponse<GovernmentCountry[]>> {
     return this.http.get<ApiResponse<GovernmentCountry[]>>(

@@ -39,7 +39,7 @@ interface ApprovalTransaction {
 export class ApprovalQueue implements OnInit {
   private readonly API_BASE = 'http://172.31.13.90:3001/api/v1';
   private readonly APPROVAL_QUEUE_URL =
-    `${this.API_BASE}/government-blockchain/approval-queue`;
+    `${this.API_BASE}/government-blockchain/approval-queue/transactions`;
 
   loading = signal(false);
   errorMessage = signal('');
@@ -256,7 +256,7 @@ export class ApprovalQueue implements OnInit {
     this.approvingIds.update((state) => ({ ...state, [tx.id]: true }));
 
     this.http
-      .post<any>(`${this.APPROVAL_QUEUE_URL}/${encodeURIComponent(tx.id)}/approve`, {
+      .patch<any>(`${this.APPROVAL_QUEUE_URL}/${encodeURIComponent(tx.id)}/approve`, {
         approvedBy: 'approval-officer',
         officerUsername: 'approval-officer',
       })
@@ -317,7 +317,7 @@ export class ApprovalQueue implements OnInit {
     this.rejectingIds.update((state) => ({ ...state, [tx.id]: true }));
 
     this.http
-      .post<any>(`${this.APPROVAL_QUEUE_URL}/${encodeURIComponent(tx.id)}/reject`, {
+      .patch<any>(`${this.APPROVAL_QUEUE_URL}/${encodeURIComponent(tx.id)}/reject`, {
         reason: reason || 'Rejected by approval officer',
       })
       .subscribe({
@@ -378,7 +378,7 @@ export class ApprovalQueue implements OnInit {
     this.approvingIds.update((state) => ({ ...state, [tx.id]: true }));
 
     this.http
-      .post<any>(`${this.APPROVAL_QUEUE_URL}/${encodeURIComponent(tx.id)}/approve`, {
+      .patch<any>(`${this.APPROVAL_QUEUE_URL}/${encodeURIComponent(tx.id)}/approve`, {
         approvedBy: 'approval-officer',
         officerUsername: 'approval-officer',
       })

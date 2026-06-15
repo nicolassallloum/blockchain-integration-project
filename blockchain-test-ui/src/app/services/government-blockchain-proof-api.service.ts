@@ -48,7 +48,7 @@ export interface BlockchainProofResponse {
   providedIn: 'root'
 })
 export class GovernmentBlockchainProofApiService {
-  private readonly baseUrl = '/api/v1/government-blockchain/blockchain-proofs';
+  private readonly baseUrl = 'http://172.31.13.90:3001/api/v1/government-blockchain/blockchain-proofs';
 
   constructor(private readonly http: HttpClient) {}
 

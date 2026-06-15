@@ -74,7 +74,7 @@ export interface GenerateGovernmentReportRequest {
   providedIn: 'root'
 })
 export class GovernmentReportsApiService {
-  private readonly baseUrl = '/api/v1/government-blockchain/reports';
+  private readonly baseUrl = 'http://172.31.13.90:3001/api/v1/government-blockchain/reports';
 
   constructor(private readonly http: HttpClient) {}
 

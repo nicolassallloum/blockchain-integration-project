@@ -110,41 +110,27 @@ export class AmlAlertsQueue implements OnInit {
       return;
     }
 
-    this.isSaving = true;
-    this.savingAction = 'review';
+    const alertId = alert.alertId;
+    const notes = this.notes;
+
+    this.successMessage = 'Review request submitted. Refreshing queue...';
     this.errorMessage = '';
-    this.successMessage = '';
+    this.closeDetails();
 
-    this.startActionSafetyTimer('Review request sent. Queue refreshed automatically.');
-
-    this.amlAlertsQueueApi
-      .markAsReviewed(alert.alertId, this.notes, this.officerName)
-      .pipe(
-        timeout(15000),
-        finalize(() => {
-          this.isSaving = false;
-          this.savingAction = null;
-        })
-      )
-      .subscribe({
-        next: (response) => {
-          this.successMessage = response.message || 'AML alert marked as reviewed successfully.';
-          this.closeDetails();
-          this.loadAlerts();
-        },
-        error: (error) => {
-          console.error('Failed to mark AML alert as reviewed:', error);
-          this.errorMessage =
-            error?.name === 'TimeoutError'
-              ? 'The review request timed out in the browser. The queue was refreshed to confirm the latest status.'
-              : error?.error?.message ||
-                error?.message ||
-                'Failed to mark AML alert as reviewed.';
-
-          this.closeDetails();
-          this.loadAlerts();
-        }
-      });
+    this.amlAlertsQueueApi.markAsReviewed(alertId, notes, this.officerName).subscribe({
+      next: (response) => {
+        this.successMessage = response.message || 'AML alert marked as reviewed successfully.';
+        this.loadAlerts();
+      },
+      error: (error) => {
+        console.error('Failed to mark AML alert as reviewed:', error);
+        this.errorMessage =
+          error?.error?.message ||
+          error?.message ||
+          'Failed to mark AML alert as reviewed.';
+        this.loadAlerts();
+      }
+    });
   }
 
   closeAlert(alert: AmlAlertQueueItem | null = this.selectedAlert): void {
@@ -152,41 +138,27 @@ export class AmlAlertsQueue implements OnInit {
       return;
     }
 
-    this.isSaving = true;
-    this.savingAction = 'close';
+    const alertId = alert.alertId;
+    const notes = this.notes;
+
+    this.successMessage = 'Close request submitted. Refreshing queue...';
     this.errorMessage = '';
-    this.successMessage = '';
+    this.closeDetails();
 
-    this.startActionSafetyTimer('Close request sent. Queue refreshed automatically.');
-
-    this.amlAlertsQueueApi
-      .closeAlert(alert.alertId, this.notes, this.officerName)
-      .pipe(
-        timeout(15000),
-        finalize(() => {
-          this.isSaving = false;
-          this.savingAction = null;
-        })
-      )
-      .subscribe({
-        next: (response) => {
-          this.successMessage = response.message || 'AML alert closed successfully.';
-          this.closeDetails();
-          this.loadAlerts();
-        },
-        error: (error) => {
-          console.error('Failed to close AML alert:', error);
-          this.errorMessage =
-            error?.name === 'TimeoutError'
-              ? 'The close request timed out in the browser. The queue was refreshed to confirm the latest status.'
-              : error?.error?.message ||
-                error?.message ||
-                'Failed to close AML alert.';
-
-          this.closeDetails();
-          this.loadAlerts();
-        }
-      });
+    this.amlAlertsQueueApi.closeAlert(alertId, notes, this.officerName).subscribe({
+      next: (response) => {
+        this.successMessage = response.message || 'AML alert closed successfully.';
+        this.loadAlerts();
+      },
+      error: (error) => {
+        console.error('Failed to close AML alert:', error);
+        this.errorMessage =
+          error?.error?.message ||
+          error?.message ||
+          'Failed to close AML alert.';
+        this.loadAlerts();
+      }
+    });
   }
 
   getRiskClass(riskLevel: string): string {

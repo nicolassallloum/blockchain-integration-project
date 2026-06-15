@@ -12,7 +12,7 @@ export interface ApiResponse<T> {
   providedIn: 'root'
 })
 export class GovernmentDashboardService {
-  private readonly baseUrl = '/api/v1/government-blockchain/dashboard';
+  private readonly baseUrl = 'http://172.31.13.90:3001/api/v1/government-blockchain/dashboard';
 
   constructor(private http: HttpClient) {}
 
