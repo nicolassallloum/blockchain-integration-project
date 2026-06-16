@@ -44,7 +44,7 @@ router.post('/customers', async (req, res) => {
       sourceSystem: 'VALOORES',
       entityType: 'CUSTOMER',
       operationType: 'CREATE_CUSTOMER',
-      ledgerKey: `RESIDENT_${fabricResidentId}`,
+      ledgerKey: `KYC_${fabricResidentId}`,
       customer: {
         customerName,
         customerType,
@@ -210,7 +210,7 @@ router.post('/customers', async (req, res) => {
         tinNumber,
         vatNumber,
         fabricResidentId,
-        ledgerKey: `RESIDENT_${fabricResidentId}`,
+        ledgerKey: `KYC_${fabricResidentId}`,
         blockchainStatus: fabricStatus,
         blockchainTransactionId: fabricTransactionId,
         blockchainHash: payloadHash,

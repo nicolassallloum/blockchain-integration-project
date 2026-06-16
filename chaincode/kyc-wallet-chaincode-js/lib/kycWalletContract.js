@@ -126,7 +126,7 @@ class KycWalletContract extends Contract {
             throw new Error('residentId is required');
         }
 
-        const key = `RESIDENT_${resident.residentId}`;
+        const key = `KYC_${resident.residentId}`;
         const exists = await ctx.stub.getState(key);
 
         if (exists && exists.length > 0) {
