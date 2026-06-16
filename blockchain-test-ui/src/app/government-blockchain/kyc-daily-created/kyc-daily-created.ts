@@ -39,7 +39,7 @@ export class KycDailyCreatedComponent implements OnInit {
 
   rows: KycDailyRow[] = [];
 
-  private readonly apiUrl = 'http://172.31.13.90:3001/api/v1/valoores-blockchain/kyc-daily-created';
+  private readonly apiUrl = '/api/v1/valoores-blockchain/kyc-daily-created';
 
   constructor(private http: HttpClient) {}
 
@@ -53,7 +53,13 @@ export class KycDailyCreatedComponent implements OnInit {
 
     this.http.get<any>(`${this.apiUrl}?month=${this.selectedMonth}`).subscribe({
       next: (res) => {
-        this.summary = res?.data?.summary || this.summary;
+        this.summary = res?.data?.summary || {
+          total_kyc_created: 0,
+          confirmed_kyc: 0,
+          failed_kyc: 0,
+          pending_kyc: 0
+        };
+
         this.rows = res?.data?.daily || [];
         this.loading = false;
       },
@@ -65,15 +71,20 @@ export class KycDailyCreatedComponent implements OnInit {
   }
 
   formatDate(value: string): string {
-    return new Date(value).toISOString().slice(0, 10);
+    if (!value) {
+      return '';
+    }
+
+    return String(value).slice(0, 10);
   }
 
   getMaxTotal(): number {
-    return Math.max(...this.rows.map(row => row.total_kyc_created), 1);
+    const values = this.rows.map(row => Number(row.total_kyc_created || 0));
+    return Math.max(...values, 1);
   }
 
   getBarWidth(value: number): string {
-    const percent = Math.round((value / this.getMaxTotal()) * 100);
+    const percent = Math.round((Number(value || 0) / this.getMaxTotal()) * 100);
     return `${percent}%`;
   }
 }

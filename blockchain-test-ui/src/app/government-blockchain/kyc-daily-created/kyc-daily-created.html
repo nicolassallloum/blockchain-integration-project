@@ -1,0 +1,87 @@
+<div class="kyc-page">
+  <div class="page-header">
+    <div>
+      <h1>KYC Daily Created</h1>
+      <p>Display number of KYC records created on a daily basis by selected month.</p>
+    </div>
+
+    <div class="month-filter">
+      <div>
+        <label>Month</label>
+        <input type="month" [(ngModel)]="selectedMonth" />
+      </div>
+
+      <button type="button" (click)="loadReport()">Search</button>
+    </div>
+  </div>
+
+  <div class="summary-grid">
+    <div class="summary-card">
+      <span>Total KYC Created</span>
+      <strong>{{ summary.total_kyc_created || 0 }}</strong>
+    </div>
+
+    <div class="summary-card success">
+      <span>Confirmed</span>
+      <strong>{{ summary.confirmed_kyc || 0 }}</strong>
+    </div>
+
+    <div class="summary-card danger">
+      <span>Failed</span>
+      <strong>{{ summary.failed_kyc || 0 }}</strong>
+    </div>
+
+    <div class="summary-card warning">
+      <span>Pending</span>
+      <strong>{{ summary.pending_kyc || 0 }}</strong>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="state-card">
+    Loading KYC daily created report...
+  </div>
+
+  <div *ngIf="errorMessage && !loading" class="state-card error">
+    {{ errorMessage }}
+  </div>
+
+  <div class="report-card" *ngIf="!loading && !errorMessage">
+    <div class="table-header">
+      <h2>Daily KYC Created — {{ selectedMonth }}</h2>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Total Created</th>
+          <th>Confirmed</th>
+          <th>Failed</th>
+          <th>Pending</th>
+          <th>Visual</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let row of rows">
+          <td>{{ formatDate(row.kyc_date) }}</td>
+          <td>{{ row.total_kyc_created }}</td>
+          <td>{{ row.confirmed_kyc }}</td>
+          <td>{{ row.failed_kyc }}</td>
+          <td>{{ row.pending_kyc }}</td>
+          <td>
+            <div class="bar-track">
+              <div class="bar-fill" [style.width]="getBarWidth(row.total_kyc_created)">
+                <span *ngIf="row.total_kyc_created > 0">{{ row.total_kyc_created }}</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div *ngIf="rows.length === 0" class="empty">
+      No KYC records found for this month.
+    </div>
+  </div>
+</div>

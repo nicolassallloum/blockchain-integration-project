@@ -137,6 +137,12 @@ export class App {
       group: 'Government Blockchain'
     },
     {
+      label: 'KYC Daily Created',
+      route: '/government-blockchain/kyc-daily-created',
+      icon: '📊',
+      group: 'Government Blockchain'
+    },
+    {
       label: 'AML Dashboard',
       route: '/government-blockchain/aml-dashboard',
       icon: '●',

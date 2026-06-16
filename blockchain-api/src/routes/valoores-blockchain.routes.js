@@ -21,16 +21,48 @@ function sha256(value) {
 router.post('/customers', async (req, res) => {
   try {
     const requestBody = req.body || {};
-    const formData = requestBody.formData || {};
 
-    const customerId = requestBody.customer_id || requestBody.customerId || formData.customer_id || formData.customerId || null;
-    const sessionId = requestBody.session_id || requestBody.sessionId || formData.session_id || formData.sessionId || null;
+    const formData =
+      requestBody.formData ||
+      requestBody.form_data ||
+      requestBody.customer_payload?.formData ||
+      requestBody.customerPayload?.formData ||
+      {};
+
+    const customerId =
+      requestBody.customer_id ||
+      requestBody.customerId ||
+      formData.customer_id ||
+      formData.customerId ||
+      null;
+
+    const sessionId =
+      requestBody.session_id ||
+      requestBody.sessionId ||
+      formData.session_id ||
+      formData.sessionId ||
+      null;
 
     const customerName = formData.CUSTOMER_NAME || null;
     const customerType = formData.CUSTOMER_TYPE || null;
     const branchCode = formData.BRANCH || null;
-    const tinNumber = formData.TIN_NUMBER || null;
+    // const tinNumber = formData.TIN_NUMBER || null;
     const vatNumber = formData.VAT_NUMBER || null;
+
+    if (!customerId) {
+      return res.status(400).json({
+        success: false,
+        message: 'customer_id is required'
+      });
+    }
+
+    if (!customerName) {
+      return res.status(400).json({
+        success: false,
+        message: 'formData.CUSTOMER_NAME is required'
+      });
+    }
+
 
     let selfieFileName = null;
     let selfieHash = null;
@@ -42,7 +74,7 @@ router.post('/customers', async (req, res) => {
       selfieHash = sha256(selfieBase64);
     }
 
-    const fabricResidentId = `VALOORES-${customerId || tinNumber || Date.now()}`;
+    const fabricResidentId = `VALOORES-${customerId}`;
 
     const blockchainPayload = {
       sourceSystem: 'VALOORES',
@@ -55,7 +87,6 @@ router.post('/customers', async (req, res) => {
         sessionId,
         customerType,
         branch: branchCode,
-        tinNumber,
         vatNumber,
         street: formData.STREET || null,
         building: formData.BUILDING || null,
@@ -81,7 +112,6 @@ router.post('/customers', async (req, res) => {
         valoores_session_id,
         customer_type,
         branch_code,
-        tin_number,
         vat_number,
         customer_payload,
         selfie_file_name,
@@ -90,7 +120,7 @@ router.post('/customers', async (req, res) => {
         blockchain_hash,
         created_by
       )
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
       RETURNING *
       `,
       [
@@ -99,7 +129,6 @@ router.post('/customers', async (req, res) => {
         sessionId,
         customerType,
         branchCode,
-        tinNumber,
         vatNumber,
         blockchainPayload,
         selfieFileName,
@@ -130,10 +159,10 @@ router.post('/customers', async (req, res) => {
       dateOfBirth: '',
       gender: '',
       nationality: String(formData.TAX_COUNTRY || ''),
-      nationalIdNumber: String(tinNumber || ''),
+      nationalIdNumber: '',
       passportNumber: '',
       residencyPermitNumber: '',
-      taxNumber: String(vatNumber || tinNumber || ''),
+      taxNumber: String(vatNumber || ''),
       mobileNumber: '',
       email: '',
       governorate: '',
@@ -169,7 +198,7 @@ router.post('/customers', async (req, res) => {
         [JSON.stringify(residentPayload)],
         {
           requestId: `VALOORES-CUSTOMER-${proofId}`,
-          correlationId: `VALOORES-${customerId || tinNumber || proofId}`,
+          correlationId: `VALOORES-${customerId || proofId}`,
           sourceSystem: 'VALOORES',
           requestSource: 'SPRINGBOOT',
           createdBy: 'SPRINGBOOT'
@@ -219,7 +248,6 @@ router.post('/customers', async (req, res) => {
         sessionId,
         customerType,
         branchCode,
-        tinNumber,
         vatNumber,
         fabricResidentId,
         ledgerKey: `KYC_${fabricResidentId}`,
@@ -256,7 +284,6 @@ router.get('/customers', async (req, res) => {
         valoores_session_id,
         customer_type,
         branch_code,
-        tin_number,
         vat_number,
         selfie_file_name,
         selfie_hash,
@@ -362,7 +389,7 @@ router.get('/kyc-daily-created', async (req, res) => {
         GROUP BY created_at::date
       )
       SELECT
-        md.kyc_date,
+        to_char(md.kyc_date, 'YYYY-MM-DD') AS kyc_date,
         COALESCE(dc.total_kyc_created, 0)::int AS total_kyc_created,
         COALESCE(dc.confirmed_kyc, 0)::int AS confirmed_kyc,
         COALESCE(dc.failed_kyc, 0)::int AS failed_kyc,
