@@ -1,8 +1,18 @@
 const express = require('express');
 const crypto = require('crypto');
 const pool = require('../config/database');
+const fabricService = require('../services/fabric.service');
 
 const router = express.Router();
+
+
+function toSafeJson(value) {
+  return JSON.parse(
+    JSON.stringify(value, (_, item) =>
+      typeof item === 'bigint' ? item.toString() : item
+    )
+  );
+}
 
 function sha256(value) {
   return crypto.createHash('sha256').update(value || '').digest('hex');
@@ -22,16 +32,19 @@ router.post('/customers', async (req, res) => {
     let selfieHash = null;
 
     if (formData.UPLOAD_SELFIE) {
-      const selfieParts = formData.UPLOAD_SELFIE.split(',');
+      const selfieParts = String(formData.UPLOAD_SELFIE).split(',');
       selfieFileName = selfieParts[0] || null;
       const selfieBase64 = selfieParts.slice(1).join(',');
       selfieHash = sha256(selfieBase64);
     }
 
+    const fabricResidentId = `VALOORES-${tinNumber || Date.now()}`;
+
     const blockchainPayload = {
       sourceSystem: 'VALOORES',
       entityType: 'CUSTOMER',
       operationType: 'CREATE_CUSTOMER',
+      ledgerKey: `RESIDENT_${fabricResidentId}`,
       customer: {
         customerName,
         customerType,
@@ -81,25 +94,128 @@ router.post('/customers', async (req, res) => {
         blockchainPayload,
         selfieFileName,
         selfieHash,
-        'SAVED',
+        'PENDING',
         payloadHash,
         'SPRINGBOOT'
       ]
     );
 
-    return res.status(201).json({
-      success: true,
-      message: 'Customer saved on Blockchain successfully',
+    const proofId = insertResult.rows[0].id;
+
+    let fabricResult = null;
+    let fabricStatus = 'PENDING';
+    let fabricTransactionId = null;
+    let fabricError = null;
+
+    const nameParts = String(customerName || 'VALOORES CUSTOMER').trim().split(/\s+/);
+
+    const residentPayload = {
+      residentId: fabricResidentId,
+      firstName: nameParts[0] || 'VALOORES',
+      fatherName: '',
+      motherName: '',
+      lastName: nameParts.slice(1).join(' ') || 'CUSTOMER',
+      fullName: customerName || 'VALOORES CUSTOMER',
+      arabicFullName: '',
+      dateOfBirth: '',
+      gender: '',
+      nationality: String(formData.TAX_COUNTRY || ''),
+      nationalIdNumber: String(tinNumber || ''),
+      passportNumber: '',
+      residencyPermitNumber: '',
+      taxNumber: String(vatNumber || tinNumber || ''),
+      mobileNumber: '',
+      email: '',
+      governorate: '',
+      district: '',
+      municipality: '',
+      address: [
+        formData.STREET,
+        formData.BUILDING,
+        formData.FLOOR
+      ].filter(Boolean).join(', '),
+      employmentStatus: '',
+      occupation: String(customerType || ''),
+      monthlyIncome: 0,
+      kycStatus: 'Submitted',
+      riskCategory: 'LOW',
+      walletAddress: '',
+      walletCurrency: 'GOV',
+      walletStatus: 'Not Created',
+
+      // Extra Valoores fields kept inside Fabric record safely.
+      sourceSystem: 'VALOORES',
+      sourceEntityType: 'CUSTOMER',
+      branchCode: String(branchCode || ''),
+      customerType: String(customerType || ''),
+      payloadHash,
+      selfieFileName,
+      selfieHash
+    };
+
+    try {
+      fabricResult = await fabricService.submitTransaction(
+        'CreateResident',
+        [JSON.stringify(residentPayload)],
+        {
+          requestId: `VALOORES-CUSTOMER-${proofId}`,
+          correlationId: `VALOORES-${tinNumber || proofId}`,
+          sourceSystem: 'VALOORES',
+          requestSource: 'SPRINGBOOT',
+          createdBy: 'SPRINGBOOT'
+        }
+      );
+
+      fabricStatus = 'CONFIRMED';
+      fabricTransactionId =
+        fabricResult?.transactionId ||
+        fabricResult?.txId ||
+        fabricResult?.commitStatus?.transactionId ||
+        null;
+    } catch (error) {
+      fabricStatus = 'FAILED';
+      fabricError = error.message;
+      console.error('Valoores customer Fabric submit error:', error);
+    }
+
+    await pool.query(
+      `
+      UPDATE blockchain.valoores_customer_blockchain_proofs
+      SET
+        blockchain_status = $1,
+        blockchain_transaction_id = $2,
+        blockchain_error = $3,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = $4
+      `,
+      [
+        fabricStatus,
+        fabricTransactionId,
+        fabricError,
+        proofId
+      ]
+    );
+
+    return res.status(fabricStatus === 'CONFIRMED' ? 201 : 202).json({
+      success: fabricStatus === 'CONFIRMED',
+      message:
+        fabricStatus === 'CONFIRMED'
+          ? 'Customer saved on PostgreSQL and Fabric Blockchain successfully'
+          : 'Customer saved on PostgreSQL but Fabric Blockchain submit failed',
       data: {
-        proofId: insertResult.rows[0].id,
+        proofId,
         customerName,
         customerType,
         branchCode,
         tinNumber,
         vatNumber,
-        blockchainStatus: 'SAVED',
-        blockchainTransactionId: `BC-CUST-${insertResult.rows[0].id}`,
-        blockchainHash: payloadHash
+        fabricResidentId,
+        ledgerKey: `RESIDENT_${fabricResidentId}`,
+        blockchainStatus: fabricStatus,
+        blockchainTransactionId: fabricTransactionId,
+        blockchainHash: payloadHash,
+        blockchainError: fabricError,
+        fabricResult: fabricResult ? toSafeJson(fabricResult) : null
       }
     });
 
