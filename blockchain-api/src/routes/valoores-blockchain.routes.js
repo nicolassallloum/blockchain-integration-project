@@ -20,7 +20,11 @@ function sha256(value) {
 
 router.post('/customers', async (req, res) => {
   try {
-    const formData = req.body.formData || {};
+    const requestBody = req.body || {};
+    const formData = requestBody.formData || {};
+
+    const customerId = requestBody.customer_id || requestBody.customerId || formData.customer_id || formData.customerId || null;
+    const sessionId = requestBody.session_id || requestBody.sessionId || formData.session_id || formData.sessionId || null;
 
     const customerName = formData.CUSTOMER_NAME || null;
     const customerType = formData.CUSTOMER_TYPE || null;
@@ -38,7 +42,7 @@ router.post('/customers', async (req, res) => {
       selfieHash = sha256(selfieBase64);
     }
 
-    const fabricResidentId = `VALOORES-${tinNumber || Date.now()}`;
+    const fabricResidentId = `VALOORES-${customerId || tinNumber || Date.now()}`;
 
     const blockchainPayload = {
       sourceSystem: 'VALOORES',
@@ -47,6 +51,8 @@ router.post('/customers', async (req, res) => {
       ledgerKey: `KYC_${fabricResidentId}`,
       customer: {
         customerName,
+        customerId,
+        sessionId,
         customerType,
         branch: branchCode,
         tinNumber,
@@ -71,6 +77,8 @@ router.post('/customers', async (req, res) => {
       `
       INSERT INTO blockchain.valoores_customer_blockchain_proofs (
         customer_name,
+        valoores_customer_id,
+        valoores_session_id,
         customer_type,
         branch_code,
         tin_number,
@@ -82,11 +90,13 @@ router.post('/customers', async (req, res) => {
         blockchain_hash,
         created_by
       )
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
       RETURNING *
       `,
       [
         customerName,
+        customerId,
+        sessionId,
         customerType,
         branchCode,
         tinNumber,
@@ -159,7 +169,7 @@ router.post('/customers', async (req, res) => {
         [JSON.stringify(residentPayload)],
         {
           requestId: `VALOORES-CUSTOMER-${proofId}`,
-          correlationId: `VALOORES-${tinNumber || proofId}`,
+          correlationId: `VALOORES-${customerId || tinNumber || proofId}`,
           sourceSystem: 'VALOORES',
           requestSource: 'SPRINGBOOT',
           createdBy: 'SPRINGBOOT'
@@ -205,6 +215,8 @@ router.post('/customers', async (req, res) => {
       data: {
         proofId,
         customerName,
+        customerId,
+        sessionId,
         customerType,
         branchCode,
         tinNumber,
@@ -240,6 +252,8 @@ router.get('/customers', async (req, res) => {
         entity_type,
         operation_type,
         customer_name,
+        valoores_customer_id,
+        valoores_session_id,
         customer_type,
         branch_code,
         tin_number,
@@ -305,5 +319,93 @@ router.get('/dashboard', async (req, res) => {
     });
   }
 });
+
+
+/**
+ * GET /api/v1/valoores-blockchain/kyc-daily-created?month=2026-06
+ *
+ * Purpose:
+ * Display number of KYC records created on a daily basis by selected month.
+ */
+router.get('/kyc-daily-created', async (req, res) => {
+  try {
+    const month = req.query.month || new Date().toISOString().slice(0, 7);
+
+    if (!/^\d{4}-\d{2}$/.test(month)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid month format. Use YYYY-MM, example: 2026-06'
+      });
+    }
+
+    const dateFrom = `${month}-01`;
+
+    const result = await pool.query(
+      `
+      WITH month_days AS (
+        SELECT generate_series(
+          date_trunc('month', $1::date),
+          date_trunc('month', $1::date) + interval '1 month' - interval '1 day',
+          interval '1 day'
+        )::date AS kyc_date
+      ),
+      daily_counts AS (
+        SELECT
+          created_at::date AS kyc_date,
+          COUNT(*)::int AS total_kyc_created,
+          COUNT(*) FILTER (WHERE blockchain_status = 'CONFIRMED')::int AS confirmed_kyc,
+          COUNT(*) FILTER (WHERE blockchain_status = 'FAILED')::int AS failed_kyc,
+          COUNT(*) FILTER (WHERE blockchain_status = 'PENDING')::int AS pending_kyc
+        FROM blockchain.valoores_customer_blockchain_proofs
+        WHERE created_at >= date_trunc('month', $1::date)
+          AND created_at < date_trunc('month', $1::date) + interval '1 month'
+        GROUP BY created_at::date
+      )
+      SELECT
+        md.kyc_date,
+        COALESCE(dc.total_kyc_created, 0)::int AS total_kyc_created,
+        COALESCE(dc.confirmed_kyc, 0)::int AS confirmed_kyc,
+        COALESCE(dc.failed_kyc, 0)::int AS failed_kyc,
+        COALESCE(dc.pending_kyc, 0)::int AS pending_kyc
+      FROM month_days md
+      LEFT JOIN daily_counts dc ON dc.kyc_date = md.kyc_date
+      ORDER BY md.kyc_date;
+      `,
+      [dateFrom]
+    );
+
+    const summaryResult = await pool.query(
+      `
+      SELECT
+        COUNT(*)::int AS total_kyc_created,
+        COUNT(*) FILTER (WHERE blockchain_status = 'CONFIRMED')::int AS confirmed_kyc,
+        COUNT(*) FILTER (WHERE blockchain_status = 'FAILED')::int AS failed_kyc,
+        COUNT(*) FILTER (WHERE blockchain_status = 'PENDING')::int AS pending_kyc
+      FROM blockchain.valoores_customer_blockchain_proofs
+      WHERE created_at >= date_trunc('month', $1::date)
+        AND created_at < date_trunc('month', $1::date) + interval '1 month';
+      `,
+      [dateFrom]
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: 'KYC daily created report retrieved successfully',
+      data: {
+        month,
+        summary: summaryResult.rows[0],
+        daily: result.rows
+      }
+    });
+  } catch (error) {
+    console.error('[VALOORES KYC DAILY CREATED ERROR]', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve KYC daily created report',
+      error: error.message
+    });
+  }
+});
+
 
 module.exports = router;

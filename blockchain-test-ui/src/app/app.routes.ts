@@ -34,6 +34,10 @@ import { Settings } from './government-blockchain/settings/settings';
 import { FabricHistory } from './government-blockchain/fabric-history/fabric-history';
 export const routes: Routes = [
   {
+    path: 'government-blockchain/kyc-daily-created',
+    loadComponent: () => import('./government-blockchain/kyc-daily-created/kyc-daily-created').then(m => m.KycDailyCreatedComponent)
+  },
+  {
     path: '',
     redirectTo: 'government-blockchain/dashboard',
     pathMatch: 'full'
