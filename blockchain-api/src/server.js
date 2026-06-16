@@ -21,6 +21,7 @@ const blockchainProofsRoutes = require('./routes/government-blockchain-proofs.ro
 const governmentSettingsRoutes = require('./routes/government-blockchain/settings.routes');
 const governmentDashboardRoutes = require('./routes/government-dashboard.routes');
 const riskFraudScreeningRoutes = require('./routes/government-risk-fraud-screening.routes');
+const valooresBlockchainRoutes = require('./routes/valoores-blockchain.routes');
 
 const cors = require('cors');
 const crypto = require('crypto');
@@ -79,7 +80,7 @@ const documentsKycCors = cors({
 
 app.use('/api/v1/government-blockchain/documents-kyc', documentsKycCors);
 app.options(/^\/api\/v1\/government-blockchain\/documents-kyc(\/.*)?$/, documentsKycCors);
-
+app.use('/api/v1/valoores-blockchain', valooresBlockchainRoutes);
 app.use('/api/v1/government-blockchain/documents-kyc', documentsKycRoutes);
 
 app.use('/api/v1/government-blockchain/documents', governmentDocumentsRoutes);

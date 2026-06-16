@@ -60,6 +60,8 @@ const corsOptions = {
  * ---------------------------------------------------------
  * Must be FIRST middleware after app creation.
  */
+
+
 app.use((req, res, next) => {
   const origin = req.headers.origin;
 
@@ -128,6 +130,8 @@ app.use(compression());
  * 6. REQUEST ID / CORRELATION ID
  * ---------------------------------------------------------
  */
+
+
 app.use((req, res, next) => {
   const incomingRequestId = req.headers['x-request-id'];
   const generatedRequestId = `REQ_${crypto.randomBytes(12).toString('hex').toUpperCase()}`;
@@ -193,6 +197,8 @@ app.use('/api/v1', routes);
  * ---------------------------------------------------------
  */
 app.use('/api/v1/organizations', organizationRoutes);
+
+
 
 app.use((req, res) => {
   return res.status(404).json({

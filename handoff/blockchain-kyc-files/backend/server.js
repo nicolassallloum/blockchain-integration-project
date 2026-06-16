@@ -259,6 +259,7 @@ const referenceRoutes = safeRoute('./routes/reference.routes', 'reference.routes
 const organizationRoutes = safeRoute('./routes/organization.routes', 'organization.routes');
 const projectViewRoutes = safeRoute('./routes/project-view.routes', 'project-view.routes');
 const dashboardRoutes = safeRoute('./routes/dashboard.routes', 'dashboard.routes');
+const valooresBlockchainRoutes = require('./routes/valoores-blockchain.routes');
 
 /**
  * Optional root API routes aggregator.
@@ -391,6 +392,7 @@ app.use((req, res) => {
     correlationId: req.correlationId || req.requestId
   });
 });
+app.use('/api/v1/valoores-blockchain', valooresBlockchainRoutes);
 
 /**
  * Global error handler.

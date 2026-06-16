@@ -18,6 +18,10 @@
 │                       └── dashboard
 │                           └── dashboard.component.ts
 ├── blockchain-api
+│   ├── backend_after_step19.log
+│   ├── backend_after_step24.log
+│   ├── backend_last_block_fix.log
+│   ├── backend_last_block_fix_v2.log
 │   ├── backups
 │   │   ├── old-api-folder
 │   │   ├── old-bak-files
@@ -2654,9 +2658,7 @@
 │   │   │   ├── php
 │   │   │   │   └── flatted.php
 │   │   │   ├── python
-│   │   │   │   ├── flatted.py
-│   │   │   │   └── __pycache__
-│   │   │   │       └── flatted.cpython-312.pyc
+│   │   │   │   └── flatted.py
 │   │   │   ├── README.md
 │   │   │   └── types
 │   │   │       └── index.d.ts
@@ -12087,6 +12089,10 @@
 │   │   └── organization_wallet_credentials_2026-05-07T13-24-43-711Z.json
 │   ├── package.json
 │   ├── package-lock.json
+│   ├── phase19_backend.log
+│   ├── phase20_backend.log
+│   ├── phase_audit_logs_backend.log
+│   ├── phase_reports_backend.log
 │   ├── postgres_export_20260521_145251
 │   ├── postgres_export_20260521_145318
 │   │   ├── cleanup_and_insert_query_csv_logical_data_FIXED.sql
@@ -12126,6 +12132,7 @@
 │   │   ├── Source_Queries.sql
 │   │   ├── test-fabric-connection.js
 │   │   └── UseFul_Queries.sql
+│   ├── settings_backend.log
 │   ├── sql
 │   │   ├── create-government-dropdown-tables.sql
 │   │   ├── create-wallet-dropdown-tables.sql
@@ -12159,6 +12166,7 @@
 │   │   │   ├── connection-org1.json
 │   │   │   ├── couchdb.config.js
 │   │   │   ├── database.js
+│   │   │   ├── db.js
 │   │   │   ├── env.validator.js
 │   │   │   ├── index.js
 │   │   │   ├── logger.config.js
@@ -12176,7 +12184,15 @@
 │   │   │   ├── fabric.controller.js
 │   │   │   ├── government-blockchain
 │   │   │   │   ├── ministry.controller.js
+│   │   │   │   ├── ministry.controller.js.bak_bulk_csv_final_20260608_111349
+│   │   │   │   ├── ministry.controller.js.bak_bulk_csv_parse_20260608_111013
+│   │   │   │   ├── ministry.controller.js.bak_bulk_csv_safe_20260608_111626
+│   │   │   │   ├── ministry.controller.js.bak_force_gov_20260608_105720
+│   │   │   │   ├── ministry.controller.js.bak_force_gov_final_20260608_110452
 │   │   │   │   └── reference.controller.js
+│   │   │   ├── government-reports.controller.js
+│   │   │   ├── government-transactions.controller.js
+│   │   │   ├── government-transactions.controller.js.bak_phase9_inspect_20260608_134106
 │   │   │   ├── health.controller.js
 │   │   │   ├── organization.controller.js
 │   │   │   ├── project-view.controller.js
@@ -12187,11 +12203,15 @@
 │   │   │   ├── reference.controller.js
 │   │   │   ├── reference.controller.js.bak_org_type_filter
 │   │   │   ├── resident.controller.js
+│   │   │   ├── resident.controller.js.bak_force_gov_resident_20260608_114935
+│   │   │   ├── resident.controller.js.bak_force_gov_resident_20260608_115024
 │   │   │   ├── resident.controller.js.bak_step6_idempotent_sync_20260528_100130
 │   │   │   ├── resident.controller.js.bak_step6_idempotent_sync_20260528_103302
 │   │   │   ├── resident.controller.js.bak_step6_wallet_address_20260527_173352
 │   │   │   ├── resident.controller.js.bak_wallet_password_alias_20260527_170801
 │   │   │   ├── resident-reference.controller.js
+│   │   │   ├── resident-reference.controller.js.bak_district_municipality_fix_20260609_111818
+│   │   │   ├── resident-reference.controller.js.bak_municipality_fix_20260609_111702
 │   │   │   ├── residentWallet.controller.js
 │   │   │   ├── transaction.controller.js
 │   │   │   ├── wallet-auth.controller.js
@@ -12201,6 +12221,8 @@
 │   │   ├── database
 │   │   │   └── postgres.js
 │   │   ├── db
+│   │   │   ├── migrations
+│   │   │   │   └── phase11_transaction_documents.sql
 │   │   │   └── postgres.js
 │   │   ├── index.js
 │   │   ├── logs
@@ -12231,7 +12253,9 @@
 │   │   ├── repositories
 │   │   │   ├── blockchain.repository.js
 │   │   │   ├── enterprise-persistence.repository.js
-│   │   │   └── resident.repository.js
+│   │   │   ├── resident.repository.js
+│   │   │   ├── resident.repository.js.bak_force_gov_resident_20260608_114935
+│   │   │   └── resident.repository.js.bak_force_gov_resident_20260608_115024
 │   │   ├── routes
 │   │   │   ├── auth.routes.js
 │   │   │   ├── blockchain-kyc.routes.js
@@ -12239,22 +12263,64 @@
 │   │   │   ├── couchdb.routes.js
 │   │   │   ├── dashboard.routes.js
 │   │   │   ├── data-generator.routes.js
+│   │   │   ├── documents-kyc.routes.js
+│   │   │   ├── documents-kyc.routes.js.bak_20260605_145252
+│   │   │   ├── documents-kyc.routes.js.bak_final_20260605_161436
+│   │   │   ├── documents-kyc.routes.js.bak_upload_fix_20260605_154816
 │   │   │   ├── fabric.routes.js
+│   │   │   ├── government-account-login.routes.js
+│   │   │   ├── government-account-login.routes.js.bak_add_account_type_20260608_122831
+│   │   │   ├── government-aml-alerts-queue.routes.js
+│   │   │   ├── government-aml-cases.routes.js
+│   │   │   ├── government-aml-dashboard.routes.js
+│   │   │   ├── government-approval-queue.routes.js
+│   │   │   ├── government-audit-logs.routes.js
 │   │   │   ├── government-blockchain
 │   │   │   │   ├── ministry.routes.js
-│   │   │   │   └── reference.routes.js
+│   │   │   │   ├── ministry.routes.js.bak_bulk_multer_20260608_111005
+│   │   │   │   ├── ministry.routes.js.bak_force_gov_20260608_105720
+│   │   │   │   ├── reference.routes.js
+│   │   │   │   ├── settings.routes.js
+│   │   │   │   ├── settings.routes.js.bak_step4_fix_20260610_142613
+│   │   │   │   └── settings.routes.js.bak_step6_audit_fix_20260610_142745
 │   │   │   ├── governmentBlockchainAuth.routes.js
+│   │   │   ├── governmentBlockchainAuth.routes.js.bak_phase5_account_login_inspect_20260608_120955
+│   │   │   ├── government-blockchain-proofs.routes.js
+│   │   │   ├── government-blockchain-proofs.routes.js.bak_missing_summary_20260610_165607
+│   │   │   ├── government-dashboard.routes.js
+│   │   │   ├── government-documents.routes.js
+│   │   │   ├── government-reports.routes.js
+│   │   │   ├── government-reports.routes.js.bak_summary_order_20260610_165607
+│   │   │   ├── government-risk-fraud-screening.routes.js
+│   │   │   ├── government-risk-fraud-screening.routes.js.bak_missing_summary_20260610_165607
 │   │   │   ├── government-services.routes.js
+│   │   │   ├── government-transactions.routes.js
+│   │   │   ├── government-transactions.routes.js.bak_add_ministries_dropdown_20260605_114240
+│   │   │   ├── government-transactions.routes.js.bak_add_post_create_20260604_165335
+│   │   │   ├── government-transactions.routes.js.bak_add_residents_services_20260604_163834
+│   │   │   ├── government-transactions.routes.js.bak_cli_fabric_submit_20260602_140320
+│   │   │   ├── government-transactions.routes.js.bak_db_config_fix_20260604_162316
+│   │   │   ├── government-transactions.routes.js.bak_phase9_sequence_txn_ref_20260612_141831
+│   │   │   ├── government-transactions.routes.js.bak_pool_fix_20260602_111655
+│   │   │   ├── government-transactions.routes.js.bak_safe_dropdown_columns_20260604_164005
+│   │   │   ├── hash-verification.routes.js
 │   │   │   ├── health.routes.js
 │   │   │   ├── index.js
 │   │   │   ├── organization.routes.js
+│   │   │   ├── payments-digital-stamps.routes.js
+│   │   │   ├── payments-digital-stamps.routes.js.bak_fix_post_20260605_141910
+│   │   │   ├── payments-digital-stamps.routes.js.bak_fix_post_20260605_141914
 │   │   │   ├── project-view.routes.js
 │   │   │   ├── publicAdministration.routes.js
 │   │   │   ├── reference.routes.js
 │   │   │   ├── reference.routes.js.bak_org_type_filter
 │   │   │   ├── resident-reference.routes.js
 │   │   │   ├── resident.routes.js
+│   │   │   ├── resident.routes.js.bak_force_gov_resident_20260608_114935
+│   │   │   ├── resident.routes.js.bak_force_gov_resident_20260608_115024
 │   │   │   ├── residentWallet.routes.js
+│   │   │   ├── resident-wallets.routes.js
+│   │   │   ├── resident-wallets.routes.js.bak_20260604_094752
 │   │   │   ├── transaction.routes.js
 │   │   │   ├── transactions.routes.js
 │   │   │   ├── wallet-query.routes.js
@@ -12271,11 +12337,25 @@
 │   │   │   ├── README_REF_CUSTOMER_TRANSACTION_FIX.txt
 │   │   │   └── test-aml-service.js
 │   │   ├── server.js
+│   │   ├── server.js.bak_aml_case_alias_20260610_165607
 │   │   ├── server.js.bak.before_options_fix_20260506_133738
 │   │   ├── server.js.bak.before_organizations_route_20260506_181742
 │   │   ├── server.js.bak.before_organizations_route_20260507_091230
 │   │   ├── server.js.bak.clean_cors_20260506_135957
+│   │   ├── server.js.bak_fix_cors_documents_kyc_20260605_163104
+│   │   ├── server.js.bak_fix_documents_kyc_order_20260605_150346
+│   │   ├── server.js.bak_fix_payments_route_order_20260605_141618
+│   │   ├── server.js.bak_move_payments_route_after_body_20260605_141816
+│   │   ├── server.js.bak_payments_stamps_20260605_141507
+│   │   ├── server.js.bak_phase5_account_login_inspect_20260608_120955
 │   │   ├── server.js.bak_project_viewers_20260514_112226
+│   │   ├── server.js.bak_remove_generic_ministry_20260604_100319
+│   │   ├── server.js.bak_remove_generic_ministry_v2_20260604_100503
+│   │   ├── server.js.bak_reports_step5_20260610_114910
+│   │   ├── server.js.bak_resident_wallets_fix_20260604_094752
+│   │   ├── server.js.bak_settings_mount_fix_20260610_142512
+│   │   ├── server.js.bak_settings_route_20260610_142433
+│   │   ├── server.js.bak_transactions_fix_20260602_105238
 │   │   ├── services
 │   │   │   ├── aml.service.js
 │   │   │   ├── aml.services.js
@@ -12287,10 +12367,17 @@
 │   │   │   ├── database.service.js
 │   │   │   ├── fabricGateway.service.js
 │   │   │   ├── fabric.service.js
+│   │   │   ├── fabric.service.js.bak_endorsement_fix_20260602_135531
+│   │   │   ├── fabric.service.js.bak_force_org1_20260602_143832
+│   │   │   ├── government-dashboard.service.js
+│   │   │   ├── government-dashboard.service.js.bak_last_block_20260610_170012
+│   │   │   ├── government-dashboard.service.js.bak_remove_missing_block_number_20260610_170144
 │   │   │   ├── health.service.js
 │   │   │   ├── organization.service.js
 │   │   │   ├── reference.service.js
 │   │   │   ├── resident.service.js
+│   │   │   ├── resident.service.js.bak_force_gov_resident_20260608_114935
+│   │   │   ├── resident.service.js.bak_force_gov_resident_20260608_115024
 │   │   │   ├── transaction.service.js
 │   │   │   ├── transaction.service.js.bak_balance_after_transfer
 │   │   │   ├── transaction.service.js.bak_customer_to_org_20260514_132823
@@ -12335,6 +12422,36 @@
 │   │       ├── response.util.js
 │   │       ├── token.util.js
 │   │       └── walletAddressGenerator.js
+│   ├── tree.txt
+│   ├── uploads
+│   │   └── kyc-documents
+│   │       ├── 1780659289058_847578504_Nicolas_Salloum_Passport1.jpg
+│   │       ├── 1780659854671_930957433_CamScanner_27-05-2026_12.14.jpg
+│   │       ├── 1780660184892_923382742_CamScanner_27-05-2026_12.14.jpg
+│   │       ├── 1780660192412_442873293_CamScanner_27-05-2026_12.14.jpg
+│   │       ├── 1780660218963_466965427_NIXO_NixTap_Enterprise_Portfolio_NFC_Preview_Platform_Printable_Roadmap.pdf
+│   │       ├── 1780660678280_174662014_CamScanner_27-05-2026_12.14.jpg
+│   │       ├── 1780660981932_713870398_Back.png
+│   │       ├── 1780661974676_345729919_ChatGPT_Image_May_27_2026_12_40_10_PM_1.png
+│   │       ├── 1780663417212_207287533_ChatGPT_Image_May_27_2026_12_40_10_PM_1.png
+│   │       ├── 1780663559370_224231950_icon.png
+│   │       ├── 1780663753069_542474532_icon.png
+│   │       ├── 1780664711012_934269856_icon.png
+│   │       ├── 1780664845448_253151361_icon.png
+│   │       ├── 1780664923540_149487294_ChatGPT_Image_May_27_2026_12_40_10_PM_1.png
+│   │       ├── 1780664962563_574435706_Back.png
+│   │       ├── 1780665044554_50093022_Back.png
+│   │       ├── 1780665477658_546727088_Back.png
+│   │       ├── 1780666463560_478897028_3b7c6448-7648-44fa-b327-afa861362d4d.png
+│   │       ├── 1780915768112_630650142_image_2.png
+│   │       ├── 1780917028942_267832585_image_2.png
+│   │       ├── 1780917523911_70343976_image_2.png
+│   │       ├── 1780919039838_951919522_image_2.png
+│   │       ├── 1780919141840_786833754_image_2.png
+│   │       ├── 1780989990984_10bad5723c9211ff_valoores-postgresql-blockchain.png
+│   │       ├── 1780990016129_5ea073819e9e9736_image_2_1.png
+│   │       ├── 1781179451840_d692172aa586e6a6_image_2_3.png
+│   │       └── 1781504119369_b7d508113742f72f_image_2_5.png
 │   ├── utils
 │   │   └── walletAddressGenerator.js
 │   └── wallet
@@ -12344,7 +12461,6 @@
 ├── blockchain-kyc-files-for-chatgpt.tar.gz
 ├── blockchain-test-ui
 │   ├── angular.json
-│   ├── angular.json.bak_budget_fix_20260527_162244
 │   ├── backups
 │   │   ├── before-wallet-information-fix-20260508_153504
 │   │   │   └── app
@@ -12493,10 +12609,32 @@
 │   ├── create-step-32-2-bulk-wallet-screens.sh
 │   ├── dist
 │   │   └── blockchain-test-ui
-│   │       └── browser
+│   │       ├── 3rdpartylicenses.txt
+│   │       ├── browser
+│   │       │   ├── assets
+│   │       │   │   └── images
+│   │       │   │       └── valoores-logo.png
+│   │       │   ├── chunk-5QG37CMU.js
+│   │       │   ├── chunk-AAGQ6ZEB.js
+│   │       │   ├── chunk-C3PMFTVS.js
+│   │       │   ├── chunk-DVKN6WUX.js
+│   │       │   ├── chunk-FFEQ7HH2.js
+│   │       │   ├── chunk-KI45EGI7.js
+│   │       │   ├── chunk-PBOSFMQA.js
+│   │       │   ├── chunk-SAAP6CVP.js
+│   │       │   ├── chunk-T3SHV4B4.js
+│   │       │   ├── favicon.ico
+│   │       │   ├── index.html
+│   │       │   ├── main-GGASJ3KV.js
+│   │       │   └── styles-5INURTSO.css
+│   │       └── prerendered-routes.json
 │   ├── export_organization_transfer_backend_files.sh
 │   ├── export_real_organization_transfer_backend_files.sh
+│   ├── frontend_after_step16.log
+│   ├── frontend_after_step8.log
+│   ├── frontend_api_debug.log
 │   ├── Front_End_Files.txt
+│   ├── frontend_proxy_fix.log
 │   ├── frontend_updated_files_excel_row.tsv
 │   ├── node_modules
 │   │   ├── abbrev
@@ -35513,6 +35651,11 @@
 │   ├── organization_transfer_backend_files.txt
 │   ├── package.json
 │   ├── package-lock.json
+│   ├── phase18_frontend_browser_debug.log
+│   ├── phase19_frontend.log
+│   ├── phase20_frontend.log
+│   ├── phase20_frontend_ui_polish.log
+│   ├── phase_reports_frontend.log
 │   ├── proxy.conf.json
 │   ├── public
 │   │   ├── assets
@@ -35522,6 +35665,7 @@
 │   ├── README.md
 │   ├── real_organization_transfer_backend_files.txt
 │   ├── remaining-ui-files.txt
+│   ├── settings_frontend.log
 │   ├── src
 │   │   ├── app
 │   │   │   ├── app.component.css
@@ -35531,14 +35675,19 @@
 │   │   │   ├── app.config.ts
 │   │   │   ├── app.config.ts.bak_project_viewers_20260514_112226
 │   │   │   ├── app.html
+│   │   │   ├── app.html.bak_kyc_menu
+│   │   │   ├── app.html.bak_sidebar_icons_20260610_162334
 │   │   │   ├── app.html.bak_valoores_design_update
 │   │   │   ├── app.html.bak_valoores_reference_design
 │   │   │   ├── app.routes.ts
 │   │   │   ├── app.routes.ts.bak_fix_routes_build
 │   │   │   ├── app.scss
+│   │   │   ├── app.scss.bak_sidebar_icons_20260610_162334
 │   │   │   ├── app.scss.bak_valoores_design_update
 │   │   │   ├── app.scss.bak_valoores_reference_design
 │   │   │   ├── app.ts
+│   │   │   ├── app.ts.bak_kyc_menu
+│   │   │   ├── app.ts.bak_sidebar_icons_20260610_162334
 │   │   │   ├── core
 │   │   │   │   ├── interceptors
 │   │   │   │   │   └── api-auth.interceptor.ts
@@ -35570,15 +35719,26 @@
 │   │   │   │   ├── government-blockchain
 │   │   │   │   │   ├── account-login
 │   │   │   │   │   │   ├── account-login.component.html
+│   │   │   │   │   │   ├── account-login.component.html.bak_add_account_type_20260608_122847
+│   │   │   │   │   │   ├── account-login.component.html.bak_phase5_account_login_inspect_20260608_120955
+│   │   │   │   │   │   ├── account-login.component.html.bak_phase5_wallet_login_20260608_122330
 │   │   │   │   │   │   ├── account-login.component.scss
-│   │   │   │   │   │   └── account-login.component.ts
+│   │   │   │   │   │   ├── account-login.component.scss.bak_phase5_account_login_inspect_20260608_120955
+│   │   │   │   │   │   ├── account-login.component.scss.bak_phase5_wallet_login_20260608_122331
+│   │   │   │   │   │   ├── account-login.component.ts
+│   │   │   │   │   │   ├── account-login.component.ts.bak_add_account_type_20260608_122847
+│   │   │   │   │   │   ├── account-login.component.ts.bak_phase5_account_login_inspect_20260608_120955
+│   │   │   │   │   │   └── account-login.component.ts.bak_phase5_wallet_login_20260608_122330
 │   │   │   │   │   ├── couchdb-explorer
 │   │   │   │   │   │   ├── couchdb-explorer.component.html
 │   │   │   │   │   │   ├── couchdb-explorer.component.scss
 │   │   │   │   │   │   └── couchdb-explorer.component.ts
 │   │   │   │   │   └── services
 │   │   │   │   │       ├── couchdb-explorer.service.ts
-│   │   │   │   │       └── government-account-auth.service.ts
+│   │   │   │   │       ├── government-account-auth.service.ts
+│   │   │   │   │       ├── government-account-auth.service.ts.bak_add_account_type_20260608_122847
+│   │   │   │   │       ├── government-account-auth.service.ts.bak_phase5_account_login_inspect_20260608_120955
+│   │   │   │   │       └── government-account-auth.service.ts.bak_phase5_wallet_login_20260608_122330
 │   │   │   │   └── transactions
 │   │   │   │       ├── balance-query
 │   │   │   │       │   ├── balance-query.component.css
@@ -35600,10 +35760,72 @@
 │   │   │   │           ├── wallet-transfer.component.html
 │   │   │   │           └── wallet-transfer.component.ts
 │   │   │   ├── government-blockchain
-│   │   │   │   └── resident-wallets
-│   │   │   │       ├── resident-wallets.component.html
-│   │   │   │       ├── resident-wallets.component.scss
-│   │   │   │       └── resident-wallets.component.ts
+│   │   │   │   ├── aml-alerts-queue
+│   │   │   │   │   ├── aml-alerts-queue.html
+│   │   │   │   │   ├── aml-alerts-queue.scss
+│   │   │   │   │   ├── aml-alerts-queue.ts
+│   │   │   │   │   └── aml-alerts-queue.ts.bak_phase19_immediate_close_20260612_120917
+│   │   │   │   ├── aml-case-management
+│   │   │   │   │   ├── aml-case-management.html
+│   │   │   │   │   ├── aml-case-management.scss
+│   │   │   │   │   └── aml-case-management.ts
+│   │   │   │   ├── aml-dashboard
+│   │   │   │   │   ├── aml-dashboard.html
+│   │   │   │   │   ├── aml-dashboard.scss
+│   │   │   │   │   └── aml-dashboard.ts
+│   │   │   │   ├── approval-queue
+│   │   │   │   │   ├── approval-queue.html
+│   │   │   │   │   ├── approval-queue.scss
+│   │   │   │   │   └── approval-queue.ts
+│   │   │   │   ├── audit-logs
+│   │   │   │   │   ├── audit-logs.html
+│   │   │   │   │   ├── audit-logs.scss
+│   │   │   │   │   └── audit-logs.ts
+│   │   │   │   ├── blockchain-proof
+│   │   │   │   │   ├── blockchain-proof.html
+│   │   │   │   │   ├── blockchain-proof.scss
+│   │   │   │   │   └── blockchain-proof.ts
+│   │   │   │   ├── documents-kyc
+│   │   │   │   │   ├── documents-kyc.html
+│   │   │   │   │   ├── documents-kyc.scss
+│   │   │   │   │   ├── documents-kyc.ts
+│   │   │   │   │   └── documents-kyc.ts.bak_final_20260605_161459
+│   │   │   │   ├── hash-verification
+│   │   │   │   │   ├── hash-verification.html
+│   │   │   │   │   ├── hash-verification.scss
+│   │   │   │   │   └── hash-verification.ts
+│   │   │   │   ├── payments-digital-stamps
+│   │   │   │   │   ├── payments-digital-stamps.html
+│   │   │   │   │   ├── payments-digital-stamps.scss
+│   │   │   │   │   └── payments-digital-stamps.ts
+│   │   │   │   ├── reports
+│   │   │   │   │   ├── reports.html
+│   │   │   │   │   ├── reports.html.bak_reports_step8_20260610_115355
+│   │   │   │   │   ├── reports.scss
+│   │   │   │   │   ├── reports.scss.bak_reports_step8_20260610_115355
+│   │   │   │   │   ├── reports.ts
+│   │   │   │   │   ├── reports.ts.bak_reports_step16_20260610_121726
+│   │   │   │   │   └── reports.ts.bak_reports_step8_20260610_115355
+│   │   │   │   ├── resident-wallets
+│   │   │   │   │   ├── resident-wallets.component.html
+│   │   │   │   │   ├── resident-wallets.component.scss
+│   │   │   │   │   └── resident-wallets.component.ts
+│   │   │   │   ├── risk-fraud-screening
+│   │   │   │   │   ├── risk-fraud-screening.html
+│   │   │   │   │   ├── risk-fraud-screening.scss
+│   │   │   │   │   └── risk-fraud-screening.ts
+│   │   │   │   ├── settings
+│   │   │   │   │   ├── settings.html
+│   │   │   │   │   ├── settings.html.bak_real_api_20260610_142935
+│   │   │   │   │   ├── settings.scss
+│   │   │   │   │   ├── settings.scss.bak_real_api_20260610_142935
+│   │   │   │   │   ├── settings.ts
+│   │   │   │   │   └── settings.ts.bak_real_api_20260610_142935
+│   │   │   │   ├── static-screen-style.scss
+│   │   │   │   └── transaction-list
+│   │   │   │       ├── transaction-list.html
+│   │   │   │       ├── transaction-list.scss
+│   │   │   │       └── transaction-list.ts
 │   │   │   ├── layout
 │   │   │   │   └── sidebar
 │   │   │   │       ├── sidebar.component.css
@@ -35713,8 +35935,11 @@
 │   │   │   │   ├── government-blockchain
 │   │   │   │   │   ├── create-ministry-account
 │   │   │   │   │   │   ├── create-ministry-account.component.html
+│   │   │   │   │   │   ├── create-ministry-account.component.html.bak_force_gov_20260608_105724
 │   │   │   │   │   │   ├── create-ministry-account.component.scss
+│   │   │   │   │   │   ├── create-ministry-account.component.scss.bak_force_gov_20260608_105724
 │   │   │   │   │   │   ├── create-ministry-account.component.ts
+│   │   │   │   │   │   ├── create-ministry-account.component.ts.bak_force_gov_20260608_105724
 │   │   │   │   │   │   └── Source_Queries.sql
 │   │   │   │   │   ├── create-public-administration-account
 │   │   │   │   │   │   ├── create-public-administration-account.component.html
@@ -35722,8 +35947,12 @@
 │   │   │   │   │   │   └── create-public-administration-account.component.ts
 │   │   │   │   │   ├── create-resident-account
 │   │   │   │   │   │   ├── create-resident-account.component.html
+│   │   │   │   │   │   ├── create-resident-account.component.html.bak_force_gov_resident_20260608_114938
+│   │   │   │   │   │   ├── create-resident-account.component.html.bak_force_gov_resident_20260608_115038
 │   │   │   │   │   │   ├── create-resident-account.component.scss
-│   │   │   │   │   │   └── create-resident-account.component.ts
+│   │   │   │   │   │   ├── create-resident-account.component.ts
+│   │   │   │   │   │   ├── create-resident-account.component.ts.bak_force_gov_resident_20260608_114938
+│   │   │   │   │   │   └── create-resident-account.component.ts.bak_force_gov_resident_20260608_115038
 │   │   │   │   │   ├── government-blockchain-dashboard
 │   │   │   │   │   │   ├── government-blockchain-dashboard.component.html
 │   │   │   │   │   │   ├── government-blockchain-dashboard.component.scss
@@ -35735,11 +35964,17 @@
 │   │   │   │   │   ├── new-transaction
 │   │   │   │   │   │   ├── new-transaction.component.html
 │   │   │   │   │   │   ├── new-transaction.component.scss
-│   │   │   │   │   │   └── new-transaction.component.ts
+│   │   │   │   │   │   ├── new-transaction.component.ts
+│   │   │   │   │   │   ├── new-transaction.component.ts.bak_phase9_fix_sequence_build_20260612_142116
+│   │   │   │   │   │   └── new-transaction.component.ts.bak_phase9_sequence_txn_id_20260612_142025
 │   │   │   │   │   └── resident-wallet-login
 │   │   │   │   │       ├── resident-wallet-login.component.html
+│   │   │   │   │       ├── resident-wallet-login.component.html.bak_force_gov_resident_20260608_114938
+│   │   │   │   │       ├── resident-wallet-login.component.html.bak_force_gov_resident_20260608_115038
 │   │   │   │   │       ├── resident-wallet-login.component.scss
-│   │   │   │   │       └── resident-wallet-login.component.ts
+│   │   │   │   │       ├── resident-wallet-login.component.ts
+│   │   │   │   │       ├── resident-wallet-login.component.ts.bak_force_gov_resident_20260608_114938
+│   │   │   │   │       └── resident-wallet-login.component.ts.bak_force_gov_resident_20260608_115038
 │   │   │   │   ├── organization-wallet-create
 │   │   │   │   │   ├── organization-wallet-create.css
 │   │   │   │   │   ├── organization-wallet-create.html
@@ -35775,16 +36010,28 @@
 │   │   │   │       ├── wallet-query.html
 │   │   │   │       └── wallet-query.ts
 │   │   │   └── services
+│   │   │       ├── aml-case-management-api.service.ts
 │   │   │       ├── blockchain-full-kyc-api.service.ts
 │   │   │       ├── blockchain-kyc.service.ts
 │   │   │       ├── blockchain-kyc.ts
 │   │   │       ├── fabric.service.ts
 │   │   │       ├── fabric.service.ts.bak_add_api_key
+│   │   │       ├── government-aml-alerts-queue-api.service.ts
+│   │   │       ├── government-aml-dashboard-api.service.ts
+│   │   │       ├── government-audit-logs-api.service.ts
 │   │   │       ├── government-blockchain
 │   │   │       │   └── government-services.service.ts
+│   │   │       ├── government-blockchain-proof-api.service.ts
 │   │   │       ├── government-blockchain-reference-api.service.ts
 │   │   │       ├── government-blockchain-resident-api.service.ts
+│   │   │       ├── government-dashboard.service.ts
 │   │   │       ├── government-ministry-api.service.ts
+│   │   │       ├── government-reports-api.service.ts
+│   │   │       ├── government-risk-fraud-screening-api.service.ts
+│   │   │       ├── government-transaction-api.service.ts
+│   │   │       ├── government-transaction-api.service.ts.bak_phase9_fix_observable_20260612_142116
+│   │   │       ├── government-transaction-api.service.ts.bak_phase9_next_reference_20260612_142021
+│   │   │       ├── government-transactions.service.ts
 │   │   │       ├── organization.service.js
 │   │   │       ├── public-administration-api.service.ts
 │   │   │       ├── resident-reference-api.service.ts
@@ -35986,6 +36233,8 @@
 │       ├── kyc-wallet-chaincode-js.tar.gz
 │       ├── lib
 │       │   ├── kycWalletContract.js
+│       │   ├── kycWalletContract.js.bak_gov_txn_20260602_112723
+│       │   ├── kycWalletContract.js.bak_gov_txn_20260602_113140
 │       │   └── kycWalletContract.js.bak_step6_wallet_address_20260527_173352
 │       ├── META-INF
 │       │   └── statedb
@@ -73402,6 +73651,7 @@
 │       └── tsconfig.spec.json
 ├── collect_blockchain_all_code_one_file.sh
 ├── collect_blockchain_update_files.sh
+├── collect-resident-wallets-debug.sh
 ├── config
 │   ├── connection-org1.json
 │   ├── connection-org2.json
@@ -76826,12 +77076,115 @@
 ├── README-STEP_8.bash
 ├── README-STEP_9.bash
 ├── real_angular_api_files.txt
+├── resident-wallets-debug-export
+│   ├── angular
+│   │   ├── angular.json
+│   │   ├── home
+│   │   │   └── nix
+│   │   │       └── u01
+│   │   │           └── blockchain-integration
+│   │   │               └── blockchain-test-ui
+│   │   │                   └── src
+│   │   │                       └── app
+│   │   │                           ├── core
+│   │   │                           │   └── services
+│   │   │                           │       ├── dashboard-api.service.ts
+│   │   │                           │       ├── fabric-api.service.ts
+│   │   │                           │       ├── project-view-api.service.ts
+│   │   │                           │       ├── transaction-api.service.ts
+│   │   │                           │       └── wallet-api.service.ts
+│   │   │                           ├── government-blockchain
+│   │   │                           │   └── resident-wallets
+│   │   │                           │       ├── resident-wallets.component.html
+│   │   │                           │       ├── resident-wallets.component.scss
+│   │   │                           │       └── resident-wallets.component.ts
+│   │   │                           ├── pages
+│   │   │                           │   └── government-blockchain
+│   │   │                           │       ├── government-blockchain-dashboard
+│   │   │                           │       │   ├── government-blockchain-dashboard.component.html
+│   │   │                           │       │   ├── government-blockchain-dashboard.component.scss
+│   │   │                           │       │   └── government-blockchain-dashboard.component.ts
+│   │   │                           │       └── resident-wallet-login
+│   │   │                           │           ├── resident-wallet-login.component.html
+│   │   │                           │           ├── resident-wallet-login.component.scss
+│   │   │                           │           └── resident-wallet-login.component.ts
+│   │   │                           └── services
+│   │   │                               ├── blockchain-full-kyc-api.service.ts
+│   │   │                               ├── government-blockchain-reference-api.service.ts
+│   │   │                               ├── government-blockchain-resident-api.service.ts
+│   │   │                               ├── government-ministry-api.service.ts
+│   │   │                               ├── government-transaction-api.service.ts
+│   │   │                               ├── public-administration-api.service.ts
+│   │   │                               ├── resident-reference-api.service.ts
+│   │   │                               └── resident-wallet.service.ts
+│   │   ├── package.json
+│   │   └── src
+│   │       ├── app
+│   │       └── environments
+│   │           ├── environment.prod.ts
+│   │           └── environment.ts
+│   ├── api-tests
+│   │   ├── health_api_response.json
+│   │   ├── resident_wallets_api_response.json
+│   │   ├── resident_wallets_filter_id_response.json
+│   │   └── resident_wallets_filter_name_response.json
+│   ├── backend
+│   │   ├── package.json
+│   │   ├── server.js
+│   │   └── src
+│   │       ├── config
+│   │       │   └── database.js
+│   │       └── routes
+│   │           ├── auth.routes.js
+│   │           ├── blockchain-kyc.routes.js
+│   │           ├── blockchain.routes.js
+│   │           ├── couchdb.routes.js
+│   │           ├── dashboard.routes.js
+│   │           ├── data-generator.routes.js
+│   │           ├── fabric.routes.js
+│   │           ├── government-blockchain
+│   │           │   ├── ministry.routes.js
+│   │           │   └── reference.routes.js
+│   │           ├── governmentBlockchainAuth.routes.js
+│   │           ├── government-services.routes.js
+│   │           ├── government-transactions.routes.js
+│   │           ├── government-transactions.routes.js.bak_cli_fabric_submit_20260602_140320
+│   │           ├── government-transactions.routes.js.bak_pool_fix_20260602_111655
+│   │           ├── health.routes.js
+│   │           ├── index.js
+│   │           ├── organization.routes.js
+│   │           ├── project-view.routes.js
+│   │           ├── publicAdministration.routes.js
+│   │           ├── reference.routes.js
+│   │           ├── reference.routes.js.bak_org_type_filter
+│   │           ├── resident-reference.routes.js
+│   │           ├── resident.routes.js
+│   │           ├── residentWallet.routes.js
+│   │           ├── resident-wallets.routes.js
+│   │           ├── transaction.routes.js
+│   │           ├── transactions.routes.js
+│   │           ├── wallet-query.routes.js
+│   │           ├── wallet.routes.js
+│   │           └── wallet.routes.js.bak_next_customer_id
+│   ├── logs
+│   │   ├── angular_grep_resident_wallets.txt
+│   │   └── backend_grep_resident_wallets.txt
+│   ├── README.txt
+│   └── sql
+│       ├── residents_columns.txt
+│       ├── residents_sample_30.txt
+│       └── resident_wallets_query_test.txt
+├── resident-wallets-debug-export.zip
 ├── scripts
 │   ├── deploy-chaincode.sh
 │   ├── restart-network.sh
 │   ├── start-network.sh
 │   ├── stop-network.sh
 │   └── verify-network.sh
+├── Source Queries & API
+│   ├── Approval Queue.sql
+│   ├── Dashboard.sql
+│   └── Transactions List.sql
 ├── src
 │   ├── app
 │   │   └── government-blockchain
@@ -76853,6 +77206,7 @@
 │       ├── jwt.util.js
 │       └── password.util.js
 ├── start-blockchain-project-after-reboot.sh
+├── start-fabric-network.sh
 ├── step-09-ledger-data-model
 │   ├── chaincode-models
 │   ├── couchdb-indexes
@@ -78115,4 +78469,4 @@
 │   └── pyvenv.cfg
 └── wallet_organization_code_update_files.txt
 
-8947 directories, 69169 files
+8994 directories, 69476 files
