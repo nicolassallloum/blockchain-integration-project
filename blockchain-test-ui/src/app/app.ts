@@ -142,6 +142,13 @@ export class App {
       icon: '📊',
       group: 'Government Blockchain'
     },
+
+    {
+      label: 'Transactions Daily Created',
+      route: '/government-blockchain/transactions-daily-created',
+      icon: '📈',
+      group: 'Government Blockchain'
+    },
     {
       label: 'AML Dashboard',
       route: '/government-blockchain/aml-dashboard',
