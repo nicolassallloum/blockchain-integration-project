@@ -24,7 +24,7 @@ router.post("/create", async (req, res) => {
     await client.query("BEGIN");
 
     const txIdResult = await client.query(`
-      SELECT 'DEV-TXN-' || LPAD(nextval('blockchain.dev_transaction_seq')::text, 6, '0') AS transaction_id
+      SELECT 'VB-TXN-' || LPAD(nextval('blockchain.dev_transaction_seq')::text, 6, '0') AS transaction_id
     `);
 
     const generatedTransactionId = txIdResult.rows[0].transaction_id;
