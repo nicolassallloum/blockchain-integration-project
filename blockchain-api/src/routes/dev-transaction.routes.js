@@ -1,9 +1,9 @@
 const express = require("express");
 const router = express.Router();
-const pool = require("../config/db");
+const pool = require("../db/postgres");
 
 // Replace this with your existing Fabric helper if already available
-const { submitTransactionToBlockchain } = require("../services/fabric.service");
+const fabricService = require("../services/fabric.service");
 
 function cleanNumber(value) {
   if (value === null || value === undefined || value === "") return null;
@@ -17,14 +17,16 @@ function cleanDate(value) {
 
 router.post("/create", async (req, res) => {
   const client = await pool.connect();
+  let pgTransactionOpen = false;
 
   try {
     const body = req.body;
 
     await client.query("BEGIN");
+    pgTransactionOpen = true;
 
     const txIdResult = await client.query(`
-      SELECT 'DEV-TXN-' || LPAD(nextval('blockchain.dev_transaction_seq')::text, 6, '0') AS transaction_id
+      SELECT 'VB-TXN-' || LPAD(nextval('blockchain.dev_transaction_seq')::text, 6, '0') AS transaction_id
     `);
 
     const generatedTransactionId = txIdResult.rows[0].transaction_id;
@@ -186,52 +188,116 @@ router.post("/create", async (req, res) => {
 
     const savedTransaction = insertResult.rows[0];
 
+    await client.query("COMMIT");
+    pgTransactionOpen = false;
+
     const blockchainPayload = {
+      transactionReference: generatedTransactionId,
       transaction_id: generatedTransactionId,
-      sender_name: body.SENDER_NAME,
-      receiver_name: body.RECEIVER_NAME,
-      payout_country: body.PAYOUT_COUNTRY,
-      amount_to_send: cleanNumber(body.AMOUNT_TO_SEND),
+
+      residentId: body.id_number || body.phone_no || generatedTransactionId,
+      residentWalletAddress: body.phone_no || null,
+      residentFullName: body.SENDER_NAME || null,
+      residentNationalId: body.id_number || null,
+
+      serviceId: body.itm_id || null,
+      serviceCode: body.transaction_type || null,
+      serviceName: body.transaction_purpose_code || "DEV_MONEY_TRANSFER",
+
+      amount: cleanNumber(body.TRANSACTION_AMNT),
+      baseAmount: cleanNumber(body.AMOUNT_TO_SEND),
       fees: cleanNumber(body.FEES),
-      transaction_amount: cleanNumber(body.TRANSACTION_AMNT),
-      amount_to_receive: cleanNumber(body.amount_to_receive),
-      currency: body.currency,
-      transaction_type: body.transaction_type,
-      source_of_funds: body.source_of_funds,
-      id_type: body.id_type,
-      id_number: body.id_number,
-      phone_no: body.phone_no,
-      beneficiary_right_owner: body.beneficiary_right_owner,
-      transaction_date: new Date().toISOString(),
-      raw_payload: body
+      amountToReceive: cleanNumber(body.amount_to_receive),
+      currency: body.currency || "84",
+
+      paymentMethod: "DEV_API",
+      transactionType: body.transaction_type || "1501",
+      transactionStatus: "CREATED_FROM_DEV",
+      blockchainStatus: "PENDING",
+
+      senderName: body.SENDER_NAME,
+      senderFirstName: body.sender_first_name,
+      senderLastName: body.sender_last_name,
+
+      receiverName: body.RECEIVER_NAME,
+      receiverFirstName: body.receiver_first_name,
+      receiverLastName: body.receiver_last_name,
+
+      payoutCountry: body.PAYOUT_COUNTRY,
+      country: body.country,
+      cityAddress: body.city_address,
+
+      sourceOfFunds: body.source_of_funds,
+      idType: body.id_type,
+      idNumber: body.id_number,
+      countryOfIssue: body.country_of_issue,
+      phoneNo: body.phone_no,
+      beneficiaryRightOwner: body.beneficiary_right_owner,
+
+      venId: body.ven_id,
+      itmId: body.itm_id,
+      partyTypeCode: body.party_type_code,
+      flag: body.flag,
+
+      transactionDate: new Date().toISOString(),
+      rawPayload: body
     };
 
     let blockchainResult = null;
+    let blockchainErrorMessage = null;
 
     try {
-      blockchainResult = await submitTransactionToBlockchain(
-        "CreateDevTransaction",
-        generatedTransactionId,
-        JSON.stringify(blockchainPayload)
+      blockchainResult = await fabricService.submitTransaction(
+        "CreateGovernmentTransaction",
+        [
+          JSON.stringify(blockchainPayload)
+        ],
+        {
+          requestId: req.headers["x-request-id"] || null,
+          sourceSystem: "DEV_TRANSACTION_API",
+          requestSource: "API",
+          createdBy: "DEV_INTEGRATION"
+        }
       );
+
+      const cleanBlockchainResponse = {
+        success: true,
+        type: blockchainResult?.type || "submit",
+        channelName: blockchainResult?.channelName || null,
+        chaincodeName: blockchainResult?.chaincodeName || null,
+        functionName: blockchainResult?.functionName || "CreateGovernmentTransaction",
+        transactionId: blockchainResult?.transactionId || blockchainResult?.txId || null,
+        txId: blockchainResult?.txId || blockchainResult?.transactionId || null,
+        durationMs: blockchainResult?.durationMs || null,
+        data: blockchainResult?.data || null,
+        commitStatus: blockchainResult?.commitStatus ? {
+          successful: blockchainResult.commitStatus.successful,
+          code: blockchainResult.commitStatus.code,
+          transactionId: blockchainResult.commitStatus.transactionId
+        } : null
+      };
+
+      console.log("[DEV_TRANSACTION_UPDATE_SUCCESS_START]", generatedTransactionId);
 
       await client.query(
         `
         UPDATE blockchain.dev_transactions
-        SET 
+        SET
           blockchain_status = $1,
           blockchain_tx_id = $2,
-          blockchain_response = $3,
+          blockchain_response = $3::jsonb,
           updated_at = CURRENT_TIMESTAMP
         WHERE transaction_id = $4
         `,
         [
           "SUCCESS",
-          blockchainResult?.transactionId || null,
-          blockchainResult,
+          cleanBlockchainResponse.transactionId,
+          JSON.stringify(cleanBlockchainResponse),
           generatedTransactionId
         ]
       );
+
+      console.log("[DEV_TRANSACTION_UPDATE_SUCCESS_DONE]", generatedTransactionId);
     } catch (blockchainError) {
       await client.query(
         `
@@ -251,23 +317,32 @@ router.post("/create", async (req, res) => {
         ]
       );
 
-      throw blockchainError;
+      blockchainErrorMessage = blockchainError.message;
+      console.error("[DEV_TRANSACTION_BLOCKCHAIN_FAILED]", blockchainError.message);
     }
 
-    await client.query("COMMIT");
-
-    return res.status(201).json({
-      success: true,
-      message: "Transaction created successfully in PostgreSQL and Blockchain",
+    return res.status(blockchainErrorMessage ? 202 : 201).json({
+      success: !blockchainErrorMessage,
+      message: blockchainErrorMessage ? "Transaction saved in PostgreSQL but Blockchain failed" : "Transaction created successfully in PostgreSQL and Blockchain",
       data: {
         transaction_id: generatedTransactionId,
         postgresql: savedTransaction,
-        blockchain: blockchainResult
+        blockchain: blockchainResult ? {
+          success: true,
+          transactionId: blockchainResult.transactionId || blockchainResult.txId || null,
+          txId: blockchainResult.txId || blockchainResult.transactionId || null,
+          functionName: blockchainResult.functionName || "CreateGovernmentTransaction",
+          data: blockchainResult.data || null
+        } : null,
+        blockchain_error: blockchainErrorMessage
       }
     });
 
   } catch (error) {
-    await client.query("ROLLBACK");
+    if (pgTransactionOpen) {
+      await client.query("ROLLBACK");
+      pgTransactionOpen = false;
+    }
 
     return res.status(500).json({
       success: false,

@@ -25,6 +25,7 @@ const referenceRoutes = require('./reference.routes');
 const dashboardRoutes = safeLoadRoute("dashboard", "./dashboard.routes");
 const publicAdministrationRoutes = require('./publicAdministration.routes');
 const governmentTransactionsRoutes = require('./government-transactions.routes');
+const devTransactionRoutes = require('./dev-transaction.routes');
 
 // router.use('/government-blockchain/public-administrations', publicAdministrationRoutes);
 const governmentReferenceRoutes = require('./government-blockchain/reference.routes');
@@ -97,6 +98,11 @@ if (referenceRoutes) {
 
 if (dashboardRoutes) {
   router.use("/dashboard", dashboardRoutes);
+}
+
+
+if (devTransactionRoutes) {
+  router.use('/dev-transactions', devTransactionRoutes);
 }
 
 router.get('/health', (req, res) => {
