@@ -64,6 +64,9 @@
 │   │       └── insert-bank001-organization.sql
 │   ├── export_government_account_tables.sh
 │   ├── export_real_backend_files.sh
+│   ├── fix_insert_after_remove_tin_backend.log
+│   ├── kyc_daily_created_backend.log
+│   ├── kyc_daily_date_format_fix.log
 │   ├── kyc-wallet-chaincode-js.tar.gz
 │   ├── logs
 │   │   ├── app.log
@@ -12116,6 +12119,7 @@
 │   │   └── step-23-wallet-transfer-compatibility-patch.sql
 │   ├── README.md
 │   ├── real_backend_files.txt
+│   ├── remove_tin_get_response_backend.log
 │   ├── scripts
 │   │   ├── API_SCRIPTS.bash
 │   │   ├── create-organization-wallets.js
@@ -12158,6 +12162,8 @@
 │   │   ├── app.js
 │   │   ├── app.js.bak.before_cors_fix_20260506_132512
 │   │   ├── app.js.bak.fix_cors_options_20260506_133352
+│   │   ├── app.js.bak_remove_duplicate_valoores_20260616_115554
+│   │   ├── app.js.bak_valoores_blockchain
 │   │   ├── config
 │   │   │   ├── app.config.js
 │   │   │   ├── auth.config.js
@@ -12263,6 +12269,7 @@
 │   │   │   ├── couchdb.routes.js
 │   │   │   ├── dashboard.routes.js
 │   │   │   ├── data-generator.routes.js
+│   │   │   ├── dev-transaction.routes.js
 │   │   │   ├── documents-kyc.routes.js
 │   │   │   ├── documents-kyc.routes.js.bak_20260605_145252
 │   │   │   ├── documents-kyc.routes.js.bak_final_20260605_161436
@@ -12306,6 +12313,7 @@
 │   │   │   ├── hash-verification.routes.js
 │   │   │   ├── health.routes.js
 │   │   │   ├── index.js
+│   │   │   ├── index.js.bak_valoores_blockchain
 │   │   │   ├── organization.routes.js
 │   │   │   ├── payments-digital-stamps.routes.js
 │   │   │   ├── payments-digital-stamps.routes.js.bak_fix_post_20260605_141910
@@ -12323,6 +12331,25 @@
 │   │   │   ├── resident-wallets.routes.js.bak_20260604_094752
 │   │   │   ├── transaction.routes.js
 │   │   │   ├── transactions.routes.js
+│   │   │   ├── valoores-blockchain.routes.js
+│   │   │   ├── valoores-blockchain.routes.js.bak_add_customer_session_payload_20260616_150142
+│   │   │   ├── valoores-blockchain.routes.js.bak_add_fabric_submit_20260616_122400
+│   │   │   ├── valoores-blockchain.routes.js.bak_bigint_response_fix_20260616_122936
+│   │   │   ├── valoores-blockchain.routes.js.bak_customer_id_primary_key_20260616_150459
+│   │   │   ├── valoores-blockchain.routes.js.bak_fabric_resident_submit_20260616_122824
+│   │   │   ├── valoores-blockchain.routes.js.bak_final_customer_id_session_fix_20260616_151003
+│   │   │   ├── valoores-blockchain.routes.js.bak_final_remove_tin_get_20260616_163135
+│   │   │   ├── valoores-blockchain.routes.js.bak_fix_customerId_not_defined_20260616_150740
+│   │   │   ├── valoores-blockchain.routes.js.bak_fix_insert_after_remove_tin_20260616_162833
+│   │   │   ├── valoores-blockchain.routes.js.bak_fix_kyc_daily_date_format_20260616_154530
+│   │   │   ├── valoores-blockchain.routes.js.bak_fix_kyc_ledger_response_20260616_143414
+│   │   │   ├── valoores-blockchain.routes.js.bak_fix_valoores_customer_name_20260616_155204
+│   │   │   ├── valoores-blockchain.routes.js.bak_kyc_daily_month_report_20260616_151913
+│   │   │   ├── valoores-blockchain.routes.js.bak_kyc_daily_month_report_20260616_151917
+│   │   │   ├── valoores-blockchain.routes.js.bak_kyc_valoores_key_20260616_140003
+│   │   │   ├── valoores-blockchain.routes.js.bak_remove_tin_from_get_response_20260616_162528
+│   │   │   ├── valoores-blockchain.routes.js.bak_remove_tin_number_20260616_161642
+│   │   │   ├── valoores-blockchain.routes.js.bak_revert_real_fabric_key_20260616_141115
 │   │   │   ├── wallet-query.routes.js
 │   │   │   ├── wallet.routes.js
 │   │   │   └── wallet.routes.js.bak_next_customer_id
@@ -12356,6 +12383,7 @@
 │   │   ├── server.js.bak_settings_mount_fix_20260610_142512
 │   │   ├── server.js.bak_settings_route_20260610_142433
 │   │   ├── server.js.bak_transactions_fix_20260602_105238
+│   │   ├── server.js.bak_valoores_blockchain_20260616_115547
 │   │   ├── services
 │   │   │   ├── aml.service.js
 │   │   │   ├── aml.services.js
@@ -12454,6 +12482,20 @@
 │   │       └── 1781504119369_b7d508113742f72f_image_2_5.png
 │   ├── utils
 │   │   └── walletAddressGenerator.js
+│   ├── valoores_bigint_fix_backend.log
+│   ├── valoores_blockchain_api.log
+│   ├── valoores_customer_id_fix_backend.log
+│   ├── valoores_customer_id_primary_key_backend.log
+│   ├── valoores_customer_id_session_final_fix.log
+│   ├── valoores_customer_session_payload_backend.log
+│   ├── valoores_fabric_submit_backend.log
+│   ├── valoores_final_remove_tin_backend.log
+│   ├── valoores_fix_customer_name_backend.log
+│   ├── valoores_kyc_key_backend.log
+│   ├── valoores_real_fabric_key_backend.log
+│   ├── valoores-real-payload.json
+│   ├── valoores_remove_tin_number_backend.log
+│   ├── valoores_seq20_org1_policy_backend.log
 │   └── wallet
 │       └── admin.id
 ├── blockchain-api-files-for-chatgpt.txt
@@ -12619,23 +12661,27 @@
 │   │       │   ├── chunk-C3PMFTVS.js
 │   │       │   ├── chunk-DVKN6WUX.js
 │   │       │   ├── chunk-FFEQ7HH2.js
+│   │       │   ├── chunk-H75JFOKW.js
 │   │       │   ├── chunk-KI45EGI7.js
 │   │       │   ├── chunk-PBOSFMQA.js
 │   │       │   ├── chunk-SAAP6CVP.js
 │   │       │   ├── chunk-T3SHV4B4.js
 │   │       │   ├── favicon.ico
 │   │       │   ├── index.html
-│   │       │   ├── main-GGASJ3KV.js
+│   │       │   ├── main-CJ7264R6.js
 │   │       │   └── styles-5INURTSO.css
 │   │       └── prerendered-routes.json
 │   ├── export_organization_transfer_backend_files.sh
 │   ├── export_real_organization_transfer_backend_files.sh
+│   ├── fabric_history_frontend.log
 │   ├── frontend_after_step16.log
 │   ├── frontend_after_step8.log
 │   ├── frontend_api_debug.log
 │   ├── Front_End_Files.txt
 │   ├── frontend_proxy_fix.log
 │   ├── frontend_updated_files_excel_row.tsv
+│   ├── kyc_daily_created_frontend.log
+│   ├── kyc_daily_date_format_frontend.log
 │   ├── node_modules
 │   │   ├── abbrev
 │   │   │   ├── lib
@@ -35657,6 +35703,7 @@
 │   ├── phase20_frontend_ui_polish.log
 │   ├── phase_reports_frontend.log
 │   ├── proxy.conf.json
+│   ├── proxy.conf.json.bak_kyc_daily_api_20260616_154057
 │   ├── public
 │   │   ├── assets
 │   │   │   └── images
@@ -35675,17 +35722,23 @@
 │   │   │   ├── app.config.ts
 │   │   │   ├── app.config.ts.bak_project_viewers_20260514_112226
 │   │   │   ├── app.html
+│   │   │   ├── app.html.bak_kyc_daily_created_menu_20260616_152020
 │   │   │   ├── app.html.bak_kyc_menu
+│   │   │   ├── app.html.bak_remove_bad_kyc_daily_menu_20260616_152614
 │   │   │   ├── app.html.bak_sidebar_icons_20260610_162334
 │   │   │   ├── app.html.bak_valoores_design_update
 │   │   │   ├── app.html.bak_valoores_reference_design
 │   │   │   ├── app.routes.ts
 │   │   │   ├── app.routes.ts.bak_fix_routes_build
+│   │   │   ├── app.routes.ts.bak_kyc_daily_created_20260616_151945
 │   │   │   ├── app.scss
 │   │   │   ├── app.scss.bak_sidebar_icons_20260610_162334
 │   │   │   ├── app.scss.bak_valoores_design_update
 │   │   │   ├── app.scss.bak_valoores_reference_design
 │   │   │   ├── app.ts
+│   │   │   ├── app.ts.bak_add_kyc_daily_created_menu_20260616_153416
+│   │   │   ├── app.ts.bak_fix_kyc_daily_created_group_20260616_153735
+│   │   │   ├── app.ts.bak_kyc_daily_created_menu_20260616_152614
 │   │   │   ├── app.ts.bak_kyc_menu
 │   │   │   ├── app.ts.bak_sidebar_icons_20260610_162334
 │   │   │   ├── core
@@ -35790,10 +35843,20 @@
 │   │   │   │   │   ├── documents-kyc.scss
 │   │   │   │   │   ├── documents-kyc.ts
 │   │   │   │   │   └── documents-kyc.ts.bak_final_20260605_161459
+│   │   │   │   ├── fabric-history
+│   │   │   │   │   ├── fabric-history.css
+│   │   │   │   │   ├── fabric-history.html
+│   │   │   │   │   └── fabric-history.ts
 │   │   │   │   ├── hash-verification
 │   │   │   │   │   ├── hash-verification.html
 │   │   │   │   │   ├── hash-verification.scss
 │   │   │   │   │   └── hash-verification.ts
+│   │   │   │   ├── kyc-daily-created
+│   │   │   │   │   ├── kyc-daily-created.css
+│   │   │   │   │   ├── kyc-daily-created.html
+│   │   │   │   │   ├── kyc-daily-created.ts
+│   │   │   │   │   ├── kyc-daily-created.ts.bak_date_string_20260616_154558
+│   │   │   │   │   └── kyc-daily-created.ts.bak_relative_api_20260616_154050
 │   │   │   │   ├── payments-digital-stamps
 │   │   │   │   │   ├── payments-digital-stamps.html
 │   │   │   │   │   ├── payments-digital-stamps.scss
@@ -36186,9 +36249,11 @@
 │   │   ├── index.html
 │   │   ├── main.ts
 │   │   ├── routes
+│   │   │   ├── dev-transaction.routes.js
 │   │   │   ├── organization.routes.js
 │   │   │   ├── publicAdministration.routes.js
-│   │   │   └── reference.routes.js
+│   │   │   ├── reference.routes.js
+│   │   │   └── valoores-blockchain.routes.js
 │   │   └── styles.scss
 │   ├── tsconfig.app.json
 │   ├── tsconfig.json
@@ -36235,6 +36300,7 @@
 │       │   ├── kycWalletContract.js
 │       │   ├── kycWalletContract.js.bak_gov_txn_20260602_112723
 │       │   ├── kycWalletContract.js.bak_gov_txn_20260602_113140
+│       │   ├── kycWalletContract.js.bak_kyc_valoores_key_20260616_140009
 │       │   └── kycWalletContract.js.bak_step6_wallet_address_20260527_173352
 │       ├── META-INF
 │       │   └── statedb
@@ -75861,11 +75927,14 @@
 │   │   │   │       └── podman-compose-test-net.yaml
 │   │   │   ├── configtx
 │   │   │   │   └── configtx.yaml
+│   │   │   ├── fabric_querycommitted.log
 │   │   │   ├── fix-org1-env-auto.sh
+│   │   │   ├── kyc-wallet-chaincode-js.tar.gz
 │   │   │   ├── log.txt
 │   │   │   ├── monitordocker.sh
 │   │   │   ├── network.config
 │   │   │   ├── network.sh
+│   │   │   ├── network.sh.bak_orderer_blockchain_local_20260616_142301
 │   │   │   ├── organizations
 │   │   │   │   ├── ccp-generate.sh
 │   │   │   │   ├── ccp-template.json
@@ -76140,11 +76209,20 @@
 │   │   │   ├── scripts
 │   │   │   │   ├── add_new_orderer_to_config.py
 │   │   │   │   ├── ccutils.sh
+│   │   │   │   ├── ccutils.sh.bak_orderer_blockchain_local_20260616_142519
+│   │   │   │   ├── ccutils.sh.bak_orderer_blockchain_local_20260616_142708
 │   │   │   │   ├── configUpdate.sh
 │   │   │   │   ├── createChannel.sh
 │   │   │   │   ├── deployCCAAS.sh
 │   │   │   │   ├── deployCC.sh
+│   │   │   │   ├── deployCC.sh.bak_orderer_blockchain_local_20260616_142301
 │   │   │   │   ├── envVar.sh
+│   │   │   │   ├── envVar.sh.bak_blockchain_local_msp_20260616_141736
+│   │   │   │   ├── envVar.sh.bak_exact_blockchain_local_msp_20260616_141832
+│   │   │   │   ├── envVar.sh.bak_live_tls_20260616_141351
+│   │   │   │   ├── envVar.sh.bak_live_tls_20260616_141542
+│   │   │   │   ├── envVar.sh.bak_orderer_blockchain_local_20260616_142301
+│   │   │   │   ├── envVar.sh.bak_tls_hostname_override_20260616_142053
 │   │   │   │   ├── orderer2.sh
 │   │   │   │   ├── orderer3.sh
 │   │   │   │   ├── orderer4.sh
@@ -77184,6 +77262,8 @@
 ├── Source Queries & API
 │   ├── Approval Queue.sql
 │   ├── Dashboard.sql
+│   ├── Documents.sql
+│   ├── Payments.sql
 │   └── Transactions List.sql
 ├── src
 │   ├── app
@@ -78469,4 +78549,4 @@
 │   └── pyvenv.cfg
 └── wallet_organization_code_update_files.txt
 
-8994 directories, 69476 files
+8996 directories, 69554 files
