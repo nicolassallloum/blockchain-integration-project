@@ -1,3 +1,4 @@
+import { ValooresAmlRulesDashboard } from './government-blockchain/valoores-aml-rules-dashboard/valoores-aml-rules-dashboard';
 import { Routes } from '@angular/router';
 import { BlockchainKycComponent } from './pages/blockchain-kyc/blockchain-kyc.component';
 import { DashboardComponent } from './features/dashboard/dashboard.component';

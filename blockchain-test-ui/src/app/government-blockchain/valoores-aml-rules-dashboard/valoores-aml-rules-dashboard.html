@@ -1,0 +1,135 @@
+<section class="aml-rules-dashboard">
+  <div class="page-header">
+    <div>
+      <p class="eyebrow">Government Blockchain</p>
+      <h1>AML Rules Dashboard</h1>
+      <p class="subtitle">
+        Monitor AML rules from PostgreSQL view and Fabric/CouchDB ledger sync status.
+      </p>
+    </div>
+
+    <button class="primary-btn" type="button" (click)="refresh()" [disabled]="loading">
+      {{ loading ? 'Loading...' : 'Refresh' }}
+    </button>
+  </div>
+
+  <div class="cards-grid">
+    <article class="metric-card">
+      <span class="label">AML Rules Count</span>
+      <strong>{{ cards.amlRulesCount }}</strong>
+    </article>
+
+    <article class="metric-card">
+      <span class="label">AML Rules Updated Today</span>
+      <strong>{{ cards.amlRulesUpdatedToday }}</strong>
+    </article>
+
+    <article class="metric-card">
+      <span class="label">AML Rules Created Today</span>
+      <strong>{{ cards.amlRulesCreatedToday }}</strong>
+    </article>
+
+    <article class="metric-card">
+      <span class="label">Active AML Rules</span>
+      <strong>{{ cards.activeAmlRules }}</strong>
+    </article>
+
+    <article class="metric-card danger">
+      <span class="label">Expired AML Rules</span>
+      <strong>{{ cards.expiredAmlRules }}</strong>
+    </article>
+  </div>
+
+  <div class="toolbar">
+    <div class="search-box">
+      <input
+        type="text"
+        [(ngModel)]="search"
+        placeholder="Search by Rule ID, Query ID, Description, Message, SQL Query..."
+        (keyup.enter)="searchNow()"
+      />
+
+      <button type="button" (click)="searchNow()">Search</button>
+      <button type="button" class="ghost-btn" (click)="clearSearch()">Clear</button>
+    </div>
+
+    <div class="pagination-info">
+      Showing {{ pagination.returned }} of {{ pagination.total }}
+    </div>
+  </div>
+
+  <div *ngIf="errorMessage" class="error-box">
+    {{ errorMessage }}
+  </div>
+
+  <div class="table-card">
+    <div class="table-header">
+      <h2>All AML Rules Data</h2>
+      <span *ngIf="loading">Loading...</span>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Rule ID</th>
+            <th>Query ID</th>
+            <th>Fabric Ledger Key</th>
+            <th>Rule Description</th>
+            <th>Computed Status</th>
+            <th>Sync Status</th>
+            <th>Fabric Status</th>
+            <th>Created Date</th>
+            <th>Updated Date</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let rule of records">
+            <td>{{ rule.rule_id }}</td>
+            <td>{{ rule.rule_query_id }}</td>
+            <td class="mono">{{ rule.fabric_ledger_key }}</td>
+            <td [title]="rule.rule_desc">{{ shortText(rule.rule_desc, 80) }}</td>
+            <td>
+              <span class="status-pill" [ngClass]="getStatusClass(rule.computed_rule_status)">
+                {{ rule.computed_rule_status || '-' }}
+              </span>
+            </td>
+            <td>
+              <span class="status-pill" [ngClass]="getStatusClass(rule.sync_status)">
+                {{ rule.sync_status || '-' }}
+              </span>
+            </td>
+            <td>
+              <span class="status-pill" [ngClass]="getStatusClass(rule.fabric_status)">
+                {{ rule.fabric_status || '-' }}
+              </span>
+            </td>
+            <td>{{ formatDate(rule.rule_creation_date) }}</td>
+            <td>{{ formatDate(rule.rule_update_date) }}</td>
+          </tr>
+
+          <tr *ngIf="!loading && records.length === 0">
+            <td colspan="9" class="empty-state">No AML rules found.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination">
+      <button type="button" (click)="previousPage()" [disabled]="offset === 0 || loading">
+        Previous
+      </button>
+
+      <span>Offset {{ offset }}</span>
+
+      <button
+        type="button"
+        (click)="nextPage()"
+        [disabled]="offset + limit >= pagination.total || loading"
+      >
+        Next
+      </button>
+    </div>
+  </div>
+</section>

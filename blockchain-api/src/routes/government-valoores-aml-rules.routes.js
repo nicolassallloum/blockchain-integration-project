@@ -282,4 +282,156 @@ router.get('/all-fabric', async (req, res) => {
   }
 });
 
+
+
+/* ===== VALOORES AML RULES DASHBOARD API START ===== */
+
+/**
+ * GET /api/v1/government-blockchain/valoores-aml-rules/dashboard
+ * Dashboard summary + AML rules table from PostgreSQL view + Fabric sync status.
+ */
+router.get('/dashboard', async (req, res) => {
+  const limit = Math.min(parseInt(req.query.limit || '100', 10), 500);
+  const offset = Math.max(parseInt(req.query.offset || '0', 10), 0);
+  const search = String(req.query.search || '').trim();
+
+  try {
+    const summarySql = `
+      SELECT
+        COUNT(*)::int AS aml_rules_count,
+
+        COUNT(*) FILTER (
+          WHERE DATE("RULE UPDATE DATE") = CURRENT_DATE
+        )::int AS aml_rules_updated_today,
+
+        COUNT(*) FILTER (
+          WHERE DATE("RULE CREATION DATE") = CURRENT_DATE
+        )::int AS aml_rules_created_today,
+
+        COUNT(*) FILTER (
+          WHERE COALESCE("RULE STATUS"::text, '') = '3'
+            AND COALESCE("RULE START DATE", CURRENT_DATE) <= CURRENT_DATE
+            AND ("RULE EXPIRY DATE" IS NULL OR "RULE EXPIRY DATE" >= CURRENT_DATE)
+        )::int AS active_aml_rules,
+
+        COUNT(*) FILTER (
+          WHERE "RULE EXPIRY DATE" IS NOT NULL
+            AND "RULE EXPIRY DATE" < CURRENT_DATE
+        )::int AS expired_aml_rules
+      FROM blockchain.valoores_aml_rules
+    `;
+
+    const searchWhere = search
+      ? `
+        WHERE
+          COALESCE(v."RULE ID"::text, '') ILIKE $3
+          OR COALESCE(v."RULE DESC"::text, '') ILIKE $3
+          OR COALESCE(v."RULE MESSAGE"::text, '') ILIKE $3
+          OR COALESCE(v."RULE QUERY ID"::text, '') ILIKE $3
+          OR COALESCE(v."RULE SQL QUERY"::text, '') ILIKE $3
+      `
+      : '';
+
+    const dataSql = `
+      SELECT
+        v."RULE ID"::text AS rule_id,
+        v."RULE QUERY ID"::text AS rule_query_id,
+        ('AML_RULE_' || v."RULE ID"::text || '_' || COALESCE(v."RULE QUERY ID"::text, '0')) AS fabric_ledger_key,
+        v."RULE DESC"::text AS rule_desc,
+        v."RULE STATUS"::text AS rule_status,
+        v."RULE START DATE" AS rule_start_date,
+        v."RULE EXPIRY DATE" AS rule_expiry_date,
+        v."RULE CREATION DATE" AS rule_creation_date,
+        v."RULE CREATOR"::text AS rule_creator,
+        v."RULE UPDATE DATE" AS rule_update_date,
+        v."RULE UPDATOR"::text AS rule_updator,
+        v."RULE MESSAGE"::text AS rule_message,
+        v."RULE SQL QUERY"::text AS rule_sql_query,
+        v."RULE QUERY CREATION DATE" AS rule_query_creation_date,
+        v."RULE QUERY CREATED BY"::text AS rule_query_created_by,
+        v."RULE APPLCIATION QUERY ID"::text AS rule_application_query_id,
+        v."RULE QUERY UPDATE DATE" AS rule_query_update_date,
+        v."RULE QUERY UPDATE BY"::text AS rule_query_update_by,
+
+        CASE
+          WHEN v."RULE EXPIRY DATE" IS NOT NULL
+           AND v."RULE EXPIRY DATE" < CURRENT_DATE
+          THEN 'EXPIRED'
+          WHEN COALESCE(v."RULE STATUS"::text, '') = '3'
+           AND COALESCE(v."RULE START DATE", CURRENT_DATE) <= CURRENT_DATE
+           AND (v."RULE EXPIRY DATE" IS NULL OR v."RULE EXPIRY DATE" >= CURRENT_DATE)
+          THEN 'ACTIVE'
+          ELSE 'INACTIVE'
+        END AS computed_rule_status,
+
+        fs.sync_status,
+        fs.fabric_status,
+        fs.fabric_tx_id,
+        fs.last_submitted_at,
+        fs.updated_at AS sync_updated_at
+
+      FROM blockchain.valoores_aml_rules v
+      LEFT JOIN blockchain.valoores_aml_rules_fabric_sync fs
+        ON fs.rule_key = ('AML_RULE_' || v."RULE ID"::text || '_' || COALESCE(v."RULE QUERY ID"::text, '0'))
+      ${searchWhere}
+      ORDER BY v."RULE ID", v."RULE QUERY ID"
+      LIMIT $1 OFFSET $2
+    `;
+
+    const countSql = `
+      SELECT COUNT(*)::int AS total
+      FROM blockchain.valoores_aml_rules v
+      ${searchWhere}
+    `;
+
+    const summaryResult = await db.query(summarySql);
+
+    const params = search ? [limit, offset, `%${search}%`] : [limit, offset];
+    const countParams = search ? [`%${search}%`] : [];
+
+    const dataResult = await db.query(dataSql, params);
+    const countResult = await db.query(countSql, countParams);
+
+    const summary = summaryResult.rows[0] || {};
+
+    return res.json({
+      success: true,
+      message: 'Valoores AML rules dashboard loaded successfully.',
+      data: {
+        cards: {
+          amlRulesCount: summary.aml_rules_count || 0,
+          amlRulesUpdatedToday: summary.aml_rules_updated_today || 0,
+          amlRulesCreatedToday: summary.aml_rules_created_today || 0,
+          activeAmlRules: summary.active_aml_rules || 0,
+          expiredAmlRules: summary.expired_aml_rules || 0,
+        },
+        pagination: {
+          limit,
+          offset,
+          total: countResult.rows[0]?.total || 0,
+          returned: dataResult.rows.length,
+        },
+        filters: {
+          search,
+        },
+        records: dataResult.rows,
+      },
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('[VALOORES_AML_RULES_DASHBOARD_ERROR]', error);
+
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to load Valoores AML rules dashboard.',
+      error: error.message,
+      data: null,
+      timestamp: new Date().toISOString(),
+    });
+  }
+});
+
+/* ===== VALOORES AML RULES DASHBOARD API END ===== */
+
+
 module.exports = router;
