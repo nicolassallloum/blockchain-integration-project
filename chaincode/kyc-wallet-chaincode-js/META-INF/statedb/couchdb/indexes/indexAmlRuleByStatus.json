@@ -1,0 +1,8 @@
+{
+  "index": {
+    "fields": ["docType", "ruleStatus"]
+  },
+  "ddoc": "indexAmlRuleByStatus",
+  "name": "indexAmlRuleByStatus",
+  "type": "json"
+}

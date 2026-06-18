@@ -22,6 +22,7 @@ const governmentSettingsRoutes = require('./routes/government-blockchain/setting
 const governmentDashboardRoutes = require('./routes/government-dashboard.routes');
 const riskFraudScreeningRoutes = require('./routes/government-risk-fraud-screening.routes');
 const valooresBlockchainRoutes = require('./routes/valoores-blockchain.routes');
+const valooresAmlRulesSyncService = require('./services/valoores-aml-rules-sync.service');
 
 const cors = require('cors');
 const crypto = require('crypto');
@@ -31,12 +32,20 @@ const paymentsDigitalStampsRoutes = require('./routes/payments-digital-stamps.ro
 const documentsKycRoutes = require('./routes/documents-kyc.routes');
 const governmentDocumentsRoutes = require('./routes/government-documents.routes');
 const governmentAmlDashboardRoutes = require('./routes/government-aml-dashboard.routes');
+const governmentValooresAmlRulesRoutes = require('./routes/government-valoores-aml-rules.routes');
 const governmentAmlAlertsQueueRoutes = require('./routes/government-aml-alerts-queue.routes');
 const governmentAmlCasesRoutes = require('./routes/government-aml-cases.routes');
 const governmentReportsRoutes = require('./routes/government-reports.routes');
 const hashVerificationRoutes = require('./routes/hash-verification.routes');
 const governmentAuditLogsRoutes = require('./routes/government-audit-logs.routes');
 const app = express();
+
+try {
+  valooresAmlRulesSyncService.startAutoSyncScheduler();
+} catch (error) {
+  console.error('[VALOORES_AML_RULES_AUTO_SYNC_BOOT_ERROR]', error.message);
+}
+
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
@@ -91,6 +100,9 @@ console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/hash-verification');
 
 app.use('/api/v1/government-blockchain/risk-fraud-screening', riskFraudScreeningRoutes);
 console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/risk-fraud-screening');
+
+app.use('/api/v1/government-blockchain/valoores-aml-rules', governmentValooresAmlRulesRoutes);
+console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/valoores-aml-rules');
 
 app.use('/api/v1/government-blockchain/audit-logs', governmentAuditLogsRoutes);
 console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/audit-logs');

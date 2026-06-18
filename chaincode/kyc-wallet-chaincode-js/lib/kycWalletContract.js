@@ -1255,6 +1255,262 @@ class KycWalletContract extends Contract {
         return JSON.stringify(results);
     }
 
+
+    async SaveAmlRule(ctx, amlRuleJson) {
+        this._required(amlRuleJson, 'amlRuleJson');
+
+        let amlRule;
+
+        try {
+            amlRule = JSON.parse(amlRuleJson);
+        } catch (error) {
+            throw new Error(`Invalid AML rule JSON: ${error.message}`);
+        }
+
+        const ruleId =
+            amlRule.ruleId ||
+            amlRule.rule_id ||
+            amlRule['RULE ID'];
+
+        this._required(ruleId, 'ruleId');
+
+        const key = this._amlRuleKey(ruleId);
+        const existingBytes = await ctx.stub.getState(key);
+
+        let existingRecord = null;
+
+        if (existingBytes && existingBytes.length > 0) {
+            existingRecord = JSON.parse(existingBytes.toString());
+        }
+
+        const txId = ctx.stub.getTxID();
+        const now = this._getTxTimestamp(ctx);
+        const sourcePayloadHash = this._hashValue(amlRuleJson);
+
+        const record = {
+            docType: 'AML_RULE',
+            ledgerReference: key,
+
+            ruleId: String(ruleId),
+            ruleDesc:
+                amlRule.ruleDesc ||
+                amlRule.rule_desc ||
+                amlRule['RULE DESC'] ||
+                null,
+
+            ruleStatus:
+                amlRule.ruleStatus ||
+                amlRule.rule_status ||
+                amlRule['RULE STATUS'] ||
+                null,
+
+            ruleStartDate:
+                amlRule.ruleStartDate ||
+                amlRule.rule_start_date ||
+                amlRule['RULE START DATE'] ||
+                null,
+
+            ruleExpiryDate:
+                amlRule.ruleExpiryDate ||
+                amlRule.rule_expiry_date ||
+                amlRule['RULE EXPIRY DATE'] ||
+                null,
+
+            ruleCreationDate:
+                amlRule.ruleCreationDate ||
+                amlRule.rule_creation_date ||
+                amlRule['RULE CREATION DATE'] ||
+                null,
+
+            ruleCreator:
+                amlRule.ruleCreator ||
+                amlRule.rule_creator ||
+                amlRule['RULE CREATOR'] ||
+                null,
+
+            ruleUpdateDate:
+                amlRule.ruleUpdateDate ||
+                amlRule.rule_update_date ||
+                amlRule['RULE UPDATE DATE'] ||
+                null,
+
+            ruleUpdator:
+                amlRule.ruleUpdator ||
+                amlRule.rule_updator ||
+                amlRule['RULE UPDATOR'] ||
+                null,
+
+            ruleMessage:
+                amlRule.ruleMessage ||
+                amlRule.rule_message ||
+                amlRule['RULE MESSAGE'] ||
+                null,
+
+            ruleQueryId:
+                amlRule.ruleQueryId ||
+                amlRule.rule_query_id ||
+                amlRule['RULE QUERY ID'] ||
+                null,
+
+            ruleSqlQuery:
+                amlRule.ruleSqlQuery ||
+                amlRule.rule_sql_query ||
+                amlRule['RULE SQL QUERY'] ||
+                null,
+
+            ruleQueryCreationDate:
+                amlRule.ruleQueryCreationDate ||
+                amlRule.rule_query_creation_date ||
+                amlRule['RULE QUERY CREATION DATE'] ||
+                null,
+
+            ruleQueryCreatedBy:
+                amlRule.ruleQueryCreatedBy ||
+                amlRule.rule_query_created_by ||
+                amlRule['RULE QUERY CREATED BY'] ||
+                null,
+
+            ruleApplicationQueryId:
+                amlRule.ruleApplicationQueryId ||
+                amlRule.rule_application_query_id ||
+                amlRule['RULE APPLCIATION QUERY ID'] ||
+                amlRule['RULE APPLICATION QUERY ID'] ||
+                null,
+
+            ruleQueryUpdateDate:
+                amlRule.ruleQueryUpdateDate ||
+                amlRule.rule_query_update_date ||
+                amlRule['RULE QUERY UPDATE DATE'] ||
+                null,
+
+            ruleQueryUpdateBy:
+                amlRule.ruleQueryUpdateBy ||
+                amlRule.rule_query_update_by ||
+                amlRule['RULE QUERY UPDATE BY'] ||
+                null,
+
+            sourceSystem: 'POSTGRESQL_VIEW',
+            sourceView: 'blockchain.valoores_aml_rules',
+            sourcePayloadHash,
+
+            rawSourceRecord: amlRule,
+
+            blockchainStatus: 'CONFIRMED',
+            createdAt: existingRecord ? existingRecord.createdAt : now,
+            updatedAt: now,
+            createdTxId: existingRecord ? existingRecord.createdTxId : txId,
+            updatedTxId: txId
+        };
+
+        await ctx.stub.putState(key, Buffer.from(JSON.stringify(record)));
+
+        return this._successResponse(
+            existingRecord
+                ? 'AML rule updated on blockchain successfully'
+                : 'AML rule created on blockchain successfully',
+            {
+                key,
+                ruleId: record.ruleId,
+                blockchainTxId: txId,
+                sourcePayloadHash,
+                record
+            }
+        );
+    }
+
+    async GetAmlRule(ctx, ruleId) {
+        this._required(ruleId, 'ruleId');
+
+        const key = this._amlRuleKey(ruleId);
+        const data = await ctx.stub.getState(key);
+
+        if (!data || data.length === 0) {
+            throw new Error(`AML rule not found on blockchain: ${ruleId}`);
+        }
+
+        return data.toString();
+    }
+
+    async AmlRuleExists(ctx, ruleId) {
+        this._required(ruleId, 'ruleId');
+
+        const key = this._amlRuleKey(ruleId);
+        const data = await ctx.stub.getState(key);
+
+        return data && data.length > 0;
+    }
+
+    async QueryAmlRulesByStatus(ctx, ruleStatus) {
+        this._required(ruleStatus, 'ruleStatus');
+
+        const query = {
+            selector: {
+                docType: 'AML_RULE',
+                ruleStatus: String(ruleStatus)
+            }
+        };
+
+        const results = await this._queryLedgerWithKeys(ctx, query);
+
+        return JSON.stringify(results);
+    }
+
+    async GetAllAmlRules(ctx) {
+        const query = {
+            selector: {
+                docType: 'AML_RULE'
+            }
+        };
+
+        const results = await this._queryLedgerWithKeys(ctx, query);
+
+        return JSON.stringify(results);
+    }
+
+    async GetAmlRuleHistory(ctx, ruleId) {
+        this._required(ruleId, 'ruleId');
+
+        const key = this._amlRuleKey(ruleId);
+        const iterator = await ctx.stub.getHistoryForKey(key);
+
+        const results = [];
+
+        while (true) {
+            const item = await iterator.next();
+
+            if (item.value) {
+                let record = null;
+
+                if (item.value.value && item.value.value.length > 0) {
+                    try {
+                        record = JSON.parse(item.value.value.toString('utf8'));
+                    } catch {
+                        record = item.value.value.toString('utf8');
+                    }
+                }
+
+                results.push({
+                    txId: item.value.txId,
+                    timestamp: item.value.timestamp,
+                    isDelete: item.value.isDelete,
+                    record
+                });
+            }
+
+            if (item.done) {
+                await iterator.close();
+                break;
+            }
+        }
+
+        return JSON.stringify(results);
+    }
+
+    _amlRuleKey(ruleId) {
+        return `AML_RULE_${ruleId}`;
+    }
+
+
     _walletKey(walletAddress) {
         return `WALLET_${walletAddress}`;
     }
@@ -1506,6 +1762,314 @@ class KycWalletContract extends Contract {
 
         return JSON.stringify(results);
     }
+
+
+
+  /* ===== VALOORES AML RULE COMPOSITE KEY OVERRIDES START ===== */
+
+  _amlRuleCompositeKey(ruleId, ruleQueryId) {
+    const cleanRuleId = String(ruleId || '').trim();
+    const cleanRuleQueryId = String(ruleQueryId || '0').trim();
+
+    if (!cleanRuleId) {
+      throw new Error('RULE ID is required');
+    }
+
+    return `AML_RULE_${cleanRuleId}_${cleanRuleQueryId || '0'}`;
+  }
+
+  _amlRuleLegacyKey(ruleId) {
+    const cleanRuleId = String(ruleId || '').trim();
+
+    if (!cleanRuleId) {
+      throw new Error('RULE ID is required');
+    }
+
+    return `AML_RULE_${cleanRuleId}`;
+  }
+
+  _getAmlRuleIdFromPayload(payload) {
+    return String(
+      payload.ruleId ||
+      payload.rule_id ||
+      payload['RULE ID'] ||
+      ''
+    ).trim();
+  }
+
+  _getAmlRuleQueryIdFromPayload(payload) {
+    return String(
+      payload.ruleQueryId ||
+      payload.rule_query_id ||
+      payload['RULE QUERY ID'] ||
+      '0'
+    ).trim();
+  }
+
+  _amlRulePayloadHash(payload) {
+    const crypto = require('crypto');
+    return crypto
+      .createHash('sha256')
+      .update(JSON.stringify(payload))
+      .digest('hex');
+  }
+
+
+  _getFabricTxTimestampIso(ctx) {
+    const ts = ctx.stub.getTxTimestamp();
+    const seconds = Number(ts.seconds.low || ts.seconds);
+    const nanos = Number(ts.nanos || 0);
+    return new Date((seconds * 1000) + Math.floor(nanos / 1000000)).toISOString();
+  }
+
+  async SaveAmlRule(ctx, amlRuleJson) {
+    if (!amlRuleJson) {
+      throw new Error('AML rule payload is required');
+    }
+
+    let sourcePayload;
+
+    try {
+      sourcePayload = typeof amlRuleJson === 'string'
+        ? JSON.parse(amlRuleJson)
+        : amlRuleJson;
+    } catch (error) {
+      throw new Error(`Invalid AML rule JSON payload: ${error.message}`);
+    }
+
+    const ruleId = this._getAmlRuleIdFromPayload(sourcePayload);
+    const ruleQueryId = this._getAmlRuleQueryIdFromPayload(sourcePayload);
+
+    if (!ruleId) {
+      throw new Error('RULE ID is required');
+    }
+
+    const key = this._amlRuleCompositeKey(ruleId, ruleQueryId);
+    const existingBytes = await ctx.stub.getState(key);
+    const now = this._getFabricTxTimestampIso(ctx);
+    const txId = ctx.stub.getTxID();
+
+    let existingRecord = null;
+
+    if (existingBytes && existingBytes.length > 0) {
+      existingRecord = JSON.parse(existingBytes.toString());
+    }
+
+    const record = {
+      docType: 'AML_RULE',
+      ledgerReference: key,
+      ruleId,
+      ruleQueryId,
+
+      ruleDesc: sourcePayload.ruleDesc || sourcePayload['RULE DESC'] || null,
+      ruleStatus: String(sourcePayload.ruleStatus || sourcePayload['RULE STATUS'] || ''),
+      ruleStartDate: sourcePayload.ruleStartDate || sourcePayload['RULE START DATE'] || null,
+      ruleExpiryDate: sourcePayload.ruleExpiryDate || sourcePayload['RULE EXPIRY DATE'] || null,
+      ruleCreationDate: sourcePayload.ruleCreationDate || sourcePayload['RULE CREATION DATE'] || null,
+      ruleCreator: String(sourcePayload.ruleCreator || sourcePayload['RULE CREATOR'] || ''),
+      ruleUpdateDate: sourcePayload.ruleUpdateDate || sourcePayload['RULE UPDATE DATE'] || null,
+      ruleUpdator: String(sourcePayload.ruleUpdator || sourcePayload['RULE UPDATOR'] || ''),
+      ruleMessage: sourcePayload.ruleMessage || sourcePayload['RULE MESSAGE'] || null,
+      ruleSqlQuery: sourcePayload.ruleSqlQuery || sourcePayload['RULE SQL QUERY'] || null,
+      ruleQueryCreationDate: sourcePayload.ruleQueryCreationDate || sourcePayload['RULE QUERY CREATION DATE'] || null,
+      ruleQueryCreatedBy: String(sourcePayload.ruleQueryCreatedBy || sourcePayload['RULE QUERY CREATED BY'] || ''),
+      ruleApplicationQueryId: String(sourcePayload.ruleApplicationQueryId || sourcePayload['RULE APPLCIATION QUERY ID'] || ''),
+      ruleQueryUpdateDate: sourcePayload.ruleQueryUpdateDate || sourcePayload['RULE QUERY UPDATE DATE'] || null,
+      ruleQueryUpdateBy: String(sourcePayload.ruleQueryUpdateBy || sourcePayload['RULE QUERY UPDATE BY'] || ''),
+
+      sourceSystem: 'POSTGRESQL_VIEW',
+      sourceView: 'blockchain.valoores_aml_rules',
+      sourcePayloadHash: this._amlRulePayloadHash(sourcePayload),
+      rawSourceRecord: sourcePayload,
+
+      blockchainStatus: 'CONFIRMED',
+      createdAt: existingRecord?.createdAt || now,
+      updatedAt: now,
+      createdTxId: existingRecord?.createdTxId || txId,
+      updatedTxId: txId
+    };
+
+    await ctx.stub.putState(key, Buffer.from(JSON.stringify(record)));
+
+    return JSON.stringify({
+      success: true,
+      message: existingRecord
+        ? 'AML rule updated on blockchain successfully'
+        : 'AML rule created on blockchain successfully',
+      data: {
+        key,
+        ruleId,
+        ruleQueryId,
+        blockchainTxId: txId,
+        sourcePayloadHash: record.sourcePayloadHash,
+        record
+      }
+    });
+  }
+
+  async GetAmlRule(ctx, ruleId, ruleQueryId) {
+    if (!ruleId) {
+      throw new Error('RULE ID is required');
+    }
+
+    if (ruleQueryId !== undefined && ruleQueryId !== null && String(ruleQueryId).trim() !== '') {
+      const key = this._amlRuleCompositeKey(ruleId, ruleQueryId);
+      const bytes = await ctx.stub.getState(key);
+
+      if (!bytes || bytes.length === 0) {
+        throw new Error(`AML rule not found on blockchain: ${ruleId}/${ruleQueryId}`);
+      }
+
+      return bytes.toString();
+    }
+
+    const selector = {
+      selector: {
+        docType: 'AML_RULE',
+        ruleId: String(ruleId).trim()
+      }
+    };
+
+    const iterator = await ctx.stub.getQueryResult(JSON.stringify(selector));
+    const records = [];
+
+    while (true) {
+      const result = await iterator.next();
+
+      if (result.value && result.value.value) {
+        records.push(JSON.parse(result.value.value.toString('utf8')));
+      }
+
+      if (result.done) {
+        await iterator.close();
+        break;
+      }
+    }
+
+    if (records.length > 0) {
+      return JSON.stringify(records.length === 1 ? records[0] : records);
+    }
+
+    const legacyKey = this._amlRuleLegacyKey(ruleId);
+    const legacyBytes = await ctx.stub.getState(legacyKey);
+
+    if (!legacyBytes || legacyBytes.length === 0) {
+      throw new Error(`AML rule not found on blockchain: ${ruleId}`);
+    }
+
+    return legacyBytes.toString();
+  }
+
+  async AmlRuleExists(ctx, ruleId, ruleQueryId) {
+    if (!ruleId) {
+      throw new Error('RULE ID is required');
+    }
+
+    const key = ruleQueryId
+      ? this._amlRuleCompositeKey(ruleId, ruleQueryId)
+      : this._amlRuleLegacyKey(ruleId);
+
+    const bytes = await ctx.stub.getState(key);
+    return Boolean(bytes && bytes.length > 0);
+  }
+
+  async QueryAmlRulesByStatus(ctx, ruleStatus) {
+    const selector = {
+      selector: {
+        docType: 'AML_RULE',
+        ruleStatus: String(ruleStatus || '')
+      }
+    };
+
+    const iterator = await ctx.stub.getQueryResult(JSON.stringify(selector));
+    const records = [];
+
+    while (true) {
+      const result = await iterator.next();
+
+      if (result.value && result.value.value) {
+        records.push({
+          key: result.value.key,
+          record: JSON.parse(result.value.value.toString('utf8'))
+        });
+      }
+
+      if (result.done) {
+        await iterator.close();
+        break;
+      }
+    }
+
+    return JSON.stringify(records);
+  }
+
+  async GetAllAmlRules(ctx) {
+    const iterator = await ctx.stub.getStateByRange('AML_RULE_', 'AML_RULE_~');
+    const records = [];
+
+    while (true) {
+      const result = await iterator.next();
+
+      if (result.value && result.value.value) {
+        const record = JSON.parse(result.value.value.toString('utf8'));
+
+        if (record.docType === 'AML_RULE') {
+          records.push({
+            key: result.value.key,
+            record
+          });
+        }
+      }
+
+      if (result.done) {
+        await iterator.close();
+        break;
+      }
+    }
+
+    return JSON.stringify(records);
+  }
+
+  async GetAmlRuleHistory(ctx, ruleId, ruleQueryId) {
+    if (!ruleId) {
+      throw new Error('RULE ID is required');
+    }
+
+    const key = ruleQueryId
+      ? this._amlRuleCompositeKey(ruleId, ruleQueryId)
+      : this._amlRuleLegacyKey(ruleId);
+
+    const iterator = await ctx.stub.getHistoryForKey(key);
+    const history = [];
+
+    while (true) {
+      const result = await iterator.next();
+
+      if (result.value) {
+        let value = null;
+
+        if (result.value.value && result.value.value.length > 0) {
+          value = JSON.parse(result.value.value.toString('utf8'));
+        }
+
+        history.push({
+          txId: result.value.txId,
+          timestamp: result.value.timestamp,
+          isDelete: result.value.isDelete,
+          value
+        });
+      }
+
+      if (result.done) {
+        await iterator.close();
+        break;
+      }
+    }
+
+    return JSON.stringify(history);
+  }
+
+  /* ===== VALOORES AML RULE COMPOSITE KEY OVERRIDES END ===== */
 
 
 }

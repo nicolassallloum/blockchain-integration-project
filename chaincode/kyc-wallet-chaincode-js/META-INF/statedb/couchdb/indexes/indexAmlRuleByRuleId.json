@@ -1,0 +1,11 @@
+{
+  "index": {
+    "fields": [
+      "docType",
+      "ruleId"
+    ]
+  },
+  "ddoc": "indexAmlRuleByRuleIdDoc",
+  "name": "indexAmlRuleByRuleId",
+  "type": "json"
+}
