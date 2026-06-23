@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Blockchain PostgreSQL Browser</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      background: #020617;
+      border-right: 1px solid #334155;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .main {
+      padding: 20px;
+      overflow: auto;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      box-sizing: border-box;
+      background: #111827;
+      color: #e5e7eb;
+      border: 1px solid #475569;
+      border-radius: 6px;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+
+    textarea {
+      height: 140px;
+      resize: vertical;
+    }
+
+    button {
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 14px;
+      cursor: pointer;
+      margin-right: 8px;
+      margin-bottom: 8px;
+    }
+
+    button:hover {
+      background: #1d4ed8;
+    }
+
+    .danger {
+      background: #dc2626;
+    }
+
+    .success-box {
+      background: #064e3b;
+      border: 1px solid #10b981;
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+    }
+
+    .error-box {
+      background: #7f1d1d;
+      border: 1px solid #ef4444;
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+    }
+
+    .table-list button {
+      width: 100%;
+      text-align: left;
+      background: #1e293b;
+      border: 1px solid #334155;
+    }
+
+    .table-list button:hover {
+      background: #334155;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #020617;
+      margin-top: 15px;
+      font-size: 13px;
+    }
+
+    th, td {
+      border: 1px solid #334155;
+      padding: 8px;
+      text-align: left;
+      vertical-align: top;
+      white-space: nowrap;
+    }
+
+    th {
+      background: #1e293b;
+      position: sticky;
+      top: 0;
+    }
+
+    .table-wrapper {
+      overflow: auto;
+      max-height: 520px;
+      border: 1px solid #334155;
+      border-radius: 8px;
+    }
+
+    .meta {
+      color: #93c5fd;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #1e3a8a;
+      color: #bfdbfe;
+      font-size: 12px;
+      margin-bottom: 10px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <h2>PostgreSQL Browser</h2>
+      <div class="badge">Blockchain Project</div>
+
+      <label>Admin Secret</label>
+      <input id="secret" type="password" placeholder="Enter UI secret" />
+
+      <button onclick="saveSecret()">Save Secret</button>
+      <button onclick="loadHealth()">Test Connection</button>
+
+      <hr style="border-color:#334155; margin:20px 0;" />
+
+      <label>Schema</label>
+      <select id="schema" onchange="loadTables()">
+        <option value="blockchain">blockchain</option>
+      </select>
+
+      <button onclick="loadSchemas()">Load Schemas</button>
+      <button onclick="loadTables()">Load Tables</button>
+
+      <h3>Tables</h3>
+      <div id="tables" class="table-list"></div>
+    </aside>
+
+    <main class="main">
+      <h1>Server Data Browser</h1>
+      <div id="message"></div>
+
+      <section>
+        <h2>Selected Table</h2>
+        <div class="grid">
+          <input id="selectedTable" placeholder="Selected table" readonly />
+          <select id="limit">
+            <option value="50">50 rows</option>
+            <option value="100" selected>100 rows</option>
+            <option value="200">200 rows</option>
+            <option value="500">500 rows</option>
+          </select>
+        </div>
+
+        <button onclick="loadRows()">Refresh Rows</button>
+        <button onclick="loadColumns()">Show Columns</button>
+
+        <div id="tableMeta" class="meta"></div>
+        <div id="data"></div>
+      </section>
+
+      <hr style="border-color:#334155; margin:30px 0;" />
+
+      <section>
+        <h2>Read-Only SQL Query</h2>
+        <p class="meta">Allowed: SELECT, WITH, SHOW, EXPLAIN only.</p>
+
+        <textarea id="query">SELECT * FROM blockchain.blockchain_validation_logs LIMIT 100;</textarea>
+
+        <button onclick="runQuery()">Run Query</button>
+        <button class="danger" onclick="clearOutput()">Clear Output</button>
+
+        <div id="queryResult"></div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const API_BASE = '/api/v1/postgres-browser';
+
+    function getSecret() {
+      return localStorage.getItem('pgadmin_ui_secret') || document.getElementById('secret').value;
+    }
+
+    function saveSecret() {
+      const secret = document.getElementById('secret').value;
+      localStorage.setItem('pgadmin_ui_secret', secret);
+      showMessage('Secret saved locally in browser.', 'success');
+    }
+
+    function initSecret() {
+      const secret = localStorage.getItem('pgadmin_ui_secret');
+      if (secret) {
+        document.getElementById('secret').value = secret;
+      }
+    }
+
+    async function api(path, options = {}) {
+      const secret = getSecret();
+
+      const response = await fetch(API_BASE + path, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          'x-pgadmin-ui-secret': secret,
+          ...(options.headers || {}),
+        },
+      });
+
+      const json = await response.json();
+
+      if (!response.ok || json.success === false) {
+        throw new Error(json.message || 'Request failed');
+      }
+
+      return json;
+    }
+
+    function showMessage(text, type = 'success') {
+      document.getElementById('message').innerHTML =
+        `<div class="${type === 'success' ? 'success-box' : 'error-box'}">${escapeHtml(text)}</div>`;
+    }
+
+    function escapeHtml(value) {
+      if (value === null || value === undefined) return '';
+      return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    function renderTable(rows, containerId) {
+      const container = document.getElementById(containerId);
+
+      if (!rows || rows.length === 0) {
+        container.innerHTML = '<p class="meta">No data found.</p>';
+        return;
+      }
+
+      const columns = Object.keys(rows[0]);
+
+      let html = '<div class="table-wrapper"><table><thead><tr>';
+      for (const col of columns) {
+        html += `<th>${escapeHtml(col)}</th>`;
+      }
+      html += '</tr></thead><tbody>';
+
+      for (const row of rows) {
+        html += '<tr>';
+        for (const col of columns) {
+          let value = row[col];
+
+          if (typeof value === 'object' && value !== null) {
+            value = JSON.stringify(value);
+          }
+
+          html += `<td>${escapeHtml(value)}</td>`;
+        }
+        html += '</tr>';
+      }
+
+      html += '</tbody></table></div>';
+      container.innerHTML = html;
+    }
+
+    async function loadHealth() {
+      try {
+        const result = await api('/health');
+        showMessage(
+          `Connected to database ${result.data.database} as ${result.data.user_name} on ${result.data.server_address}:${result.data.server_port}`,
+          'success'
+        );
+      } catch (error) {
+        showMessage(error.message, 'error');
+      }
+    }
+
+    async function loadSchemas() {
+      try {
+        const result = await api('/schemas');
+        const schemaSelect = document.getElementById('schema');
+
+        schemaSelect.innerHTML = result.data
+          .map(row => `<option value="${escapeHtml(row.schema_name)}">${escapeHtml(row.schema_name)}</option>`)
+          .join('');
+
+        if ([...schemaSelect.options].some(o => o.value === 'blockchain')) {
+          schemaSelect.value = 'blockchain';
+        }
+
+        showMessage('Schemas loaded.', 'success');
+        await loadTables();
+      } catch (error) {
+        showMessage(error.message, 'error');
+      }
+    }
+
+    async function loadTables() {
+      try {
+        const schema = document.getElementById('schema').value;
+        const result = await api(`/tables?schema=${encodeURIComponent(schema)}`);
+
+        const tablesDiv = document.getElementById('tables');
+
+        tablesDiv.innerHTML = result.data.map(row => {
+          return `<button onclick="selectTable('${escapeHtml(row.table_name)}')">${escapeHtml(row.table_name)}</button>`;
+        }).join('');
+
+        showMessage(`Loaded ${result.data.length} tables from schema ${schema}.`, 'success');
+      } catch (error) {
+        showMessage(error.message, 'error');
+      }
+    }
+
+    async function selectTable(table) {
+      document.getElementById('selectedTable').value = table;
+      await loadRows();
+    }
+
+    async function loadRows() {
+      try {
+        const schema = document.getElementById('schema').value;
+        const table = document.getElementById('selectedTable').value;
+        const limit = document.getElementById('limit').value;
+
+        if (!table) {
+          showMessage('Select a table first.', 'error');
+          return;
+        }
+
+        const result = await api(`/rows?schema=${encodeURIComponent(schema)}&table=${encodeURIComponent(table)}&limit=${limit}`);
+
+        document.getElementById('tableMeta').innerText =
+          `Schema: ${schema} | Table: ${table} | Total rows: ${result.total} | Showing: ${result.data.length}`;
+
+        renderTable(result.data, 'data');
+      } catch (error) {
+        showMessage(error.message, 'error');
+      }
+    }
+
+    async function loadColumns() {
+      try {
+        const schema = document.getElementById('schema').value;
+        const table = document.getElementById('selectedTable').value;
+
+        if (!table) {
+          showMessage('Select a table first.', 'error');
+          return;
+        }
+
+        const result = await api(`/columns?schema=${encodeURIComponent(schema)}&table=${encodeURIComponent(table)}`);
+        renderTable(result.data, 'data');
+        document.getElementById('tableMeta').innerText = `Columns for ${schema}.${table}`;
+      } catch (error) {
+        showMessage(error.message, 'error');
+      }
+    }
+
+    async function runQuery() {
+      try {
+        const query = document.getElementById('query').value;
+
+        const result = await api('/query', {
+          method: 'POST',
+          body: JSON.stringify({ query }),
+        });
+
+        document.getElementById('queryResult').innerHTML =
+          `<p class="meta">Rows: ${result.data.length}</p>`;
+
+        renderTable(result.data, 'queryResult');
+        showMessage('Query executed successfully.', 'success');
+      } catch (error) {
+        showMessage(error.message, 'error');
+      }
+    }
+
+    function clearOutput() {
+      document.getElementById('data').innerHTML = '';
+      document.getElementById('queryResult').innerHTML = '';
+      document.getElementById('tableMeta').innerText = '';
+    }
+
+    initSecret();
+  </script>
+</body>
+</html>

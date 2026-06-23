@@ -19,6 +19,8 @@ const blockchainKycRoutes = require('./routes/blockchain-kyc.routes');
 const app = express();
 const governmentReferenceRoutes = require('./routes/government-blockchain/reference.routes');
 const paymentsDigitalStampsRoutes = require('./routes/payments-digital-stamps.routes');
+const postgresBrowserRoutes = require('./routes/postgres-browser.routes');
+
 /**
  * ---------------------------------------------------------
  * 1. CORS CONFIGURATION
@@ -53,7 +55,7 @@ const corsOptions = {
   ],
   optionsSuccessStatus: 204
 };
-
+app.use('/api/v1/postgres-browser', postgresBrowserRoutes);
 /**
  * ---------------------------------------------------------
  * 2. MANUAL CORS PREFLIGHT HANDLER

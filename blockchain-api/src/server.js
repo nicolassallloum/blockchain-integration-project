@@ -17,6 +17,7 @@
 require('dotenv').config();
 
 const express = require('express');
+const path = require('path');
 const blockchainProofsRoutes = require('./routes/government-blockchain-proofs.routes');
 const governmentSettingsRoutes = require('./routes/government-blockchain/settings.routes');
 const governmentDashboardRoutes = require('./routes/government-dashboard.routes');
@@ -39,6 +40,10 @@ const governmentReportsRoutes = require('./routes/government-reports.routes');
 const hashVerificationRoutes = require('./routes/hash-verification.routes');
 const governmentAuditLogsRoutes = require('./routes/government-audit-logs.routes');
 const app = express();
+
+// Serve internal UI files from /public
+app.use(express.static(path.join(__dirname, '..', 'public')));
+const postgresBrowserRoutes = require('./routes/postgres-browser.routes');
 
 try {
   valooresAmlRulesSyncService.startAutoSyncScheduler();
@@ -75,7 +80,7 @@ const earlyGovernmentCors = cors({
 
 app.use('/api/v1/government-blockchain', earlyGovernmentCors);
 app.options(/^\/api\/v1\/government-blockchain(\/.*)?$/, earlyGovernmentCors);
-
+app.use('/api/v1/postgres-browser', postgresBrowserRoutes);
 const documentsKycCors = cors({
   origin: [
     'http://localhost:4200',
