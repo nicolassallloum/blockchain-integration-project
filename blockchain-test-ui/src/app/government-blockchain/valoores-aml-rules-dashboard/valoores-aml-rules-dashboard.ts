@@ -78,8 +78,10 @@ export class ValooresAmlRulesDashboard implements OnInit {
       params.set('search', this.search.trim());
     }
 
+    const backendBaseUrl = `${window.location.protocol}//${window.location.hostname}:3001`;
+
     this.http
-      .get<any>(`/api/v1/government-blockchain/valoores-aml-rules/dashboard?${params.toString()}`)
+      .get<any>(`${backendBaseUrl}/api/v1/government-blockchain/valoores-aml-rules/dashboard?${params.toString()}`)
       .subscribe({
         next: (response) => {
           const data = response?.data || {};

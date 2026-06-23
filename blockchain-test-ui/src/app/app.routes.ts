@@ -35,6 +35,11 @@ import { Settings } from './government-blockchain/settings/settings';
 import { FabricHistory } from './government-blockchain/fabric-history/fabric-history';
 export const routes: Routes = [
   {
+    path: 'government-blockchain/valoores-aml-rules-dashboard',
+    component: ValooresAmlRulesDashboard,
+  },
+
+  {
     path: 'government-blockchain/transactions-daily-created',
     loadComponent: () => import('./government-blockchain/transactions-daily-created/transactions-daily-created').then(m => m.TransactionsDailyCreatedComponent)
   },
