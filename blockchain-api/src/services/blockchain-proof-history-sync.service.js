@@ -139,6 +139,98 @@ async function previewSourceRecords(recordType, limitInput, offsetInput) {
   };
 }
 
+
+function buildSourceRecordIdSqlExpression(keyColumns) {
+  return `CONCAT_WS('::', ${keyColumns.map((keyColumn) => `${quoteIdentifier(keyColumn)}::TEXT`).join(', ')})`;
+}
+
+async function detectCreateRecords(recordType, limitInput, offsetInput) {
+  const config = getSourceViewConfig(recordType);
+  const fullViewName = getTrustedFullViewName(config);
+  const limit = sanitizeLimit(limitInput, 10, 100);
+  const offset = sanitizeOffset(offsetInput);
+
+  const keyColumns = config.sourcePrimaryKey;
+  const selectColumns = keyColumns.map(quoteIdentifier).join(', ');
+  const orderColumns = keyColumns.map(quoteIdentifier).join(', ');
+  const sourceRecordIdExpression = buildSourceRecordIdSqlExpression(keyColumns);
+
+  const totalSourceRecords = await countSourceRecords(recordType);
+
+  const countResult = await postgres.query(
+    `
+    WITH source_records AS (
+      SELECT
+        ${sourceRecordIdExpression} AS source_record_id
+      FROM ${fullViewName}
+    ),
+    existing_history AS (
+      SELECT DISTINCT
+        source_record_id
+      FROM blockchain.blockchain_sync_history
+      WHERE record_type = $1
+    )
+    SELECT
+      COUNT(*)::BIGINT AS create_candidate_count
+    FROM source_records src
+    LEFT JOIN existing_history hist
+      ON hist.source_record_id = src.source_record_id
+    WHERE hist.source_record_id IS NULL
+    `,
+    [config.recordType]
+  );
+
+  const candidatesResult = await postgres.query(
+    `
+    WITH source_records AS (
+      SELECT
+        ${selectColumns},
+        ${sourceRecordIdExpression} AS source_record_id
+      FROM ${fullViewName}
+    ),
+    existing_history AS (
+      SELECT DISTINCT
+        source_record_id
+      FROM blockchain.blockchain_sync_history
+      WHERE record_type = $1
+    )
+    SELECT
+      ${selectColumns},
+      src.source_record_id
+    FROM source_records src
+    LEFT JOIN existing_history hist
+      ON hist.source_record_id = src.source_record_id
+    WHERE hist.source_record_id IS NULL
+    ORDER BY ${orderColumns}
+    LIMIT $2 OFFSET $3
+    `,
+    [config.recordType, limit, offset]
+  );
+
+  const createCandidateCount = Number(countResult.rows[0].create_candidate_count);
+
+  const candidates = candidatesResult.rows.map((row) => ({
+    recordType: config.recordType,
+    actionType: 'CREATE',
+    sourceViewName: config.fullViewName,
+    sourcePrimaryKey: buildSourcePrimaryKey(row, keyColumns),
+    sourceRecordId: row.source_record_id,
+    reason: 'No existing history record found for this source record'
+  }));
+
+  return {
+    recordType: config.recordType,
+    sourceViewName: config.fullViewName,
+    sourcePrimaryKeyColumns: keyColumns,
+    totalSourceRecords,
+    existingHistoryRecords: totalSourceRecords - createCandidateCount,
+    createCandidateCount,
+    limit,
+    offset,
+    candidates
+  };
+}
+
 async function createSyncRun({
   runType = 'MANUAL',
   recordType,
@@ -298,6 +390,7 @@ module.exports = {
   getSourceViewConfig,
   countSourceRecords,
   previewSourceRecords,
+  detectCreateRecords,
   createSyncRun,
   finishSyncRun,
   createValidationRun,

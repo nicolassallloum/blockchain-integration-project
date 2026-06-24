@@ -45,6 +45,28 @@ async function previewSourceRecords(req, res) {
   }
 }
 
+
+async function detectCreateRecords(req, res) {
+  try {
+    const { recordType } = req.params;
+    const { limit, offset } = req.query;
+
+    const data = await historySyncService.detectCreateRecords(recordType, limit, offset);
+
+    return res.status(200).json({
+      success: true,
+      message: 'CREATE candidates detected successfully',
+      data
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: 'Failed to detect CREATE candidates',
+      error: error.message
+    });
+  }
+}
+
 async function createValidationRun(req, res) {
   try {
     const { recordType } = req.params;
@@ -68,5 +90,6 @@ async function createValidationRun(req, res) {
 module.exports = {
   healthCheck,
   previewSourceRecords,
+  detectCreateRecords,
   createValidationRun
 };
