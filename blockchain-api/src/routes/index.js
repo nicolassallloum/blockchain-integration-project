@@ -35,6 +35,7 @@ const healthRoutes = safeLoadRoute("health", "./health.routes");
 const blockchainRoutes = safeLoadRoute("blockchain", "./blockchain.routes");
 const blockchainProofOwnershipRoutes = require('./blockchain-proof-ownership.routes');
 const blockchainProofSourceViewsRoutes = require('./blockchain-proof-source-views.routes');
+const blockchainProofHistorySyncRoutes = require('./blockchain-proof-history-sync.routes');
 // const referenceRoutes = require('./reference.routes');
 // const residentRoutes = require('./resident.routes');
 
@@ -241,5 +242,7 @@ router.use('/valoores-blockchain', valooresBlockchainRoutes);
 router.use('/blockchain-proof/ownership', blockchainProofOwnershipRoutes);
 
 router.use('/blockchain-proof/source-views', blockchainProofSourceViewsRoutes);
+
+router.use('/blockchain-proof/history-sync', blockchainProofHistorySyncRoutes);
 
 module.exports = router;
