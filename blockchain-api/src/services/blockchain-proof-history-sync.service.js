@@ -492,6 +492,146 @@ async function detectUnchangedRecords(recordType, limitInput, offsetInput) {
   };
 }
 
+
+function validateSourcePrimaryKeyInput(config, input) {
+  const keyColumns = config.sourcePrimaryKey;
+  const missingKeys = keyColumns.filter((keyColumn) => {
+    const value = input[keyColumn];
+    return value === undefined || value === null || String(value).trim() === '';
+  });
+
+  if (missingKeys.length > 0) {
+    throw new Error(`Missing required source key values: ${missingKeys.join(', ')}`);
+  }
+
+  return keyColumns.reduce((acc, keyColumn) => {
+    acc[keyColumn] = String(input[keyColumn]).trim();
+    return acc;
+  }, {});
+}
+
+function buildPrimaryKeyWhereClause(keyColumns) {
+  return keyColumns
+    .map((keyColumn, index) => `${quoteIdentifier(keyColumn)}::TEXT = $${index + 1}`)
+    .join(' AND ');
+}
+
+async function getSourceRecordForHash(recordType, sourcePrimaryKeyInput) {
+  const config = getSourceViewConfig(recordType);
+  const fullViewName = getTrustedFullViewName(config);
+  const normalizedPrimaryKey = validateSourcePrimaryKeyInput(config, sourcePrimaryKeyInput);
+
+  const keyColumns = config.sourcePrimaryKey;
+  const whereClause = buildPrimaryKeyWhereClause(keyColumns);
+  const params = keyColumns.map((keyColumn) => normalizedPrimaryKey[keyColumn]);
+
+  const result = await postgres.query(
+    `
+    SELECT *
+    FROM ${fullViewName}
+    WHERE ${whereClause}
+    LIMIT 1
+    `,
+    params
+  );
+
+  if (result.rows.length === 0) {
+    throw new Error(`Source record not found for record type ${config.recordType}`);
+  }
+
+  const sourceRow = result.rows[0];
+
+  return {
+    config,
+    sourceRow,
+    sourcePrimaryKey: buildSourcePrimaryKey(sourceRow, keyColumns),
+    sourceRecordId: buildSourceRecordId(sourceRow, keyColumns)
+  };
+}
+
+async function generateStableHashForSourceRecord(recordType, sourcePrimaryKeyInput) {
+  const {
+    config,
+    sourceRow,
+    sourcePrimaryKey,
+    sourceRecordId
+  } = await getSourceRecordForHash(recordType, sourcePrimaryKeyInput);
+
+  const stableHash = generateRowHash(sourceRow);
+
+  return {
+    recordType: config.recordType,
+    sourceViewName: config.fullViewName,
+    sourcePrimaryKeyColumns: config.sourcePrimaryKey,
+    sourcePrimaryKey,
+    sourceRecordId,
+    hashAlgorithm: 'SHA-256',
+    stableHash,
+    includedColumns: Object.keys(sourceRow).sort(),
+    includedColumnCount: Object.keys(sourceRow).length,
+    proofOnlyRule: 'Only this hash and non-sensitive metadata will be submitted to blockchain'
+  };
+}
+
+async function validateStableHashForSourceRecord(recordType, sourcePrimaryKeyInput) {
+  const firstHash = await generateStableHashForSourceRecord(recordType, sourcePrimaryKeyInput);
+  const secondHash = await generateStableHashForSourceRecord(recordType, sourcePrimaryKeyInput);
+
+  return {
+    recordType: firstHash.recordType,
+    sourceViewName: firstHash.sourceViewName,
+    sourcePrimaryKey: firstHash.sourcePrimaryKey,
+    sourceRecordId: firstHash.sourceRecordId,
+    hashAlgorithm: firstHash.hashAlgorithm,
+    firstHash: firstHash.stableHash,
+    secondHash: secondHash.stableHash,
+    deterministic: firstHash.stableHash === secondHash.stableHash,
+    message:
+      firstHash.stableHash === secondHash.stableHash
+        ? 'Stable hash validation passed. Same input generated the same hash.'
+        : 'Stable hash validation failed. Same input generated different hashes.'
+  };
+}
+
+async function previewStableHashes(recordType, limitInput, offsetInput) {
+  const config = getSourceViewConfig(recordType);
+  const fullViewName = getTrustedFullViewName(config);
+  const limit = sanitizeLimit(limitInput, 10, 100);
+  const offset = sanitizeOffset(offsetInput);
+  const keyColumns = config.sourcePrimaryKey;
+  const orderColumns = keyColumns.map(quoteIdentifier).join(', ');
+
+  const result = await postgres.query(
+    `
+    SELECT *
+    FROM ${fullViewName}
+    ORDER BY ${orderColumns}
+    LIMIT $1 OFFSET $2
+    `,
+    [limit, offset]
+  );
+
+  const records = result.rows.map((sourceRow) => ({
+    recordType: config.recordType,
+    sourceViewName: config.fullViewName,
+    sourcePrimaryKey: buildSourcePrimaryKey(sourceRow, keyColumns),
+    sourceRecordId: buildSourceRecordId(sourceRow, keyColumns),
+    hashAlgorithm: 'SHA-256',
+    stableHash: generateRowHash(sourceRow),
+    includedColumnCount: Object.keys(sourceRow).length
+  }));
+
+  return {
+    recordType: config.recordType,
+    sourceViewName: config.fullViewName,
+    sourcePrimaryKeyColumns: keyColumns,
+    totalSourceRecords: await countSourceRecords(recordType),
+    limit,
+    offset,
+    records
+  };
+}
+
 async function createSyncRun({
   runType = 'MANUAL',
   recordType,
@@ -654,6 +794,7 @@ module.exports = {
   detectCreateRecords,
   detectUpdateRecords,
   detectUnchangedRecords,
+  generateStableHashForSourceRecord,
   createSyncRun,
   finishSyncRun,
   createValidationRun,

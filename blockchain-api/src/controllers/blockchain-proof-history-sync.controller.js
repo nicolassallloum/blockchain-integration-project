@@ -111,6 +111,74 @@ async function detectUnchangedRecords(req, res) {
   }
 }
 
+
+async function generateStableHash(req, res) {
+  try {
+    const { recordType } = req.params;
+
+    const data = await historySyncService.generateStableHashForSourceRecord(
+      recordType,
+      req.query
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: 'Stable hash generated successfully',
+      data
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: 'Failed to generate stable hash',
+      error: error.message
+    });
+  }
+}
+
+async function validateStableHash(req, res) {
+  try {
+    const { recordType } = req.params;
+
+    const data = await historySyncService.validateStableHashForSourceRecord(
+      recordType,
+      req.query
+    );
+
+    return res.status(data.deterministic ? 200 : 500).json({
+      success: data.deterministic,
+      message: data.message,
+      data
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: 'Failed to validate stable hash',
+      error: error.message
+    });
+  }
+}
+
+async function previewStableHashes(req, res) {
+  try {
+    const { recordType } = req.params;
+    const { limit, offset } = req.query;
+
+    const data = await historySyncService.previewStableHashes(recordType, limit, offset);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Stable hash preview loaded successfully',
+      data
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: 'Failed to preview stable hashes',
+      error: error.message
+    });
+  }
+}
+
 async function createValidationRun(req, res) {
   try {
     const { recordType } = req.params;
@@ -137,5 +205,6 @@ module.exports = {
   detectCreateRecords,
   detectUpdateRecords,
   detectUnchangedRecords,
+  generateStableHash,
   createValidationRun
 };
