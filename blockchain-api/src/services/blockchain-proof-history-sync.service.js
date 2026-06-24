@@ -795,6 +795,8 @@ module.exports = {
   detectUpdateRecords,
   detectUnchangedRecords,
   generateStableHashForSourceRecord,
+  validateStableHashForSourceRecord,
+  previewStableHashes,
   createSyncRun,
   finishSyncRun,
   createValidationRun,
@@ -804,3 +806,4 @@ module.exports = {
   buildSourcePrimaryKey,
   generateRowHash
 };
+

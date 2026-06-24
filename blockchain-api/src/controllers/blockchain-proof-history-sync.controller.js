@@ -206,5 +206,8 @@ module.exports = {
   detectUpdateRecords,
   detectUnchangedRecords,
   generateStableHash,
+  validateStableHash,
+  previewStableHashes,
   createValidationRun
 };
+
