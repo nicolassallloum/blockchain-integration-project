@@ -632,6 +632,128 @@ async function previewStableHashes(recordType, limitInput, offsetInput) {
   };
 }
 
+
+const BLOCKCHAIN_PROOF_KEY_PREFIX = 'BCPROOF';
+const BLOCKCHAIN_PROOF_KEY_VERSION = 'V1';
+const BLOCKCHAIN_PROOF_HASH_PREFIX_LENGTH = 16;
+
+function normalizeBlockchainKeyPart(value, fieldName) {
+  if (value === null || value === undefined || String(value).trim() === '') {
+    throw new Error(`${fieldName} is required for blockchain key generation`);
+  }
+
+  return String(value).trim();
+}
+
+function validateStableHashFormat(stableHash) {
+  const hash = normalizeBlockchainKeyPart(stableHash, 'stableHash').toLowerCase();
+
+  if (!/^[a-f0-9]{64}$/.test(hash)) {
+    throw new Error('stableHash must be a valid SHA-256 hex value with 64 characters');
+  }
+
+  return hash;
+}
+
+function generateBlockchainProofKey({
+  recordType,
+  sourceRecordId,
+  stableHash
+}) {
+  const normalizedRecordType = normalizeBlockchainKeyPart(recordType, 'recordType').toUpperCase();
+  const normalizedSourceRecordId = normalizeBlockchainKeyPart(sourceRecordId, 'sourceRecordId');
+  const normalizedStableHash = validateStableHashFormat(stableHash);
+  const hashPrefix = normalizedStableHash.slice(0, BLOCKCHAIN_PROOF_HASH_PREFIX_LENGTH);
+
+  return [
+    BLOCKCHAIN_PROOF_KEY_PREFIX,
+    BLOCKCHAIN_PROOF_KEY_VERSION,
+    normalizedRecordType,
+    normalizedSourceRecordId,
+    hashPrefix
+  ].join('::');
+}
+
+function parseBlockchainProofKey(blockchainKey) {
+  const key = normalizeBlockchainKeyPart(blockchainKey, 'blockchainKey');
+  const parts = key.split('::');
+
+  if (parts.length < 6) {
+    throw new Error('Invalid blockchain key format');
+  }
+
+  const prefix = parts[0];
+  const version = parts[1];
+  const recordType = parts[2];
+  const hashPrefix = parts[parts.length - 1];
+  const sourceRecordId = parts.slice(3, -1).join('::');
+
+  const valid =
+    prefix === BLOCKCHAIN_PROOF_KEY_PREFIX &&
+    version === BLOCKCHAIN_PROOF_KEY_VERSION &&
+    Boolean(recordType) &&
+    Boolean(sourceRecordId) &&
+    /^[a-f0-9]{16}$/.test(hashPrefix);
+
+  return {
+    blockchainKey: key,
+    valid,
+    prefix,
+    version,
+    recordType,
+    sourceRecordId,
+    hashPrefix,
+    expectedFormat: 'BCPROOF::V1::<RECORD_TYPE>::<SOURCE_RECORD_ID>::<HASH_PREFIX_16>'
+  };
+}
+
+async function generateBlockchainKeyForSourceRecord(recordType, sourcePrimaryKeyInput) {
+  const hashData = await generateStableHashForSourceRecord(recordType, sourcePrimaryKeyInput);
+
+  const blockchainKey = generateBlockchainProofKey({
+    recordType: hashData.recordType,
+    sourceRecordId: hashData.sourceRecordId,
+    stableHash: hashData.stableHash
+  });
+
+  return {
+    ...hashData,
+    blockchainKey,
+    blockchainKeyFormat: 'BCPROOF::V1::<RECORD_TYPE>::<SOURCE_RECORD_ID>::<HASH_PREFIX_16>',
+    blockchainKeyParsed: parseBlockchainProofKey(blockchainKey)
+  };
+}
+
+async function previewBlockchainKeys(recordType, limitInput, offsetInput) {
+  const hashPreview = await previewStableHashes(recordType, limitInput, offsetInput);
+
+  const records = hashPreview.records.map((record) => ({
+    ...record,
+    blockchainKey: generateBlockchainProofKey({
+      recordType: record.recordType,
+      sourceRecordId: record.sourceRecordId,
+      stableHash: record.stableHash
+    }),
+    blockchainKeyFormat: 'BCPROOF::V1::<RECORD_TYPE>::<SOURCE_RECORD_ID>::<HASH_PREFIX_16>'
+  }));
+
+  return {
+    ...hashPreview,
+    records
+  };
+}
+
+function validateBlockchainProofKey(blockchainKey) {
+  const parsed = parseBlockchainProofKey(blockchainKey);
+
+  return {
+    ...parsed,
+    message: parsed.valid
+      ? 'Blockchain proof key format is valid'
+      : 'Blockchain proof key format is invalid'
+  };
+}
+
 async function createSyncRun({
   runType = 'MANUAL',
   recordType,
@@ -797,6 +919,11 @@ module.exports = {
   generateStableHashForSourceRecord,
   validateStableHashForSourceRecord,
   previewStableHashes,
+  generateBlockchainProofKey,
+  parseBlockchainProofKey,
+  generateBlockchainKeyForSourceRecord,
+  previewBlockchainKeys,
+  validateBlockchainProofKey,
   createSyncRun,
   finishSyncRun,
   createValidationRun,

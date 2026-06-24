@@ -9,6 +9,9 @@ const {
   generateStableHash,
   validateStableHash,
   previewStableHashes,
+  generateBlockchainKey,
+  previewBlockchainKeys,
+  validateBlockchainKey,
   createValidationRun
 } = require('../controllers/blockchain-proof-history-sync.controller');
 
@@ -22,6 +25,9 @@ router.get('/source/:recordType/detect-unchanged', detectUnchangedRecords);
 router.get('/source/:recordType/hash-preview', previewStableHashes);
 router.get('/source/:recordType/hash/validate', validateStableHash);
 router.get('/source/:recordType/hash', generateStableHash);
+router.get('/source/:recordType/blockchain-key-preview', previewBlockchainKeys);
+router.get('/source/:recordType/blockchain-key', generateBlockchainKey);
+router.get('/blockchain-key/validate', validateBlockchainKey);
 router.post('/runs/test/:recordType', createValidationRun);
 
 module.exports = router;

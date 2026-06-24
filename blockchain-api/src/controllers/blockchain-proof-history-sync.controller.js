@@ -179,6 +179,71 @@ async function previewStableHashes(req, res) {
   }
 }
 
+
+async function generateBlockchainKey(req, res) {
+  try {
+    const { recordType } = req.params;
+
+    const data = await historySyncService.generateBlockchainKeyForSourceRecord(
+      recordType,
+      req.query
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: 'Blockchain proof key generated successfully',
+      data
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: 'Failed to generate blockchain proof key',
+      error: error.message
+    });
+  }
+}
+
+async function previewBlockchainKeys(req, res) {
+  try {
+    const { recordType } = req.params;
+    const { limit, offset } = req.query;
+
+    const data = await historySyncService.previewBlockchainKeys(recordType, limit, offset);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Blockchain proof key preview loaded successfully',
+      data
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: 'Failed to preview blockchain proof keys',
+      error: error.message
+    });
+  }
+}
+
+async function validateBlockchainKey(req, res) {
+  try {
+    const { blockchainKey } = req.query;
+
+    const data = historySyncService.validateBlockchainProofKey(blockchainKey);
+
+    return res.status(data.valid ? 200 : 400).json({
+      success: data.valid,
+      message: data.message,
+      data
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: 'Failed to validate blockchain proof key',
+      error: error.message
+    });
+  }
+}
+
 async function createValidationRun(req, res) {
   try {
     const { recordType } = req.params;
@@ -208,6 +273,9 @@ module.exports = {
   generateStableHash,
   validateStableHash,
   previewStableHashes,
+  generateBlockchainKey,
+  previewBlockchainKeys,
+  validateBlockchainKey,
   createValidationRun
 };
 
