@@ -231,6 +231,177 @@ async function detectCreateRecords(recordType, limitInput, offsetInput) {
   };
 }
 
+
+function normalizeValueForHash(value) {
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  if (value instanceof Date) {
+    return value.toISOString();
+  }
+
+  if (Buffer.isBuffer(value)) {
+    return value.toString('base64');
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((item) => normalizeValueForHash(item));
+  }
+
+  if (typeof value === 'object') {
+    return Object.keys(value)
+      .sort()
+      .reduce((acc, key) => {
+        acc[key] = normalizeValueForHash(value[key]);
+        return acc;
+      }, {});
+  }
+
+  return String(value).trim();
+}
+
+function stableStringify(value) {
+  if (value === null || typeof value !== 'object') {
+    return JSON.stringify(value);
+  }
+
+  if (Array.isArray(value)) {
+    return `[${value.map((item) => stableStringify(item)).join(',')}]`;
+  }
+
+  return `{${Object.keys(value)
+    .sort()
+    .map((key) => `${JSON.stringify(key)}:${stableStringify(value[key])}`)
+    .join(',')}}`;
+}
+
+function generateRowHash(row, excludeColumns = []) {
+  const excluded = new Set(excludeColumns);
+
+  const normalizedRow = Object.keys(row)
+    .filter((key) => !excluded.has(key))
+    .sort()
+    .reduce((acc, key) => {
+      acc[key] = normalizeValueForHash(row[key]);
+      return acc;
+    }, {});
+
+  return crypto
+    .createHash('sha256')
+    .update(stableStringify(normalizedRow))
+    .digest('hex');
+}
+
+function splitSourceRowAndHistory(row) {
+  const historyColumns = new Set([
+    'source_record_id',
+    'latest_history_id',
+    'latest_history_hash',
+    'latest_history_action_type',
+    'latest_history_sync_status',
+    'latest_history_created_at'
+  ]);
+
+  const sourceRow = {};
+
+  Object.keys(row).forEach((key) => {
+    if (!historyColumns.has(key)) {
+      sourceRow[key] = row[key];
+    }
+  });
+
+  return sourceRow;
+}
+
+async function detectUpdateRecords(recordType, limitInput, offsetInput) {
+  const config = getSourceViewConfig(recordType);
+  const fullViewName = getTrustedFullViewName(config);
+  const limit = sanitizeLimit(limitInput, 10, 100);
+  const offset = sanitizeOffset(offsetInput);
+
+  const keyColumns = config.sourcePrimaryKey;
+  const sourceRecordIdExpression = buildSourceRecordIdSqlExpression(keyColumns);
+
+  const totalSourceRecords = await countSourceRecords(recordType);
+
+  const result = await postgres.query(
+    `
+    WITH source_records AS (
+      SELECT
+        src.*,
+        ${sourceRecordIdExpression} AS source_record_id
+      FROM ${fullViewName} src
+    ),
+    latest_history AS (
+      SELECT DISTINCT ON (record_type, source_record_id)
+        history_id,
+        record_type,
+        source_record_id,
+        action_type,
+        new_hash,
+        sync_status,
+        created_at
+      FROM blockchain.blockchain_sync_history
+      WHERE record_type = $1
+      ORDER BY record_type, source_record_id, created_at DESC, history_id DESC
+    )
+    SELECT
+      src.*,
+      hist.history_id AS latest_history_id,
+      hist.new_hash AS latest_history_hash,
+      hist.action_type AS latest_history_action_type,
+      hist.sync_status AS latest_history_sync_status,
+      hist.created_at AS latest_history_created_at
+    FROM source_records src
+    INNER JOIN latest_history hist
+      ON hist.source_record_id = src.source_record_id
+    ORDER BY src.source_record_id
+    `,
+    [config.recordType]
+  );
+
+  const recordsWithHistory = result.rows;
+
+  const updateCandidates = recordsWithHistory
+    .map((row) => {
+      const sourceRow = splitSourceRowAndHistory(row);
+      const currentHash = generateRowHash(sourceRow);
+      const latestHistoryHash = row.latest_history_hash;
+
+      return {
+        recordType: config.recordType,
+        actionType: 'UPDATE',
+        sourceViewName: config.fullViewName,
+        sourcePrimaryKey: buildSourcePrimaryKey(sourceRow, keyColumns),
+        sourceRecordId: row.source_record_id,
+        latestHistoryId: row.latest_history_id,
+        oldHash: latestHistoryHash,
+        newHash: currentHash,
+        latestHistorySyncStatus: row.latest_history_sync_status,
+        latestHistoryCreatedAt: row.latest_history_created_at,
+        changed: latestHistoryHash !== currentHash,
+        reason:
+          latestHistoryHash !== currentHash
+            ? 'Current PostgreSQL source hash differs from latest history hash'
+            : 'Current PostgreSQL source hash matches latest history hash'
+      };
+    })
+    .filter((candidate) => candidate.changed === true);
+
+  return {
+    recordType: config.recordType,
+    sourceViewName: config.fullViewName,
+    sourcePrimaryKeyColumns: keyColumns,
+    totalSourceRecords,
+    existingHistoryRecords: recordsWithHistory.length,
+    updateCandidateCount: updateCandidates.length,
+    limit,
+    offset,
+    candidates: updateCandidates.slice(offset, offset + limit)
+  };
+}
+
 async function createSyncRun({
   runType = 'MANUAL',
   recordType,
@@ -391,11 +562,13 @@ module.exports = {
   countSourceRecords,
   previewSourceRecords,
   detectCreateRecords,
+  detectUpdateRecords,
   createSyncRun,
   finishSyncRun,
   createValidationRun,
   checkRequiredTables,
   healthCheck,
   buildSourceRecordId,
-  buildSourcePrimaryKey
+  buildSourcePrimaryKey,
+  generateRowHash
 };

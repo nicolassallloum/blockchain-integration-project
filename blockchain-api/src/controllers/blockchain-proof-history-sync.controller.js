@@ -67,6 +67,28 @@ async function detectCreateRecords(req, res) {
   }
 }
 
+
+async function detectUpdateRecords(req, res) {
+  try {
+    const { recordType } = req.params;
+    const { limit, offset } = req.query;
+
+    const data = await historySyncService.detectUpdateRecords(recordType, limit, offset);
+
+    return res.status(200).json({
+      success: true,
+      message: 'UPDATE candidates detected successfully',
+      data
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: 'Failed to detect UPDATE candidates',
+      error: error.message
+    });
+  }
+}
+
 async function createValidationRun(req, res) {
   try {
     const { recordType } = req.params;
@@ -91,5 +113,6 @@ module.exports = {
   healthCheck,
   previewSourceRecords,
   detectCreateRecords,
+  detectUpdateRecords,
   createValidationRun
 };
