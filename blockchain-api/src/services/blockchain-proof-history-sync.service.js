@@ -826,6 +826,124 @@ function getFabricSubmitDiagnostics() {
   };
 }
 
+
+function validateHistoryId(historyId) {
+  const value = String(historyId || '').trim();
+
+  if (!/^[0-9]+$/.test(value)) {
+    throw new Error('historyId must be a numeric PostgreSQL history ID');
+  }
+
+  return value;
+}
+
+function validateBlockchainTransactionId(blockchainTransactionId) {
+  const value = String(blockchainTransactionId || '').trim();
+
+  if (!value) {
+    throw new Error('blockchainTransactionId is required');
+  }
+
+  if (value.length < 8) {
+    throw new Error('blockchainTransactionId is too short');
+  }
+
+  if (!/^[a-zA-Z0-9_.:-]+$/.test(value)) {
+    throw new Error('blockchainTransactionId contains unsupported characters');
+  }
+
+  return value;
+}
+
+async function linkBlockchainTransactionToPostgresHistory(historyId, blockchainTransactionId, options = {}) {
+  const normalizedHistoryId = validateHistoryId(historyId);
+  const normalizedTransactionId = validateBlockchainTransactionId(blockchainTransactionId);
+  const linkedBy = String(options.linkedBy || SERVICE_NAME);
+
+  const result = await postgres.query(
+    `
+    UPDATE blockchain.blockchain_sync_history
+    SET
+      blockchain_transaction_id = $2,
+      sync_status = 'SYNCED',
+      submitted_by = COALESCE(NULLIF(submitted_by, ''), $3),
+      metadata = COALESCE(metadata, '{}'::jsonb) || jsonb_build_object(
+        'blockchainTransactionLinked', true,
+        'blockchainTransactionLinkedAt', NOW(),
+        'blockchainTransactionLinkedBy', $3
+      ),
+      updated_at = NOW()
+    WHERE history_id = $1
+    RETURNING
+      history_id,
+      record_type,
+      source_record_id,
+      action_type,
+      new_hash,
+      blockchain_key,
+      blockchain_transaction_id,
+      sync_status,
+      submitted_by,
+      metadata,
+      created_at,
+      updated_at
+    `,
+    [normalizedHistoryId, normalizedTransactionId, linkedBy]
+  );
+
+  if (result.rows.length === 0) {
+    throw new Error(`No blockchain sync history row found for history_id ${normalizedHistoryId}`);
+  }
+
+  return {
+    linked: true,
+    message: 'Blockchain transaction ID linked to PostgreSQL history successfully',
+    history: result.rows[0]
+  };
+}
+
+async function getBlockchainTransactionLink(historyId) {
+  const normalizedHistoryId = validateHistoryId(historyId);
+
+  const result = await postgres.query(
+    `
+    SELECT
+      history_id,
+      record_type,
+      source_record_id,
+      action_type,
+      new_hash,
+      blockchain_key,
+      blockchain_transaction_id,
+      sync_status,
+      submitted_by,
+      metadata,
+      created_at,
+      updated_at
+    FROM blockchain.blockchain_sync_history
+    WHERE history_id = $1
+    `,
+    [normalizedHistoryId]
+  );
+
+  if (result.rows.length === 0) {
+    throw new Error(`No blockchain sync history row found for history_id ${normalizedHistoryId}`);
+  }
+
+  const row = result.rows[0];
+
+  return {
+    historyId: row.history_id,
+    recordType: row.record_type,
+    sourceRecordId: row.source_record_id,
+    blockchainKey: row.blockchain_key,
+    blockchainTransactionId: row.blockchain_transaction_id,
+    syncStatus: row.sync_status,
+    linked: Boolean(row.blockchain_transaction_id),
+    history: row
+  };
+}
+
 async function createSyncRun({
   runType = 'MANUAL',
   recordType,
@@ -999,6 +1117,9 @@ module.exports = {
   buildProofOnlyPayloadForSourceRecord,
   submitProofOnlyForSourceRecord,
   getFabricSubmitDiagnostics,
+  linkBlockchainTransactionToPostgresHistory,
+  getBlockchainTransactionLink,
+  validateBlockchainTransactionId,
   createSyncRun,
   finishSyncRun,
   createValidationRun,

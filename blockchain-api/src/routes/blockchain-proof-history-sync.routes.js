@@ -15,6 +15,8 @@ const {
   getFabricSubmitDiagnostics,
   previewProofOnlyPayload,
   submitProofOnly,
+  linkBlockchainTransaction,
+  getBlockchainTransactionLink,
   createValidationRun
 } = require('../controllers/blockchain-proof-history-sync.controller');
 
@@ -34,6 +36,8 @@ router.get('/blockchain-key/validate', validateBlockchainKey);
 router.get('/fabric-submit/diagnostics', getFabricSubmitDiagnostics);
 router.get('/source/:recordType/proof-only/preview', previewProofOnlyPayload);
 router.post('/source/:recordType/proof-only/submit', submitProofOnly);
+router.post('/history/:historyId/link-transaction', linkBlockchainTransaction);
+router.get('/history/:historyId/transaction-link', getBlockchainTransactionLink);
 router.post('/runs/test/:recordType', createValidationRun);
 
 module.exports = router;

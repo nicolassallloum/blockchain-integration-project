@@ -320,6 +320,57 @@ async function submitProofOnly(req, res) {
   }
 }
 
+
+async function linkBlockchainTransaction(req, res) {
+  try {
+    const { historyId } = req.params;
+    const blockchainTransactionId =
+      req.body?.blockchainTransactionId ||
+      req.query.blockchainTransactionId ||
+      req.query.txId;
+
+    const data = await historySyncService.linkBlockchainTransactionToPostgresHistory(
+      historyId,
+      blockchainTransactionId,
+      {
+        linkedBy: req.body?.linkedBy || req.query.linkedBy || 'step14-api'
+      }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: data.message,
+      data
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: 'Failed to link blockchain transaction ID to PostgreSQL history',
+      error: error.message
+    });
+  }
+}
+
+async function getBlockchainTransactionLink(req, res) {
+  try {
+    const { historyId } = req.params;
+
+    const data = await historySyncService.getBlockchainTransactionLink(historyId);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Blockchain transaction link loaded successfully',
+      data
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: 'Failed to load blockchain transaction link',
+      error: error.message
+    });
+  }
+}
+
 async function createValidationRun(req, res) {
   try {
     const { recordType } = req.params;
@@ -355,6 +406,8 @@ module.exports = {
   getFabricSubmitDiagnostics,
   previewProofOnlyPayload,
   submitProofOnly,
+  linkBlockchainTransaction,
+  getBlockchainTransactionLink,
   createValidationRun
 };
 
