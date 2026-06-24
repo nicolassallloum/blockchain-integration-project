@@ -402,6 +402,96 @@ async function detectUpdateRecords(recordType, limitInput, offsetInput) {
   };
 }
 
+
+async function detectUnchangedRecords(recordType, limitInput, offsetInput) {
+  const config = getSourceViewConfig(recordType);
+  const fullViewName = getTrustedFullViewName(config);
+  const limit = sanitizeLimit(limitInput, 10, 100);
+  const offset = sanitizeOffset(offsetInput);
+
+  const keyColumns = config.sourcePrimaryKey;
+  const sourceRecordIdExpression = buildSourceRecordIdSqlExpression(keyColumns);
+
+  const totalSourceRecords = await countSourceRecords(recordType);
+
+  const result = await postgres.query(
+    `
+    WITH source_records AS (
+      SELECT
+        src.*,
+        ${sourceRecordIdExpression} AS source_record_id
+      FROM ${fullViewName} src
+    ),
+    latest_history AS (
+      SELECT DISTINCT ON (record_type, source_record_id)
+        history_id,
+        record_type,
+        source_record_id,
+        action_type,
+        new_hash,
+        sync_status,
+        created_at
+      FROM blockchain.blockchain_sync_history
+      WHERE record_type = $1
+      ORDER BY record_type, source_record_id, created_at DESC, history_id DESC
+    )
+    SELECT
+      src.*,
+      hist.history_id AS latest_history_id,
+      hist.new_hash AS latest_history_hash,
+      hist.action_type AS latest_history_action_type,
+      hist.sync_status AS latest_history_sync_status,
+      hist.created_at AS latest_history_created_at
+    FROM source_records src
+    INNER JOIN latest_history hist
+      ON hist.source_record_id = src.source_record_id
+    ORDER BY src.source_record_id
+    `,
+    [config.recordType]
+  );
+
+  const recordsWithHistory = result.rows;
+
+  const unchangedRecords = recordsWithHistory
+    .map((row) => {
+      const sourceRow = splitSourceRowAndHistory(row);
+      const currentHash = generateRowHash(sourceRow);
+      const latestHistoryHash = row.latest_history_hash;
+
+      return {
+        recordType: config.recordType,
+        actionType: 'SKIP_UNCHANGED',
+        sourceViewName: config.fullViewName,
+        sourcePrimaryKey: buildSourcePrimaryKey(sourceRow, keyColumns),
+        sourceRecordId: row.source_record_id,
+        latestHistoryId: row.latest_history_id,
+        currentHash,
+        latestHistoryHash,
+        latestHistorySyncStatus: row.latest_history_sync_status,
+        latestHistoryCreatedAt: row.latest_history_created_at,
+        unchanged: latestHistoryHash === currentHash,
+        reason:
+          latestHistoryHash === currentHash
+            ? 'Current PostgreSQL source hash matches latest history hash; record will be skipped'
+            : 'Current PostgreSQL source hash differs from latest history hash'
+      };
+    })
+    .filter((record) => record.unchanged === true);
+
+  return {
+    recordType: config.recordType,
+    sourceViewName: config.fullViewName,
+    sourcePrimaryKeyColumns: keyColumns,
+    totalSourceRecords,
+    existingHistoryRecords: recordsWithHistory.length,
+    unchangedRecordCount: unchangedRecords.length,
+    skippedRecordCount: unchangedRecords.length,
+    limit,
+    offset,
+    records: unchangedRecords.slice(offset, offset + limit)
+  };
+}
+
 async function createSyncRun({
   runType = 'MANUAL',
   recordType,
@@ -563,6 +653,7 @@ module.exports = {
   previewSourceRecords,
   detectCreateRecords,
   detectUpdateRecords,
+  detectUnchangedRecords,
   createSyncRun,
   finishSyncRun,
   createValidationRun,
