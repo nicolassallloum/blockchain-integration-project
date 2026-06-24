@@ -2,6 +2,7 @@ const crypto = require('crypto');
 
 const sourceViewsConfig = require('../config/blockchain-proof-source-views.config');
 const postgres = require('./blockchain-proof-postgres.service');
+const blockchainProofFabricSubmitService = require('./blockchain-proof-fabric-submit.service');
 
 const SERVICE_NAME = 'postgres-blockchain-proof-sync-service';
 
@@ -754,6 +755,77 @@ function validateBlockchainProofKey(blockchainKey) {
   };
 }
 
+
+function normalizeActionType(actionType) {
+  const normalized = String(actionType || '').trim().toUpperCase();
+
+  if (!['CREATE', 'UPDATE'].includes(normalized)) {
+    throw new Error('actionType must be CREATE or UPDATE');
+  }
+
+  return normalized;
+}
+
+async function buildProofOnlyPayloadForSourceRecord(recordType, sourcePrimaryKeyInput, options = {}) {
+  const actionType = normalizeActionType(options.actionType || 'CREATE');
+  const postgresHistoryId = options.postgresHistoryId || 'PENDING_STEP_14';
+
+  const keyData = await generateBlockchainKeyForSourceRecord(recordType, sourcePrimaryKeyInput);
+
+  return {
+    blockchainKey: keyData.blockchainKey,
+    recordType: keyData.recordType,
+    sourceRecordId: keyData.sourceRecordId,
+    stableHash: keyData.stableHash,
+    hashAlgorithm: keyData.hashAlgorithm,
+    actionType,
+    postgresHistoryId: String(postgresHistoryId),
+    submittedBy: SERVICE_NAME,
+    metadata: {
+      sourceViewName: keyData.sourceViewName,
+      sourcePrimaryKey: keyData.sourcePrimaryKey,
+      sourcePrimaryKeyColumns: keyData.sourcePrimaryKeyColumns,
+      blockchainKeyFormat: keyData.blockchainKeyFormat,
+      proofOnly: true
+    },
+    blockedDataPolicy: {
+      rawSourceRecordIncluded: false,
+      sensitiveDataIncluded: false,
+      onlyProofSubmitted: true
+    }
+  };
+}
+
+async function submitProofOnlyForSourceRecord(recordType, sourcePrimaryKeyInput, options = {}) {
+  const dryRun = String(options.dryRun || 'true').toLowerCase() !== 'false';
+
+  const proof = await buildProofOnlyPayloadForSourceRecord(
+    recordType,
+    sourcePrimaryKeyInput,
+    {
+      actionType: options.actionType || 'CREATE',
+      postgresHistoryId: options.postgresHistoryId || 'PENDING_STEP_14'
+    }
+  );
+
+  const submission = await blockchainProofFabricSubmitService.submitBlockchainProof(
+    proof,
+    { dryRun }
+  );
+
+  return {
+    proof,
+    submission
+  };
+}
+
+function getFabricSubmitDiagnostics() {
+  return {
+    serviceName: SERVICE_NAME,
+    diagnostics: blockchainProofFabricSubmitService.getFabricServiceDiagnostics()
+  };
+}
+
 async function createSyncRun({
   runType = 'MANUAL',
   recordType,
@@ -924,6 +996,9 @@ module.exports = {
   generateBlockchainKeyForSourceRecord,
   previewBlockchainKeys,
   validateBlockchainProofKey,
+  buildProofOnlyPayloadForSourceRecord,
+  submitProofOnlyForSourceRecord,
+  getFabricSubmitDiagnostics,
   createSyncRun,
   finishSyncRun,
   createValidationRun,

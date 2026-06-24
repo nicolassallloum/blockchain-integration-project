@@ -244,6 +244,82 @@ async function validateBlockchainKey(req, res) {
   }
 }
 
+
+async function getFabricSubmitDiagnostics(req, res) {
+  try {
+    const data = historySyncService.getFabricSubmitDiagnostics();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Fabric submit diagnostics loaded successfully',
+      data
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to load Fabric submit diagnostics',
+      error: error.message
+    });
+  }
+}
+
+async function previewProofOnlyPayload(req, res) {
+  try {
+    const { recordType } = req.params;
+
+    const data = await historySyncService.buildProofOnlyPayloadForSourceRecord(
+      recordType,
+      req.query,
+      {
+        actionType: req.query.actionType || 'CREATE',
+        postgresHistoryId: req.query.postgresHistoryId || 'PENDING_STEP_14'
+      }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: 'Proof-only payload preview generated successfully',
+      data
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: 'Failed to preview proof-only payload',
+      error: error.message
+    });
+  }
+}
+
+async function submitProofOnly(req, res) {
+  try {
+    const { recordType } = req.params;
+
+    const data = await historySyncService.submitProofOnlyForSourceRecord(
+      recordType,
+      req.query,
+      {
+        actionType: req.query.actionType || 'CREATE',
+        postgresHistoryId: req.query.postgresHistoryId || 'PENDING_STEP_14',
+        dryRun: req.query.dryRun || 'true'
+      }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: data.submission.dryRun
+        ? 'Proof-only submission dry run completed successfully'
+        : 'Proof-only payload submitted to blockchain successfully',
+      data
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: 'Failed to submit proof-only payload',
+      error: error.message
+    });
+  }
+}
+
 async function createValidationRun(req, res) {
   try {
     const { recordType } = req.params;
@@ -276,6 +352,9 @@ module.exports = {
   generateBlockchainKey,
   previewBlockchainKeys,
   validateBlockchainKey,
+  getFabricSubmitDiagnostics,
+  previewProofOnlyPayload,
+  submitProofOnly,
   createValidationRun
 };
 
