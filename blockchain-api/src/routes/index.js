@@ -33,6 +33,7 @@ const residentReferenceRoutes = require('./resident-reference.routes');
 const valooresBlockchainRoutes = require('./valoores-blockchain.routes');
 const healthRoutes = safeLoadRoute("health", "./health.routes");
 const blockchainRoutes = safeLoadRoute("blockchain", "./blockchain.routes");
+const blockchainProofOwnershipRoutes = require('./blockchain-proof-ownership.routes');
 // const referenceRoutes = require('./reference.routes');
 // const residentRoutes = require('./resident.routes');
 
@@ -235,5 +236,7 @@ router.get('/government-blockchain/accounts/:accountId/transactions', async (req
 });
 
 router.use('/valoores-blockchain', valooresBlockchainRoutes);
+
+router.use('/blockchain-proof/ownership', blockchainProofOwnershipRoutes);
 
 module.exports = router;
