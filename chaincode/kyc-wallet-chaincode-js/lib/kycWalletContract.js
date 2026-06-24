@@ -2072,6 +2072,237 @@ class KycWalletContract extends Contract {
   /* ===== VALOORES AML RULE COMPOSITE KEY OVERRIDES END ===== */
 
 
+
+    /**
+     * SaveBlockchainProof
+     *
+     * Stores proof only on-chain.
+     * PostgreSQL remains source of truth.
+     * No sensitive source payload is allowed.
+     */
+    async SaveBlockchainProof(
+        ctx,
+        blockchainKey,
+        recordType,
+        sourceRecordId,
+        stableHash,
+        actionType,
+        postgresHistoryId,
+        submittedBy,
+        metadataJson
+    ) {
+        if (!blockchainKey || !recordType || !sourceRecordId || !stableHash || !actionType) {
+            throw new Error('Missing required blockchain proof fields');
+        }
+
+        const normalizedRecordType = String(recordType).trim().toUpperCase();
+        const normalizedActionType = String(actionType).trim().toUpperCase();
+
+        if (!['CREATE', 'UPDATE'].includes(normalizedActionType)) {
+            throw new Error('Invalid actionType. Expected CREATE or UPDATE');
+        }
+
+        const existingProofBytes = await ctx.stub.getState(blockchainKey);
+
+        if (existingProofBytes && existingProofBytes.length > 0) {
+            throw new Error(`Blockchain proof already exists for key: ${blockchainKey}`);
+        }
+
+        let metadata = {};
+
+        if (metadataJson) {
+            try {
+                metadata = JSON.parse(metadataJson);
+            } catch (error) {
+                throw new Error(`Invalid metadata JSON: ${error.message}`);
+            }
+        }
+
+        const sensitiveKeys = [
+            'password',
+            'token',
+            'secret',
+            'authorization',
+            'personal_entity',
+            'photo',
+            'customer_full_data',
+            'raw_payload',
+            'raw_record',
+            'aml_full_data',
+            'transaction_full_data'
+        ];
+
+        const metadataText = JSON.stringify(metadata).toLowerCase();
+
+        for (const sensitiveKey of sensitiveKeys) {
+            if (metadataText.includes(sensitiveKey)) {
+                throw new Error(`Sensitive metadata is not allowed on blockchain: ${sensitiveKey}`);
+            }
+        }
+
+        const txTimestamp = ctx.stub.getTxTimestamp();
+        const seconds = txTimestamp.seconds.low || txTimestamp.seconds;
+        const nanos = txTimestamp.nanos || 0;
+        const txDate = new Date((Number(seconds) * 1000) + Math.floor(Number(nanos) / 1000000));
+
+        const proof = {
+            docType: 'BLOCKCHAIN_PROOF',
+            blockchainKey,
+            recordType: normalizedRecordType,
+            sourceRecordId: String(sourceRecordId),
+            stableHash: String(stableHash),
+            hashAlgorithm: 'SHA-256',
+            actionType: normalizedActionType,
+            postgresHistoryId: String(postgresHistoryId || ''),
+            submittedBy: String(submittedBy || 'postgres-blockchain-proof-sync-service'),
+            metadata,
+            txId: ctx.stub.getTxID(),
+            createdAt: txDate.toISOString()
+        };
+
+        await ctx.stub.putState(blockchainKey, Buffer.from(JSON.stringify(proof)));
+
+        const recordTypeIndexKey = ctx.stub.createCompositeKey(
+            'proof~recordType~sourceRecordId',
+            [normalizedRecordType, String(sourceRecordId), blockchainKey]
+        );
+
+        await ctx.stub.putState(recordTypeIndexKey, Buffer.from('\u0000'));
+
+        return JSON.stringify(proof);
+    }
+
+    /**
+     * GetBlockchainProof
+     *
+     * Returns one proof by blockchain key.
+     */
+    async GetBlockchainProof(ctx, blockchainKey) {
+        if (!blockchainKey) {
+            throw new Error('blockchainKey is required');
+        }
+
+        const proofBytes = await ctx.stub.getState(blockchainKey);
+
+        if (!proofBytes || proofBytes.length === 0) {
+            throw new Error(`Blockchain proof not found for key: ${blockchainKey}`);
+        }
+
+        return proofBytes.toString();
+    }
+
+    /**
+     * VerifyBlockchainProof
+     *
+     * Compares the submitted hash with the stored on-chain hash.
+     */
+    async VerifyBlockchainProof(ctx, blockchainKey, stableHash) {
+        if (!blockchainKey || !stableHash) {
+            throw new Error('blockchainKey and stableHash are required');
+        }
+
+        const proofBytes = await ctx.stub.getState(blockchainKey);
+
+        if (!proofBytes || proofBytes.length === 0) {
+            throw new Error(`Blockchain proof not found for key: ${blockchainKey}`);
+        }
+
+        const proof = JSON.parse(proofBytes.toString());
+        const verified = proof.stableHash === String(stableHash);
+
+        return JSON.stringify({
+            blockchainKey,
+            recordType: proof.recordType,
+            sourceRecordId: proof.sourceRecordId,
+            storedHash: proof.stableHash,
+            submittedHash: String(stableHash),
+            verified,
+            status: verified ? 'VERIFIED' : 'MISMATCHED',
+            txId: proof.txId,
+            createdAt: proof.createdAt
+        });
+    }
+
+    /**
+     * QueryBlockchainProofsByRecordType
+     *
+     * Queries proof records by record type using composite key index.
+     */
+    async QueryBlockchainProofsByRecordType(ctx, recordType) {
+        if (!recordType) {
+            throw new Error('recordType is required');
+        }
+
+        const normalizedRecordType = String(recordType).trim().toUpperCase();
+
+        const iterator = await ctx.stub.getStateByPartialCompositeKey(
+            'proof~recordType~sourceRecordId',
+            [normalizedRecordType]
+        );
+
+        const results = [];
+
+        while (true) {
+            const response = await iterator.next();
+
+            if (response.value && response.value.key) {
+                const attributes = ctx.stub.splitCompositeKey(response.value.key).attributes;
+                const blockchainKey = attributes[2];
+
+                const proofBytes = await ctx.stub.getState(blockchainKey);
+
+                if (proofBytes && proofBytes.length > 0) {
+                    results.push(JSON.parse(proofBytes.toString()));
+                }
+            }
+
+            if (response.done) {
+                await iterator.close();
+                break;
+            }
+        }
+
+        return JSON.stringify(results);
+    }
+
+    /**
+     * GetBlockchainProofHistory
+     *
+     * Returns Fabric history for the blockchain proof key.
+     */
+    async GetBlockchainProofHistory(ctx, blockchainKey) {
+        if (!blockchainKey) {
+            throw new Error('blockchainKey is required');
+        }
+
+        const iterator = await ctx.stub.getHistoryForKey(blockchainKey);
+        const results = [];
+
+        while (true) {
+            const response = await iterator.next();
+
+            if (response.value) {
+                const item = {
+                    txId: response.value.txId,
+                    timestamp: response.value.timestamp,
+                    isDelete: response.value.isDelete,
+                    value: response.value.value && response.value.value.toString()
+                        ? JSON.parse(response.value.value.toString())
+                        : null
+                };
+
+                results.push(item);
+            }
+
+            if (response.done) {
+                await iterator.close();
+                break;
+            }
+        }
+
+        return JSON.stringify(results);
+    }
+
 }
 
 module.exports = KycWalletContract;
