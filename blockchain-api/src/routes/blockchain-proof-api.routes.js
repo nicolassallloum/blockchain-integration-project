@@ -3,6 +3,7 @@ const express = require('express');
 const controller = require('../controllers/blockchain-proof-api.controller');
 
 const router = express.Router();
+const historyController = require('../controllers/blockchain-proof-history.controller');
 
 router.get('/health', controller.health);
 
@@ -21,5 +22,17 @@ router.post('/records/:recordType/proof-only/submit', controller.proofOnlySubmit
 
 router.get('/history/:historyId/transaction-link', controller.transactionLink);
 router.post('/history/:historyId/link-transaction', controller.linkTransaction);
+
+
+/**
+ * Step 16 — Blockchain proof history APIs
+ * Read-only proof-history endpoints.
+ */
+router.get('/history/health', historyController.health);
+router.get('/history/summary', historyController.summary);
+router.get('/history', historyController.listHistory);
+router.get('/history/:historyId', historyController.getHistoryById);
+router.get('/records/:recordType/history/latest', historyController.getLatestRecordHistory);
+router.get('/records/:recordType/history', historyController.listRecordHistory);
 
 module.exports = router;
