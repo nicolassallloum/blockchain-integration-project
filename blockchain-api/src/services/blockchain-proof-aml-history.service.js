@@ -373,6 +373,7 @@ async function createSyncRun(runId, submittedBy) {
 
   const valuesByColumn = {
     run_id: runId,
+    run_type: 'AML_HISTORY_SYNC',
     record_type: RECORD_TYPE,
     source_schema_name: BLOCKCHAIN_SCHEMA,
     source_view_name: AML_SOURCE_VIEW,
