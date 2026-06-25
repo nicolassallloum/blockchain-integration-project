@@ -1,0 +1,296 @@
+<div class="monitoring-page">
+  <div class="page-header">
+    <div class="title-block">
+      <h1>Blockchain Proof Monitoring Dashboard</h1>
+      <p>
+        Operational monitoring for PostgreSQL-to-blockchain proof history,
+        retry status, verification logs, and proof-safety checks.
+      </p>
+    </div>
+
+    <div class="actions">
+      <button class="refresh-button" type="button" (click)="loadDashboard(true)">
+        Refresh
+      </button>
+
+      <label class="auto-refresh">
+        <input type="checkbox" [checked]="autoRefresh" (change)="toggleAutoRefresh()" />
+        Auto refresh every 30 seconds
+      </label>
+    </div>
+  </div>
+
+  <div class="status-bar">
+    <span class="status-pill" [class.good]="health.status === 'UP'">
+      Dashboard: {{ health.status || 'UNKNOWN' }}
+    </span>
+
+    <span class="status-pill" [class.good]="health.dashboardReady">
+      Ready: {{ health.dashboardReady === true ? 'YES' : 'NO' }}
+    </span>
+
+    <span
+      class="status-pill"
+      [class.good]="number(verification.fake_verified_rows) === 0"
+      [class.warning]="number(verification.fake_verified_rows) > 0"
+    >
+      Fake Verified Rows: {{ number(verification.fake_verified_rows) }}
+    </span>
+
+    <span class="status-pill">
+      Last Loaded: {{ lastLoadedAt || 'Not loaded yet' }}
+    </span>
+  </div>
+
+  <div *ngIf="loading && !data" class="loading-state">
+    Loading monitoring dashboard...
+  </div>
+
+  <div *ngIf="error" class="error-state">
+    {{ error }}
+  </div>
+
+  <ng-container *ngIf="data">
+    <section class="cards">
+      <div class="card">
+        <div class="label">Total Proof History Rows</div>
+        <div class="value">{{ number(history.total_history_rows) }}</div>
+        <div class="hint">All proof history records stored in PostgreSQL.</div>
+      </div>
+
+      <div class="card">
+        <div class="label">Rows Without Blockchain TX</div>
+        <div class="value">{{ number(history.rows_without_blockchain_tx) }}</div>
+        <div class="hint">Expected while Fabric submit endpoint is not linked.</div>
+      </div>
+
+      <div class="card">
+        <div class="label">Rows With Blockchain TX</div>
+        <div class="value">{{ number(history.rows_with_blockchain_tx) }}</div>
+        <div class="hint">Rows linked to real blockchain transactions.</div>
+      </div>
+
+      <div class="card">
+        <div class="label">Rows With Retry</div>
+        <div class="value">{{ number(history.rows_with_retry) }}</div>
+        <div class="hint">Rows retried by the Step 22 retry mechanism.</div>
+      </div>
+
+      <div class="card">
+        <div class="label">Verification Logs</div>
+        <div class="value">{{ number(verification.total_verification_logs) }}</div>
+        <div class="hint">Verification attempts recorded by Step 23.</div>
+      </div>
+
+      <div class="card">
+        <div class="label">Fake Verified Rows</div>
+        <div
+          class="value"
+          [class.success-text]="number(verification.fake_verified_rows) === 0"
+          [class.danger-text]="number(verification.fake_verified_rows) > 0"
+        >
+          {{ number(verification.fake_verified_rows) }}
+        </div>
+        <div class="hint">Must always remain zero.</div>
+      </div>
+    </section>
+
+    <div class="grid-two">
+      <section class="panel">
+        <h2>Record Type Breakdown</h2>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Record Type</th>
+              <th>Total</th>
+              <th>Create</th>
+              <th>Update</th>
+              <th>No TX</th>
+              <th>Retry Rows</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of recordTypeBreakdown">
+              <td>{{ row.record_type }}</td>
+              <td>{{ number(row.total_rows) }}</td>
+              <td>{{ number(row.create_rows) }}</td>
+              <td>{{ number(row.update_rows) }}</td>
+              <td>{{ number(row.rows_without_blockchain_tx) }}</td>
+              <td>{{ number(row.rows_with_retry) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="panel">
+        <h2>Sync Status Breakdown</h2>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Sync Status</th>
+              <th>Total</th>
+              <th>With TX</th>
+              <th>Without TX</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of syncStatusBreakdown">
+              <td>{{ row.sync_status }}</td>
+              <td>{{ number(row.total_rows) }}</td>
+              <td>{{ number(row.rows_with_blockchain_tx) }}</td>
+              <td>{{ number(row.rows_without_blockchain_tx) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </div>
+
+    <div class="grid-two">
+      <section class="panel">
+        <h2>Verification Status Breakdown</h2>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Verification Status</th>
+              <th>Total</th>
+              <th>With TX</th>
+              <th>Without TX</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of verificationStatusBreakdown">
+              <td>{{ row.verification_status }}</td>
+              <td>{{ number(row.total_rows) }}</td>
+              <td>{{ number(row.rows_with_blockchain_tx) }}</td>
+              <td>{{ number(row.rows_without_blockchain_tx) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="panel">
+        <h2>Retry Summary</h2>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Record Type</th>
+              <th>Total Rows</th>
+              <th>Rows With Retry</th>
+              <th>Total Attempts</th>
+              <th>Max Retry</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of retrySummary.byRecordType || []">
+              <td>{{ row.record_type }}</td>
+              <td>{{ number(row.total_rows) }}</td>
+              <td>{{ number(row.rows_with_retry) }}</td>
+              <td>{{ number(row.total_retry_attempts) }}</td>
+              <td>{{ number(row.max_retry_count) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </div>
+
+    <section class="panel">
+      <h2>Latest Sync Runs</h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Run ID</th>
+            <th>Type</th>
+            <th>Record Type</th>
+            <th>Status</th>
+            <th>Source</th>
+            <th>Total</th>
+            <th>Created</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of latestRuns">
+            <td class="mono">{{ row.runId }}</td>
+            <td>{{ row.runType }}</td>
+            <td>{{ row.recordType }}</td>
+            <td>{{ row.status }}</td>
+            <td>{{ row.sourceViewName }}</td>
+            <td>{{ number(row.totalSourceRecords) }}</td>
+            <td>{{ row.createdAt }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="panel">
+      <h2>Latest Proof History Rows</h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th>History ID</th>
+            <th>Record Type</th>
+            <th>Source Record ID</th>
+            <th>Sync</th>
+            <th>Verification</th>
+            <th>Has TX</th>
+            <th>Retry</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of latestHistory">
+            <td>{{ row.historyId }}</td>
+            <td>{{ row.recordType }}</td>
+            <td class="mono">{{ row.sourceRecordId }}</td>
+            <td>{{ row.syncStatus }}</td>
+            <td>{{ row.verificationStatus }}</td>
+            <td>{{ row.hasBlockchainTransaction ? 'YES' : 'NO' }}</td>
+            <td>{{ number(row.retryCount) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="panel">
+      <h2>Latest Verification Logs</h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Verification ID</th>
+            <th>History ID</th>
+            <th>Record Type</th>
+            <th>Status</th>
+            <th>Has TX</th>
+            <th>Blockchain Verification Status</th>
+            <th>Fake Success</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of latestVerificationLogs">
+            <td>{{ row.verificationId }}</td>
+            <td>{{ row.historyId }}</td>
+            <td>{{ row.recordType }}</td>
+            <td>{{ row.verificationStatus }}</td>
+            <td>{{ row.hasBlockchainTransaction ? 'YES' : 'NO' }}</td>
+            <td>{{ row.metadataSummary?.blockchainVerificationStatus || 'N/A' }}</td>
+            <td
+              [class.success-text]="row.metadataSummary?.fakeBlockchainSuccess === false"
+              [class.danger-text]="row.metadataSummary?.fakeBlockchainSuccess === true"
+            >
+              {{ row.metadataSummary?.fakeBlockchainSuccess === true ? 'YES' : 'NO' }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </ng-container>
+
+  <div *ngIf="!loading && !error && !data" class="empty-state">
+    No dashboard data loaded yet.
+  </div>
+</div>

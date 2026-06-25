@@ -406,7 +406,15 @@ export const routes: Routes = [
   /*
    * Wildcard Route Must Always Stay Last
    */
+  
   {
+    path: 'government-blockchain/blockchain-proof-monitoring-dashboard',
+    loadComponent: () =>
+      import('./government-blockchain/blockchain-proof-monitoring-dashboard/blockchain-proof-monitoring-dashboard').then(
+        (m) => m.BlockchainProofMonitoringDashboard
+      )
+  },
+{
     path: '**',
     redirectTo: 'government-blockchain/dashboard'
   }
