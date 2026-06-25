@@ -247,6 +247,87 @@ function getColumnNames(columnRows) {
   return columnRows.map((row) => row.column_name);
 }
 
+function extractAllowedValuesFromConstraint(definition) {
+  if (!definition || typeof definition !== 'string') {
+    return [];
+  }
+
+  const values = [];
+  const regex = /'([^']+)'/g;
+  let match;
+
+  while ((match = regex.exec(definition)) !== null) {
+    if (match[1] && !values.includes(match[1])) {
+      values.push(match[1]);
+    }
+  }
+
+  return values;
+}
+
+async function getAllowedCheckValues(tableName, columnName) {
+  const query = resolveQueryClient();
+
+  const result = await query(
+    `
+    SELECT
+      conname,
+      pg_get_constraintdef(c.oid) AS constraint_definition
+    FROM pg_constraint c
+    JOIN pg_class t ON t.oid = c.conrelid
+    JOIN pg_namespace n ON n.oid = t.relnamespace
+    WHERE n.nspname = $1
+      AND t.relname = $2
+      AND c.contype = 'c'
+      AND pg_get_constraintdef(c.oid) ILIKE '%' || $3 || '%'
+    ORDER BY conname
+    `,
+    [BLOCKCHAIN_SCHEMA, tableName, columnName]
+  );
+
+  const values = [];
+
+  for (const row of result.rows) {
+    const extracted = extractAllowedValuesFromConstraint(row.constraint_definition);
+
+    for (const value of extracted) {
+      if (!values.includes(value)) {
+        values.push(value);
+      }
+    }
+  }
+
+  return values;
+}
+
+async function resolveRunTypeValue() {
+  const allowedValues = await getAllowedCheckValues(RUNS_TABLE, 'run_type');
+
+  if (!allowedValues.length) {
+    return 'HISTORY_SYNC';
+  }
+
+  const preferredValues = [
+    'HISTORY_SYNC',
+    'FULL_SYNC',
+    'MANUAL_SYNC',
+    'CREATE_DETECTION',
+    'UPDATE_DETECTION',
+    'BLOCKCHAIN_PROOF_SYNC',
+    'PROOF_SYNC',
+    'AML',
+    'AML_SYNC'
+  ];
+
+  for (const preferredValue of preferredValues) {
+    if (allowedValues.includes(preferredValue)) {
+      return preferredValue;
+    }
+  }
+
+  return allowedValues[0];
+}
+
 async function getAmlSourceCount() {
   const query = resolveQueryClient();
 
@@ -371,20 +452,27 @@ async function createSyncRun(runId, submittedBy) {
 
   const now = new Date();
 
+  const runTypeValue = await resolveRunTypeValue();
+
   const valuesByColumn = {
     run_id: runId,
-    run_type: 'AML_HISTORY_SYNC',
+    run_type: runTypeValue,
     record_type: RECORD_TYPE,
     source_schema_name: BLOCKCHAIN_SCHEMA,
     source_view_name: AML_SOURCE_VIEW,
     source_name: `${BLOCKCHAIN_SCHEMA}.${AML_SOURCE_VIEW}`,
     sync_status: 'IN_PROGRESS',
     run_status: 'IN_PROGRESS',
-    status: 'IN_PROGRESS',
+    status: 'RUNNING',
     started_at: now,
     completed_at: null,
+    finished_at: null,
     total_source_records: 0,
     total_records: 0,
+    total_create_records: 0,
+    total_update_records: 0,
+    total_unchanged_records: 0,
+    total_failed_records: 0,
     create_count: 0,
     update_count: 0,
     unchanged_count: 0,
@@ -393,6 +481,7 @@ async function createSyncRun(runId, submittedBy) {
     history_inserted_count: 0,
     error_count: 0,
     submitted_by: submittedBy,
+    triggered_by: submittedBy,
     created_by: submittedBy,
     metadata: safeJson({
       integrationStep: 'STEP_18_AML_HISTORY_FIRST',
@@ -449,8 +538,13 @@ async function updateSyncRun(runId, summary) {
     run_status: 'COMPLETED',
     status: 'COMPLETED',
     completed_at: now,
+    finished_at: now,
     total_source_records: summary.totalSourceRecords,
     total_records: summary.scannedRecords,
+    total_create_records: summary.createCount,
+    total_update_records: summary.updateCount,
+    total_unchanged_records: summary.unchangedCount,
+    total_failed_records: summary.errorCount,
     create_count: summary.createCount,
     update_count: summary.updateCount,
     unchanged_count: summary.unchangedCount,
@@ -518,6 +612,7 @@ async function markSyncRunFailed(runId, error) {
     run_status: 'FAILED',
     status: 'FAILED',
     completed_at: now,
+    finished_at: now,
     error_message: error.message,
     last_error: error.message,
     updated_at: now
