@@ -47,10 +47,12 @@ const COLUMN_ALIASES = {
   ],
   stableHash: [
     'stable_hash',
+    'new_hash',
     'record_hash',
     'source_hash',
     'data_hash',
-    'hash_value'
+    'hash_value',
+    'old_hash'
   ],
   hashAlgorithm: [
     'hash_algorithm',
@@ -106,6 +108,7 @@ const COLUMN_ALIASES = {
   ],
   submittedAt: [
     'submitted_at',
+    'blockchain_submitted_at',
     'synced_at',
     'created_at',
     'inserted_at'
@@ -185,6 +188,35 @@ function normalizeOffset(value) {
   }
 
   return parsed;
+}
+
+function normalizeColumns(rawColumns) {
+  if (Array.isArray(rawColumns)) {
+    return rawColumns;
+  }
+
+  if (typeof rawColumns === 'string') {
+    const trimmed = rawColumns.trim();
+
+    if (!trimmed) {
+      return [];
+    }
+
+    if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+      return trimmed
+        .slice(1, -1)
+        .split(',')
+        .map((columnName) => columnName.replace(/^"|"$/g, '').trim())
+        .filter(Boolean);
+    }
+
+    return trimmed
+      .split(',')
+      .map((columnName) => columnName.replace(/^"|"$/g, '').trim())
+      .filter(Boolean);
+  }
+
+  return [];
 }
 
 function resolveColumn(columns, aliases) {
@@ -279,12 +311,16 @@ async function getHistoryTableMetadata() {
   }
 
   const candidates = result.rows
-    .map((row) => ({
-      schemaName: row.table_schema,
-      tableName: row.table_name,
-      columns: row.columns || [],
-      score: scoreHistoryTable(row.table_name, row.columns || [])
-    }))
+    .map((row) => {
+      const normalizedColumns = normalizeColumns(row.columns);
+
+      return {
+        schemaName: row.table_schema,
+        tableName: row.table_name,
+        columns: normalizedColumns,
+        score: scoreHistoryTable(row.table_name, normalizedColumns)
+      };
+    })
     .filter((row) => row.score > 0)
     .sort((a, b) => b.score - a.score);
 
