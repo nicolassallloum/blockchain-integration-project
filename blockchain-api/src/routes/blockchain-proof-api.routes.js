@@ -10,6 +10,7 @@ const customerHistoryController = require('../controllers/blockchain-proof-custo
 const transactionHistoryController = require('../controllers/blockchain-proof-transaction-history.controller');
 const screeningHistoryController = require('../controllers/blockchain-proof-screening-history.controller');
 const retryController = require('../controllers/blockchain-proof-retry.controller');
+const verificationLogicController = require('../controllers/blockchain-proof-verification-logic.controller');
 
 router.get('/health', controller.health);
 
@@ -111,5 +112,16 @@ router.post('/records/SCREENING_ACTIVITY/history/sync', screeningHistoryControll
 router.get('/retry/health', retryController.health);
 router.get('/retry/candidates', retryController.candidates);
 router.post('/retry/run', retryController.run);
+
+
+/**
+ * Step 23 — Verification logic
+ * Recomputes PostgreSQL source hash and writes verification logs.
+ * Does not fake blockchain success when blockchain transaction ID is missing.
+ */
+router.get('/verification/logic/health', verificationLogicController.health);
+router.get('/verification/candidates', verificationLogicController.candidates);
+router.post('/verification/run', verificationLogicController.run);
+router.post('/records/:recordType/verification/run', verificationLogicController.runRecord);
 
 module.exports = router;
