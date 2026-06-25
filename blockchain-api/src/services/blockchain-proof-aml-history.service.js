@@ -328,6 +328,58 @@ async function resolveRunTypeValue() {
   return allowedValues[0];
 }
 
+async function resolveHistorySyncStatusValue() {
+  const allowedValues = await getAllowedCheckValues(HISTORY_TABLE, 'sync_status');
+
+  if (!allowedValues.length) {
+    return 'PENDING';
+  }
+
+  const preferredValues = [
+    'PENDING',
+    'NEW',
+    'READY',
+    'QUEUED',
+    'CREATED',
+    'NOT_SUBMITTED',
+    'PENDING_SUBMISSION',
+    'PENDING_BLOCKCHAIN',
+    'PENDING_BLOCKCHAIN_SUBMISSION'
+  ];
+
+  for (const preferredValue of preferredValues) {
+    if (allowedValues.includes(preferredValue)) {
+      return preferredValue;
+    }
+  }
+
+  return allowedValues[0];
+}
+
+async function resolveHistoryVerificationStatusValue() {
+  const allowedValues = await getAllowedCheckValues(HISTORY_TABLE, 'verification_status');
+
+  if (!allowedValues.length) {
+    return 'NOT_VERIFIED';
+  }
+
+  const preferredValues = [
+    'NOT_VERIFIED',
+    'PENDING',
+    'UNVERIFIED',
+    'NOT_CHECKED',
+    'PENDING_VERIFICATION'
+  ];
+
+  for (const preferredValue of preferredValues) {
+    if (allowedValues.includes(preferredValue)) {
+      return preferredValue;
+    }
+  }
+
+  return allowedValues[0];
+}
+
 async function getAmlSourceCount() {
   const query = resolveQueryClient();
 
@@ -653,6 +705,8 @@ async function markSyncRunFailed(runId, error) {
 async function insertHistoryRow(runId, decision, submittedBy) {
   const query = resolveQueryClient();
   const now = new Date();
+  const historySyncStatus = await resolveHistorySyncStatusValue();
+  const historyVerificationStatus = await resolveHistoryVerificationStatusValue();
 
   const result = await query(
     `
@@ -724,9 +778,9 @@ async function insertHistoryRow(runId, decision, submittedBy) {
       decision.oldHash,
       decision.stableHash,
       HASH_ALGORITHM,
-      'PENDING_BLOCKCHAIN',
+      historySyncStatus,
       decision.blockchainKey,
-      'NOT_VERIFIED',
+      historyVerificationStatus,
       submittedBy,
       safeJson({
         integrationStep: 'STEP_18_AML_HISTORY_FIRST',
