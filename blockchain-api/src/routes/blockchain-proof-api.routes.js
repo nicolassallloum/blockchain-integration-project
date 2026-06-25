@@ -6,6 +6,7 @@ const router = express.Router();
 const historyController = require('../controllers/blockchain-proof-history.controller');
 const verificationController = require('../controllers/blockchain-proof-verification.controller');
 const amlHistoryController = require('../controllers/blockchain-proof-aml-history.controller');
+const customerHistoryController = require('../controllers/blockchain-proof-customer-history.controller');
 
 router.get('/health', controller.health);
 
@@ -60,5 +61,17 @@ router.get('/records/:recordType/verification/logs', verificationController.list
 router.get('/records/AML/history/source-count', amlHistoryController.sourceCount);
 router.get('/records/AML/history/preview', amlHistoryController.preview);
 router.post('/records/AML/history/sync', amlHistoryController.sync);
+
+
+/**
+ * Step 19 — Customer data history
+ * Creates PostgreSQL history rows for CUSTOMER proof records only.
+ * Does not submit to Fabric.
+ * Does not expose or store customer PII.
+ */
+router.get('/records/CUSTOMER/history/source-discovery', customerHistoryController.sourceDiscovery);
+router.get('/records/CUSTOMER/history/source-count', customerHistoryController.sourceCount);
+router.get('/records/CUSTOMER/history/preview', customerHistoryController.preview);
+router.post('/records/CUSTOMER/history/sync', customerHistoryController.sync);
 
 module.exports = router;
