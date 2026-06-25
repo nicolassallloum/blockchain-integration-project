@@ -278,13 +278,17 @@ async function resolveVerificationStatusValue(outcome) {
   const allowedValues = await getAllowedCheckValues(VERIFICATION_TABLE, 'verification_status');
 
   if (!allowedValues.length) {
-    return outcome;
+    return outcome === 'VERIFIED'
+      ? 'VERIFIED'
+      : outcome === 'FAILED'
+        ? 'FAILED'
+        : 'NOT_VERIFIED';
   }
 
   const preferredByOutcome = {
     VERIFIED: ['VERIFIED', 'SUCCESS', 'PASSED', 'MATCHED'],
-    FAILED: ['FAILED', 'ERROR', 'MISMATCH', 'NOT_VERIFIED'],
-    NOT_VERIFIED: ['NOT_VERIFIED', 'PENDING', 'UNVERIFIED', 'NOT_CHECKED']
+    FAILED: ['FAILED', 'ERROR', 'MISMATCH', 'NOT_VERIFIED', 'PENDING'],
+    NOT_VERIFIED: ['NOT_VERIFIED', 'PENDING', 'UNVERIFIED', 'NOT_CHECKED', 'FAILED']
   };
 
   const preferredValues = preferredByOutcome[outcome] || preferredByOutcome.NOT_VERIFIED;
@@ -293,6 +297,12 @@ async function resolveVerificationStatusValue(outcome) {
     if (allowedValues.includes(preferredValue)) {
       return preferredValue;
     }
+  }
+
+  if (outcome === 'NOT_VERIFIED') {
+    throw new Error(
+      'Verification status constraint does not contain a safe non-verified value. Refusing to write fake VERIFIED status.'
+    );
   }
 
   return allowedValues[0];
