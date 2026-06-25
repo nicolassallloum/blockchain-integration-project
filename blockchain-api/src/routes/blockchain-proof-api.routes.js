@@ -5,6 +5,7 @@ const controller = require('../controllers/blockchain-proof-api.controller');
 const router = express.Router();
 const historyController = require('../controllers/blockchain-proof-history.controller');
 const verificationController = require('../controllers/blockchain-proof-verification.controller');
+const amlHistoryController = require('../controllers/blockchain-proof-aml-history.controller');
 
 router.get('/health', controller.health);
 
@@ -49,5 +50,15 @@ router.get('/verification/logs/:verificationId', verificationController.getLogBy
 router.get('/records/:recordType/verification/preview', verificationController.preview);
 router.get('/records/:recordType/verification/latest', verificationController.getLatestRecordLog);
 router.get('/records/:recordType/verification/logs', verificationController.listRecordLogs);
+
+
+/**
+ * Step 18 — AML history first
+ * Creates PostgreSQL history rows for AML proof records only.
+ * Does not submit to Fabric.
+ */
+router.get('/records/AML/history/source-count', amlHistoryController.sourceCount);
+router.get('/records/AML/history/preview', amlHistoryController.preview);
+router.post('/records/AML/history/sync', amlHistoryController.sync);
 
 module.exports = router;
