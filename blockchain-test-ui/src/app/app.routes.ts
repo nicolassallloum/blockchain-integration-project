@@ -414,6 +414,14 @@ export const routes: Routes = [
         (m) => m.BlockchainProofMonitoringDashboard
       )
   },
+
+  {
+    path: 'government-blockchain/blockchain-proof-history-screens',
+    loadComponent: () =>
+      import('./government-blockchain/blockchain-proof-history-screens/blockchain-proof-history-screens').then(
+        (m) => m.BlockchainProofHistoryScreens
+      )
+  },
 {
     path: '**',
     redirectTo: 'government-blockchain/dashboard'

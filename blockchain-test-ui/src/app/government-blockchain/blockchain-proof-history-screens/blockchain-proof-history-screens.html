@@ -1,0 +1,253 @@
+<div class="history-page">
+  <div class="page-header">
+    <div>
+      <p class="eyebrow">Blockchain Proof</p>
+      <h1>History Screens</h1>
+      <p class="subtitle">
+        Proof-safe history viewer for PostgreSQL-to-blockchain sync records,
+        verification logs, retry status, and blockchain transaction linkage.
+      </p>
+    </div>
+
+    <button class="refresh-button" type="button" (click)="loadAll()">
+      Refresh
+    </button>
+  </div>
+
+  <div class="filters-panel">
+    <label>
+      Record Type
+      <select [(ngModel)]="selectedRecordType" (change)="onFilterChange()">
+        <option *ngFor="let recordType of recordTypes" [value]="recordType">
+          {{ recordType }}
+        </option>
+      </select>
+    </label>
+
+    <label>
+      Limit
+      <select [(ngModel)]="selectedLimit" (change)="onFilterChange()">
+        <option *ngFor="let limit of limits" [value]="limit">
+          {{ limit }}
+        </option>
+      </select>
+    </label>
+
+    <div class="last-loaded">
+      Last Loaded:
+      <span>{{ lastLoadedAt || 'Not loaded yet' }}</span>
+    </div>
+  </div>
+
+  <div *ngIf="error" class="error-box">
+    {{ error }}
+  </div>
+
+  <div class="summary-cards">
+    <div class="summary-card">
+      <div class="label">History Rows Loaded</div>
+      <div class="value">{{ historyTotalRows }}</div>
+      <div class="hint">Proof history rows only.</div>
+    </div>
+
+    <div class="summary-card">
+      <div class="label">Rows With Blockchain TX</div>
+      <div class="value success">{{ historyRowsWithTx }}</div>
+      <div class="hint">Rows linked to real blockchain transactions.</div>
+    </div>
+
+    <div class="summary-card">
+      <div class="label">Rows Without Blockchain TX</div>
+      <div class="value warning">{{ historyRowsWithoutTx }}</div>
+      <div class="hint">Expected until proof submit endpoint is connected.</div>
+    </div>
+
+    <div class="summary-card">
+      <div class="label">Verification Logs Loaded</div>
+      <div class="value">{{ verificationTotalRows }}</div>
+      <div class="hint">Verification attempts from Step 23.</div>
+    </div>
+
+    <div class="summary-card">
+      <div class="label">Fake Blockchain Success</div>
+      <div
+        class="value"
+        [class.success]="verificationRowsWithFakeSuccess === 0"
+        [class.danger]="verificationRowsWithFakeSuccess > 0"
+      >
+        {{ verificationRowsWithFakeSuccess }}
+      </div>
+      <div class="hint">Must always be zero.</div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button
+      type="button"
+      [class.active]="activeTab === 'history'"
+      (click)="setTab('history')"
+    >
+      Proof History
+    </button>
+
+    <button
+      type="button"
+      [class.active]="activeTab === 'verification'"
+      (click)="setTab('verification')"
+    >
+      Verification Logs
+    </button>
+  </div>
+
+  <section *ngIf="activeTab === 'history'" class="panel">
+    <div class="panel-header">
+      <div>
+        <h2>Proof History Rows</h2>
+        <p>No raw source rows are displayed. Only proof identifiers and operational status are shown.</p>
+      </div>
+
+      <button type="button" class="small-button" (click)="loadHistory(true)">
+        Reload History
+      </button>
+    </div>
+
+    <div *ngIf="loading || loadingHistory" class="loading-box">
+      Loading proof history...
+    </div>
+
+    <div *ngIf="!loading && !loadingHistory && historyRows.length === 0" class="empty-box">
+      No proof history rows found for the selected filter.
+    </div>
+
+    <div *ngIf="historyRows.length > 0" class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>History ID</th>
+            <th>Record Type</th>
+            <th>Source Record ID</th>
+            <th>Action</th>
+            <th>Sync</th>
+            <th>Verification</th>
+            <th>Blockchain TX</th>
+            <th>Retry</th>
+            <th>Submitted By</th>
+            <th>Proof Safety</th>
+            <th>Created</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let row of historyRows">
+            <td>{{ row.historyId }}</td>
+            <td>
+              <span class="badge">{{ row.recordType }}</span>
+            </td>
+            <td class="mono" [title]="row.sourceRecordId">
+              {{ shortValue(row.sourceRecordId, 28) }}
+            </td>
+            <td>{{ row.actionType }}</td>
+            <td>{{ row.syncStatus }}</td>
+            <td>{{ row.verificationStatus }}</td>
+            <td>
+              <span
+                class="tx-pill"
+                [class.linked]="row.hasBlockchainTransaction"
+                [class.missing]="!row.hasBlockchainTransaction"
+              >
+                {{ txLabel(row) }}
+              </span>
+            </td>
+            <td>{{ number(row.retryCount) }}</td>
+            <td>{{ row.submittedBy || 'N/A' }}</td>
+            <td>
+              <div class="safety-lines">
+                <span>Proof Only: {{ row.metadataSummary?.proofOnly ? 'YES' : 'NO' }}</span>
+                <span>Raw Excluded: {{ row.metadataSummary?.rawSourceRowExcluded ? 'YES' : 'NO' }}</span>
+                <span>Sensitive Excluded: {{ row.metadataSummary?.sensitiveFieldsExcluded ? 'YES' : 'NO' }}</span>
+              </div>
+            </td>
+            <td>{{ row.createdAt }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section *ngIf="activeTab === 'verification'" class="panel">
+    <div class="panel-header">
+      <div>
+        <h2>Verification Logs</h2>
+        <p>Shows verification outcome metadata without exposing source payloads.</p>
+      </div>
+
+      <button type="button" class="small-button" (click)="loadVerification(true)">
+        Reload Verification Logs
+      </button>
+    </div>
+
+    <div *ngIf="loading || loadingVerification" class="loading-box">
+      Loading verification logs...
+    </div>
+
+    <div *ngIf="!loading && !loadingVerification && verificationRows.length === 0" class="empty-box">
+      No verification logs found for the selected filter.
+    </div>
+
+    <div *ngIf="verificationRows.length > 0" class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Verification ID</th>
+            <th>History ID</th>
+            <th>Record Type</th>
+            <th>Source Record ID</th>
+            <th>Status</th>
+            <th>Blockchain TX</th>
+            <th>Verified By</th>
+            <th>Blockchain Verification</th>
+            <th>Fake Success</th>
+            <th>Corrected By</th>
+            <th>Created</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let row of verificationRows">
+            <td>{{ row.verificationId }}</td>
+            <td>{{ row.historyId }}</td>
+            <td>
+              <span class="badge">{{ row.recordType }}</span>
+            </td>
+            <td class="mono" [title]="row.sourceRecordId">
+              {{ shortValue(row.sourceRecordId, 28) }}
+            </td>
+            <td>{{ row.verificationStatus }}</td>
+            <td>
+              <span
+                class="tx-pill"
+                [class.linked]="row.hasBlockchainTransaction"
+                [class.missing]="!row.hasBlockchainTransaction"
+              >
+                {{ txLabel(row) }}
+              </span>
+            </td>
+            <td>{{ row.verifiedBy || 'N/A' }}</td>
+            <td>{{ row.metadataSummary?.blockchainVerificationStatus || 'N/A' }}</td>
+            <td>
+              <span
+                class="fake-pill"
+                [class.safe]="row.metadataSummary?.fakeBlockchainSuccess === false"
+                [class.danger]="row.metadataSummary?.fakeBlockchainSuccess === true"
+              >
+                {{ fakeSuccessLabel(row) }}
+              </span>
+            </td>
+            <td>{{ row.metadataSummary?.correctedBy || 'N/A' }}</td>
+            <td>{{ row.createdAt }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
