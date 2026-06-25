@@ -4,6 +4,7 @@ const controller = require('../controllers/blockchain-proof-api.controller');
 
 const router = express.Router();
 const historyController = require('../controllers/blockchain-proof-history.controller');
+const verificationController = require('../controllers/blockchain-proof-verification.controller');
 
 router.get('/health', controller.health);
 
@@ -34,5 +35,19 @@ router.get('/history', historyController.listHistory);
 router.get('/history/:historyId', historyController.getHistoryById);
 router.get('/records/:recordType/history/latest', historyController.getLatestRecordHistory);
 router.get('/records/:recordType/history', historyController.listRecordHistory);
+
+
+/**
+ * Step 17 — Blockchain proof verification APIs
+ * Read-only verification endpoints.
+ * Live Fabric verification logic is reserved for Step 23.
+ */
+router.get('/verification/health', verificationController.health);
+router.get('/verification/summary', verificationController.summary);
+router.get('/verification/logs', verificationController.listLogs);
+router.get('/verification/logs/:verificationId', verificationController.getLogById);
+router.get('/records/:recordType/verification/preview', verificationController.preview);
+router.get('/records/:recordType/verification/latest', verificationController.getLatestRecordLog);
+router.get('/records/:recordType/verification/logs', verificationController.listRecordLogs);
 
 module.exports = router;
