@@ -11,6 +11,7 @@ const transactionHistoryController = require('../controllers/blockchain-proof-tr
 const screeningHistoryController = require('../controllers/blockchain-proof-screening-history.controller');
 const retryController = require('../controllers/blockchain-proof-retry.controller');
 const verificationLogicController = require('../controllers/blockchain-proof-verification-logic.controller');
+const dashboardController = require('../controllers/blockchain-proof-dashboard.controller');
 
 router.get('/health', controller.health);
 
@@ -123,5 +124,22 @@ router.get('/verification/logic/health', verificationLogicController.health);
 router.get('/verification/candidates', verificationLogicController.candidates);
 router.post('/verification/run', verificationLogicController.run);
 router.post('/records/:recordType/verification/run', verificationLogicController.runRecord);
+
+
+/**
+ * Step 24 — Dashboard APIs
+ * Proof-safe operational metrics for blockchain proof integration.
+ * Does not expose raw source rows or sensitive fields.
+ */
+router.get('/dashboard/health', dashboardController.health);
+router.get('/dashboard/summary', dashboardController.summary);
+router.get('/dashboard/record-types', dashboardController.recordTypes);
+router.get('/dashboard/sync-status', dashboardController.syncStatus);
+router.get('/dashboard/verification-status', dashboardController.verificationStatus);
+router.get('/dashboard/retry-summary', dashboardController.retrySummary);
+router.get('/dashboard/latest-runs', dashboardController.latestRuns);
+router.get('/dashboard/latest-history', dashboardController.latestHistory);
+router.get('/dashboard/latest-verification-logs', dashboardController.latestVerificationLogs);
+router.get('/dashboard/full', dashboardController.full);
 
 module.exports = router;
