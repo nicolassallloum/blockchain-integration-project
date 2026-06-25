@@ -9,6 +9,7 @@ const amlHistoryController = require('../controllers/blockchain-proof-aml-histor
 const customerHistoryController = require('../controllers/blockchain-proof-customer-history.controller');
 const transactionHistoryController = require('../controllers/blockchain-proof-transaction-history.controller');
 const screeningHistoryController = require('../controllers/blockchain-proof-screening-history.controller');
+const retryController = require('../controllers/blockchain-proof-retry.controller');
 
 router.get('/health', controller.health);
 
@@ -99,5 +100,16 @@ router.get('/records/SCREENING_ACTIVITY/history/source-discovery', screeningHist
 router.get('/records/SCREENING_ACTIVITY/history/source-count', screeningHistoryController.sourceCount);
 router.get('/records/SCREENING_ACTIVITY/history/preview', screeningHistoryController.preview);
 router.post('/records/SCREENING_ACTIVITY/history/sync', screeningHistoryController.sync);
+
+
+/**
+ * Step 22 — Retry mechanism
+ * Retries proof-only blockchain submissions safely.
+ * If no submit endpoint is configured, it records retry attempts only.
+ * It never fakes blockchain success.
+ */
+router.get('/retry/health', retryController.health);
+router.get('/retry/candidates', retryController.candidates);
+router.post('/retry/run', retryController.run);
 
 module.exports = router;
