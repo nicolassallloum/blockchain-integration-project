@@ -8,6 +8,7 @@ const verificationController = require('../controllers/blockchain-proof-verifica
 const amlHistoryController = require('../controllers/blockchain-proof-aml-history.controller');
 const customerHistoryController = require('../controllers/blockchain-proof-customer-history.controller');
 const transactionHistoryController = require('../controllers/blockchain-proof-transaction-history.controller');
+const screeningHistoryController = require('../controllers/blockchain-proof-screening-history.controller');
 
 router.get('/health', controller.health);
 
@@ -86,5 +87,17 @@ router.get('/records/TRANSACTION/history/source-discovery', transactionHistoryCo
 router.get('/records/TRANSACTION/history/source-count', transactionHistoryController.sourceCount);
 router.get('/records/TRANSACTION/history/preview', transactionHistoryController.preview);
 router.post('/records/TRANSACTION/history/sync', transactionHistoryController.sync);
+
+
+/**
+ * Step 21 — Screening activity history
+ * Creates PostgreSQL history rows for SCREENING_ACTIVITY proof records only.
+ * Does not submit to Fabric.
+ * Does not expose or store screening payloads, AML rule SQL, or match details.
+ */
+router.get('/records/SCREENING_ACTIVITY/history/source-discovery', screeningHistoryController.sourceDiscovery);
+router.get('/records/SCREENING_ACTIVITY/history/source-count', screeningHistoryController.sourceCount);
+router.get('/records/SCREENING_ACTIVITY/history/preview', screeningHistoryController.preview);
+router.post('/records/SCREENING_ACTIVITY/history/sync', screeningHistoryController.sync);
 
 module.exports = router;
