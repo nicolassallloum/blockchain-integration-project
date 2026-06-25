@@ -7,6 +7,7 @@ const historyController = require('../controllers/blockchain-proof-history.contr
 const verificationController = require('../controllers/blockchain-proof-verification.controller');
 const amlHistoryController = require('../controllers/blockchain-proof-aml-history.controller');
 const customerHistoryController = require('../controllers/blockchain-proof-customer-history.controller');
+const transactionHistoryController = require('../controllers/blockchain-proof-transaction-history.controller');
 
 router.get('/health', controller.health);
 
@@ -73,5 +74,17 @@ router.get('/records/CUSTOMER/history/source-discovery', customerHistoryControll
 router.get('/records/CUSTOMER/history/source-count', customerHistoryController.sourceCount);
 router.get('/records/CUSTOMER/history/preview', customerHistoryController.preview);
 router.post('/records/CUSTOMER/history/sync', customerHistoryController.sync);
+
+
+/**
+ * Step 20 — Transaction data history
+ * Creates PostgreSQL history rows for TRANSACTION proof records only.
+ * Does not submit to Fabric.
+ * Does not expose or store raw transaction payloads.
+ */
+router.get('/records/TRANSACTION/history/source-discovery', transactionHistoryController.sourceDiscovery);
+router.get('/records/TRANSACTION/history/source-count', transactionHistoryController.sourceCount);
+router.get('/records/TRANSACTION/history/preview', transactionHistoryController.preview);
+router.post('/records/TRANSACTION/history/sync', transactionHistoryController.sync);
 
 module.exports = router;
