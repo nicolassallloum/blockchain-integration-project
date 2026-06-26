@@ -2,21 +2,61 @@
 ├── Application_Files.txt
 ├── apply_project_viewer_count.sh
 ├── backups
-│   └── step59-dashboard-enhancement-20260518-115815
-│       ├── blockchain-api
-│       │   └── src
-│       │       ├── routes
-│       │       │   └── index.js
-│       │       └── server.js
-│       └── blockchain-test-ui
-│           └── src
-│               └── app
-│                   ├── core
-│                   │   └── services
-│                   │       └── wallet-api.service.ts
-│                   └── features
-│                       └── dashboard
-│                           └── dashboard.component.ts
+│   ├── add_fabric_ledger_key_step25_20260618_164856
+│   │   ├── government-valoores-aml-rules.routes.js.bak
+│   │   └── valoores-aml-rules-sync.service.js.bak
+│   ├── add_fabric_ledger_key_step25B_20260618_165132
+│   │   ├── government-valoores-aml-rules.routes.js.bak
+│   │   └── valoores-aml-rules-sync.service.js.bak
+│   ├── aml_rule_deterministic_timestamp_step20_20260618_160600
+│   │   └── kycWalletContract.js.bak
+│   ├── aml_rules_chaincode_step5_20260618_140601
+│   │   └── kycWalletContract.js.bak
+│   ├── aml_rules_deploy_scripts_step7_20260618_140718
+│   │   ├── deploy-chaincode.sh.bak
+│   │   ├── fabric-env.sh.bak
+│   │   ├── fix-org1-env-auto.sh.bak
+│   │   └── setOrgEnv.sh.bak
+│   ├── aml_rules_fabric_sync_step3_20260618_135715
+│   │   ├── fabric.routes.js.bak
+│   │   ├── fabric.service.js.bak
+│   │   ├── routes-index.js.bak
+│   │   ├── server.js.bak
+│   │   └── valoores-blockchain.routes.js.bak
+│   ├── fix_aml_rules_dashboard_api_url_step31_20260618_181938
+│   │   └── valoores-aml-rules-dashboard.ts.bak
+│   ├── fix_aml_rules_dashboard_route_step30_20260618_181722
+│   │   └── app.routes.ts.bak
+│   ├── step59-dashboard-enhancement-20260518-115815
+│   │   ├── blockchain-api
+│   │   │   └── src
+│   │   │       ├── routes
+│   │   │       │   └── index.js
+│   │   │       └── server.js
+│   │   └── blockchain-test-ui
+│   │       └── src
+│   │           └── app
+│   │               ├── core
+│   │               │   └── services
+│   │               │       └── wallet-api.service.ts
+│   │               └── features
+│   │                   └── dashboard
+│   │                       └── dashboard.component.ts
+│   ├── valoores_aml_rules_api_step13_20260618_153954
+│   │   └── server.js.bak
+│   ├── valoores_aml_rules_auto_sync_step15_20260618_154643
+│   │   ├── government-valoores-aml-rules.routes.js.bak
+│   │   └── server.js.bak
+│   ├── valoores_aml_rules_composite_key_step17_20260618_155159
+│   │   ├── government-valoores-aml-rules.routes.js.bak
+│   │   ├── kycWalletContract.js.bak
+│   │   └── valoores-aml-rules-sync.service.js.bak
+│   ├── valoores_aml_rules_dashboard_frontend_step27_20260618_170532
+│   │   ├── app.html.bak
+│   │   ├── app.routes.ts.bak
+│   │   └── app.ts.bak
+│   └── valoores_aml_rules_dashboard_step26_20260618_165555
+│       └── government-valoores-aml-rules.routes.js.bak
 ├── blockchain-api
 │   ├── backend_after_step19.log
 │   ├── backend_after_step24.log
@@ -70,7 +110,8 @@
 │   ├── kyc-wallet-chaincode-js.tar.gz
 │   ├── logs
 │   │   ├── app.log
-│   │   └── error.log
+│   │   ├── error.log
+│   │   └── postgres-browser-ui.log
 │   ├── META-INF
 │   │   └── statedb
 │   │       └── couchdb
@@ -10274,9 +10315,7 @@
 │   │   │   │   ├── crypto
 │   │   │   │   │   ├── cert-signatures.js
 │   │   │   │   │   ├── sasl.js
-│   │   │   │   │   ├── utils.js
-│   │   │   │   │   ├── utils-legacy.js
-│   │   │   │   │   └── utils-webcrypto.js
+│   │   │   │   │   └── utils.js
 │   │   │   │   ├── defaults.js
 │   │   │   │   ├── index.js
 │   │   │   │   ├── native
@@ -12117,6 +12156,8 @@
 │   │   ├── step-23-operation-name-fix.sql
 │   │   ├── step-23-transaction-type-constraint-fix.sql
 │   │   └── step-23-wallet-transfer-compatibility-patch.sql
+│   ├── public
+│   │   └── postgres-browser.html
 │   ├── README.md
 │   ├── real_backend_files.txt
 │   ├── remove_tin_get_response_backend.log
@@ -12270,6 +12311,17 @@
 │   │   │   ├── dashboard.routes.js
 │   │   │   ├── data-generator.routes.js
 │   │   │   ├── dev-transaction.routes.js
+│   │   │   ├── dev-transaction.routes.js.bak_add_get_apis_20260617_163722
+│   │   │   ├── dev-transaction.routes.js.bak_clean_blockchain_response_20260617_151228
+│   │   │   ├── dev-transaction.routes.js.bak_clean_blockchain_response_position_20260617_151401
+│   │   │   ├── dev-transaction.routes.js.bak_clean_blockchain_response_regex_20260617_151317
+│   │   │   ├── dev-transaction.routes.js.bak_commit_pg_before_fabric_20260617_145855
+│   │   │   ├── dev-transaction.routes.js.bak_daily_created_api_20260617_165046
+│   │   │   ├── dev-transaction.routes.js.bak_fabric_service_instance_20260617_143212
+│   │   │   ├── dev-transaction.routes.js.bak_fix_daily_created_date_param_20260617_165255
+│   │   │   ├── dev-transaction.routes.js.bak_fix_db_connection_20260617_143743
+│   │   │   ├── dev-transaction.routes.js.bak_keep_pg_record_on_fabric_fail_20260617_143351
+│   │   │   ├── dev-transaction.routes.js.bak_use_create_government_transaction_20260617_144615
 │   │   │   ├── documents-kyc.routes.js
 │   │   │   ├── documents-kyc.routes.js.bak_20260605_145252
 │   │   │   ├── documents-kyc.routes.js.bak_final_20260605_161436
@@ -12310,14 +12362,17 @@
 │   │   │   ├── government-transactions.routes.js.bak_phase9_sequence_txn_ref_20260612_141831
 │   │   │   ├── government-transactions.routes.js.bak_pool_fix_20260602_111655
 │   │   │   ├── government-transactions.routes.js.bak_safe_dropdown_columns_20260604_164005
+│   │   │   ├── government-valoores-aml-rules.routes.js
 │   │   │   ├── hash-verification.routes.js
 │   │   │   ├── health.routes.js
 │   │   │   ├── index.js
+│   │   │   ├── index.js.bak_register_dev_transactions_20260617_143113
 │   │   │   ├── index.js.bak_valoores_blockchain
 │   │   │   ├── organization.routes.js
 │   │   │   ├── payments-digital-stamps.routes.js
 │   │   │   ├── payments-digital-stamps.routes.js.bak_fix_post_20260605_141910
 │   │   │   ├── payments-digital-stamps.routes.js.bak_fix_post_20260605_141914
+│   │   │   ├── postgres-browser.routes.js
 │   │   │   ├── project-view.routes.js
 │   │   │   ├── publicAdministration.routes.js
 │   │   │   ├── reference.routes.js
@@ -12382,6 +12437,7 @@
 │   │   ├── server.js.bak_resident_wallets_fix_20260604_094752
 │   │   ├── server.js.bak_settings_mount_fix_20260610_142512
 │   │   ├── server.js.bak_settings_route_20260610_142433
+│   │   ├── server.js.bak_static_public_20260623_143109
 │   │   ├── server.js.bak_transactions_fix_20260602_105238
 │   │   ├── server.js.bak_valoores_blockchain_20260616_115547
 │   │   ├── services
@@ -12418,6 +12474,7 @@
 │   │   │   ├── transaction.service.js.bak.step32_constraint_fix
 │   │   │   ├── transaction.service.js.bak.step32_type_fix
 │   │   │   ├── transaction.service.js.bak_wallet_to_org_type_20260514_133559
+│   │   │   ├── valoores-aml-rules-sync.service.js
 │   │   │   ├── wallet-auth.service.js
 │   │   │   ├── wallet-query.service.js
 │   │   │   ├── wallet.service.js
@@ -12482,6 +12539,7 @@
 │   │       └── 1781504119369_b7d508113742f72f_image_2_5.png
 │   ├── utils
 │   │   └── walletAddressGenerator.js
+│   ├── valoores_aml_rules_backend.log
 │   ├── valoores_bigint_fix_backend.log
 │   ├── valoores_blockchain_api.log
 │   ├── valoores_customer_id_fix_backend.log
@@ -12657,6 +12715,7 @@
 │   │       │   │   └── images
 │   │       │   │       └── valoores-logo.png
 │   │       │   ├── chunk-5QG37CMU.js
+│   │       │   ├── chunk-5UMA3H5O.js
 │   │       │   ├── chunk-AAGQ6ZEB.js
 │   │       │   ├── chunk-C3PMFTVS.js
 │   │       │   ├── chunk-DVKN6WUX.js
@@ -12668,7 +12727,7 @@
 │   │       │   ├── chunk-T3SHV4B4.js
 │   │       │   ├── favicon.ico
 │   │       │   ├── index.html
-│   │       │   ├── main-CJ7264R6.js
+│   │       │   ├── main-BRM5W73W.js
 │   │       │   └── styles-5INURTSO.css
 │   │       └── prerendered-routes.json
 │   ├── export_organization_transfer_backend_files.sh
@@ -35731,6 +35790,7 @@
 │   │   │   ├── app.routes.ts
 │   │   │   ├── app.routes.ts.bak_fix_routes_build
 │   │   │   ├── app.routes.ts.bak_kyc_daily_created_20260616_151945
+│   │   │   ├── app.routes.ts.bak_transactions_daily_created_20260617_171700
 │   │   │   ├── app.scss
 │   │   │   ├── app.scss.bak_sidebar_icons_20260610_162334
 │   │   │   ├── app.scss.bak_valoores_design_update
@@ -35741,6 +35801,7 @@
 │   │   │   ├── app.ts.bak_kyc_daily_created_menu_20260616_152614
 │   │   │   ├── app.ts.bak_kyc_menu
 │   │   │   ├── app.ts.bak_sidebar_icons_20260610_162334
+│   │   │   ├── app.ts.bak_transactions_daily_created_menu_20260617_171700
 │   │   │   ├── core
 │   │   │   │   ├── interceptors
 │   │   │   │   │   └── api-auth.interceptor.ts
@@ -35856,6 +35917,7 @@
 │   │   │   │   │   ├── kyc-daily-created.html
 │   │   │   │   │   ├── kyc-daily-created.ts
 │   │   │   │   │   ├── kyc-daily-created.ts.bak_date_string_20260616_154558
+│   │   │   │   │   ├── kyc-daily-created.ts.bak_fix_api_url_20260617_164425
 │   │   │   │   │   └── kyc-daily-created.ts.bak_relative_api_20260616_154050
 │   │   │   │   ├── payments-digital-stamps
 │   │   │   │   │   ├── payments-digital-stamps.html
@@ -35885,10 +35947,18 @@
 │   │   │   │   │   ├── settings.ts
 │   │   │   │   │   └── settings.ts.bak_real_api_20260610_142935
 │   │   │   │   ├── static-screen-style.scss
-│   │   │   │   └── transaction-list
-│   │   │   │       ├── transaction-list.html
-│   │   │   │       ├── transaction-list.scss
-│   │   │   │       └── transaction-list.ts
+│   │   │   │   ├── transaction-list
+│   │   │   │   │   ├── transaction-list.html
+│   │   │   │   │   ├── transaction-list.scss
+│   │   │   │   │   └── transaction-list.ts
+│   │   │   │   ├── transactions-daily-created
+│   │   │   │   │   ├── transactions-daily-created.css
+│   │   │   │   │   ├── transactions-daily-created.html
+│   │   │   │   │   └── transactions-daily-created.ts
+│   │   │   │   └── valoores-aml-rules-dashboard
+│   │   │   │       ├── valoores-aml-rules-dashboard.html
+│   │   │   │       ├── valoores-aml-rules-dashboard.scss
+│   │   │   │       └── valoores-aml-rules-dashboard.ts
 │   │   │   ├── layout
 │   │   │   │   └── sidebar
 │   │   │   │       ├── sidebar.component.css
@@ -36262,7 +36332,8 @@
 │   ├── updated-angular-files-20260511.zip
 │   ├── updated-files-today.txt
 │   ├── updated_frontend_files_with_dates.txt
-│   └── updated_frontend_files_without_time.txt
+│   ├── updated_frontend_files_without_time.txt
+│   └── valoores_aml_rules_dashboard_frontend.log
 ├── blockchain-ui-runtime.log
 ├── blockchain_update_needed_files.txt
 ├── chaincode
@@ -36306,6 +36377,9 @@
 │       │   └── statedb
 │       │       └── couchdb
 │       │           └── indexes
+│       │               ├── indexAmlRuleByRuleId.json
+│       │               ├── indexAmlRuleByRuleIdQueryId.json
+│       │               ├── indexAmlRuleByStatus.json
 │       │               ├── indexOrganizationById.json
 │       │               ├── indexTransactionByCreatedDate.json
 │       │               ├── indexTransactionByFromWallet.json
@@ -77287,6 +77361,7 @@
 │       └── password.util.js
 ├── start-blockchain-project-after-reboot.sh
 ├── start-fabric-network.sh
+├── step-01-integration-scope.md
 ├── step-09-ledger-data-model
 │   ├── chaincode-models
 │   ├── couchdb-indexes
@@ -78549,4 +78624,4 @@
 │   └── pyvenv.cfg
 └── wallet_organization_code_update_files.txt
 
-8996 directories, 69554 files
+9012 directories, 69613 files
