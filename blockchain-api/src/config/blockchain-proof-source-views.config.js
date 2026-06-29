@@ -20,6 +20,21 @@ const blockchainProofSourceViewsConfig = {
       blockchainSubmissionRule: 'Submit only proof hash and metadata, never full AML rule details'
     },
 
+    AML_CASE_CLOSURE: {
+      recordType: 'AML_CASE_CLOSURE',
+      priority: 5,
+      enabled: true,
+      confirmed: true,
+      sourceSchema: 'blockchain',
+      sourceView: 'aml_case_closure_sync',
+      fullViewName: 'blockchain.aml_case_closure_sync',
+      sourcePrimaryKey: ['case_id'],
+      implementationOrder: 'SECOND',
+      description: 'Proof-safe AML case closure source view for blockchain proof sync',
+      allowedForBlockchain: false,
+      blockchainSubmissionRule: 'Submit only proof hash and metadata, never closure reason, investigation notes, full case description, or sensitive payloads'
+    },
+
     CUSTOMER_DATA: {
       recordType: 'CUSTOMER_DATA',
       priority: 2,

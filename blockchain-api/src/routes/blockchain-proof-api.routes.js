@@ -7,6 +7,7 @@ const historyController = require('../controllers/blockchain-proof-history.contr
 const verificationController = require('../controllers/blockchain-proof-verification.controller');
 const amlHistoryController = require('../controllers/blockchain-proof-aml-history.controller');
 const customerHistoryController = require('../controllers/blockchain-proof-customer-history.controller');
+const amlCaseClosureHistoryController = require('../controllers/blockchain-proof-aml-case-closure-history.controller');
 const transactionHistoryController = require('../controllers/blockchain-proof-transaction-history.controller');
 const screeningHistoryController = require('../controllers/blockchain-proof-screening-history.controller');
 const retryController = require('../controllers/blockchain-proof-retry.controller');
@@ -67,6 +68,17 @@ router.get('/records/AML/history/source-count', amlHistoryController.sourceCount
 router.get('/records/AML/history/preview', amlHistoryController.preview);
 router.post('/records/AML/history/sync', amlHistoryController.sync);
 
+
+
+/**
+ * Step 11 — AML case closure history
+ * Creates PostgreSQL history rows for AML_CASE_CLOSURE proof records and submits proof to Fabric.
+ * Does not expose closure reason, investigation notes, full case description, or sensitive payloads.
+ */
+router.get('/records/AML_CASE_CLOSURE/history/source-discovery', amlCaseClosureHistoryController.sourceDiscovery);
+router.get('/records/AML_CASE_CLOSURE/history/source-count', amlCaseClosureHistoryController.sourceCount);
+router.get('/records/AML_CASE_CLOSURE/history/preview', amlCaseClosureHistoryController.preview);
+router.post('/records/AML_CASE_CLOSURE/history/sync', amlCaseClosureHistoryController.sync);
 
 /**
  * Step 19 — Customer data history
