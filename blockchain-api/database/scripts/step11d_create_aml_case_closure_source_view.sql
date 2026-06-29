@@ -1,5 +1,5 @@
 -- ============================================================
--- Phase 1 - Step 11D
+-- Phase 1 - Step 11D / 11F
 -- AML Case Closure Blockchain Proof Source View
 -- ============================================================
 --
@@ -9,8 +9,9 @@
 -- Rules:
 --   - PostgreSQL remains the source of truth.
 --   - Blockchain stores proof hash and metadata only.
---   - Do not expose investigation notes, full case description, or sensitive payloads.
+--   - Do not expose investigation notes, full case description, closure reason, or sensitive payloads.
 --   - Only closed AML cases are included.
+--   - No pgcrypto dependency is required.
 --
 -- Source table:
 --   blockchain.aml_cases
@@ -32,15 +33,14 @@ SELECT
     c.opened_at::text AS opened_at,
     c.reviewed_at::text AS reviewed_at,
     c.closed_at::text AS closed_at,
-
-    -- Store only a hash of the closure reason in the source view.
-    -- The raw closure reason must not be submitted to blockchain.
-    encode(
-        digest(COALESCE(c.closure_reason::text, ''), 'sha256'),
-        'hex'
-    ) AS closure_reason_hash,
-
     c.updated_at::text AS updated_at,
+
+    -- Proof-safe flag only.
+    -- Raw closure_reason is intentionally excluded from this view.
+    CASE
+        WHEN NULLIF(TRIM(COALESCE(c.closure_reason::text, '')), '') IS NULL THEN false
+        ELSE true
+    END AS closure_reason_provided,
 
     -- Stable event identifier for blockchain proof history.
     CONCAT('AML_CASE_CLOSURE::', c.case_id::text) AS source_record_id
@@ -50,4 +50,4 @@ WHERE UPPER(COALESCE(c.case_status::text, '')) = 'CLOSED'
   AND c.closed_at IS NOT NULL;
 
 COMMENT ON VIEW blockchain.aml_case_closure_sync IS
-'Proof-safe AML case closure source view for blockchain proof sync. Excludes raw closure reason, investigation notes, and sensitive case payloads.';
+'Proof-safe AML case closure source view for blockchain proof sync. Excludes raw closure reason, investigation notes, full case description, and sensitive case payloads.';
