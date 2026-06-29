@@ -24,6 +24,7 @@
  */
 
 const crypto = require('crypto');
+const { submitBlockchainProof } = require('./blockchain-proof-fabric-submit.service');
 
 const BLOCKCHAIN_SCHEMA = 'blockchain';
 const HISTORY_TABLE = 'blockchain_sync_history';
@@ -876,6 +877,143 @@ async function insertHistoryRow(runId, sourceViewName, decision, submittedBy) {
   return result.rows[0].history_id;
 }
 
+
+function truncateError(value) {
+  if (!value) {
+    return null;
+  }
+
+  return String(value).slice(0, 2000);
+}
+
+async function resolveFabricSubmittedSyncStatusValue() {
+  const allowedValues = await getAllowedCheckValues(HISTORY_TABLE, 'sync_status');
+
+  if (!allowedValues.length) {
+    return 'SUBMITTED';
+  }
+
+  const preferredValues = [
+    'SUBMITTED',
+    'SYNCED',
+    'SUCCESS',
+    'COMPLETED',
+    'DONE',
+    'ON_CHAIN',
+    'BLOCKCHAIN_SUBMITTED',
+    'PENDING'
+  ];
+
+  for (const preferredValue of preferredValues) {
+    if (allowedValues.includes(preferredValue)) {
+      return preferredValue;
+    }
+  }
+
+  return await resolveHistorySyncStatusValue();
+}
+
+async function resolveFabricFailedSyncStatusValue() {
+  const allowedValues = await getAllowedCheckValues(HISTORY_TABLE, 'sync_status');
+
+  if (!allowedValues.length) {
+    return 'FAILED';
+  }
+
+  const preferredValues = [
+    'FAILED',
+    'ERROR',
+    'SUBMISSION_FAILED',
+    'BLOCKCHAIN_FAILED',
+    'PENDING_RETRY',
+    'RETRY',
+    'PENDING'
+  ];
+
+  for (const preferredValue of preferredValues) {
+    if (allowedValues.includes(preferredValue)) {
+      return preferredValue;
+    }
+  }
+
+  return await resolveHistorySyncStatusValue();
+}
+
+function extractFabricTransactionId(fabricResult) {
+  return fabricResult?.fabric?.transactionId ||
+    fabricResult?.transactionId ||
+    fabricResult?.txId ||
+    null;
+}
+
+async function updateHistoryAfterFabricSuccess(historyId, fabricResult) {
+  const query = resolveQueryClient();
+  const now = new Date();
+  const submittedStatus = await resolveFabricSubmittedSyncStatusValue();
+  const fabricTransactionId = extractFabricTransactionId(fabricResult);
+
+  await query(
+    `
+    UPDATE ${quoteTable(BLOCKCHAIN_SCHEMA, HISTORY_TABLE)}
+    SET
+      sync_status = $1,
+      blockchain_transaction_id = $2,
+      blockchain_submitted_at = $3,
+      error_message = NULL,
+      metadata = COALESCE(metadata, '{}'::jsonb) || $4::jsonb,
+      updated_at = $5
+    WHERE history_id = $6
+    `,
+    [
+      submittedStatus,
+      fabricTransactionId,
+      now,
+      safeJson({
+        fabricSubmitted: true,
+        fabricSubmissionService: fabricResult?.fabric?.service || null,
+        fabricSubmissionMethod: fabricResult?.fabric?.method || null,
+        fabricTransactionId,
+        proofOnly: true
+      }),
+      now,
+      historyId
+    ]
+  );
+
+  return fabricTransactionId;
+}
+
+async function markHistoryFabricFailed(historyId, error) {
+  const query = resolveQueryClient();
+  const now = new Date();
+  const failedStatus = await resolveFabricFailedSyncStatusValue();
+
+  await query(
+    `
+    UPDATE ${quoteTable(BLOCKCHAIN_SCHEMA, HISTORY_TABLE)}
+    SET
+      sync_status = $1,
+      error_message = $2,
+      last_retry_at = $3,
+      metadata = COALESCE(metadata, '{}'::jsonb) || $4::jsonb,
+      updated_at = $5
+    WHERE history_id = $6
+    `,
+    [
+      failedStatus,
+      truncateError(error.message),
+      now,
+      safeJson({
+        fabricSubmitted: false,
+        fabricSubmissionError: truncateError(error.message),
+        proofOnly: true
+      }),
+      now,
+      historyId
+    ]
+  );
+}
+
 async function previewCustomerHistorySync(options = {}) {
   const limit = normalizeLimit(options.limit);
   const rowContext = await getCustomerSourceRows(limit);
@@ -950,6 +1088,8 @@ async function syncCustomerHistory(options = {}) {
     unchangedCount,
     insertableHistoryRows: insertable.length,
     insertedHistoryRows: 0,
+    fabricSubmittedCount: 0,
+    fabricFailedCount: 0,
     errorCount: 0
   };
 
@@ -979,6 +1119,8 @@ async function syncCustomerHistory(options = {}) {
   await createSyncRun(runId, submittedBy, rowContext.sourceView.viewName);
 
   try {
+    const fabricSubmissionResults = [];
+
     for (const decision of insertable) {
       const historyId = await insertHistoryRow(
         runId,
@@ -988,9 +1130,61 @@ async function syncCustomerHistory(options = {}) {
       );
 
       insertedHistoryIds.push(historyId);
+
+      try {
+        const fabricResult = await submitBlockchainProof(
+          {
+            blockchainKey: decision.blockchainKey,
+            recordType: decision.recordType,
+            sourceRecordId: decision.sourceRecordId,
+            stableHash: decision.stableHash,
+            actionType: decision.actionType,
+            postgresHistoryId: historyId,
+            submittedBy,
+            metadata: {
+              integrationStep: 'STEP_19_CUSTOMER_DATA_HISTORY',
+              sourceView: `${BLOCKCHAIN_SCHEMA}.${rowContext.sourceView.viewName}`,
+              proofOnly: true,
+              sensitiveFieldsExcluded: true,
+              rawSourceRowExcluded: true
+            }
+          },
+          {
+            dryRun: false
+          }
+        );
+
+        const fabricTransactionId = await updateHistoryAfterFabricSuccess(
+          historyId,
+          fabricResult
+        );
+
+        summary.fabricSubmittedCount += 1;
+
+        fabricSubmissionResults.push({
+          historyId,
+          sourceRecordId: decision.sourceRecordId,
+          blockchainKey: decision.blockchainKey,
+          submitted: true,
+          fabricTransactionId
+        });
+      } catch (fabricError) {
+        summary.fabricFailedCount += 1;
+
+        await markHistoryFabricFailed(historyId, fabricError);
+
+        fabricSubmissionResults.push({
+          historyId,
+          sourceRecordId: decision.sourceRecordId,
+          blockchainKey: decision.blockchainKey,
+          submitted: false,
+          errorMessage: truncateError(fabricError.message)
+        });
+      }
     }
 
     summary.insertedHistoryRows = insertedHistoryIds.length;
+    summary.errorCount = summary.fabricFailedCount;
 
     await updateSyncRun(runId, summary);
 
@@ -998,6 +1192,7 @@ async function syncCustomerHistory(options = {}) {
       ...summary,
       runId,
       insertedHistoryIds,
+      fabricSubmissionResults,
       decisions: decisions.map((item) => ({
         recordType: item.recordType,
         sourceRecordId: item.sourceRecordId,
