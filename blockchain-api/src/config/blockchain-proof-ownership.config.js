@@ -1,142 +1,274 @@
 const blockchainProofOwnershipConfig = {
   project: {
-    name: 'PostgreSQL Blockchain Proof Integration',
-    architectureRule: 'PostgreSQL remains source of truth; blockchain stores proof only'
+    name: 'VALOORES Blockchain Integration Ownership Model',
+    phase: 'Phase 2',
+    architectureRule:
+      'PostgreSQL owns full business data; Hyperledger Fabric stores immutable proof only; Backend owns integration logic; Frontend owns user interaction; Compliance/Audit users approve records before blockchain submission.'
   },
 
+  phase2Rules: [
+    'PostgreSQL owns the full business data.',
+    'Hyperledger Fabric owns immutable proof only.',
+    'Backend owns validation, hash generation, blockchain submission, retry, and verification logic.',
+    'Frontend owns user interaction, dashboard display, verification buttons, and audit screens.',
+    'Compliance/Audit users approve records before blockchain submission.'
+  ],
+
+  requiredAreas: [
+    'postgresqlBusinessData',
+    'hyperledgerFabricProof',
+    'backendIntegrationLogic',
+    'frontendUserInteraction',
+    'complianceAuditApproval',
+    'dataFlowOwnership',
+    'approvalOwnership',
+    'verificationOwnership',
+    'errorRetryOwnership',
+    'securityValidation'
+  ],
+
   ownershipModel: {
-    postgresqlSourceViews: {
-      owner: 'PostgreSQL / Data Owner',
+    postgresqlBusinessData: {
+      owner: 'PostgreSQL',
+      primaryOwnership: true,
       responsibility: [
-        'Own source views',
-        'Approve source primary keys',
-        'Approve fields used for stable hash generation',
-        'Ensure source views do not expose unnecessary sensitive fields'
+        'Own full VALOORES business records',
+        'Own PostgreSQL source views',
+        'Own PostgreSQL history tables',
+        'Own approval status',
+        'Own blockchain submission status',
+        'Own Fabric transaction ID reference',
+        'Own retry metadata',
+        'Own verification result',
+        'Own dashboard source data'
+      ],
+      storedData: [
+        'Full AML records',
+        'Full customer records',
+        'Full transaction records',
+        'Full screening activity records',
+        'History records',
+        'Approval status',
+        'Blockchain transaction references',
+        'Retry count and error message',
+        'Verification result and timestamp'
+      ],
+      prohibitedFromFabric: [
+        'Full customer personal data',
+        'Full AML business data',
+        'Full transaction details',
+        'Full screening details',
+        'Passwords',
+        'Tokens',
+        'Secrets'
       ],
       systemOfRecord: true
     },
 
-    postgresqlHistoryTables: {
-      owner: 'Backend Integration Service',
+    hyperledgerFabricProof: {
+      owner: 'Hyperledger Fabric',
+      primaryOwnership: true,
       responsibility: [
-        'Create history records',
-        'Store old hash and new hash',
-        'Store sync status',
-        'Store blockchain key',
-        'Store blockchain transaction ID',
-        'Store retry count and error message'
+        'Store immutable proof only',
+        'Store blockchain ledger key',
+        'Store source module name',
+        'Store source record reference',
+        'Store stable hash',
+        'Store proof timestamp',
+        'Store submitted-by identity',
+        'Store Fabric transaction metadata',
+        'Support proof lookup and proof history'
       ],
+      storedData: [
+        'Ledger key',
+        'Stable hash',
+        'Source module',
+        'Source record ID/reference',
+        'Action type',
+        'PostgreSQL history ID/reference',
+        'Proof timestamp',
+        'Submitting service/user reference',
+        'Non-sensitive metadata only'
+      ],
+      storesSensitiveData: false,
       systemOfRecord: false
     },
 
-    backendSyncService: {
-      owner: 'Backend Integration Service',
+    backendIntegrationLogic: {
+      owner: 'Backend API',
+      primaryOwnership: true,
       responsibility: [
-        'Read from PostgreSQL source views',
-        'Detect CREATE events',
-        'Detect UPDATE events',
-        'Skip unchanged records',
-        'Generate stable hashes',
-        'Submit proof to blockchain',
-        'Update PostgreSQL history after blockchain submission'
-      ],
-      serviceName: 'postgres-blockchain-proof-sync-service'
-    },
-
-    hashGeneration: {
-      owner: 'Backend Integration Service',
-      responsibility: [
-        'Normalize approved source fields',
+        'Read approved records from PostgreSQL',
+        'Validate record eligibility',
+        'Validate approval status before blockchain submission',
         'Generate deterministic stable hash',
-        'Exclude sensitive fields',
-        'Ensure same input always creates same hash'
+        'Create proof-only blockchain payload',
+        'Submit proof to Hyperledger Fabric',
+        'Link Fabric transaction ID back to PostgreSQL',
+        'Detect failed submissions',
+        'Retry eligible failed records',
+        'Recalculate hash for verification',
+        'Compare PostgreSQL recalculated hash with Fabric proof',
+        'Protect API routes and enforce permissions'
       ],
-      algorithm: 'SHA-256'
+      ownsBusinessApprovalDecision: false,
+      ownsHashGeneration: true,
+      ownsFabricSubmission: true,
+      ownsRetryLogic: true,
+      ownsVerificationLogic: true
     },
 
-    blockchainChaincode: {
-      owner: 'Hyperledger Fabric Chaincode',
+    frontendUserInteraction: {
+      owner: 'VALOORES UI',
+      primaryOwnership: true,
       responsibility: [
-        'Save proof records',
-        'Return proof records',
-        'Return proof history',
-        'Verify proof hash',
-        'Query proof records by record type',
-        'Query proof records by source record ID'
+        'Display pending approval records',
+        'Display approved, rejected, submitted, failed, retry, and verified statuses',
+        'Display blockchain dashboard',
+        'Display audit screens',
+        'Display proof history screens',
+        'Display verification buttons',
+        'Display retry buttons based on permissions',
+        'Display success and error messages',
+        'Provide filtering and search for audit users'
       ],
-      storesSensitiveData: false
+      doesNotOwn: [
+        'Full business data storage',
+        'Stable hash generation',
+        'Direct Fabric submission',
+        'Blockchain immutability',
+        'Backend validation logic'
+      ],
+      userFacingOnly: true
     },
 
-    blockchainProofRecord: {
-      owner: 'Blockchain Proof Layer',
+    complianceAuditApproval: {
+      owner: 'Compliance/Audit Users',
+      primaryOwnership: true,
       responsibility: [
-        'Store immutable proof only',
-        'Store blockchain key',
-        'Store record type',
-        'Store source record ID',
-        'Store stable hash',
-        'Store action type',
-        'Store PostgreSQL history ID',
-        'Store timestamp',
-        'Store submitting service name',
-        'Store optional non-sensitive metadata'
+        'Review records before blockchain submission',
+        'Approve eligible records',
+        'Reject records that should not be submitted',
+        'Review proof history',
+        'Review verification status',
+        'Review failed submissions and retry status',
+        'Review audit exceptions'
       ],
-      prohibited: [
-        'Full AML details',
-        'Full customer details',
-        'Full transaction details',
-        'Full screening details',
-        'PII',
-        'Raw PostgreSQL records',
-        'Passwords',
-        'Tokens',
-        'Secrets'
+      approvalRequiredBeforeSubmission: true,
+      approvalStatuses: [
+        'PENDING_APPROVAL',
+        'APPROVED',
+        'REJECTED',
+        'SUBMITTED',
+        'FAILED',
+        'RETRY_PENDING',
+        'VERIFIED',
+        'VERIFICATION_FAILED'
       ]
     },
 
-    retryLogic: {
-      owner: 'Backend Integration Service',
+    dataFlowOwnership: {
+      owner: 'PostgreSQL + Backend API + Hyperledger Fabric + Frontend UI',
       responsibility: [
-        'Find failed records',
-        'Retry failed blockchain submissions',
-        'Increase retry count',
-        'Preserve original proof hash',
-        'Avoid duplicate proof records where possible'
+        'PostgreSQL stores source business data and history',
+        'Frontend displays pending records and user actions',
+        'Compliance/Audit users approve records',
+        'Backend validates approved records',
+        'Backend generates stable hash',
+        'Backend submits proof-only payload to Fabric',
+        'Fabric stores immutable proof only',
+        'Backend stores Fabric transaction ID and status in PostgreSQL',
+        'Frontend displays submission and verification status'
+      ],
+      flow: [
+        'Business data is created or updated in PostgreSQL',
+        'Backend detects eligible history records',
+        'Frontend displays pending records',
+        'Compliance/Audit user approves or rejects the record',
+        'PostgreSQL stores approval decision',
+        'Backend reads approved record',
+        'Backend validates required fields',
+        'Backend generates stable hash',
+        'Backend submits proof-only payload to Hyperledger Fabric',
+        'Hyperledger Fabric stores immutable proof only',
+        'Backend stores Fabric transaction ID in PostgreSQL',
+        'Frontend displays blockchain status and audit result'
       ]
     },
 
-    verificationLogic: {
-      owner: 'Backend Integration Service',
+    approvalOwnership: {
+      owner: 'Compliance/Audit Users + Backend API + PostgreSQL + Frontend UI',
       responsibility: [
-        'Regenerate PostgreSQL hash',
-        'Read blockchain proof',
-        'Compare PostgreSQL hash with blockchain hash',
-        'Return VERIFIED, MISMATCHED, or TAMPERED status'
+        'Compliance/Audit users own approval decision',
+        'PostgreSQL owns approval storage',
+        'Backend validates that only approved records are submitted',
+        'Frontend displays approval screens and approval status',
+        'PostgreSQL stores approval audit trail'
+      ],
+      rule: 'No record can be submitted to Hyperledger Fabric before Compliance/Audit approval.',
+      approvalRequiredBeforeBlockchainSubmission: true
+    },
+
+    verificationOwnership: {
+      owner: 'Backend API',
+      responsibility: [
+        'Receive verification request from Frontend UI',
+        'Read source/history record from PostgreSQL',
+        'Recalculate stable hash',
+        'Read immutable proof from Hyperledger Fabric',
+        'Compare PostgreSQL hash with Fabric hash',
+        'Return verification result',
+        'Store verification result in PostgreSQL'
+      ],
+      frontendResponsibility: [
+        'Display verify button',
+        'Display verified status',
+        'Display mismatch status',
+        'Display proof not found status',
+        'Display verification error message'
+      ],
+      verificationStatuses: [
+        'VERIFIED',
+        'HASH_MISMATCH',
+        'FABRIC_PROOF_NOT_FOUND',
+        'POSTGRES_RECORD_NOT_FOUND',
+        'VERIFICATION_ERROR'
       ]
     },
 
-    dashboardAndMonitoring: {
-      owner: 'Backend API and Frontend Dashboard',
+    errorRetryOwnership: {
+      owner: 'Backend API + PostgreSQL + Frontend UI',
       responsibility: [
-        'Show synced records',
-        'Show failed records',
-        'Show retry count',
-        'Show last sync date',
-        'Show verification status',
-        'Show records by type',
-        'Show records by status'
+        'Backend catches validation and Fabric submission errors',
+        'Backend marks failed records',
+        'Backend decides retry eligibility',
+        'Backend retries eligible failed records',
+        'PostgreSQL stores retry count, last retry date, next retry date, and error message',
+        'Frontend displays failed records and retry actions based on role',
+        'Audit users can review retry history and final failed records'
+      ],
+      retryRules: [
+        'Only approved records can be retried',
+        'Rejected records must not be submitted or retried',
+        'Records with unchanged hash must not be resubmitted unless previous Fabric submission failed',
+        'Retry count must be tracked in PostgreSQL',
+        'Final failed records must remain visible to Audit users',
+        'Fabric must not store full business data during retry'
       ]
     },
 
     securityValidation: {
-      owner: 'Security / Backend Integration Service',
+      owner: 'Security + Backend API',
       responsibility: [
         'Block sensitive data from blockchain payloads',
-        'Protect API routes',
+        'Protect ownership, approval, retry, and verification API routes',
         'Avoid sensitive data in logs',
         'Validate stable hash generation',
-        'Validate tampering detection'
-      ]
+        'Validate tampering detection',
+        'Ensure Fabric payload remains proof-only',
+        'Ensure frontend cannot bypass backend approval validation'
+      ],
+      sensitiveDataAllowedOnFabric: false
     }
   }
 };
