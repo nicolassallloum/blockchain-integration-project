@@ -125,6 +125,12 @@ export class App {
       group: 'Government Blockchain'
     },
     {
+      label: 'Ownership Model',
+      route: '/government-blockchain/ownership-model',
+      icon: '🧭',
+      group: 'Government Blockchain'
+    },
+    {
       label: 'Hash Verification',
       route: '/government-blockchain/hash-verification',
       icon: '●',

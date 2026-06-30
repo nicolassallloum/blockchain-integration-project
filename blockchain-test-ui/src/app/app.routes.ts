@@ -408,6 +408,14 @@ export const routes: Routes = [
    */
   
   {
+    path: 'government-blockchain/ownership-model',
+    loadComponent: () =>
+      import('./government-blockchain/ownership-model/ownership-model').then(
+        (m) => m.OwnershipModel
+      )
+  },
+
+  {
     path: 'government-blockchain/blockchain-proof-monitoring-dashboard',
     loadComponent: () =>
       import('./government-blockchain/blockchain-proof-monitoring-dashboard/blockchain-proof-monitoring-dashboard').then(

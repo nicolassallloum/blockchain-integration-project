@@ -1,0 +1,179 @@
+<section class="ownership-page">
+  <div class="page-header">
+    <div>
+      <p class="eyebrow">Phase 2</p>
+      <h1>Blockchain Ownership Model</h1>
+      <p>
+        Defines ownership between PostgreSQL, Hyperledger Fabric, Backend APIs,
+        VALOORES UI, and Compliance/Audit users.
+      </p>
+    </div>
+
+    <button class="primary-btn" type="button" (click)="refresh()" [disabled]="isLoading || isValidating">
+      {{ isLoading || isValidating ? 'Loading...' : 'Refresh Ownership Model' }}
+    </button>
+  </div>
+
+  <div *ngIf="errorMessage" class="alert error-alert">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="validationErrorMessage" class="alert error-alert">
+    {{ validationErrorMessage }}
+  </div>
+
+  <div class="validation-card" *ngIf="validation">
+    <div>
+      <span class="label">Validation Status</span>
+      <strong [class.valid]="validation.valid" [class.invalid]="!validation.valid">
+        {{ validation.valid ? 'VALID' : 'INVALID' }}
+      </strong>
+      <p>{{ validation.message }}</p>
+    </div>
+
+    <div>
+      <span class="label">Required Areas</span>
+      <strong>{{ validation.requiredAreas.length }}</strong>
+      <p>Missing: {{ validation.missingAreas.length }}</p>
+    </div>
+
+    <div>
+      <span class="label">Invalid Rules</span>
+      <strong>{{ validation.invalidRules.length }}</strong>
+      <p>Backend ownership validation result</p>
+    </div>
+  </div>
+
+  <div class="project-card" *ngIf="model">
+    <div>
+      <p class="eyebrow">{{ model.project.phase }}</p>
+      <h2>{{ model.project.name }}</h2>
+      <p>{{ model.project.architectureRule }}</p>
+    </div>
+
+    <div class="last-loaded" *ngIf="lastLoadedAt">
+      Last loaded: {{ lastLoadedAt | date:'medium' }}
+    </div>
+  </div>
+
+  <div class="rules-grid" *ngIf="model">
+    <article class="rule-card" *ngFor="let rule of model.phase2Rules; let i = index">
+      <span>Rule {{ i + 1 }}</span>
+      <p>{{ rule }}</p>
+    </article>
+  </div>
+
+  <div class="ownership-layout" *ngIf="model">
+    <aside class="area-list">
+      <h2>Ownership Areas</h2>
+
+      <button
+        type="button"
+        *ngFor="let entry of areaEntries"
+        [class.active]="entry[0] === selectedAreaKey"
+        (click)="selectArea(entry[0])"
+      >
+        <span>{{ formatAreaLabel(entry[0]) }}</span>
+        <small>{{ entry[1].owner }}</small>
+      </button>
+    </aside>
+
+    <article class="area-details" *ngIf="selectedArea">
+      <div class="area-header">
+        <div>
+          <p class="eyebrow">Selected Area</p>
+          <h2>{{ formatAreaLabel(selectedAreaKey) }}</h2>
+          <p>Owner: <strong>{{ selectedArea.owner }}</strong></p>
+        </div>
+
+        <span class="owner-pill">
+          {{ selectedArea.primaryOwnership ? 'Primary Owner' : 'Supporting Owner' }}
+        </span>
+      </div>
+
+      <div class="details-grid">
+        <div>
+          <span>System of Record</span>
+          <strong>{{ booleanLabel(selectedArea.systemOfRecord) }}</strong>
+        </div>
+
+        <div>
+          <span>Stores Sensitive Data</span>
+          <strong>{{ booleanLabel(selectedArea.storesSensitiveData) }}</strong>
+        </div>
+
+        <div>
+          <span>Sensitive Data Allowed on Fabric</span>
+          <strong>{{ booleanLabel(selectedArea.sensitiveDataAllowedOnFabric) }}</strong>
+        </div>
+      </div>
+
+      <section *ngIf="asStringArray(selectedArea.responsibility).length > 0">
+        <h3>Responsibilities</h3>
+        <ul>
+          <li *ngFor="let item of asStringArray(selectedArea.responsibility)">
+            {{ item }}
+          </li>
+        </ul>
+      </section>
+
+      <section *ngIf="asStringArray(selectedArea.storedData).length > 0">
+        <h3>Stored Data</h3>
+        <ul>
+          <li *ngFor="let item of asStringArray(selectedArea.storedData)">
+            {{ item }}
+          </li>
+        </ul>
+      </section>
+
+      <section *ngIf="asStringArray(selectedArea.prohibitedFromFabric).length > 0">
+        <h3>Prohibited From Fabric</h3>
+        <ul>
+          <li *ngFor="let item of asStringArray(selectedArea.prohibitedFromFabric)">
+            {{ item }}
+          </li>
+        </ul>
+      </section>
+
+      <section *ngIf="asStringArray(selectedArea.flow).length > 0">
+        <h3>Data Flow</h3>
+        <ol>
+          <li *ngFor="let item of asStringArray(selectedArea.flow)">
+            {{ item }}
+          </li>
+        </ol>
+      </section>
+
+      <section *ngIf="asStringArray(selectedArea.retryRules).length > 0">
+        <h3>Retry Rules</h3>
+        <ul>
+          <li *ngFor="let item of asStringArray(selectedArea.retryRules)">
+            {{ item }}
+          </li>
+        </ul>
+      </section>
+
+      <section *ngIf="asStringArray(selectedArea.verificationStatuses).length > 0">
+        <h3>Verification Statuses</h3>
+        <div class="pill-list">
+          <span *ngFor="let item of asStringArray(selectedArea.verificationStatuses)">
+            {{ item }}
+          </span>
+        </div>
+      </section>
+
+      <section *ngIf="asStringArray(selectedArea.approvalStatuses).length > 0">
+        <h3>Approval Statuses</h3>
+        <div class="pill-list">
+          <span *ngFor="let item of asStringArray(selectedArea.approvalStatuses)">
+            {{ item }}
+          </span>
+        </div>
+      </section>
+    </article>
+  </div>
+
+  <div *ngIf="isLoading" class="loading-state">
+    Loading Phase 2 ownership model from backend...
+  </div>
+</section>
