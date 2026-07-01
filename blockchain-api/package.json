@@ -13,7 +13,8 @@
     "audit:fix": "npm audit fix",
     "lint": "eslint src",
     "format": "prettier --write src",
-    "test:hash": "node --test tests/stable-hash-generator.service.test.js"
+    "test:hash": "node --test tests/stable-hash-generator.service.test.js",
+    "validate:hash": "node scripts/phase8-validate-stable-hash.js"
   },
   "keywords": [
     "blockchain",
