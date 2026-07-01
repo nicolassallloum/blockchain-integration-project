@@ -14,7 +14,8 @@
     "lint": "eslint src",
     "format": "prettier --write src",
     "test:hash": "node --test tests/stable-hash-generator.service.test.js",
-    "validate:hash": "node scripts/phase8-validate-stable-hash.js"
+    "validate:hash": "node scripts/phase8-validate-stable-hash.js",
+    "test:key": "node --test tests/blockchain-key-generator.service.test.js"
   },
   "keywords": [
     "blockchain",
