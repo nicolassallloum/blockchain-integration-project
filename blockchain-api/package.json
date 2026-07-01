@@ -12,7 +12,8 @@
     "audit": "npm audit",
     "audit:fix": "npm audit fix",
     "lint": "eslint src",
-    "format": "prettier --write src"
+    "format": "prettier --write src",
+    "test:hash": "node --test tests/stable-hash-generator.service.test.js"
   },
   "keywords": [
     "blockchain",
