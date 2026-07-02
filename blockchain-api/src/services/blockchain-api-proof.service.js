@@ -238,68 +238,178 @@ function extractTransactionId(fabricResult) {
   );
 }
 
+
+function buildDuplicateHistoryError(message, code, existingRow = null) {
+  const error = new ApiError(message, 409, code);
+
+  if (existingRow) {
+    error.details = {
+      blockchainHistoryId: String(existingRow.blockchain_history_id),
+      moduleName: existingRow.module_name,
+      sourceRecordId: existingRow.source_record_id,
+      blockchainKey: existingRow.blockchain_key,
+      recordHash: existingRow.record_hash,
+      actionType: existingRow.action_type,
+      blockchainStatus: existingRow.blockchain_status,
+      verificationStatus: existingRow.verification_status,
+      retryCount: Number(existingRow.retry_count || 0),
+      blockchainTransactionId: existingRow.blockchain_transaction_id || null
+    };
+  }
+
+  return error;
+}
+
+async function getDuplicateProofHistory(client, proof) {
+  const result = await client.query(
+    `
+    SELECT *
+    FROM blockchain.blockchain_history
+    WHERE module_name = $1
+      AND source_record_id = $2
+      AND action_type = $3
+      AND record_hash = $4
+    ORDER BY blockchain_history_id DESC
+    LIMIT 1
+    `,
+    [
+      proof.moduleName,
+      proof.sourceRecordId,
+      proof.actionType,
+      proof.recordHash
+    ]
+  );
+
+  return result.rows[0] || null;
+}
+
+async function getDuplicateBlockchainKeyHistory(client, blockchainKey) {
+  const result = await client.query(
+    `
+    SELECT *
+    FROM blockchain.blockchain_history
+    WHERE blockchain_key = $1
+    ORDER BY blockchain_history_id DESC
+    LIMIT 1
+    `,
+    [blockchainKey]
+  );
+
+  return result.rows[0] || null;
+}
+
+async function throwDuplicateInsertError(client, error, proof) {
+  if (!error || error.code !== "23505") {
+    throw error;
+  }
+
+  const constraint = String(error.constraint || "");
+
+  if (constraint === "uq_blockchain_history_blockchain_key") {
+    const existing = await getDuplicateBlockchainKeyHistory(client, proof.blockchainKey);
+
+    throw buildDuplicateHistoryError(
+      `blockchainKey already exists in PostgreSQL history: ${proof.blockchainKey}`,
+      "DUPLICATE_BLOCKCHAIN_KEY",
+      existing
+    );
+  }
+
+  if (constraint === "uq_blockchain_history_module_source_action_hash") {
+    const existing = await getDuplicateProofHistory(client, proof);
+
+    throw buildDuplicateHistoryError(
+      `Blockchain proof already exists for module/source/action/hash: ${proof.moduleName}/${proof.sourceRecordId}/${proof.actionType}`,
+      "DUPLICATE_BLOCKCHAIN_PROOF",
+      existing
+    );
+  }
+
+  throw buildDuplicateHistoryError(
+    "Duplicate blockchain history row rejected by PostgreSQL",
+    "DUPLICATE_BLOCKCHAIN_HISTORY"
+  );
+}
+
+
 async function insertPendingHistory(proof) {
   const client = await db.getClient();
 
   try {
     await client.query("BEGIN");
 
-    const existing = await client.query(
-      `
-      SELECT *
-      FROM blockchain.blockchain_history
-      WHERE blockchain_key = $1
-      LIMIT 1
-      `,
-      [proof.blockchainKey]
+    const existingByKey = await getDuplicateBlockchainKeyHistory(
+      client,
+      proof.blockchainKey
     );
 
-    if (existing.rows.length > 0) {
-      throw new ApiError(
+    if (existingByKey) {
+      throw buildDuplicateHistoryError(
         `blockchainKey already exists in PostgreSQL history: ${proof.blockchainKey}`,
-        409,
-        "DUPLICATE_BLOCKCHAIN_KEY"
+        "DUPLICATE_BLOCKCHAIN_KEY",
+        existingByKey
       );
     }
 
-    const result = await client.query(
-      `
-      INSERT INTO blockchain.blockchain_history (
-        module_name,
-        source_record_id,
-        blockchain_key,
-        record_hash,
-        hash_version,
-        action_type,
-        approval_status,
-        blockchain_status,
-        submitted_by,
-        submitted_at
-      )
-      VALUES (
-        $1,
-        $2,
-        $3,
-        $4,
-        $5,
-        $6,
-        'APPROVED',
-        'PENDING',
-        $7,
-        NOW()
-      )
-      RETURNING *
-      `,
-      [
-        proof.moduleName,
-        proof.sourceRecordId,
-        proof.blockchainKey,
-        proof.recordHash,
-        proof.hashVersion,
-        proof.actionType,
-        proof.approvedBy
-      ]
-    );
+    const existingByProof = await getDuplicateProofHistory(client, proof);
+
+    if (existingByProof) {
+      throw buildDuplicateHistoryError(
+        `Blockchain proof already exists for module/source/action/hash: ${proof.moduleName}/${proof.sourceRecordId}/${proof.actionType}`,
+        "DUPLICATE_BLOCKCHAIN_PROOF",
+        existingByProof
+      );
+    }
+
+    let result;
+
+    await client.query("SAVEPOINT insert_pending_history_row");
+
+    try {
+      result = await client.query(
+        `
+        INSERT INTO blockchain.blockchain_history (
+          module_name,
+          source_record_id,
+          blockchain_key,
+          record_hash,
+          hash_version,
+          action_type,
+          approval_status,
+          blockchain_status,
+          submitted_by,
+          submitted_at
+        )
+        VALUES (
+          $1,
+          $2,
+          $3,
+          $4,
+          $5,
+          $6,
+          'APPROVED',
+          'PENDING',
+          $7,
+          NOW()
+        )
+        RETURNING *
+        `,
+        [
+          proof.moduleName,
+          proof.sourceRecordId,
+          proof.blockchainKey,
+          proof.recordHash,
+          proof.hashVersion,
+          proof.actionType,
+          proof.approvedBy
+        ]
+      );
+
+      await client.query("RELEASE SAVEPOINT insert_pending_history_row");
+    } catch (error) {
+      await client.query("ROLLBACK TO SAVEPOINT insert_pending_history_row");
+      await throwDuplicateInsertError(client, error, proof);
+    }
 
     await client.query("COMMIT");
 
@@ -2089,6 +2199,9 @@ module.exports = {
   SERVICE_NAME,
   ApiError,
   validateSubmitPayload,
+  buildDuplicateHistoryError,
+  getDuplicateProofHistory,
+  getDuplicateBlockchainKeyHistory,
   markHistorySubmitting,
   insertSubmitAttemptStarted,
   submitProof,
