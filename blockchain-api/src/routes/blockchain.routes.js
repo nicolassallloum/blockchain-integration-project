@@ -8,6 +8,11 @@ const router = express.Router();
 
 router.get("/status", asyncHandler(blockchainController.getBlockchainStatus));
 
+router.get(
+  "/history/:recordId",
+  asyncHandler(blockchainController.getHistory)
+);
+
 router.post(
   "/proof/submit",
   asyncHandler(blockchainController.submitProof)

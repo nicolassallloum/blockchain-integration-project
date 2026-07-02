@@ -94,9 +94,40 @@ const verifyProof = async (req, res) => {
 };
 
 
+
+const getHistory = async (req, res) => {
+  try {
+    const data = await blockchainApiProofService.getHistoryByRecordId(
+      req.params.recordId,
+      {
+        requestId: req.headers["x-request-id"] || null,
+        correlationId: req.headers["x-correlation-id"] || null,
+        requestedBy: req.headers["x-requested-by"] || "phase11-api-client"
+      }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Blockchain history loaded successfully",
+      data
+    });
+  } catch (error) {
+    const statusCode = Number(error.statusCode || 500);
+
+    return res.status(statusCode).json({
+      success: false,
+      message: error.message || "Blockchain history lookup failed",
+      code: error.code || "BLOCKCHAIN_HISTORY_LOOKUP_FAILED",
+      details: error.details || null
+    });
+  }
+};
+
+
 module.exports = {
   getBlockchainStatus,
   submitProof,
   getProof,
-  verifyProof
+  verifyProof,
+  getHistory
 };

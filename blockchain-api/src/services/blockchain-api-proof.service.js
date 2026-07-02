@@ -709,6 +709,225 @@ async function verifyProof(payload, options = {}) {
 }
 
 
+
+function validateHistoryRecordId(recordId) {
+  const value = normalizeString(recordId, "recordId", {
+    maxLength: 180
+  });
+
+  if (!/^[a-zA-Z0-9_.:-]+$/.test(value)) {
+    throw new ApiError(
+      "recordId may contain only letters, numbers, underscore, dot, colon, or dash",
+      400,
+      "VALIDATION_ERROR"
+    );
+  }
+
+  assertSafeValue("recordId", value);
+
+  return value;
+}
+
+async function getPostgresHistoriesByRecordId(recordId) {
+  const result = await db.query(
+    `
+    SELECT
+      blockchain_history_id,
+      module_name,
+      source_record_id,
+      blockchain_key,
+      record_hash,
+      hash_version,
+      action_type,
+      approval_status,
+      blockchain_status,
+      blockchain_transaction_id,
+      submitted_by,
+      submitted_at,
+      verified_at,
+      verification_status,
+      error_message,
+      retry_count,
+      created_at,
+      updated_at
+    FROM blockchain.blockchain_history
+    WHERE source_record_id = $1
+       OR blockchain_key = $1
+    ORDER BY blockchain_history_id DESC
+    `,
+    [recordId]
+  );
+
+  return result.rows;
+}
+
+async function queryFabricProofsByRecordId(recordId, options = {}) {
+  const result = await fabricService.evaluateTransaction(
+    "QueryProofsByRecordId",
+    [recordId],
+    buildRequestContext({
+      requestId: options.requestId,
+      correlationId: options.correlationId,
+      createdBy: options.requestedBy || SERVICE_NAME
+    })
+  );
+
+  if (Array.isArray(result.data)) {
+    return {
+      channelName: result.channelName,
+      chaincodeName: result.chaincodeName,
+      functionName: result.functionName,
+      durationMs: result.durationMs,
+      proofs: result.data
+    };
+  }
+
+  return {
+    channelName: result.channelName,
+    chaincodeName: result.chaincodeName,
+    functionName: result.functionName,
+    durationMs: result.durationMs,
+    proofs: []
+  };
+}
+
+async function getFabricHistoryForBlockchainKey(blockchainKey, options = {}) {
+  const result = await fabricService.evaluateTransaction(
+    "GetHistoryForKey",
+    [blockchainKey],
+    buildRequestContext({
+      requestId: options.requestId,
+      correlationId: options.correlationId,
+      createdBy: options.requestedBy || SERVICE_NAME
+    })
+  );
+
+  return {
+    blockchainKey,
+    channelName: result.channelName,
+    chaincodeName: result.chaincodeName,
+    functionName: result.functionName,
+    durationMs: result.durationMs,
+    count: Array.isArray(result.data) ? result.data.length : 0,
+    items: Array.isArray(result.data) ? result.data : []
+  };
+}
+
+async function getHistoryByRecordId(recordId, options = {}) {
+  const normalizedRecordId = validateHistoryRecordId(recordId);
+
+  const postgresRows = await getPostgresHistoriesByRecordId(normalizedRecordId);
+  const postgresHistories = postgresRows.map(mapHistoryRow);
+
+  const blockchainKeys = new Set();
+
+  for (const row of postgresRows) {
+    if (row.blockchain_key) {
+      blockchainKeys.add(row.blockchain_key);
+    }
+  }
+
+  let recordProofQuery = {
+    attempted: true,
+    success: false,
+    proofs: [],
+    errorMessage: null
+  };
+
+  try {
+    const fabricProofs = await queryFabricProofsByRecordId(normalizedRecordId, options);
+
+    recordProofQuery = {
+      attempted: true,
+      success: true,
+      channelName: fabricProofs.channelName,
+      chaincodeName: fabricProofs.chaincodeName,
+      functionName: fabricProofs.functionName,
+      durationMs: fabricProofs.durationMs,
+      count: fabricProofs.proofs.length,
+      proofs: fabricProofs.proofs,
+      errorMessage: null
+    };
+
+    for (const proof of fabricProofs.proofs) {
+      if (proof && proof.blockchainKey) {
+        blockchainKeys.add(proof.blockchainKey);
+      }
+    }
+  } catch (error) {
+    recordProofQuery = {
+      attempted: true,
+      success: false,
+      proofs: [],
+      errorMessage: error.message
+    };
+  }
+
+  if (blockchainKeys.size === 0 && /^[a-zA-Z0-9_.:-]+$/.test(normalizedRecordId)) {
+    blockchainKeys.add(normalizedRecordId);
+  }
+
+  const fabricHistories = [];
+  const fabricHistoryErrors = [];
+
+  for (const blockchainKey of blockchainKeys) {
+    try {
+      const history = await getFabricHistoryForBlockchainKey(blockchainKey, options);
+      fabricHistories.push(history);
+    } catch (error) {
+      fabricHistoryErrors.push({
+        blockchainKey,
+        errorMessage: error.message
+      });
+    }
+  }
+
+  const fabricHistoryItemCount = fabricHistories.reduce(
+    (total, history) => total + Number(history.count || 0),
+    0
+  );
+
+  const found =
+    postgresHistories.length > 0 ||
+    recordProofQuery.proofs.length > 0 ||
+    fabricHistoryItemCount > 0;
+
+  if (!found) {
+    const notFound = new ApiError(
+      `Blockchain history not found for recordId: ${normalizedRecordId}`,
+      404,
+      "BLOCKCHAIN_HISTORY_NOT_FOUND"
+    );
+
+    notFound.details = {
+      recordId: normalizedRecordId,
+      postgresCount: 0,
+      fabricRecordProofCount: 0,
+      fabricHistoryItemCount: 0,
+      fabricHistoryErrors
+    };
+
+    throw notFound;
+  }
+
+  return {
+    found: true,
+    recordId: normalizedRecordId,
+    postgres: {
+      count: postgresHistories.length,
+      histories: postgresHistories
+    },
+    fabric: {
+      recordProofQuery,
+      historyKeyCount: blockchainKeys.size,
+      historyItemCount: fabricHistoryItemCount,
+      histories: fabricHistories,
+      errors: fabricHistoryErrors
+    }
+  };
+}
+
+
 module.exports = {
   SERVICE_NAME,
   ApiError,
@@ -718,5 +937,8 @@ module.exports = {
   getPostgresHistoryByKey,
   getProof,
   validateVerifyPayload,
-  verifyProof
+  verifyProof,
+  validateHistoryRecordId,
+  getPostgresHistoriesByRecordId,
+  getHistoryByRecordId
 };
