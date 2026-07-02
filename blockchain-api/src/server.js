@@ -24,6 +24,7 @@ const governmentDashboardRoutes = require('./routes/government-dashboard.routes'
 const riskFraudScreeningRoutes = require('./routes/government-risk-fraud-screening.routes');
 const valooresBlockchainRoutes = require('./routes/valoores-blockchain.routes');
 const valooresAmlRulesSyncService = require('./services/valoores-aml-rules-sync.service');
+const blockchainApiProofService = require('./services/blockchain-api-proof.service');
 
 const cors = require('cors');
 const crypto = require('crypto');
@@ -49,6 +50,12 @@ try {
   valooresAmlRulesSyncService.startAutoSyncScheduler();
 } catch (error) {
   console.error('[VALOORES_AML_RULES_AUTO_SYNC_BOOT_ERROR]', error.message);
+}
+
+try {
+  blockchainApiProofService.startAutomaticRetryScheduler();
+} catch (error) {
+  console.error('[BLOCKCHAIN_AUTO_RETRY_BOOT_ERROR]', error.message);
 }
 
 

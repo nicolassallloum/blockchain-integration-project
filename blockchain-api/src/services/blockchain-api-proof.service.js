@@ -1847,6 +1847,244 @@ async function retryProofSubmission(id, options = {}) {
 }
 
 
+
+
+function parsePositiveInteger(value, defaultValue, maxValue = null) {
+  const parsed = Number.parseInt(value, 10);
+
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return defaultValue;
+  }
+
+  if (maxValue && parsed > maxValue) {
+    return maxValue;
+  }
+
+  return parsed;
+}
+
+function isAutomaticRetryEnabled() {
+  return String(process.env.BLOCKCHAIN_AUTO_RETRY_ENABLED || "false").toLowerCase() === "true";
+}
+
+function getAutomaticRetryConfig(options = {}) {
+  return {
+    enabled: options.enabled !== undefined
+      ? Boolean(options.enabled)
+      : isAutomaticRetryEnabled(),
+    intervalMs: parsePositiveInteger(
+      options.intervalMs || process.env.BLOCKCHAIN_AUTO_RETRY_INTERVAL_MS,
+      60000,
+      3600000
+    ),
+    initialDelayMs: parsePositiveInteger(
+      options.initialDelayMs || process.env.BLOCKCHAIN_AUTO_RETRY_INITIAL_DELAY_MS,
+      10000,
+      300000
+    ),
+    limit: parsePositiveInteger(
+      options.limit || process.env.BLOCKCHAIN_AUTO_RETRY_LIMIT,
+      5,
+      100
+    ),
+    maxRetries: parsePositiveInteger(
+      options.maxRetries || process.env.BLOCKCHAIN_AUTO_RETRY_MAX_RETRIES,
+      3,
+      20
+    ),
+    workerName: options.workerName || process.env.BLOCKCHAIN_AUTO_RETRY_WORKER_NAME || "phase12-auto-retry-job"
+  };
+}
+
+async function getAutomaticRetryCandidates(options = {}) {
+  const config = getAutomaticRetryConfig(options);
+
+  const result = await db.query(
+    `
+    SELECT
+      blockchain_history_id,
+      module_name,
+      source_record_id,
+      blockchain_key,
+      blockchain_status,
+      verification_status,
+      retry_count,
+      error_message,
+      blockchain_transaction_id,
+      updated_at
+    FROM blockchain.blockchain_history
+    WHERE (
+        blockchain_status IN ('FAILED', 'ERROR')
+        OR error_message IS NOT NULL
+      )
+      AND COALESCE(retry_count, 0) < $1
+      AND blockchain_transaction_id IS NULL
+    ORDER BY
+      COALESCE(retry_count, 0) ASC,
+      updated_at ASC NULLS FIRST,
+      blockchain_history_id ASC
+    LIMIT $2
+    `,
+    [config.maxRetries, config.limit]
+  );
+
+  return result.rows;
+}
+
+async function runAutomaticRetryBatch(options = {}) {
+  const config = getAutomaticRetryConfig(options);
+  const startedAt = new Date();
+  const candidates = await getAutomaticRetryCandidates(config);
+
+  const retried = [];
+  const failed = [];
+  const skipped = [];
+
+  for (const row of candidates) {
+    const blockchainHistoryId = row.blockchain_history_id;
+
+    try {
+      const result = await retryProofSubmission(blockchainHistoryId, {
+        requestId: `${config.workerName}-${Date.now()}-${blockchainHistoryId}`,
+        correlationId: options.correlationId || null,
+        requestedBy: config.workerName
+      });
+
+      retried.push({
+        blockchainHistoryId: String(blockchainHistoryId),
+        blockchainKey: row.blockchain_key,
+        status: result.status,
+        attemptNo: result.attemptNo,
+        retryCount: result.retryCount,
+        blockchainTransactionId: result.blockchainTransactionId || null
+      });
+    } catch (error) {
+      const statusCode = Number(error.statusCode || error.status || 500);
+
+      if (statusCode === 409 || error.code === "BLOCKCHAIN_HISTORY_NOT_RETRYABLE") {
+        skipped.push({
+          blockchainHistoryId: String(blockchainHistoryId),
+          blockchainKey: row.blockchain_key,
+          reason: error.code || "NOT_RETRYABLE",
+          message: error.message
+        });
+      } else {
+        failed.push({
+          blockchainHistoryId: String(blockchainHistoryId),
+          blockchainKey: row.blockchain_key,
+          code: error.code || "AUTO_RETRY_FAILED",
+          message: error.message
+        });
+      }
+    }
+  }
+
+  return {
+    startedAt: startedAt.toISOString(),
+    finishedAt: new Date().toISOString(),
+    workerName: config.workerName,
+    limit: config.limit,
+    maxRetries: config.maxRetries,
+    candidateCount: candidates.length,
+    retriedCount: retried.length,
+    failedCount: failed.length,
+    skippedCount: skipped.length,
+    retried,
+    failed,
+    skipped
+  };
+}
+
+let automaticRetrySchedulerStarted = false;
+let automaticRetrySchedulerTimer = null;
+let automaticRetrySchedulerRunning = false;
+let automaticRetrySchedulerLastResult = null;
+let automaticRetrySchedulerLastError = null;
+
+function getAutomaticRetrySchedulerState() {
+  return {
+    started: automaticRetrySchedulerStarted,
+    running: automaticRetrySchedulerRunning,
+    enabled: isAutomaticRetryEnabled(),
+    lastResult: automaticRetrySchedulerLastResult,
+    lastError: automaticRetrySchedulerLastError
+  };
+}
+
+function startAutomaticRetryScheduler(options = {}) {
+  if (automaticRetrySchedulerStarted) {
+    return getAutomaticRetrySchedulerState();
+  }
+
+  const config = getAutomaticRetryConfig(options);
+
+  if (!config.enabled) {
+    console.log("[BLOCKCHAIN_AUTO_RETRY] Disabled by env.");
+    return getAutomaticRetrySchedulerState();
+  }
+
+  automaticRetrySchedulerStarted = true;
+
+  const runOnce = async () => {
+    if (automaticRetrySchedulerRunning) {
+      return;
+    }
+
+    automaticRetrySchedulerRunning = true;
+
+    try {
+      const result = await runAutomaticRetryBatch(config);
+      automaticRetrySchedulerLastResult = result;
+      automaticRetrySchedulerLastError = null;
+
+      if (result.candidateCount > 0 || result.failedCount > 0 || result.skippedCount > 0) {
+        console.log("[BLOCKCHAIN_AUTO_RETRY_RESULT]", {
+          candidateCount: result.candidateCount,
+          retriedCount: result.retriedCount,
+          failedCount: result.failedCount,
+          skippedCount: result.skippedCount
+        });
+      }
+    } catch (error) {
+      automaticRetrySchedulerLastError = {
+        message: error.message,
+        code: error.code || null,
+        at: new Date().toISOString()
+      };
+
+      console.error("[BLOCKCHAIN_AUTO_RETRY_ERROR]", error.message);
+    } finally {
+      automaticRetrySchedulerRunning = false;
+    }
+  };
+
+  automaticRetrySchedulerTimer = setInterval(runOnce, config.intervalMs);
+  setTimeout(runOnce, config.initialDelayMs);
+
+  console.log("[BLOCKCHAIN_AUTO_RETRY] Started", {
+    intervalMs: config.intervalMs,
+    initialDelayMs: config.initialDelayMs,
+    limit: config.limit,
+    maxRetries: config.maxRetries,
+    workerName: config.workerName
+  });
+
+  return getAutomaticRetrySchedulerState();
+}
+
+function stopAutomaticRetryScheduler() {
+  if (automaticRetrySchedulerTimer) {
+    clearInterval(automaticRetrySchedulerTimer);
+    automaticRetrySchedulerTimer = null;
+  }
+
+  automaticRetrySchedulerStarted = false;
+  automaticRetrySchedulerRunning = false;
+
+  return getAutomaticRetrySchedulerState();
+}
+
+
 module.exports = {
   SERVICE_NAME,
   ApiError,
@@ -1868,5 +2106,12 @@ module.exports = {
   getFailedRecords,
   validateRetryId,
   getNextAttemptNo,
+  isAutomaticRetryEnabled,
+  getAutomaticRetryConfig,
+  getAutomaticRetryCandidates,
+  runAutomaticRetryBatch,
+  startAutomaticRetryScheduler,
+  stopAutomaticRetryScheduler,
+  getAutomaticRetrySchedulerState,
   retryProofSubmission
 };
