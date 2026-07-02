@@ -198,6 +198,51 @@ async function verifyAmlRuleProofRequest(req, res) {
 router.post('/proof/verify', verifyAmlRuleProofRequest);
 router.post('/proof/verify/:sourceRecordId', verifyAmlRuleProofRequest);
 
+
+/**
+ * GET /api/v1/government-blockchain/valoores-aml-rules/proof/status
+ * GET /api/v1/government-blockchain/valoores-aml-rules/proof/status/:sourceRecordId
+ *
+ * Shows AML Rules blockchain submission and verification status.
+ * Source records come from blockchain.valoores_aml_rules.
+ * Proof status comes from blockchain.blockchain_history.
+ */
+router.get('/proof/status', async (req, res) => {
+  try {
+    const result = await amlRulesProofService.getAmlRulesBlockchainStatus({
+      limit: req.query.limit,
+      offset: req.query.offset,
+      search: req.query.search
+    });
+
+    return successResponse(
+      res,
+      result,
+      'AML Rules blockchain status loaded successfully.'
+    );
+  } catch (error) {
+    return errorResponse(res, error, 'Failed to load AML Rules blockchain status.');
+  }
+});
+
+router.get('/proof/status/:sourceRecordId', async (req, res) => {
+  try {
+    const result = await amlRulesProofService.getAmlRulesBlockchainStatus({
+      sourceRecordId: req.params.sourceRecordId,
+      limit: 1,
+      offset: 0
+    });
+
+    return successResponse(
+      res,
+      result,
+      'AML Rule blockchain status loaded successfully.'
+    );
+  } catch (error) {
+    return errorResponse(res, error, 'Failed to load AML Rule blockchain status.');
+  }
+});
+
 /**
  * GET /api/v1/government-blockchain/valoores-aml-rules/source?limit=100
  *

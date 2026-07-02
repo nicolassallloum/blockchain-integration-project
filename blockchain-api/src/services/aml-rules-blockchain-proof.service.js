@@ -334,6 +334,181 @@ async function verifyAmlRuleProof(sourceRecordId, options = {}) {
   };
 }
 
+
+function normalizeLimit(value, defaultLimit = 100, maxLimit = 500) {
+  const parsed = Number.parseInt(value, 10);
+
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return defaultLimit;
+  }
+
+  return Math.min(parsed, maxLimit);
+}
+
+function normalizeOffset(value) {
+  const parsed = Number.parseInt(value, 10);
+
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    return 0;
+  }
+
+  return parsed;
+}
+
+function mapStatusRow(row) {
+  return {
+    sourceView: SOURCE_VIEW,
+    sourceSystem: row.source_system,
+    sourceEntity: row.source_entity,
+    sourceRecordId: row.source_record_id,
+    businessReference: row.business_reference,
+    recordType: row.record_type,
+    recordStatus: row.record_status,
+    standardizedEventTimestamp: row.standardized_event_timestamp,
+    proofVersion: row.proof_version,
+    expectedBlockchainKey: row.expected_blockchain_key,
+    blockchainKey: row.blockchain_key || row.expected_blockchain_key,
+    blockchainHistoryId: row.blockchain_history_id,
+    blockchainStatus: row.effective_blockchain_status,
+    verificationStatus: row.effective_verification_status,
+    blockchainTransactionId: row.blockchain_transaction_id,
+    submittedBy: row.submitted_by,
+    submittedAt: row.submitted_at,
+    verifiedAt: row.verified_at,
+    retryCount: Number(row.retry_count || 0),
+    hasBlockchainProof: Boolean(row.blockchain_history_id),
+    hasBlockchainTransaction: Boolean(row.blockchain_transaction_id)
+  };
+}
+
+async function getAmlRulesBlockchainStatus(options = {}) {
+  const limit = normalizeLimit(options.limit, 100, 500);
+  const offset = normalizeOffset(options.offset);
+  const sourceRecordId = options.sourceRecordId
+    ? normalizeSourceRecordId(options.sourceRecordId)
+    : null;
+  const search = options.search ? String(options.search).trim() : '';
+
+  const values = [MODULE_NAME];
+  const where = [];
+
+  if (sourceRecordId) {
+    values.push(sourceRecordId);
+    where.push(`v.source_record_id = $${values.length}`);
+  }
+
+  if (search) {
+    values.push(`%${search}%`);
+    where.push(`(
+      v.source_record_id ILIKE $${values.length}
+      OR v.business_reference ILIKE $${values.length}
+      OR v.record_status ILIKE $${values.length}
+    )`);
+  }
+
+  const whereSql = where.length > 0 ? `WHERE ${where.join(' AND ')}` : '';
+
+  values.push(limit);
+  const limitParam = values.length;
+
+  values.push(offset);
+  const offsetParam = values.length;
+
+  const result = await db.query(
+    `
+      WITH latest_history AS (
+        SELECT DISTINCT ON (h.source_record_id)
+          h.blockchain_history_id,
+          h.module_name,
+          h.source_record_id,
+          h.blockchain_key,
+          h.blockchain_status,
+          h.blockchain_transaction_id,
+          h.submitted_by,
+          h.submitted_at,
+          h.verified_at,
+          h.verification_status,
+          h.retry_count,
+          h.updated_at
+        FROM blockchain.blockchain_history h
+        WHERE h.module_name = $1
+        ORDER BY h.source_record_id, h.updated_at DESC, h.blockchain_history_id DESC
+      ),
+      joined AS (
+        SELECT
+          v.source_system,
+          v.source_entity,
+          v.source_record_id,
+          v.business_reference,
+          v.record_type,
+          v.record_status,
+          v.standardized_event_timestamp,
+          v.proof_version,
+          ('VALOORES:' || v.source_entity || ':' || v.source_record_id || ':' || v.proof_version) AS expected_blockchain_key,
+          h.blockchain_history_id,
+          h.blockchain_key,
+          COALESCE(h.blockchain_status, 'NOT_SUBMITTED') AS effective_blockchain_status,
+          COALESCE(h.verification_status, 'NOT_VERIFIED') AS effective_verification_status,
+          h.blockchain_transaction_id,
+          h.submitted_by,
+          h.submitted_at,
+          h.verified_at,
+          h.retry_count
+        FROM blockchain.valoores_aml_rules v
+        LEFT JOIN latest_history h
+          ON h.source_record_id = v.source_record_id
+        ${whereSql}
+      ),
+      totals AS (
+        SELECT
+          COUNT(*)::int AS total_records,
+          COUNT(*) FILTER (WHERE blockchain_history_id IS NOT NULL)::int AS proof_records,
+          COUNT(*) FILTER (WHERE blockchain_history_id IS NULL)::int AS not_submitted_records,
+          COUNT(*) FILTER (WHERE effective_blockchain_status = 'SUBMITTED')::int AS submitted_records,
+          COUNT(*) FILTER (WHERE effective_blockchain_status = 'FAILED')::int AS failed_records,
+          COUNT(*) FILTER (WHERE effective_verification_status = 'VERIFIED')::int AS verified_records,
+          COUNT(*) FILTER (WHERE effective_verification_status = 'MISMATCH')::int AS mismatch_records
+        FROM joined
+      )
+      SELECT
+        j.*,
+        t.total_records,
+        t.proof_records,
+        t.not_submitted_records,
+        t.submitted_records,
+        t.failed_records,
+        t.verified_records,
+        t.mismatch_records
+      FROM joined j
+      CROSS JOIN totals t
+      ORDER BY j.source_record_id
+      LIMIT $${limitParam}
+      OFFSET $${offsetParam}
+    `,
+    values
+  );
+
+  const rows = result.rows;
+  const first = rows[0] || {};
+
+  return {
+    sourceView: SOURCE_VIEW,
+    moduleName: MODULE_NAME,
+    limit,
+    offset,
+    summary: {
+      totalRecords: Number(first.total_records || 0),
+      proofRecords: Number(first.proof_records || 0),
+      notSubmittedRecords: Number(first.not_submitted_records || 0),
+      submittedRecords: Number(first.submitted_records || 0),
+      failedRecords: Number(first.failed_records || 0),
+      verifiedRecords: Number(first.verified_records || 0),
+      mismatchRecords: Number(first.mismatch_records || 0)
+    },
+    records: rows.map(mapStatusRow)
+  };
+}
+
 module.exports = {
   SOURCE_VIEW,
   MODULE_NAME,
@@ -347,5 +522,6 @@ module.exports = {
   previewAmlRuleProof,
   previewAmlRuleVerification,
   submitAmlRuleProof,
-  verifyAmlRuleProof
+  verifyAmlRuleProof,
+  getAmlRulesBlockchainStatus
 };
