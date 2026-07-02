@@ -4,6 +4,7 @@ const express = require('express');
 const db = require('../config/database');
 const fabricService = require('../services/fabric.service');
 const valooresAmlRulesSyncService = require('../services/valoores-aml-rules-sync.service');
+const amlRulesProofService = require('../services/aml-rules-blockchain-proof.service');
 
 const router = express.Router();
 
@@ -66,6 +67,71 @@ function getAmlRulesSourceSql(limit) {
 function getRuleId(row) {
   return String(row['RULE ID'] || '').trim();
 }
+
+
+/**
+ * GET /api/v1/government-blockchain/valoores-aml-rules/proof/preview/:sourceRecordId
+ *
+ * Builds the Phase 13 AML Rule proof payload from blockchain.valoores_aml_rules only.
+ * This endpoint does not submit to Fabric.
+ */
+router.get('/proof/preview/:sourceRecordId', async (req, res) => {
+  try {
+    const result = await amlRulesProofService.previewAmlRuleProof(
+      req.params.sourceRecordId,
+      {
+        submittedBy: req.query.submittedBy || 'phase-13-api-preview'
+      }
+    );
+
+    return successResponse(
+      res,
+      result,
+      'AML Rule blockchain proof preview generated successfully.'
+    );
+  } catch (error) {
+    return errorResponse(res, error, 'Failed to preview AML Rule blockchain proof.');
+  }
+});
+
+/**
+ * POST /api/v1/government-blockchain/valoores-aml-rules/proof/submit
+ * POST /api/v1/government-blockchain/valoores-aml-rules/proof/submit/:sourceRecordId
+ *
+ * Submits one AML Rule proof using blockchain.valoores_aml_rules as the only proof input source.
+ */
+async function submitAmlRuleProofRequest(req, res) {
+  try {
+    const sourceRecordId = (
+      req.params.sourceRecordId ||
+      req.body.sourceRecordId ||
+      req.body.source_record_id ||
+      req.query.sourceRecordId ||
+      req.query.source_record_id
+    );
+
+    const result = await amlRulesProofService.submitAmlRuleProof(
+      sourceRecordId,
+      {
+        submittedBy: req.body.submittedBy ||
+          req.body.submitted_by ||
+          req.query.submittedBy ||
+          'phase-13-api-submit'
+      }
+    );
+
+    return successResponse(
+      res,
+      result,
+      'AML Rule blockchain proof submitted successfully.'
+    );
+  } catch (error) {
+    return errorResponse(res, error, 'Failed to submit AML Rule blockchain proof.');
+  }
+}
+
+router.post('/proof/submit', submitAmlRuleProofRequest);
+router.post('/proof/submit/:sourceRecordId', submitAmlRuleProofRequest);
 
 /**
  * GET /api/v1/government-blockchain/valoores-aml-rules/source?limit=100
