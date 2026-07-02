@@ -5,13 +5,13 @@ View: blockchain.valoores_aml_rules
 Purpose:
 Prepare normalized AML rule source records for stable blockchain proof generation.
 
-Rules:
-- Do not expose raw AML SQL query text directly.
-- Normalize text.
-- Standardize dates/timestamps.
-- Standardize nulls.
-- Produce deterministic hash_input.
-- Keep only proof-generation fields.
+Phase 13 contract repair:
+- Provide the required proof columns:
+  source_system, source_entity, source_record_id, business_reference,
+  record_type, record_status, standardized_event_timestamp, proof_version, hash_input.
+- Do not expose raw AML SQL query text.
+- Keep deterministic hash_input.
+- Keep compatibility columns used by older AML Rules dashboard/API logic.
 - Preserve blockchain.valoores_aml_rules_sync as a compatibility view.
 */
 
@@ -26,54 +26,56 @@ DECLARE
     v_rule_query_table text;
 BEGIN
     /*
-      Resolve real source tables from the old view dependency before dropping the view.
-      Store fully-qualified table names as text so they remain usable after DROP VIEW.
+      Resolve real source tables from the old view dependency when the old view exists.
+      Use to_regclass so the script can also run when the view is missing.
     */
 
-    SELECT quote_ident(src_ns.nspname) || '.' || quote_ident(src.relname)
-    INTO v_rule_def_table
-    FROM pg_depend d
-    JOIN pg_rewrite r
-      ON r.oid = d.objid
-    JOIN pg_class v
-      ON v.oid = r.ev_class
-    JOIN pg_class src
-      ON src.oid = d.refobjid
-    JOIN pg_namespace src_ns
-      ON src_ns.oid = src.relnamespace
-    WHERE v.oid = 'blockchain.valoores_aml_rules'::regclass
-      AND src.relname = 'br_business_rule_definition'
-    LIMIT 1;
+    IF to_regclass('blockchain.valoores_aml_rules') IS NOT NULL THEN
+        SELECT quote_ident(src_ns.nspname) || '.' || quote_ident(src.relname)
+        INTO v_rule_def_table
+        FROM pg_depend d
+        JOIN pg_rewrite r
+          ON r.oid = d.objid
+        JOIN pg_class v
+          ON v.oid = r.ev_class
+        JOIN pg_class src
+          ON src.oid = d.refobjid
+        JOIN pg_namespace src_ns
+          ON src_ns.oid = src.relnamespace
+        WHERE v.oid = to_regclass('blockchain.valoores_aml_rules')
+          AND src.relname = 'br_business_rule_definition'
+        LIMIT 1;
 
-    SELECT quote_ident(src_ns.nspname) || '.' || quote_ident(src.relname)
-    INTO v_rule_msg_table
-    FROM pg_depend d
-    JOIN pg_rewrite r
-      ON r.oid = d.objid
-    JOIN pg_class v
-      ON v.oid = r.ev_class
-    JOIN pg_class src
-      ON src.oid = d.refobjid
-    JOIN pg_namespace src_ns
-      ON src_ns.oid = src.relnamespace
-    WHERE v.oid = 'blockchain.valoores_aml_rules'::regclass
-      AND src.relname = 'br_business_rule_message'
-    LIMIT 1;
+        SELECT quote_ident(src_ns.nspname) || '.' || quote_ident(src.relname)
+        INTO v_rule_msg_table
+        FROM pg_depend d
+        JOIN pg_rewrite r
+          ON r.oid = d.objid
+        JOIN pg_class v
+          ON v.oid = r.ev_class
+        JOIN pg_class src
+          ON src.oid = d.refobjid
+        JOIN pg_namespace src_ns
+          ON src_ns.oid = src.relnamespace
+        WHERE v.oid = to_regclass('blockchain.valoores_aml_rules')
+          AND src.relname = 'br_business_rule_message'
+        LIMIT 1;
 
-    SELECT quote_ident(src_ns.nspname) || '.' || quote_ident(src.relname)
-    INTO v_rule_query_table
-    FROM pg_depend d
-    JOIN pg_rewrite r
-      ON r.oid = d.objid
-    JOIN pg_class v
-      ON v.oid = r.ev_class
-    JOIN pg_class src
-      ON src.oid = d.refobjid
-    JOIN pg_namespace src_ns
-      ON src_ns.oid = src.relnamespace
-    WHERE v.oid = 'blockchain.valoores_aml_rules'::regclass
-      AND src.relname = 'br_business_rule_query'
-    LIMIT 1;
+        SELECT quote_ident(src_ns.nspname) || '.' || quote_ident(src.relname)
+        INTO v_rule_query_table
+        FROM pg_depend d
+        JOIN pg_rewrite r
+          ON r.oid = d.objid
+        JOIN pg_class v
+          ON v.oid = r.ev_class
+        JOIN pg_class src
+          ON src.oid = d.refobjid
+        JOIN pg_namespace src_ns
+          ON src_ns.oid = src.relnamespace
+        WHERE v.oid = to_regclass('blockchain.valoores_aml_rules')
+          AND src.relname = 'br_business_rule_query'
+        LIMIT 1;
+    END IF;
 
     IF v_rule_def_table IS NULL THEN
         SELECT quote_ident(table_schema) || '.' || quote_ident(table_name)
@@ -123,10 +125,6 @@ BEGIN
         v_rule_msg_table,
         v_rule_query_table;
 
-    /*
-      Drop dependent compatibility view first.
-      Then replace the required Phase 5 source view.
-    */
     DROP VIEW IF EXISTS blockchain.valoores_aml_rules_sync;
     DROP VIEW IF EXISTS blockchain.valoores_aml_rules;
 
@@ -154,14 +152,37 @@ BEGIN
         ),
         normalized AS (
             SELECT
-                'AML_RULE'::text AS source_module,
+                'VALOORES'::text AS source_system,
+                'AML_RULE'::text AS source_entity,
 
                 CONCAT(
                     COALESCE(business_rule_id::text, 'NA'),
-                    ':',
+                    '-',
                     COALESCE(business_rule_query_id::text, 'NA')
                 ) AS source_record_id,
 
+                CONCAT(
+                    'AML_RULE:',
+                    COALESCE(business_rule_id::text, 'NA'),
+                    ':QUERY:',
+                    COALESCE(business_rule_query_id::text, 'NA')
+                ) AS business_reference,
+
+                'AML_RULE'::text AS record_type,
+                COALESCE(status_code::text, 'UNKNOWN') AS record_status,
+
+                COALESCE(
+                    query_update_date::timestamptz,
+                    rule_update_date::timestamptz,
+                    query_creation_date::timestamptz,
+                    rule_creation_date::timestamptz,
+                    business_rule_bdate::timestamptz,
+                    '1970-01-01 00:00:00+00'::timestamptz
+                ) AS standardized_event_timestamp,
+
+                'V1'::text AS proof_version,
+
+                'AML_RULE'::text AS source_module,
                 COALESCE(business_rule_id::text, 'NA') AS rule_id,
                 COALESCE(business_rule_query_id::text, 'NA') AS rule_query_id,
 
@@ -170,7 +191,7 @@ BEGIN
                     ''
                 ) AS rule_desc_normalized,
 
-                COALESCE(status_code::text, 'NA') AS rule_status_code,
+                COALESCE(status_code::text, 'UNKNOWN') AS rule_status_code,
 
                 COALESCE(
                     TO_CHAR(business_rule_bdate::date, 'YYYY-MM-DD'),
@@ -198,8 +219,8 @@ BEGIN
                 ) AS rule_message_normalized,
 
                 /*
-                  Do not expose raw SQL query text.
-                  Store only a deterministic fingerprint of the normalized rule logic.
+                  Do not expose raw AML SQL query text.
+                  Only expose a deterministic fingerprint of normalized rule logic.
                 */
                 MD5(
                     COALESCE(
@@ -219,31 +240,44 @@ BEGIN
                 ) AS rule_logic_updated_date
             FROM source_data
         ),
-        hash_ready AS (
+        payload AS (
             SELECT
-                *,
+                normalized.*,
                 CONCAT_WS(
                     '|',
-                    source_module,
-                    source_record_id,
-                    rule_id,
-                    rule_query_id,
-                    rule_desc_normalized,
-                    rule_status_code,
-                    rule_start_date,
-                    rule_expiry_date,
-                    rule_creation_ts_utc,
-                    rule_update_ts_utc,
-                    rule_message_normalized,
-                    rule_logic_fingerprint,
-                    rule_logic_created_date,
-                    rule_logic_updated_date
+                    'business_reference=' || business_reference,
+                    'proof_version=' || proof_version,
+                    'record_status=' || record_status,
+                    'record_type=' || record_type,
+                    'rule_desc_normalized=' || rule_desc_normalized,
+                    'rule_expiry_date=' || rule_expiry_date,
+                    'rule_id=' || rule_id,
+                    'rule_logic_created_date=' || rule_logic_created_date,
+                    'rule_logic_fingerprint=' || rule_logic_fingerprint,
+                    'rule_logic_updated_date=' || rule_logic_updated_date,
+                    'rule_message_normalized=' || rule_message_normalized,
+                    'rule_query_id=' || rule_query_id,
+                    'rule_start_date=' || rule_start_date,
+                    'source_entity=' || source_entity,
+                    'source_record_id=' || source_record_id,
+                    'source_system=' || source_system,
+                    'standardized_event_timestamp=' ||
+                        TO_CHAR(standardized_event_timestamp AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
                 ) AS hash_input
             FROM normalized
         )
         SELECT
-            source_module,
+            source_system,
+            source_entity,
             source_record_id,
+            business_reference,
+            record_type,
+            record_status,
+            standardized_event_timestamp,
+            proof_version,
+            hash_input,
+
+            source_module,
             rule_id,
             rule_query_id,
             rule_desc_normalized,
@@ -256,38 +290,36 @@ BEGIN
             rule_logic_fingerprint,
             rule_logic_created_date,
             rule_logic_updated_date,
-            hash_input,
+
             MD5(hash_input) AS hash_md5
-        FROM hash_ready;
+        FROM payload;
     $VIEW$, v_rule_def_table, v_rule_msg_table, v_rule_query_table);
 
-    /*
-      Recreate compatibility view used by existing sync/validation logic.
-      It no longer exposes raw SQL query text.
-    */
     CREATE VIEW blockchain.valoores_aml_rules_sync AS
     SELECT
-        NULLIF(rule_id, 'NA')::numeric AS rule_id,
-        NULLIF(rule_query_id, 'NA')::numeric AS rule_query_id,
-        rule_desc_normalized AS rule_desc,
-        NULLIF(rule_status_code, 'NA')::numeric AS rule_status,
-        NULLIF(rule_start_date, '')::date AS rule_start_date,
-        NULLIF(rule_expiry_date, '')::date AS rule_expiry_date,
-        NULLIF(rule_creation_ts_utc, '')::timestamptz AS rule_creation_date,
-        NULLIF(rule_update_ts_utc, '')::timestamptz AS rule_update_date,
         source_module,
         source_record_id,
-        rule_message_normalized AS rule_message,
+        rule_id,
+        rule_query_id,
+        rule_desc_normalized,
+        rule_status_code,
+        rule_start_date,
+        rule_expiry_date,
+        rule_creation_ts_utc,
+        rule_update_ts_utc,
+        rule_message_normalized,
         rule_logic_fingerprint,
+        rule_logic_created_date,
+        rule_logic_updated_date,
         hash_input,
         hash_md5
     FROM blockchain.valoores_aml_rules;
 END $$;
 
 COMMENT ON VIEW blockchain.valoores_aml_rules IS
-'Phase 5 normalized AML rules source view for blockchain proof hash generation. Raw SQL query text is not exposed; only a deterministic rule logic fingerprint is included.';
+'Phase 5 AML Rules proof source view repaired for Phase 13. Raw AML SQL query text is not exposed.';
 
 COMMENT ON VIEW blockchain.valoores_aml_rules_sync IS
-'Compatibility view rebuilt during Phase 5 from blockchain.valoores_aml_rules. Raw SQL query text is not exposed.';
+'Compatibility view rebuilt from blockchain.valoores_aml_rules. Raw AML SQL query text is not exposed.';
 
 COMMIT;
