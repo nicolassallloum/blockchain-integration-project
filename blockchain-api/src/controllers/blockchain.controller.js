@@ -174,6 +174,36 @@ const getFailedRecords = async (req, res) => {
 };
 
 
+
+const retryProofSubmission = async (req, res) => {
+  try {
+    const data = await blockchainApiProofService.retryProofSubmission(
+      req.params.id,
+      {
+        requestId: req.headers["x-request-id"] || null,
+        correlationId: req.headers["x-correlation-id"] || null,
+        requestedBy: req.headers["x-requested-by"] || "phase11-api-client"
+      }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Blockchain proof retry submitted successfully",
+      data
+    });
+  } catch (error) {
+    const statusCode = Number(error.statusCode || 500);
+
+    return res.status(statusCode).json({
+      success: false,
+      message: error.message || "Blockchain proof retry failed",
+      code: error.code || "BLOCKCHAIN_RETRY_FAILED",
+      details: error.details || null
+    });
+  }
+};
+
+
 module.exports = {
   getBlockchainStatus,
   submitProof,
@@ -181,5 +211,6 @@ module.exports = {
   verifyProof,
   getHistory,
   getDashboard,
-  getFailedRecords
+  getFailedRecords,
+  retryProofSubmission
 };

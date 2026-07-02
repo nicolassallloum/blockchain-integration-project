@@ -18,6 +18,11 @@ router.get(
   asyncHandler(blockchainController.getFailedRecords)
 );
 
+router.post(
+  "/retry/:id",
+  asyncHandler(blockchainController.retryProofSubmission)
+);
+
 router.get(
   "/history/:recordId",
   asyncHandler(blockchainController.getHistory)

@@ -1295,6 +1295,398 @@ async function getFailedRecords(options = {}) {
 }
 
 
+
+function validateRetryId(value) {
+  const parsed = Number.parseInt(value, 10);
+
+  if (!Number.isFinite(parsed) || parsed <= 0 || String(parsed) !== String(value).trim()) {
+    throw new ApiError(
+      "Retry id must be a positive integer blockchain_history_id",
+      400,
+      "VALIDATION_ERROR"
+    );
+  }
+
+  return parsed;
+}
+
+function buildRetryProofPayload(historyRow, options = {}) {
+  return {
+    blockchainKey: historyRow.blockchain_key,
+    moduleName: historyRow.module_name,
+    sourceRecordId: historyRow.source_record_id,
+    recordHash: historyRow.record_hash,
+    hashVersion: historyRow.hash_version || "v1",
+    actionType: historyRow.action_type || "SUBMIT",
+    sourceSystem: "VALOORES",
+    approvedBy: options.requestedBy || historyRow.submitted_by || SERVICE_NAME
+  };
+}
+
+function isRetryableHistoryRow(historyRow, maxRetries = 3) {
+  if (!historyRow) {
+    return false;
+  }
+
+  const blockchainStatus = String(historyRow.blockchain_status || "").toUpperCase();
+  const retryCount = Number(historyRow.retry_count || 0);
+
+  if (retryCount >= maxRetries) {
+    return false;
+  }
+
+  return (
+    blockchainStatus === "FAILED" ||
+    blockchainStatus === "ERROR" ||
+    Boolean(historyRow.error_message)
+  );
+}
+
+async function getHistoryById(blockchainHistoryId) {
+  const result = await db.query(
+    `
+    SELECT
+      blockchain_history_id,
+      module_name,
+      source_record_id,
+      blockchain_key,
+      record_hash,
+      hash_version,
+      action_type,
+      approval_status,
+      blockchain_status,
+      blockchain_transaction_id,
+      submitted_by,
+      submitted_at,
+      verified_at,
+      verification_status,
+      error_message,
+      retry_count,
+      created_at,
+      updated_at
+    FROM blockchain.blockchain_history
+    WHERE blockchain_history_id = $1
+    `,
+    [blockchainHistoryId]
+  );
+
+  return result.rows[0] || null;
+}
+
+async function insertRetryAttemptStarted(historyRow, attemptNo, options = {}) {
+  const result = await db.query(
+    `
+    INSERT INTO blockchain.blockchain_history_attempts (
+      blockchain_history_id,
+      module_name,
+      source_record_id,
+      blockchain_key,
+      attempt_no,
+      attempt_type,
+      blockchain_status,
+      verification_status,
+      request_id,
+      worker_name,
+      started_at,
+      created_by
+    )
+    VALUES (
+      $1, $2, $3, $4, $5, 'RETRY', 'PENDING', $6, $7, $8, NOW(), $9
+    )
+    RETURNING *
+    `,
+    [
+      historyRow.blockchain_history_id,
+      historyRow.module_name,
+      historyRow.source_record_id,
+      historyRow.blockchain_key,
+      attemptNo,
+      historyRow.verification_status || "NOT_VERIFIED",
+      options.requestId || null,
+      "phase11-api-retry",
+      options.requestedBy || SERVICE_NAME
+    ]
+  );
+
+  return result.rows[0] || null;
+}
+
+async function finishRetryAttempt(attemptId, patch = {}) {
+  if (!attemptId) {
+    return null;
+  }
+
+  const result = await db.query(
+    `
+    UPDATE blockchain.blockchain_history_attempts
+    SET
+      blockchain_status = $2,
+      verification_status = $3,
+      blockchain_transaction_id = $4,
+      error_code = $5,
+      error_message = $6,
+      request_id = COALESCE($7, request_id),
+      finished_at = NOW(),
+      duration_ms = GREATEST(
+        0,
+        FLOOR(EXTRACT(EPOCH FROM (NOW() - started_at)) * 1000)::int
+      )
+    WHERE blockchain_history_attempt_id = $1
+    RETURNING *
+    `,
+    [
+      attemptId,
+      patch.blockchainStatus || null,
+      patch.verificationStatus || null,
+      patch.blockchainTransactionId || null,
+      patch.errorCode || null,
+      patch.errorMessage || null,
+      patch.requestId || null
+    ]
+  );
+
+  return result.rows[0] || null;
+}
+
+async function markRetrySubmitted(blockchainHistoryId, attemptNo, transactionId, requestedBy) {
+  const result = await db.query(
+    `
+    UPDATE blockchain.blockchain_history
+    SET
+      blockchain_status = 'SUBMITTED',
+      blockchain_transaction_id = $2,
+      submitted_by = COALESCE($3, submitted_by),
+      submitted_at = NOW(),
+      verification_status = 'NOT_VERIFIED',
+      verified_at = NULL,
+      error_message = NULL,
+      retry_count = $4,
+      updated_at = NOW()
+    WHERE blockchain_history_id = $1
+    RETURNING
+      blockchain_history_id,
+      module_name,
+      source_record_id,
+      blockchain_key,
+      record_hash,
+      hash_version,
+      action_type,
+      approval_status,
+      blockchain_status,
+      blockchain_transaction_id,
+      submitted_by,
+      submitted_at,
+      verified_at,
+      verification_status,
+      error_message,
+      retry_count,
+      created_at,
+      updated_at
+    `,
+    [blockchainHistoryId, transactionId || null, requestedBy || SERVICE_NAME, attemptNo]
+  );
+
+  return result.rows[0] || null;
+}
+
+async function markRetryFailed(blockchainHistoryId, attemptNo, error) {
+  const result = await db.query(
+    `
+    UPDATE blockchain.blockchain_history
+    SET
+      blockchain_status = 'FAILED',
+      error_message = $2,
+      retry_count = $3,
+      updated_at = NOW()
+    WHERE blockchain_history_id = $1
+    RETURNING
+      blockchain_history_id,
+      module_name,
+      source_record_id,
+      blockchain_key,
+      record_hash,
+      hash_version,
+      action_type,
+      approval_status,
+      blockchain_status,
+      blockchain_transaction_id,
+      submitted_by,
+      submitted_at,
+      verified_at,
+      verification_status,
+      error_message,
+      retry_count,
+      created_at,
+      updated_at
+    `,
+    [blockchainHistoryId, String(error.message || error).slice(0, 2000), attemptNo]
+  );
+
+  return result.rows[0] || null;
+}
+
+function extractFabricTransactionId(fabricResult) {
+  if (!fabricResult || typeof fabricResult !== "object") {
+    return null;
+  }
+
+  return (
+    fabricResult.transactionId ||
+    fabricResult.txId ||
+    fabricResult.transactionID ||
+    fabricResult.fabricTransactionId ||
+    (fabricResult.data && (
+      fabricResult.data.transactionId ||
+      fabricResult.data.txId ||
+      fabricResult.data.transactionID ||
+      fabricResult.data.fabricTransactionId
+    )) ||
+    null
+  );
+}
+
+async function retryProofSubmission(id, options = {}) {
+  const blockchainHistoryId = validateRetryId(id);
+  const maxRetries = 3;
+
+  const historyRow = await getHistoryById(blockchainHistoryId);
+
+  if (!historyRow) {
+    throw new ApiError(
+      `Blockchain history row not found for id: ${blockchainHistoryId}`,
+      404,
+      "BLOCKCHAIN_HISTORY_NOT_FOUND"
+    );
+  }
+
+  if (!isRetryableHistoryRow(historyRow, maxRetries)) {
+    const error = new ApiError(
+      `Blockchain history row ${blockchainHistoryId} is not retryable`,
+      409,
+      "BLOCKCHAIN_HISTORY_NOT_RETRYABLE"
+    );
+
+    error.details = {
+      blockchainHistoryId: String(historyRow.blockchain_history_id),
+      blockchainStatus: historyRow.blockchain_status,
+      verificationStatus: historyRow.verification_status,
+      retryCount: Number(historyRow.retry_count || 0),
+      maxRetries,
+      retryableStatuses: ["FAILED", "ERROR"],
+      hasErrorMessage: Boolean(historyRow.error_message)
+    };
+
+    throw error;
+  }
+
+  const attemptNo = Number(historyRow.retry_count || 0) + 1;
+  const proofPayload = buildRetryProofPayload(historyRow, options);
+
+  validateSubmitPayload(proofPayload);
+
+  let attemptRow = null;
+  let attemptLogWarning = null;
+
+  try {
+    attemptRow = await insertRetryAttemptStarted(historyRow, attemptNo, options);
+  } catch (error) {
+    attemptLogWarning = error.message;
+  }
+
+  try {
+    const fabricResult = await fabricService.submitTransaction(
+      "SubmitProof",
+      [JSON.stringify(proofPayload)],
+      buildRequestContext({
+        requestId: options.requestId,
+        correlationId: options.correlationId,
+        createdBy: options.requestedBy || SERVICE_NAME
+      })
+    );
+
+    const transactionId = extractFabricTransactionId(fabricResult);
+
+    const updatedHistory = await markRetrySubmitted(
+      blockchainHistoryId,
+      attemptNo,
+      transactionId,
+      options.requestedBy || SERVICE_NAME
+    );
+
+    let finishedAttempt = null;
+
+    try {
+      finishedAttempt = await finishRetryAttempt(
+        attemptRow && attemptRow.blockchain_history_attempt_id,
+        {
+          blockchainStatus: "SUBMITTED",
+          verificationStatus: "NOT_VERIFIED",
+          blockchainTransactionId: transactionId,
+          requestId: options.requestId || null
+        }
+      );
+    } catch (error) {
+      attemptLogWarning = attemptLogWarning || error.message;
+    }
+
+    return {
+      retried: true,
+      status: "SUBMITTED",
+      blockchainHistoryId: String(blockchainHistoryId),
+      attemptNo,
+      blockchainKey: updatedHistory.blockchain_key,
+      blockchainTransactionId: transactionId,
+      postgres: {
+        historyBefore: mapHistoryRow(historyRow),
+        history: mapHistoryRow(updatedHistory),
+        attempt: finishedAttempt || attemptRow,
+        attemptLogWarning
+      },
+      fabric: {
+        channelName: fabricResult.channelName,
+        chaincodeName: fabricResult.chaincodeName,
+        functionName: fabricResult.functionName,
+        durationMs: fabricResult.durationMs,
+        transactionId,
+        result: fabricResult.data || null
+      }
+    };
+  } catch (error) {
+    const failedHistory = await markRetryFailed(blockchainHistoryId, attemptNo, error);
+
+    try {
+      await finishRetryAttempt(
+        attemptRow && attemptRow.blockchain_history_attempt_id,
+        {
+          blockchainStatus: "FAILED",
+          verificationStatus: historyRow.verification_status || "NOT_VERIFIED",
+          errorCode: error.code || "FABRIC_RETRY_FAILED",
+          errorMessage: String(error.message || error).slice(0, 2000),
+          requestId: options.requestId || null
+        }
+      );
+    } catch (_) {}
+
+    const wrapped = new ApiError(
+      `Blockchain retry failed: ${error.message}`,
+      502,
+      "BLOCKCHAIN_RETRY_FAILED"
+    );
+
+    wrapped.details = {
+      blockchainHistoryId: String(blockchainHistoryId),
+      attemptNo,
+      postgres: {
+        historyBefore: mapHistoryRow(historyRow),
+        history: mapHistoryRow(failedHistory)
+      }
+    };
+
+    throw wrapped;
+  }
+}
+
+
 module.exports = {
   SERVICE_NAME,
   ApiError,
@@ -1311,5 +1703,7 @@ module.exports = {
   normalizeDashboardLimit,
   getDashboard,
   normalizeFailedLimit,
-  getFailedRecords
+  getFailedRecords,
+  validateRetryId,
+  retryProofSubmission
 };
