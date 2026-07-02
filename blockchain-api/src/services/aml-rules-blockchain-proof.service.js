@@ -198,6 +198,7 @@ function buildAmlRuleProofPayload(sourceRecord, options = {}) {
   });
 
   return {
+    sourceSystem: sourceRecord.source_system,
     blockchainKey: keyData.blockchainKey,
     moduleName: keyData.moduleName,
     sourceRecordId: keyData.sourceRecordId,
