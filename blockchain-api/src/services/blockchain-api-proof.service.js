@@ -1516,6 +1516,21 @@ async function getHistoryById(blockchainHistoryId) {
   return result.rows[0] || null;
 }
 
+
+async function getNextAttemptNo(blockchainHistoryId) {
+  const result = await db.query(
+    `
+    SELECT COALESCE(MAX(attempt_no), 0) + 1 AS next_attempt_no
+    FROM blockchain.blockchain_history_attempts
+    WHERE blockchain_history_id = $1
+    `,
+    [blockchainHistoryId]
+  );
+
+  return Number(result.rows[0] && result.rows[0].next_attempt_no) || 1;
+}
+
+
 async function insertRetryAttemptStarted(historyRow, attemptNo, options = {}) {
   const result = await db.query(
     `
@@ -1722,7 +1737,8 @@ async function retryProofSubmission(id, options = {}) {
     throw error;
   }
 
-  const attemptNo = Number(historyRow.retry_count || 0) + 1;
+  const retryCount = Number(historyRow.retry_count || 0) + 1;
+  const attemptNo = await getNextAttemptNo(blockchainHistoryId);
   const proofPayload = buildRetryProofPayload(historyRow, options);
 
   validateSubmitPayload(proofPayload);
@@ -1751,7 +1767,7 @@ async function retryProofSubmission(id, options = {}) {
 
     const updatedHistory = await markRetrySubmitted(
       blockchainHistoryId,
-      attemptNo,
+      retryCount,
       transactionId,
       options.requestedBy || SERVICE_NAME
     );
@@ -1777,6 +1793,7 @@ async function retryProofSubmission(id, options = {}) {
       status: "SUBMITTED",
       blockchainHistoryId: String(blockchainHistoryId),
       attemptNo,
+      retryCount,
       blockchainKey: updatedHistory.blockchain_key,
       blockchainTransactionId: transactionId,
       postgres: {
@@ -1795,7 +1812,7 @@ async function retryProofSubmission(id, options = {}) {
       }
     };
   } catch (error) {
-    const failedHistory = await markRetryFailed(blockchainHistoryId, attemptNo, error);
+    const failedHistory = await markRetryFailed(blockchainHistoryId, retryCount, error);
 
     try {
       await finishRetryAttempt(
@@ -1850,5 +1867,6 @@ module.exports = {
   normalizeFailedLimit,
   getFailedRecords,
   validateRetryId,
+  getNextAttemptNo,
   retryProofSubmission
 };
