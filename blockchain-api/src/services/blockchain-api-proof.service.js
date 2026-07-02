@@ -928,6 +928,249 @@ async function getHistoryByRecordId(recordId, options = {}) {
 }
 
 
+
+function normalizeDashboardLimit(value, defaultValue = 10, maxValue = 50) {
+  const parsed = Number.parseInt(value, 10);
+
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return defaultValue;
+  }
+
+  return Math.min(parsed, maxValue);
+}
+
+function toNumber(value) {
+  if (value === null || value === undefined) {
+    return 0;
+  }
+
+  const parsed = Number(value);
+
+  if (!Number.isFinite(parsed)) {
+    return 0;
+  }
+
+  return parsed;
+}
+
+function mapDashboardModuleSummary(row) {
+  return {
+    moduleName: row.module_name,
+    totalHistoryRecords: toNumber(row.total_history_records),
+    approvalPendingCount: toNumber(row.approval_pending_count),
+    approvalApprovedCount: toNumber(row.approval_approved_count),
+    approvalRejectedCount: toNumber(row.approval_rejected_count),
+    blockchainPendingCount: toNumber(row.blockchain_pending_count),
+    blockchainSubmittedCount: toNumber(row.blockchain_submitted_count),
+    blockchainConfirmedCount: toNumber(row.blockchain_confirmed_count),
+    blockchainFailedCount: toNumber(row.blockchain_failed_count),
+    notVerifiedCount: toNumber(row.not_verified_count),
+    verifiedCount: toNumber(row.verified_count),
+    verificationFailedCount: toNumber(row.verification_failed_count),
+    verificationMismatchCount: toNumber(row.verification_mismatch_count),
+    totalRetryCount: toNumber(row.total_retry_count),
+    firstHistoryCreatedAt: row.first_history_created_at,
+    latestHistoryUpdatedAt: row.latest_history_updated_at
+  };
+}
+
+function mapDashboardLatestRow(row) {
+  return {
+    blockchainHistoryId: row.blockchain_history_id ? String(row.blockchain_history_id) : null,
+    moduleName: row.module_name,
+    sourceRecordId: row.source_record_id,
+    blockchainKey: row.blockchain_key,
+    hashVersion: row.hash_version,
+    actionType: row.action_type,
+    approvalStatus: row.approval_status,
+    blockchainStatus: row.blockchain_status,
+    blockchainTransactionId: row.blockchain_transaction_id || null,
+    hasRecordHash: Boolean(row.record_hash),
+    submittedBy: row.submitted_by,
+    submittedAt: row.submitted_at,
+    verifiedAt: row.verified_at,
+    verificationStatus: row.verification_status,
+    errorMessage: row.error_message,
+    retryCount: toNumber(row.retry_count),
+    attemptCount: toNumber(row.attempt_count),
+    latestAttemptNo: row.latest_attempt_no,
+    latestAttemptStartedAt: row.latest_attempt_started_at,
+    latestAttemptFinishedAt: row.latest_attempt_finished_at,
+    latestAttemptType: row.latest_attempt_type,
+    latestAttemptBlockchainStatus: row.latest_attempt_blockchain_status,
+    latestAttemptVerificationStatus: row.latest_attempt_verification_status,
+    latestAttemptErrorCode: row.latest_attempt_error_code,
+    latestAttemptRequestId: row.latest_attempt_request_id,
+    latestAttemptWorkerName: row.latest_attempt_worker_name,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
+  };
+}
+
+function mapDashboardRetryRow(row) {
+  return {
+    blockchainHistoryId: row.blockchain_history_id ? String(row.blockchain_history_id) : null,
+    moduleName: row.module_name,
+    sourceRecordId: row.source_record_id,
+    blockchainKey: row.blockchain_key,
+    actionType: row.action_type,
+    approvalStatus: row.approval_status,
+    blockchainStatus: row.blockchain_status,
+    verificationStatus: row.verification_status,
+    retryCount: toNumber(row.retry_count),
+    errorMessage: row.error_message,
+    blockchainTransactionId: row.blockchain_transaction_id || null,
+    submittedBy: row.submitted_by,
+    submittedAt: row.submitted_at,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
+  };
+}
+
+async function getDashboard(options = {}) {
+  const limit = normalizeDashboardLimit(options.limit);
+
+  const [
+    totalsResult,
+    blockchainStatusResult,
+    verificationStatusResult,
+    actionTypeResult,
+    moduleSummaryResult,
+    latestResult,
+    retryQueueResult
+  ] = await Promise.all([
+    db.query(
+      `
+      SELECT
+        COUNT(*)::int AS total_records,
+        COUNT(*) FILTER (WHERE blockchain_status = 'PENDING')::int AS pending_count,
+        COUNT(*) FILTER (WHERE blockchain_status = 'SUBMITTED')::int AS submitted_count,
+        COUNT(*) FILTER (WHERE blockchain_status = 'CONFIRMED')::int AS confirmed_count,
+        COUNT(*) FILTER (WHERE blockchain_status = 'FAILED')::int AS failed_count,
+        COUNT(*) FILTER (WHERE verification_status = 'NOT_VERIFIED')::int AS not_verified_count,
+        COUNT(*) FILTER (WHERE verification_status = 'VERIFIED')::int AS verified_count,
+        COUNT(*) FILTER (WHERE verification_status = 'FAILED')::int AS verification_failed_count,
+        COUNT(*) FILTER (WHERE verification_status = 'MISMATCHED')::int AS mismatched_count,
+        COUNT(*) FILTER (WHERE blockchain_transaction_id IS NOT NULL)::int AS records_with_transaction_count,
+        COUNT(*) FILTER (WHERE blockchain_transaction_id IS NULL)::int AS records_without_transaction_count,
+        COALESCE(SUM(COALESCE(retry_count, 0)), 0)::int AS total_retry_count,
+        MIN(created_at) AS first_created_at,
+        MAX(updated_at) AS latest_updated_at
+      FROM blockchain.blockchain_history
+      `
+    ),
+    db.query(
+      `
+      SELECT
+        COALESCE(blockchain_status, 'NULL') AS status,
+        COUNT(*)::int AS count
+      FROM blockchain.blockchain_history
+      GROUP BY blockchain_status
+      ORDER BY COUNT(*) DESC, status ASC
+      `
+    ),
+    db.query(
+      `
+      SELECT
+        COALESCE(verification_status, 'NULL') AS status,
+        COUNT(*)::int AS count
+      FROM blockchain.blockchain_history
+      GROUP BY verification_status
+      ORDER BY COUNT(*) DESC, status ASC
+      `
+    ),
+    db.query(
+      `
+      SELECT
+        COALESCE(action_type, 'NULL') AS actionType,
+        COUNT(*)::int AS count
+      FROM blockchain.blockchain_history
+      GROUP BY action_type
+      ORDER BY COUNT(*) DESC, actionType ASC
+      `
+    ),
+    db.query(
+      `
+      SELECT *
+      FROM blockchain.vw_blockchain_history_summary
+      ORDER BY total_history_records DESC, module_name ASC
+      `
+    ),
+    db.query(
+      `
+      SELECT *
+      FROM blockchain.vw_blockchain_history_latest
+      ORDER BY blockchain_history_id DESC
+      LIMIT $1
+      `,
+      [limit]
+    ),
+    db.query(
+      `
+      SELECT *
+      FROM blockchain.vw_blockchain_history_retry_queue
+      ORDER BY retry_count DESC, updated_at ASC
+      LIMIT $1
+      `,
+      [limit]
+    )
+  ]);
+
+  const totals = totalsResult.rows[0] || {};
+
+  return {
+    asOf: new Date().toISOString(),
+    summary: {
+      totalRecords: toNumber(totals.total_records),
+      pendingCount: toNumber(totals.pending_count),
+      submittedCount: toNumber(totals.submitted_count),
+      confirmedCount: toNumber(totals.confirmed_count),
+      failedCount: toNumber(totals.failed_count),
+      notVerifiedCount: toNumber(totals.not_verified_count),
+      verifiedCount: toNumber(totals.verified_count),
+      verificationFailedCount: toNumber(totals.verification_failed_count),
+      mismatchedCount: toNumber(totals.mismatched_count),
+      recordsWithTransactionCount: toNumber(totals.records_with_transaction_count),
+      recordsWithoutTransactionCount: toNumber(totals.records_without_transaction_count),
+      totalRetryCount: toNumber(totals.total_retry_count),
+      firstCreatedAt: totals.first_created_at || null,
+      latestUpdatedAt: totals.latest_updated_at || null
+    },
+    breakdowns: {
+      blockchainStatus: blockchainStatusResult.rows.map((row) => ({
+        status: row.status,
+        count: toNumber(row.count)
+      })),
+      verificationStatus: verificationStatusResult.rows.map((row) => ({
+        status: row.status,
+        count: toNumber(row.count)
+      })),
+      actionType: actionTypeResult.rows.map((row) => ({
+        actionType: row.actiontype,
+        count: toNumber(row.count)
+      })),
+      modules: moduleSummaryResult.rows.map(mapDashboardModuleSummary)
+    },
+    recent: {
+      limit,
+      count: latestResult.rows.length,
+      records: latestResult.rows.map(mapDashboardLatestRow)
+    },
+    retryQueue: {
+      limit,
+      count: retryQueueResult.rows.length,
+      records: retryQueueResult.rows.map(mapDashboardRetryRow)
+    },
+    securityPolicy: {
+      rawSourceRowsReturned: false,
+      sensitiveFieldsReturned: false,
+      hashesExposedInRecentList: false,
+      proofOnlyMetrics: true
+    }
+  };
+}
+
+
 module.exports = {
   SERVICE_NAME,
   ApiError,
@@ -940,5 +1183,7 @@ module.exports = {
   verifyProof,
   validateHistoryRecordId,
   getPostgresHistoriesByRecordId,
-  getHistoryByRecordId
+  getHistoryByRecordId,
+  normalizeDashboardLimit,
+  getDashboard
 };

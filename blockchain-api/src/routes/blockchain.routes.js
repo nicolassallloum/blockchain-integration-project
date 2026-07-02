@@ -9,6 +9,11 @@ const router = express.Router();
 router.get("/status", asyncHandler(blockchainController.getBlockchainStatus));
 
 router.get(
+  "/dashboard",
+  asyncHandler(blockchainController.getDashboard)
+);
+
+router.get(
   "/history/:recordId",
   asyncHandler(blockchainController.getHistory)
 );

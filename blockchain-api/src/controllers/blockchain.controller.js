@@ -124,10 +124,36 @@ const getHistory = async (req, res) => {
 };
 
 
+
+const getDashboard = async (req, res) => {
+  try {
+    const data = await blockchainApiProofService.getDashboard({
+      limit: req.query.limit
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Blockchain dashboard loaded successfully",
+      data
+    });
+  } catch (error) {
+    const statusCode = Number(error.statusCode || 500);
+
+    return res.status(statusCode).json({
+      success: false,
+      message: error.message || "Blockchain dashboard lookup failed",
+      code: error.code || "BLOCKCHAIN_DASHBOARD_LOOKUP_FAILED",
+      details: error.details || null
+    });
+  }
+};
+
+
 module.exports = {
   getBlockchainStatus,
   submitProof,
   getProof,
   verifyProof,
-  getHistory
+  getHistory,
+  getDashboard
 };
