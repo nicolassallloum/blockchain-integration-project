@@ -261,6 +261,79 @@ async function submitAmlRuleProof(sourceRecordId, options = {}) {
   };
 }
 
+
+function buildAmlRuleVerificationPayload(sourceRecord, options = {}) {
+  const proofPayload = buildAmlRuleProofPayload(sourceRecord, options);
+
+  return {
+    blockchainKey: proofPayload.blockchainKey,
+    recordHash: proofPayload.recordHash
+  };
+}
+
+async function previewAmlRuleVerification(sourceRecordId, options = {}) {
+  const sourceRecord = await getAmlRuleSourceRecord(sourceRecordId);
+  const proofPayload = buildAmlRuleProofPayload(sourceRecord, options);
+  const verificationPayload = buildAmlRuleVerificationPayload(sourceRecord, options);
+
+  return {
+    sourceView: SOURCE_VIEW,
+    source: mapSourceRow(sourceRecord),
+    proof: {
+      blockchainKey: proofPayload.blockchainKey,
+      moduleName: proofPayload.moduleName,
+      sourceRecordId: proofPayload.sourceRecordId,
+      hashVersion: proofPayload.hashVersion,
+      actionType: proofPayload.actionType,
+      hasRecordHash: Boolean(proofPayload.recordHash),
+      recordHashLength: proofPayload.recordHash
+        ? String(proofPayload.recordHash).length
+        : 0
+    },
+    verificationPayload: {
+      blockchainKey: verificationPayload.blockchainKey,
+      hasRecordHash: Boolean(verificationPayload.recordHash),
+      recordHashLength: verificationPayload.recordHash
+        ? String(verificationPayload.recordHash).length
+        : 0
+    }
+  };
+}
+
+async function verifyAmlRuleProof(sourceRecordId, options = {}) {
+  const sourceRecord = await getAmlRuleSourceRecord(sourceRecordId);
+  const proofPayload = buildAmlRuleProofPayload(sourceRecord, options);
+  const verificationPayload = buildAmlRuleVerificationPayload(sourceRecord, options);
+
+  const verification = await blockchainApiProofService.verifyProof(
+    verificationPayload,
+    {
+      requestedBy: options.verifiedBy ||
+        options.submittedBy ||
+        options.approvedBy ||
+        SERVICE_NAME,
+      requestSource: 'POST /api/v1/government-blockchain/valoores-aml-rules/proof/verify'
+    }
+  );
+
+  return {
+    sourceView: SOURCE_VIEW,
+    source: mapSourceRow(sourceRecord),
+    proof: {
+      blockchainKey: proofPayload.blockchainKey,
+      moduleName: proofPayload.moduleName,
+      sourceRecordId: proofPayload.sourceRecordId,
+      hashVersion: proofPayload.hashVersion,
+      actionType: proofPayload.actionType,
+      hasRecordHash: Boolean(proofPayload.recordHash),
+      recordHashLength: proofPayload.recordHash
+        ? String(proofPayload.recordHash).length
+        : 0
+    },
+    verification
+  };
+}
+
 module.exports = {
   SOURCE_VIEW,
   MODULE_NAME,
@@ -270,6 +343,9 @@ module.exports = {
   getAmlRuleSourceRecord,
   generateAmlRuleRecordHash,
   buildAmlRuleProofPayload,
+  buildAmlRuleVerificationPayload,
   previewAmlRuleProof,
-  submitAmlRuleProof
+  previewAmlRuleVerification,
+  submitAmlRuleProof,
+  verifyAmlRuleProof
 };

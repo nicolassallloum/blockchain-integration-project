@@ -133,6 +133,71 @@ async function submitAmlRuleProofRequest(req, res) {
 router.post('/proof/submit', submitAmlRuleProofRequest);
 router.post('/proof/submit/:sourceRecordId', submitAmlRuleProofRequest);
 
+
+/**
+ * GET /api/v1/government-blockchain/valoores-aml-rules/proof/verify/preview/:sourceRecordId
+ *
+ * Builds the Phase 13 AML Rule verification payload from blockchain.valoores_aml_rules only.
+ * This endpoint does not call Fabric.
+ */
+router.get('/proof/verify/preview/:sourceRecordId', async (req, res) => {
+  try {
+    const result = await amlRulesProofService.previewAmlRuleVerification(
+      req.params.sourceRecordId,
+      {
+        verifiedBy: req.query.verifiedBy || 'phase-13-api-verify-preview'
+      }
+    );
+
+    return successResponse(
+      res,
+      result,
+      'AML Rule blockchain proof verification preview generated successfully.'
+    );
+  } catch (error) {
+    return errorResponse(res, error, 'Failed to preview AML Rule blockchain proof verification.');
+  }
+});
+
+/**
+ * POST /api/v1/government-blockchain/valoores-aml-rules/proof/verify
+ * POST /api/v1/government-blockchain/valoores-aml-rules/proof/verify/:sourceRecordId
+ *
+ * Verifies one AML Rule proof using blockchain.valoores_aml_rules as the only proof input source.
+ */
+async function verifyAmlRuleProofRequest(req, res) {
+  try {
+    const sourceRecordId = (
+      req.params.sourceRecordId ||
+      req.body.sourceRecordId ||
+      req.body.source_record_id ||
+      req.query.sourceRecordId ||
+      req.query.source_record_id
+    );
+
+    const result = await amlRulesProofService.verifyAmlRuleProof(
+      sourceRecordId,
+      {
+        verifiedBy: req.body.verifiedBy ||
+          req.body.verified_by ||
+          req.query.verifiedBy ||
+          'phase-13-api-verify'
+      }
+    );
+
+    return successResponse(
+      res,
+      result,
+      'AML Rule blockchain proof verified successfully.'
+    );
+  } catch (error) {
+    return errorResponse(res, error, 'Failed to verify AML Rule blockchain proof.');
+  }
+}
+
+router.post('/proof/verify', verifyAmlRuleProofRequest);
+router.post('/proof/verify/:sourceRecordId', verifyAmlRuleProofRequest);
+
 /**
  * GET /api/v1/government-blockchain/valoores-aml-rules/source?limit=100
  *
