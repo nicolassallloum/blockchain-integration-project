@@ -13,6 +13,11 @@ router.post(
   asyncHandler(blockchainController.submitProof)
 );
 
+router.post(
+  "/proof/verify",
+  asyncHandler(blockchainController.verifyProof)
+);
+
 router.get(
   "/proof/:key",
   asyncHandler(blockchainController.getProof)

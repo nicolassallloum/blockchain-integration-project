@@ -553,6 +553,162 @@ async function getProof(blockchainKey, options = {}) {
 }
 
 
+
+function validateVerifyPayload(payload) {
+  if (!payload || Array.isArray(payload) || typeof payload !== "object") {
+    throw new ApiError("Request body must be a JSON object", 400, "VALIDATION_ERROR");
+  }
+
+  const allowedFields = new Set(["blockchainKey", "recordHash"]);
+
+  for (const fieldName of Object.keys(payload)) {
+    if (!allowedFields.has(fieldName)) {
+      throw new ApiError(
+        `Unsupported field for proof verification: ${fieldName}`,
+        400,
+        "UNSUPPORTED_FIELD"
+      );
+    }
+  }
+
+  const blockchainKey = validateBlockchainKey(payload.blockchainKey);
+
+  const recordHash = normalizeString(payload.recordHash, "recordHash", {
+    maxLength: 64
+  }).toLowerCase();
+
+  if (!/^[a-f0-9]{64}$/.test(recordHash)) {
+    throw new ApiError(
+      "recordHash must be a 64-character SHA-256 hex string",
+      400,
+      "VALIDATION_ERROR"
+    );
+  }
+
+  assertSafeValue("blockchainKey", blockchainKey);
+  assertSafeValue("recordHash", recordHash);
+
+  return {
+    blockchainKey,
+    recordHash
+  };
+}
+
+async function updatePostgresVerification(blockchainKey, verificationResult) {
+  const verificationStatus = verificationResult && verificationResult.status
+    ? String(verificationResult.status).toUpperCase()
+    : "NOT_VERIFIED";
+
+  const result = await db.query(
+    `
+    UPDATE blockchain.blockchain_history
+    SET
+      verification_status = $2,
+      verified_at = NOW(),
+      error_message = NULL,
+      updated_at = NOW()
+    WHERE blockchain_key = $1
+    RETURNING
+      blockchain_history_id,
+      module_name,
+      source_record_id,
+      blockchain_key,
+      record_hash,
+      hash_version,
+      action_type,
+      approval_status,
+      blockchain_status,
+      blockchain_transaction_id,
+      submitted_by,
+      submitted_at,
+      verified_at,
+      verification_status,
+      error_message,
+      retry_count,
+      created_at,
+      updated_at
+    `,
+    [blockchainKey, verificationStatus]
+  );
+
+  return result.rows[0] || null;
+}
+
+async function verifyProof(payload, options = {}) {
+  const verificationInput = validateVerifyPayload(payload);
+  const postgresHistoryBefore = await getPostgresHistoryByKey(
+    verificationInput.blockchainKey
+  );
+
+  try {
+    const fabricResult = await fabricService.evaluateTransaction(
+      "VerifyProof",
+      [
+        verificationInput.blockchainKey,
+        verificationInput.recordHash
+      ],
+      buildRequestContext({
+        requestId: options.requestId,
+        correlationId: options.correlationId,
+        createdBy: options.requestedBy || SERVICE_NAME
+      })
+    );
+
+    const verification = fabricResult.data || null;
+
+    if (!verification || typeof verification !== "object") {
+      throw new ApiError(
+        "Fabric VerifyProof returned an invalid response",
+        502,
+        "FABRIC_VERIFY_INVALID_RESPONSE"
+      );
+    }
+
+    const updatedHistory = await updatePostgresVerification(
+      verificationInput.blockchainKey,
+      verification
+    );
+
+    return {
+      verified: Boolean(verification.verified),
+      status: verification.status || "UNKNOWN",
+      blockchainKey: verificationInput.blockchainKey,
+      submittedHash: verification.submittedHash || verificationInput.recordHash,
+      storedHash: verification.storedHash || null,
+      postgres: {
+        historyBefore: mapHistoryRow(postgresHistoryBefore),
+        history: mapHistoryRow(updatedHistory)
+      },
+      fabric: {
+        channelName: fabricResult.channelName,
+        chaincodeName: fabricResult.chaincodeName,
+        functionName: fabricResult.functionName,
+        durationMs: fabricResult.durationMs,
+        verification
+      }
+    };
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+
+    const wrapped = new ApiError(
+      `Fabric proof verification failed: ${error.message}`,
+      502,
+      "FABRIC_VERIFY_PROOF_FAILED"
+    );
+
+    wrapped.details = {
+      postgres: {
+        history: mapHistoryRow(postgresHistoryBefore)
+      }
+    };
+
+    throw wrapped;
+  }
+}
+
+
 module.exports = {
   SERVICE_NAME,
   ApiError,
@@ -560,5 +716,7 @@ module.exports = {
   submitProof,
   validateBlockchainKey,
   getPostgresHistoryByKey,
-  getProof
+  getProof,
+  validateVerifyPayload,
+  verifyProof
 };
