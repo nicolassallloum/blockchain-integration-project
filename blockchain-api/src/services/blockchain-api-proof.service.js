@@ -1171,6 +1171,130 @@ async function getDashboard(options = {}) {
 }
 
 
+
+function normalizeFailedLimit(value, defaultValue = 25, maxValue = 100) {
+  const parsed = Number.parseInt(value, 10);
+
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return defaultValue;
+  }
+
+  return Math.min(parsed, maxValue);
+}
+
+function mapFailedRecord(row) {
+  return {
+    blockchainHistoryId: row.blockchain_history_id ? String(row.blockchain_history_id) : null,
+    moduleName: row.module_name,
+    sourceRecordId: row.source_record_id,
+    blockchainKey: row.blockchain_key,
+    hashVersion: row.hash_version,
+    actionType: row.action_type,
+    approvalStatus: row.approval_status,
+    blockchainStatus: row.blockchain_status,
+    verificationStatus: row.verification_status,
+    blockchainTransactionId: row.blockchain_transaction_id || null,
+    hasRecordHash: Boolean(row.has_record_hash),
+    submittedBy: row.submitted_by,
+    submittedAt: row.submitted_at,
+    verifiedAt: row.verified_at,
+    retryCount: toNumber(row.retry_count),
+    retryEligible: Boolean(row.retry_eligible),
+    errorMessage: row.error_message,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
+  };
+}
+
+async function getFailedRecords(options = {}) {
+  const limit = normalizeFailedLimit(options.limit);
+
+  const failedWhereClause = `
+    blockchain_status IN ('FAILED', 'ERROR')
+    OR verification_status IN ('FAILED', 'MISMATCHED')
+    OR error_message IS NOT NULL
+  `;
+
+  const [summaryResult, recordsResult] = await Promise.all([
+    db.query(
+      `
+      SELECT
+        COUNT(*)::int AS total_failed_records,
+        COUNT(*) FILTER (WHERE blockchain_status IN ('FAILED', 'ERROR'))::int AS blockchain_failed_count,
+        COUNT(*) FILTER (WHERE verification_status = 'FAILED')::int AS verification_failed_count,
+        COUNT(*) FILTER (WHERE verification_status = 'MISMATCHED')::int AS mismatched_count,
+        COUNT(*) FILTER (WHERE error_message IS NOT NULL)::int AS records_with_error_message_count,
+        COUNT(*) FILTER (
+          WHERE blockchain_status IN ('FAILED', 'ERROR')
+            AND COALESCE(retry_count, 0) < 3
+        )::int AS retry_eligible_count,
+        COALESCE(SUM(COALESCE(retry_count, 0)), 0)::int AS total_retry_count,
+        MAX(updated_at) AS latest_failed_updated_at
+      FROM blockchain.blockchain_history
+      WHERE ${failedWhereClause}
+      `
+    ),
+    db.query(
+      `
+      SELECT
+        blockchain_history_id,
+        module_name,
+        source_record_id,
+        blockchain_key,
+        record_hash IS NOT NULL AS has_record_hash,
+        hash_version,
+        action_type,
+        approval_status,
+        blockchain_status,
+        verification_status,
+        blockchain_transaction_id,
+        submitted_by,
+        submitted_at,
+        verified_at,
+        retry_count,
+        (
+          blockchain_status IN ('FAILED', 'ERROR')
+          AND COALESCE(retry_count, 0) < 3
+        ) AS retry_eligible,
+        error_message,
+        created_at,
+        updated_at
+      FROM blockchain.blockchain_history
+      WHERE ${failedWhereClause}
+      ORDER BY updated_at DESC NULLS LAST, blockchain_history_id DESC
+      LIMIT $1
+      `,
+      [limit]
+    )
+  ]);
+
+  const summary = summaryResult.rows[0] || {};
+
+  return {
+    asOf: new Date().toISOString(),
+    limit,
+    count: recordsResult.rows.length,
+    summary: {
+      totalFailedRecords: toNumber(summary.total_failed_records),
+      blockchainFailedCount: toNumber(summary.blockchain_failed_count),
+      verificationFailedCount: toNumber(summary.verification_failed_count),
+      mismatchedCount: toNumber(summary.mismatched_count),
+      recordsWithErrorMessageCount: toNumber(summary.records_with_error_message_count),
+      retryEligibleCount: toNumber(summary.retry_eligible_count),
+      totalRetryCount: toNumber(summary.total_retry_count),
+      latestFailedUpdatedAt: summary.latest_failed_updated_at || null
+    },
+    records: recordsResult.rows.map(mapFailedRecord),
+    securityPolicy: {
+      rawSourceRowsReturned: false,
+      sensitiveFieldsReturned: false,
+      recordHashReturned: false,
+      proofOnlyMetadataReturned: true
+    }
+  };
+}
+
+
 module.exports = {
   SERVICE_NAME,
   ApiError,
@@ -1185,5 +1309,7 @@ module.exports = {
   getPostgresHistoriesByRecordId,
   getHistoryByRecordId,
   normalizeDashboardLimit,
-  getDashboard
+  getDashboard,
+  normalizeFailedLimit,
+  getFailedRecords
 };

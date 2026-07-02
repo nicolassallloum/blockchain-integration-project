@@ -14,6 +14,11 @@ router.get(
 );
 
 router.get(
+  "/failed",
+  asyncHandler(blockchainController.getFailedRecords)
+);
+
+router.get(
   "/history/:recordId",
   asyncHandler(blockchainController.getHistory)
 );
