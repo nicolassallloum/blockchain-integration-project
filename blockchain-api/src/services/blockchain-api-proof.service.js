@@ -312,6 +312,94 @@ async function insertPendingHistory(proof) {
   }
 }
 
+
+async function markHistorySubmitting(blockchainHistoryId) {
+  const result = await db.query(
+    `
+    UPDATE blockchain.blockchain_history
+    SET
+      blockchain_status = 'SUBMITTING',
+      error_message = NULL,
+      updated_at = NOW()
+    WHERE blockchain_history_id = $1
+    RETURNING
+      blockchain_history_id,
+      module_name,
+      source_record_id,
+      blockchain_key,
+      record_hash,
+      hash_version,
+      action_type,
+      approval_status,
+      blockchain_status,
+      blockchain_transaction_id,
+      submitted_by,
+      submitted_at,
+      verified_at,
+      verification_status,
+      error_message,
+      retry_count,
+      created_at,
+      updated_at
+    `,
+    [blockchainHistoryId]
+  );
+
+  return result.rows[0] || null;
+}
+
+async function insertSubmitAttemptStarted(historyRow, options = {}) {
+  const result = await db.query(
+    `
+    INSERT INTO blockchain.blockchain_history_attempts (
+      blockchain_history_id,
+      module_name,
+      source_record_id,
+      blockchain_key,
+      attempt_no,
+      attempt_type,
+      blockchain_status,
+      verification_status,
+      request_id,
+      worker_name,
+      started_at,
+      created_by
+    )
+    VALUES (
+      $1,
+      $2,
+      $3,
+      $4,
+      (
+        SELECT COALESCE(MAX(attempt_no), 0) + 1
+        FROM blockchain.blockchain_history_attempts
+        WHERE blockchain_history_id = $1
+      ),
+      'SUBMIT',
+      'SUBMITTING',
+      $5,
+      $6,
+      'phase12-api-submit',
+      NOW(),
+      $7
+    )
+    RETURNING *
+    `,
+    [
+      historyRow.blockchain_history_id,
+      historyRow.module_name,
+      historyRow.source_record_id,
+      historyRow.blockchain_key,
+      historyRow.verification_status || "NOT_VERIFIED",
+      options.requestId || null,
+      options.requestedBy || SERVICE_NAME
+    ]
+  );
+
+  return result.rows[0] || null;
+}
+
+
 async function markHistorySubmitted(blockchainHistoryId, transactionId) {
   const result = await db.query(
     `
@@ -360,7 +448,24 @@ function buildRequestContext(options = {}) {
 
 async function submitProof(payload, options = {}) {
   const proof = validateSubmitPayload(payload);
-  const historyRow = await insertPendingHistory(proof);
+  const pendingHistory = await insertPendingHistory(proof);
+
+  let submittingHistory = pendingHistory;
+  let submitAttempt = null;
+  let attemptLogWarning = null;
+
+  try {
+    submittingHistory = await markHistorySubmitting(
+      pendingHistory.blockchain_history_id
+    );
+
+    submitAttempt = await insertSubmitAttemptStarted(submittingHistory, {
+      requestId: options.requestId,
+      requestedBy: proof.approvedBy || SERVICE_NAME
+    });
+  } catch (error) {
+    attemptLogWarning = error.message;
+  }
 
   try {
     const fabricResult = await fabricService.submitTransaction(
@@ -384,17 +489,40 @@ async function submitProof(payload, options = {}) {
     }
 
     const updatedHistory = await markHistorySubmitted(
-      historyRow.blockchain_history_id,
+      pendingHistory.blockchain_history_id,
       transactionId
     );
+
+    let finishedAttempt = submitAttempt;
+
+    try {
+      finishedAttempt = await finishRetryAttempt(
+        submitAttempt && submitAttempt.blockchain_history_attempt_id,
+        {
+          blockchainStatus: "SUBMITTED",
+          verificationStatus: updatedHistory.verification_status || "NOT_VERIFIED",
+          blockchainTransactionId: transactionId,
+          requestId: options.requestId || null
+        }
+      );
+    } catch (error) {
+      attemptLogWarning = attemptLogWarning || error.message;
+    }
 
     return {
       submitted: true,
       dryRun: false,
       chaincodeFunction: "SubmitProof",
+      blockchainKey: proof.blockchainKey,
+      blockchainHistoryId: String(updatedHistory.blockchain_history_id),
+      blockchainTransactionId: transactionId,
       proof,
       postgres: {
-        history: mapHistoryRow(updatedHistory)
+        historyBefore: mapHistoryRow(pendingHistory),
+        submittingHistory: mapHistoryRow(submittingHistory),
+        history: mapHistoryRow(updatedHistory),
+        attempt: finishedAttempt,
+        attemptLogWarning
       },
       fabric: {
         transactionId,
@@ -407,9 +535,22 @@ async function submitProof(payload, options = {}) {
     };
   } catch (error) {
     const failedHistory = await markHistoryFailed(
-      historyRow.blockchain_history_id,
+      pendingHistory.blockchain_history_id,
       error
     );
+
+    try {
+      await finishRetryAttempt(
+        submitAttempt && submitAttempt.blockchain_history_attempt_id,
+        {
+          blockchainStatus: "FAILED",
+          verificationStatus: failedHistory.verification_status || "NOT_VERIFIED",
+          errorCode: error.code || "FABRIC_SUBMIT_FAILED",
+          errorMessage: String(error.message || error).slice(0, 2000),
+          requestId: options.requestId || null
+        }
+      );
+    } catch (_) {}
 
     const wrapped = error instanceof ApiError
       ? error
@@ -421,6 +562,8 @@ async function submitProof(payload, options = {}) {
 
     wrapped.details = {
       postgres: {
+        historyBefore: mapHistoryRow(pendingHistory),
+        submittingHistory: mapHistoryRow(submittingHistory),
         history: mapHistoryRow(failedHistory)
       }
     };
@@ -1691,6 +1834,8 @@ module.exports = {
   SERVICE_NAME,
   ApiError,
   validateSubmitPayload,
+  markHistorySubmitting,
+  insertSubmitAttemptStarted,
   submitProof,
   validateBlockchainKey,
   getPostgresHistoryByKey,
