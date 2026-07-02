@@ -13,4 +13,9 @@ router.post(
   asyncHandler(blockchainController.submitProof)
 );
 
+router.get(
+  "/proof/:key",
+  asyncHandler(blockchainController.getProof)
+);
+
 module.exports = router;

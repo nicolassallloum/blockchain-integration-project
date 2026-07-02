@@ -429,9 +429,136 @@ async function submitProof(payload, options = {}) {
   }
 }
 
+
+function validateBlockchainKey(blockchainKey) {
+  const value = normalizeString(blockchainKey, "blockchainKey", {
+    maxLength: 180
+  });
+
+  if (!/^[a-zA-Z0-9_.:-]+$/.test(value)) {
+    throw new ApiError(
+      "blockchainKey may contain only letters, numbers, underscore, dot, colon, or dash",
+      400,
+      "VALIDATION_ERROR"
+    );
+  }
+
+  return value;
+}
+
+async function getPostgresHistoryByKey(blockchainKey) {
+  const result = await db.query(
+    `
+    SELECT
+      blockchain_history_id,
+      module_name,
+      source_record_id,
+      blockchain_key,
+      record_hash,
+      hash_version,
+      action_type,
+      approval_status,
+      blockchain_status,
+      blockchain_transaction_id,
+      submitted_by,
+      submitted_at,
+      verified_at,
+      verification_status,
+      error_message,
+      retry_count,
+      created_at,
+      updated_at
+    FROM blockchain.blockchain_history
+    WHERE blockchain_key = $1
+    ORDER BY blockchain_history_id DESC
+    LIMIT 1
+    `,
+    [blockchainKey]
+  );
+
+  return result.rows[0] || null;
+}
+
+function isFabricNotFoundError(error) {
+  const message = String(error && error.message ? error.message : error || "").toLowerCase();
+
+  return (
+    message.includes("not found") ||
+    message.includes("does not exist") ||
+    message.includes("no proof") ||
+    message.includes("proof not found")
+  );
+}
+
+async function getProof(blockchainKey, options = {}) {
+  const normalizedKey = validateBlockchainKey(blockchainKey);
+  const postgresHistory = await getPostgresHistoryByKey(normalizedKey);
+
+  try {
+    const fabricResult = await fabricService.evaluateTransaction(
+      "GetProof",
+      [normalizedKey],
+      buildRequestContext({
+        requestId: options.requestId,
+        correlationId: options.correlationId,
+        createdBy: options.requestedBy || SERVICE_NAME
+      })
+    );
+
+    return {
+      found: true,
+      blockchainKey: normalizedKey,
+      postgres: {
+        history: mapHistoryRow(postgresHistory)
+      },
+      fabric: {
+        channelName: fabricResult.channelName,
+        chaincodeName: fabricResult.chaincodeName,
+        functionName: fabricResult.functionName,
+        durationMs: fabricResult.durationMs,
+        proof: fabricResult.data
+      }
+    };
+  } catch (error) {
+    if (isFabricNotFoundError(error)) {
+      const notFound = new ApiError(
+        `Blockchain proof not found for key: ${normalizedKey}`,
+        404,
+        "PROOF_NOT_FOUND"
+      );
+
+      notFound.details = {
+        postgres: {
+          history: mapHistoryRow(postgresHistory)
+        }
+      };
+
+      throw notFound;
+    }
+
+    const wrapped = new ApiError(
+      `Fabric proof lookup failed: ${error.message}`,
+      502,
+      "FABRIC_GET_PROOF_FAILED"
+    );
+
+    wrapped.details = {
+      postgres: {
+        history: mapHistoryRow(postgresHistory)
+      }
+    };
+
+    throw wrapped;
+  }
+}
+
+
 module.exports = {
   SERVICE_NAME,
   ApiError,
   validateSubmitPayload,
-  submitProof
+  submitProof,
+  validateBlockchainKey,
+  getPostgresHistoryByKey,
+  getProof
 };

@@ -38,7 +38,35 @@ const submitProof = async (req, res) => {
   }
 };
 
+
+const getProof = async (req, res) => {
+  try {
+    const data = await blockchainApiProofService.getProof(req.params.key, {
+      requestId: req.headers["x-request-id"] || null,
+      correlationId: req.headers["x-correlation-id"] || null,
+      requestedBy: req.headers["x-requested-by"] || "phase11-api-client"
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Blockchain proof loaded successfully",
+      data
+    });
+  } catch (error) {
+    const statusCode = Number(error.statusCode || 500);
+
+    return res.status(statusCode).json({
+      success: false,
+      message: error.message || "Blockchain proof lookup failed",
+      code: error.code || "BLOCKCHAIN_PROOF_LOOKUP_FAILED",
+      details: error.details || null
+    });
+  }
+};
+
+
 module.exports = {
   getBlockchainStatus,
-  submitProof
+  submitProof,
+  getProof
 };
