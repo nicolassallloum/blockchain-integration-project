@@ -86,25 +86,25 @@ async function ensureSyncTable() {
 function getSourceSql(limit) {
   return `
     SELECT
-      "RULE ID"::text AS "RULE ID",
-      "RULE DESC" AS "RULE DESC",
-      "RULE STATUS"::text AS "RULE STATUS",
-      "RULE START DATE"::text AS "RULE START DATE",
-      "RULE EXPIRY DATE"::text AS "RULE EXPIRY DATE",
-      "RULE CREATION DATE"::text AS "RULE CREATION DATE",
-      "RULE CREATOR"::text AS "RULE CREATOR",
-      "RULE UPDATE DATE"::text AS "RULE UPDATE DATE",
-      "RULE UPDATOR"::text AS "RULE UPDATOR",
-      "RULE MESSAGE" AS "RULE MESSAGE",
-      "RULE QUERY ID"::text AS "RULE QUERY ID",
-      "RULE SQL QUERY" AS "RULE SQL QUERY",
-      "RULE QUERY CREATION DATE"::text AS "RULE QUERY CREATION DATE",
-      "RULE QUERY CREATED BY"::text AS "RULE QUERY CREATED BY",
-      "RULE APPLCIATION QUERY ID"::text AS "RULE APPLCIATION QUERY ID",
-      "RULE QUERY UPDATE DATE"::text AS "RULE QUERY UPDATE DATE",
-      "RULE QUERY UPDATE BY"::text AS "RULE QUERY UPDATE BY"
+      rule_id::text AS "RULE ID",
+      rule_desc_normalized::text AS "RULE DESC",
+      rule_status_code::text AS "RULE STATUS",
+      rule_start_date::text AS "RULE START DATE",
+      rule_expiry_date::text AS "RULE EXPIRY DATE",
+      rule_creation_ts_utc::text AS "RULE CREATION DATE",
+      NULL::text AS "RULE CREATOR",
+      rule_update_ts_utc::text AS "RULE UPDATE DATE",
+      NULL::text AS "RULE UPDATOR",
+      rule_message_normalized::text AS "RULE MESSAGE",
+      rule_query_id::text AS "RULE QUERY ID",
+      rule_logic_fingerprint::text AS "RULE SQL QUERY",
+      rule_logic_created_date::text AS "RULE QUERY CREATION DATE",
+      NULL::text AS "RULE QUERY CREATED BY",
+      rule_query_id::text AS "RULE APPLCIATION QUERY ID",
+      rule_logic_updated_date::text AS "RULE QUERY UPDATE DATE",
+      NULL::text AS "RULE QUERY UPDATE BY"
     FROM blockchain.valoores_aml_rules
-    ORDER BY "RULE ID", "RULE QUERY ID"
+    ORDER BY rule_id, rule_query_id
     LIMIT ${limit};
   `;
 }

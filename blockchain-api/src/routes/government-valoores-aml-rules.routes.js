@@ -41,25 +41,25 @@ function normalizeLimit(value, defaultLimit = 100, maxLimit = 1000) {
 function getAmlRulesSourceSql(limit) {
   return `
     SELECT
-      "RULE ID"::text AS "RULE ID",
-      "RULE DESC" AS "RULE DESC",
-      "RULE STATUS"::text AS "RULE STATUS",
-      "RULE START DATE"::text AS "RULE START DATE",
-      "RULE EXPIRY DATE"::text AS "RULE EXPIRY DATE",
-      "RULE CREATION DATE"::text AS "RULE CREATION DATE",
-      "RULE CREATOR"::text AS "RULE CREATOR",
-      "RULE UPDATE DATE"::text AS "RULE UPDATE DATE",
-      "RULE UPDATOR"::text AS "RULE UPDATOR",
-      "RULE MESSAGE" AS "RULE MESSAGE",
-      "RULE QUERY ID"::text AS "RULE QUERY ID",
-      "RULE SQL QUERY" AS "RULE SQL QUERY",
-      "RULE QUERY CREATION DATE"::text AS "RULE QUERY CREATION DATE",
-      "RULE QUERY CREATED BY"::text AS "RULE QUERY CREATED BY",
-      "RULE APPLCIATION QUERY ID"::text AS "RULE APPLCIATION QUERY ID",
-      "RULE QUERY UPDATE DATE"::text AS "RULE QUERY UPDATE DATE",
-      "RULE QUERY UPDATE BY"::text AS "RULE QUERY UPDATE BY"
+      rule_id::text AS "RULE ID",
+      rule_desc_normalized::text AS "RULE DESC",
+      rule_status_code::text AS "RULE STATUS",
+      rule_start_date::text AS "RULE START DATE",
+      rule_expiry_date::text AS "RULE EXPIRY DATE",
+      rule_creation_ts_utc::text AS "RULE CREATION DATE",
+      NULL::text AS "RULE CREATOR",
+      rule_update_ts_utc::text AS "RULE UPDATE DATE",
+      NULL::text AS "RULE UPDATOR",
+      rule_message_normalized::text AS "RULE MESSAGE",
+      rule_query_id::text AS "RULE QUERY ID",
+      rule_logic_fingerprint::text AS "RULE SQL QUERY",
+      rule_logic_created_date::text AS "RULE QUERY CREATION DATE",
+      NULL::text AS "RULE QUERY CREATED BY",
+      rule_query_id::text AS "RULE APPLCIATION QUERY ID",
+      rule_logic_updated_date::text AS "RULE QUERY UPDATE DATE",
+      NULL::text AS "RULE QUERY UPDATE BY"
     FROM blockchain.valoores_aml_rules
-    ORDER BY "RULE ID", "RULE QUERY ID"
+    ORDER BY rule_id, rule_query_id
     LIMIT ${limit};
   `;
 }
@@ -485,14 +485,14 @@ router.get('/dashboard', async (req, res) => {
         )::int AS aml_rules_created_today,
 
         COUNT(*) FILTER (
-          WHERE COALESCE("RULE STATUS"::text, '') = '3'
-            AND COALESCE("RULE START DATE", CURRENT_DATE) <= CURRENT_DATE
-            AND ("RULE EXPIRY DATE" IS NULL OR "RULE EXPIRY DATE" >= CURRENT_DATE)
+          WHERE COALESCE(rule_status_code::text, '') = '3'
+            AND COALESCE(rule_start_date, CURRENT_DATE) <= CURRENT_DATE
+            AND (rule_expiry_date IS NULL OR rule_expiry_date >= CURRENT_DATE)
         )::int AS active_aml_rules,
 
         COUNT(*) FILTER (
-          WHERE "RULE EXPIRY DATE" IS NOT NULL
-            AND "RULE EXPIRY DATE" < CURRENT_DATE
+          WHERE rule_expiry_date IS NOT NULL
+            AND rule_expiry_date < CURRENT_DATE
         )::int AS expired_aml_rules
       FROM blockchain.valoores_aml_rules
     `;
@@ -500,42 +500,42 @@ router.get('/dashboard', async (req, res) => {
     const searchWhere = search
       ? `
         WHERE
-          COALESCE(v."RULE ID"::text, '') ILIKE $3
-          OR COALESCE(v."RULE DESC"::text, '') ILIKE $3
-          OR COALESCE(v."RULE MESSAGE"::text, '') ILIKE $3
-          OR COALESCE(v."RULE QUERY ID"::text, '') ILIKE $3
-          OR COALESCE(v."RULE SQL QUERY"::text, '') ILIKE $3
+          COALESCE(v.rule_id::text, '') ILIKE $3
+          OR COALESCE(v.rule_desc_normalized::text, '') ILIKE $3
+          OR COALESCE(v.rule_message_normalized::text, '') ILIKE $3
+          OR COALESCE(v.rule_query_id::text, '') ILIKE $3
+          OR COALESCE(v.rule_logic_fingerprint::text, '') ILIKE $3
       `
       : '';
 
     const dataSql = `
       SELECT
-        v."RULE ID"::text AS rule_id,
-        v."RULE QUERY ID"::text AS rule_query_id,
-        ('AML_RULE_' || v."RULE ID"::text || '_' || COALESCE(v."RULE QUERY ID"::text, '0')) AS fabric_ledger_key,
-        v."RULE DESC"::text AS rule_desc,
-        v."RULE STATUS"::text AS rule_status,
-        v."RULE START DATE" AS rule_start_date,
-        v."RULE EXPIRY DATE" AS rule_expiry_date,
-        v."RULE CREATION DATE" AS rule_creation_date,
-        v."RULE CREATOR"::text AS rule_creator,
-        v."RULE UPDATE DATE" AS rule_update_date,
-        v."RULE UPDATOR"::text AS rule_updator,
-        v."RULE MESSAGE"::text AS rule_message,
-        v."RULE SQL QUERY"::text AS rule_sql_query,
-        v."RULE QUERY CREATION DATE" AS rule_query_creation_date,
-        v."RULE QUERY CREATED BY"::text AS rule_query_created_by,
-        v."RULE APPLCIATION QUERY ID"::text AS rule_application_query_id,
-        v."RULE QUERY UPDATE DATE" AS rule_query_update_date,
-        v."RULE QUERY UPDATE BY"::text AS rule_query_update_by,
+        v.rule_id::text AS rule_id,
+        v.rule_query_id::text AS rule_query_id,
+        ('AML_RULE_' || v.rule_id::text || '_' || COALESCE(v.rule_query_id::text, '0')) AS fabric_ledger_key,
+        v.rule_desc_normalized::text AS rule_desc,
+        v.rule_status_code::text AS rule_status,
+        v.rule_start_date AS rule_start_date,
+        v.rule_expiry_date AS rule_expiry_date,
+        v.rule_creation_ts_utc AS rule_creation_date,
+        NULL::text AS rule_creator,
+        v.rule_update_ts_utc AS rule_update_date,
+        NULL::text AS rule_updator,
+        v.rule_message_normalized::text AS rule_message,
+        v.rule_logic_fingerprint::text AS rule_sql_query,
+        v.rule_logic_created_date AS rule_query_creation_date,
+        NULL::text AS rule_query_created_by,
+        v.rule_query_id::text AS rule_application_query_id,
+        v.rule_logic_updated_date AS rule_query_update_date,
+        NULL::text AS rule_query_update_by,
 
         CASE
-          WHEN v."RULE EXPIRY DATE" IS NOT NULL
-           AND v."RULE EXPIRY DATE" < CURRENT_DATE
+          WHEN v.rule_expiry_date IS NOT NULL
+           AND v.rule_expiry_date < CURRENT_DATE
           THEN 'EXPIRED'
-          WHEN COALESCE(v."RULE STATUS"::text, '') = '3'
-           AND COALESCE(v."RULE START DATE", CURRENT_DATE) <= CURRENT_DATE
-           AND (v."RULE EXPIRY DATE" IS NULL OR v."RULE EXPIRY DATE" >= CURRENT_DATE)
+          WHEN COALESCE(v.rule_status_code::text, '') = '3'
+           AND COALESCE(v.rule_start_date, CURRENT_DATE) <= CURRENT_DATE
+           AND (v.rule_expiry_date IS NULL OR v.rule_expiry_date >= CURRENT_DATE)
           THEN 'ACTIVE'
           ELSE 'INACTIVE'
         END AS computed_rule_status,
@@ -548,9 +548,9 @@ router.get('/dashboard', async (req, res) => {
 
       FROM blockchain.valoores_aml_rules v
       LEFT JOIN blockchain.valoores_aml_rules_fabric_sync fs
-        ON fs.rule_key = ('AML_RULE_' || v."RULE ID"::text || '_' || COALESCE(v."RULE QUERY ID"::text, '0'))
+        ON fs.rule_key = ('AML_RULE_' || v.rule_id::text || '_' || COALESCE(v.rule_query_id::text, '0'))
       ${searchWhere}
-      ORDER BY v."RULE ID", v."RULE QUERY ID"
+      ORDER BY v.rule_id, v.rule_query_id
       LIMIT $1 OFFSET $2
     `;
 
