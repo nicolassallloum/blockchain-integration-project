@@ -2303,6 +2303,395 @@ class KycWalletContract extends Contract {
         return JSON.stringify(results);
     }
 
+
+    /* ===== PHASE 10 BLOCKCHAIN PROOF FUNCTIONS START ===== */
+
+    /**
+     * SubmitProof
+     *
+     * Stores only Phase 10 proof data on-chain.
+     * No source payload, no PII, no raw record, and no metadata are accepted.
+     *
+     * Expected JSON payload:
+     * {
+     *   "blockchainKey": "...",
+     *   "moduleName": "...",
+     *   "sourceRecordId": "...",
+     *   "recordHash": "...",
+     *   "hashVersion": "...",
+     *   "actionType": "...",
+     *   "sourceSystem": "...",
+     *   "approvedBy": "..."
+     * }
+     */
+    async SubmitProof(ctx, proofPayloadJson) {
+        const payload = this._parsePhase10ProofPayload(proofPayloadJson);
+        const proof = this._buildPhase10Proof(ctx, payload);
+
+        const existingProofBytes = await ctx.stub.getState(proof.blockchainKey);
+
+        if (existingProofBytes && existingProofBytes.length > 0) {
+            throw new Error(`Proof already exists for blockchainKey: ${proof.blockchainKey}`);
+        }
+
+        await ctx.stub.putState(
+            proof.blockchainKey,
+            Buffer.from(JSON.stringify(proof))
+        );
+
+        const moduleIndexKey = ctx.stub.createCompositeKey(
+            'proof~moduleName~blockchainKey',
+            [proof.moduleName, proof.blockchainKey]
+        );
+
+        const recordIndexKey = ctx.stub.createCompositeKey(
+            'proof~sourceRecordId~blockchainKey',
+            [proof.sourceRecordId, proof.blockchainKey]
+        );
+
+        await ctx.stub.putState(moduleIndexKey, Buffer.from('\u0000'));
+        await ctx.stub.putState(recordIndexKey, Buffer.from('\u0000'));
+
+        return JSON.stringify(proof);
+    }
+
+    /**
+     * GetProof
+     *
+     * Returns one Phase 10 proof by blockchain key.
+     */
+    async GetProof(ctx, blockchainKey) {
+        const normalizedKey = this._normalizePhase10ProofString(
+            blockchainKey,
+            'blockchainKey'
+        );
+
+        const proof = await this._getPhase10ProofByKey(ctx, normalizedKey);
+
+        return JSON.stringify(proof);
+    }
+
+    /**
+     * VerifyProof
+     *
+     * Compares the submitted record hash against the stored on-chain record hash.
+     */
+    async VerifyProof(ctx, blockchainKey, recordHash) {
+        const normalizedKey = this._normalizePhase10ProofString(
+            blockchainKey,
+            'blockchainKey'
+        );
+
+        const normalizedHash = this._normalizePhase10RecordHash(recordHash);
+        const proof = await this._getPhase10ProofByKey(ctx, normalizedKey);
+        const verified = proof.recordHash === normalizedHash;
+
+        return JSON.stringify({
+            blockchainKey: proof.blockchainKey,
+            moduleName: proof.moduleName,
+            sourceRecordId: proof.sourceRecordId,
+            storedHash: proof.recordHash,
+            submittedHash: normalizedHash,
+            hashVersion: proof.hashVersion,
+            verified,
+            status: verified ? 'VERIFIED' : 'MISMATCHED',
+            timestamp: proof.timestamp
+        });
+    }
+
+    /**
+     * QueryProofsByModule
+     *
+     * Returns Phase 10 proofs for one module name.
+     */
+    async QueryProofsByModule(ctx, moduleName) {
+        const normalizedModuleName = this._normalizePhase10ProofString(
+            moduleName,
+            'moduleName'
+        ).toUpperCase();
+
+        const results = await this._queryPhase10ProofsByCompositeIndex(
+            ctx,
+            'proof~moduleName~blockchainKey',
+            [normalizedModuleName]
+        );
+
+        return JSON.stringify(results);
+    }
+
+    /**
+     * QueryProofsByRecordId
+     *
+     * Returns Phase 10 proofs for one source record ID.
+     */
+    async QueryProofsByRecordId(ctx, sourceRecordId) {
+        const normalizedSourceRecordId = this._normalizePhase10ProofString(
+            sourceRecordId,
+            'sourceRecordId'
+        );
+
+        const results = await this._queryPhase10ProofsByCompositeIndex(
+            ctx,
+            'proof~sourceRecordId~blockchainKey',
+            [normalizedSourceRecordId]
+        );
+
+        return JSON.stringify(results);
+    }
+
+    _parsePhase10ProofPayload(proofPayloadJson) {
+        if (!proofPayloadJson || String(proofPayloadJson).trim() === '') {
+            throw new Error('proofPayloadJson is required');
+        }
+
+        let payload;
+
+        try {
+            payload = JSON.parse(proofPayloadJson);
+        } catch (error) {
+            throw new Error(`Invalid proofPayloadJson: ${error.message}`);
+        }
+
+        if (!payload || Array.isArray(payload) || typeof payload !== 'object') {
+            throw new Error('proofPayloadJson must be a JSON object');
+        }
+
+        return payload;
+    }
+
+    _buildPhase10Proof(ctx, payload) {
+        const allowedFields = [
+            'blockchainKey',
+            'moduleName',
+            'sourceRecordId',
+            'recordHash',
+            'hashVersion',
+            'actionType',
+            'sourceSystem',
+            'approvedBy'
+        ];
+
+        const receivedFields = Object.keys(payload);
+
+        for (const field of receivedFields) {
+            if (!allowedFields.includes(field)) {
+                throw new Error(`Invalid proof field not allowed on blockchain: ${field}`);
+            }
+        }
+
+        const blockchainKey = this._normalizePhase10ProofString(
+            payload.blockchainKey,
+            'blockchainKey'
+        );
+
+        const moduleName = this._normalizePhase10ProofString(
+            payload.moduleName,
+            'moduleName'
+        ).toUpperCase();
+
+        const sourceRecordId = this._normalizePhase10ProofString(
+            payload.sourceRecordId,
+            'sourceRecordId'
+        );
+
+        const recordHash = this._normalizePhase10RecordHash(payload.recordHash);
+
+        const hashVersion = this._normalizePhase10ProofString(
+            payload.hashVersion,
+            'hashVersion'
+        );
+
+        const actionType = this._normalizePhase10ActionType(payload.actionType);
+
+        const sourceSystem = this._normalizePhase10ProofString(
+            payload.sourceSystem,
+            'sourceSystem'
+        ).toUpperCase();
+
+        const approvedBy = this._normalizePhase10ProofString(
+            payload.approvedBy,
+            'approvedBy'
+        );
+
+        this._assertPhase10SafeValue(blockchainKey, 'blockchainKey');
+        this._assertPhase10SafeValue(moduleName, 'moduleName');
+        this._assertPhase10SafeValue(sourceRecordId, 'sourceRecordId');
+        this._assertPhase10SafeValue(hashVersion, 'hashVersion');
+        this._assertPhase10SafeValue(sourceSystem, 'sourceSystem');
+        this._assertPhase10SafeValue(approvedBy, 'approvedBy');
+
+        return {
+            blockchainKey,
+            moduleName,
+            sourceRecordId,
+            recordHash,
+            hashVersion,
+            actionType,
+            sourceSystem,
+            approvedBy,
+            timestamp: this._getPhase10TxTimestamp(ctx)
+        };
+    }
+
+    _normalizePhase10ProofString(value, fieldName) {
+        if (value === undefined || value === null) {
+            throw new Error(`${fieldName} is required`);
+        }
+
+        const normalizedValue = String(value).trim();
+
+        if (normalizedValue === '') {
+            throw new Error(`${fieldName} cannot be empty`);
+        }
+
+        if (normalizedValue.length > 256) {
+            throw new Error(`${fieldName} cannot exceed 256 characters`);
+        }
+
+        return normalizedValue;
+    }
+
+    _normalizePhase10RecordHash(recordHash) {
+        const normalizedHash = this._normalizePhase10ProofString(
+            recordHash,
+            'recordHash'
+        ).toLowerCase();
+
+        if (!/^[a-f0-9]{64}$/.test(normalizedHash)) {
+            throw new Error('recordHash must be a SHA-256 hex string with 64 characters');
+        }
+
+        return normalizedHash;
+    }
+
+    _normalizePhase10ActionType(actionType) {
+        const normalizedActionType = this._normalizePhase10ProofString(
+            actionType,
+            'actionType'
+        ).toUpperCase();
+
+        const allowedActionTypes = [
+            'CREATE',
+            'UPDATE',
+            'DELETE',
+            'SUBMIT',
+            'APPROVE',
+            'REJECT',
+            'SYNC',
+            'VERIFY'
+        ];
+
+        if (!allowedActionTypes.includes(normalizedActionType)) {
+            throw new Error(
+                `Invalid actionType. Expected one of: ${allowedActionTypes.join(', ')}`
+            );
+        }
+
+        return normalizedActionType;
+    }
+
+    _assertPhase10SafeValue(value, fieldName) {
+        const normalizedValue = String(value).toLowerCase();
+
+        const forbiddenPatterns = [
+            'password',
+            'token',
+            'secret',
+            'authorization',
+            'bearer',
+            'private_key',
+            'raw_payload',
+            'raw_record',
+            'full_data',
+            'photo',
+            'image',
+            'base64',
+            'national_id_number',
+            'passport_number',
+            'mobile_number',
+            'email_address'
+        ];
+
+        for (const pattern of forbiddenPatterns) {
+            if (normalizedValue.includes(pattern)) {
+                throw new Error(`Sensitive value is not allowed in ${fieldName}`);
+            }
+        }
+    }
+
+    async _getPhase10ProofByKey(ctx, blockchainKey) {
+        const proofBytes = await ctx.stub.getState(blockchainKey);
+
+        if (!proofBytes || proofBytes.length === 0) {
+            throw new Error(`Proof not found for blockchainKey: ${blockchainKey}`);
+        }
+
+        return JSON.parse(proofBytes.toString());
+    }
+
+    async _queryPhase10ProofsByCompositeIndex(ctx, indexName, attributes) {
+        const iterator = await ctx.stub.getStateByPartialCompositeKey(
+            indexName,
+            attributes
+        );
+
+        const results = [];
+
+        try {
+            while (true) {
+                const response = await iterator.next();
+
+                if (response.value && response.value.key) {
+                    const compositeKeyParts = ctx.stub.splitCompositeKey(
+                        response.value.key
+                    );
+
+                    const blockchainKey =
+                        compositeKeyParts.attributes[
+                            compositeKeyParts.attributes.length - 1
+                        ];
+
+                    const proofBytes = await ctx.stub.getState(blockchainKey);
+
+                    if (proofBytes && proofBytes.length > 0) {
+                        results.push(JSON.parse(proofBytes.toString()));
+                    }
+                }
+
+                if (response.done) {
+                    break;
+                }
+            }
+        } finally {
+            await iterator.close();
+        }
+
+        return results;
+    }
+
+    _getPhase10TxTimestamp(ctx) {
+        const timestamp = ctx.stub.getTxTimestamp();
+        let seconds = 0;
+
+        if (
+            timestamp &&
+            timestamp.seconds &&
+            typeof timestamp.seconds.low !== 'undefined'
+        ) {
+            seconds = Number(timestamp.seconds.low);
+        } else if (timestamp && timestamp.seconds) {
+            seconds = Number(timestamp.seconds);
+        }
+
+        const nanos = timestamp && timestamp.nanos ? Number(timestamp.nanos) : 0;
+        const milliseconds = seconds * 1000 + Math.floor(nanos / 1000000);
+
+        return new Date(milliseconds).toISOString();
+    }
+
+    /* ===== PHASE 10 BLOCKCHAIN PROOF FUNCTIONS END ===== */
+
+
 }
 
 module.exports = KycWalletContract;
