@@ -1,4 +1,7 @@
+"use strict";
+
 const blockchainService = require("../services/blockchain.service");
+const blockchainApiProofService = require("../services/blockchain-api-proof.service");
 const { successResponse } = require("../utils/apiResponse");
 
 const getBlockchainStatus = async (req, res) => {
@@ -11,6 +14,31 @@ const getBlockchainStatus = async (req, res) => {
   });
 };
 
+const submitProof = async (req, res) => {
+  try {
+    const data = await blockchainApiProofService.submitProof(req.body, {
+      requestId: req.headers["x-request-id"] || null,
+      correlationId: req.headers["x-correlation-id"] || null
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Blockchain proof submitted successfully",
+      data
+    });
+  } catch (error) {
+    const statusCode = Number(error.statusCode || 500);
+
+    return res.status(statusCode).json({
+      success: false,
+      message: error.message || "Blockchain proof submission failed",
+      code: error.code || "BLOCKCHAIN_PROOF_SUBMIT_FAILED",
+      details: error.details || null
+    });
+  }
+};
+
 module.exports = {
-  getBlockchainStatus
+  getBlockchainStatus,
+  submitProof
 };
