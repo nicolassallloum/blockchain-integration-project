@@ -387,7 +387,7 @@ function mapStatusRow(row) {
   };
 }
 
-async function getCustomerKycsBlockchainStatus(options = {}) {
+async function getCustomerKycBlockchainStatus(options = {}) {
   const limit = normalizeLimit(options.limit, 100, 500);
   const offset = normalizeOffset(options.offset);
   const sourceRecordId = options.sourceRecordId
@@ -531,5 +531,6 @@ module.exports = {
   previewCustomerKycVerification,
   submitCustomerKycProof,
   verifyCustomerKycProof,
-  getCustomerKycsBlockchainStatus
+  getCustomerKycBlockchainStatus,
+  getCustomerKycBlockchainStatus
 };
