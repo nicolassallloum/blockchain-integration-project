@@ -473,7 +473,7 @@ async function getCustomerKycBlockchainStatus(options = {}) {
           COUNT(*) FILTER (WHERE effective_blockchain_status = 'SUBMITTED')::int AS submitted_records,
           COUNT(*) FILTER (WHERE effective_blockchain_status = 'FAILED')::int AS failed_records,
           COUNT(*) FILTER (WHERE effective_verification_status = 'VERIFIED')::int AS verified_records,
-          COUNT(*) FILTER (WHERE effective_verification_status = 'MISMATCH')::int AS mismatch_records
+          COUNT(*) FILTER (WHERE effective_verification_status IN ('MISMATCH', 'MISMATCHED'))::int AS mismatch_records
         FROM joined
       )
       SELECT
