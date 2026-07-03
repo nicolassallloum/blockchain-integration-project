@@ -35,6 +35,7 @@ const documentsKycRoutes = require('./routes/documents-kyc.routes');
 const governmentDocumentsRoutes = require('./routes/government-documents.routes');
 const governmentAmlDashboardRoutes = require('./routes/government-aml-dashboard.routes');
 const governmentValooresAmlRulesRoutes = require('./routes/government-valoores-aml-rules.routes');
+const governmentValooresCustomerKycRoutes = require('./routes/government-valoores-customer-kyc.routes');
 const governmentAmlAlertsQueueRoutes = require('./routes/government-aml-alerts-queue.routes');
 const governmentAmlCasesRoutes = require('./routes/government-aml-cases.routes');
 const governmentReportsRoutes = require('./routes/government-reports.routes');
@@ -115,6 +116,9 @@ console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/risk-fraud-screening'
 
 app.use('/api/v1/government-blockchain/valoores-aml-rules', governmentValooresAmlRulesRoutes);
 console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/valoores-aml-rules');
+
+app.use('/api/v1/government-blockchain/valoores-customer-kyc', governmentValooresCustomerKycRoutes);
+console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/valoores-customer-kyc');
 
 app.use('/api/v1/government-blockchain/audit-logs', governmentAuditLogsRoutes);
 console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/audit-logs');
