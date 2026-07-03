@@ -531,6 +531,5 @@ module.exports = {
   previewCustomerKycVerification,
   submitCustomerKycProof,
   verifyCustomerKycProof,
-  getCustomerKycBlockchainStatus,
   getCustomerKycBlockchainStatus
 };
