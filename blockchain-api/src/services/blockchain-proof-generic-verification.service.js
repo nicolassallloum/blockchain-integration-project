@@ -43,6 +43,15 @@ const VOLATILE_FIELDS = Object.freeze([
   'hash_md5'
 ]);
 
+const INTERNAL_PROOF_TABLES = Object.freeze([
+  'blockchain_history',
+  'blockchain_history_attempts',
+  'blockchain_sync_history',
+  'blockchain_verification_logs',
+  'vw_blockchain_history_latest',
+  'vw_blockchain_history_retry_queue'
+]);
+
 let sourceViewCache = null;
 
 function normalizeText(value) {
@@ -337,11 +346,21 @@ async function getSourceViewCandidates() {
       array_agg(column_name ORDER BY ordinal_position) AS columns
     FROM information_schema.columns
     WHERE table_schema = $1
+      AND table_name <> ALL($2::text[])
+      AND table_name NOT ILIKE 'vw_blockchain_history%'
+      AND table_name NOT ILIKE '%verification_log%'
+      AND table_name NOT ILIKE '%history%'
     GROUP BY table_schema, table_name
     HAVING bool_or(column_name = 'source_record_id')
-    ORDER BY table_name
+    ORDER BY
+      CASE
+        WHEN table_name ILIKE 'valoores_%' THEN 1
+        WHEN table_name ILIKE '%_sync' THEN 2
+        ELSE 3
+      END,
+      table_name
     `,
-    [BLOCKCHAIN_SCHEMA]
+    [BLOCKCHAIN_SCHEMA, INTERNAL_PROOF_TABLES]
   );
 
   sourceViewCache = result.rows.map((row) => ({
