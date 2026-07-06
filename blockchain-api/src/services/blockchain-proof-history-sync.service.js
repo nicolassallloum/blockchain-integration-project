@@ -797,7 +797,9 @@ async function buildProofOnlyPayloadForSourceRecord(recordType, sourcePrimaryKey
 }
 
 async function submitProofOnlyForSourceRecord(recordType, sourcePrimaryKeyInput, options = {}) {
-  const dryRun = String(options.dryRun || 'true').toLowerCase() !== 'false';
+  const dryRun = options.dryRun === false
+    ? false
+    : String(options.dryRun || 'true').toLowerCase() !== 'false';
 
   const proof = await buildProofOnlyPayloadForSourceRecord(
     recordType,
