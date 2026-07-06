@@ -12,6 +12,7 @@ const transactionHistoryController = require('../controllers/blockchain-proof-tr
 const screeningHistoryController = require('../controllers/blockchain-proof-screening-history.controller');
 const retryController = require('../controllers/blockchain-proof-retry.controller');
 const verificationLogicController = require('../controllers/blockchain-proof-verification-logic.controller');
+const genericVerificationController = require('../controllers/blockchain-proof-generic-verification.controller');
 const dashboardController = require('../controllers/blockchain-proof-dashboard.controller');
 
 router.get('/health', controller.health);
@@ -136,6 +137,14 @@ router.get('/verification/logic/health', verificationLogicController.health);
 router.get('/verification/candidates', verificationLogicController.candidates);
 router.post('/verification/run', verificationLogicController.run);
 router.post('/records/:recordType/verification/run', verificationLogicController.runRecord);
+
+
+/**
+ * Phase 17 — Generic blockchain verification APIs
+ * Compares current PostgreSQL source hash with Hyperledger Fabric proof hash.
+ */
+router.post('/verification/by-module-record', genericVerificationController.verifyByModuleAndSourceRecordId);
+router.post('/verification/by-blockchain-key', genericVerificationController.verifyByBlockchainKey);
 
 
 /**
