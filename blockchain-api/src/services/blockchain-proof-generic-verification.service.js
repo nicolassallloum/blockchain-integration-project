@@ -431,6 +431,183 @@ async function findCurrentPostgresSourceRow(moduleName, sourceRecordId) {
   };
 }
 
+function extractProofData(blockchainProof) {
+  if (!blockchainProof || typeof blockchainProof !== 'object') {
+    return null;
+  }
+
+  return blockchainProof.data && typeof blockchainProof.data === 'object'
+    ? blockchainProof.data
+    : blockchainProof;
+}
+
+function parseSourceViewName(sourceViewName) {
+  const text = normalizeText(sourceViewName);
+
+  if (!text || !text.includes('.')) {
+    return null;
+  }
+
+  const [schemaName, tableName] = text.split('.');
+
+  if (!schemaName || !tableName) {
+    return null;
+  }
+
+  return {
+    schemaName,
+    tableName
+  };
+}
+
+async function findCurrentPostgresSourceRowFromFabricProof(proofData) {
+  const metadata = proofData?.metadata || {};
+  const sourceView = parseSourceViewName(metadata.sourceViewName);
+
+  if (!sourceView) {
+    return findCurrentPostgresSourceRow(
+      proofData?.recordType || proofData?.moduleName || null,
+      proofData?.sourceRecordId || null
+    );
+  }
+
+  const sourcePrimaryKey = metadata.sourcePrimaryKey || {};
+  const sourcePrimaryKeyColumns = Array.isArray(metadata.sourcePrimaryKeyColumns)
+    ? metadata.sourcePrimaryKeyColumns
+    : Object.keys(sourcePrimaryKey);
+
+  const safeColumns = sourcePrimaryKeyColumns.filter((columnName) => {
+    return sourcePrimaryKey[columnName] !== undefined && sourcePrimaryKey[columnName] !== null;
+  });
+
+  if (!safeColumns.length) {
+    return findCurrentPostgresSourceRow(
+      proofData?.recordType || proofData?.moduleName || null,
+      proofData?.sourceRecordId || null
+    );
+  }
+
+  const tableRef = quoteTable(sourceView.schemaName, sourceView.tableName);
+
+  const whereClause = safeColumns
+    .map((columnName, index) => `${quoteIdent(columnName)}::text = $${index + 1}`)
+    .join(' AND ');
+
+  const values = safeColumns.map((columnName) => String(sourcePrimaryKey[columnName]));
+
+  const result = await db.query(
+    `
+    SELECT *
+    FROM ${tableRef}
+    WHERE ${whereClause}
+    LIMIT 1
+    `,
+    values
+  ).catch(() => ({ rows: [] }));
+
+  if (!result.rows.length) {
+    return {
+      sourceRowFound: false,
+      sourceView: `${sourceView.schemaName}.${sourceView.tableName}`,
+      sourceRowModule: proofData?.recordType || proofData?.moduleName || null,
+      sourceRow: null
+    };
+  }
+
+  return {
+    sourceRowFound: true,
+    sourceView: `${sourceView.schemaName}.${sourceView.tableName}`,
+    sourceRowModule: proofData?.recordType || proofData?.moduleName || null,
+    sourceRow: result.rows[0]
+  };
+}
+
+async function verifyFabricOnlyBlockchainProof(blockchainKey, options = {}) {
+  const verifiedBy = options.verifiedBy || 'phase-17-generic-verification-service';
+
+  const fabricResult = await readBlockchainProof(blockchainKey);
+
+  if (!fabricResult.blockchainProofFound) {
+    const response = buildVerificationResponse({
+      verificationResult: VERIFICATION_RESULTS.NOT_FOUND,
+      blockchainKey,
+      blockchainProofFound: false,
+      message: 'No PostgreSQL blockchain history record or Hyperledger Fabric proof was found for this blockchain key.',
+      error: fabricResult.error,
+      verifiedBy
+    });
+
+    response.database.verificationId = await insertVerificationLog(response);
+
+    return response;
+  }
+
+  const proofData = extractProofData(fabricResult.blockchainProof);
+  const moduleName = proofData?.recordType || proofData?.moduleName || null;
+  const sourceRecordId = proofData?.sourceRecordId || null;
+  const blockchainHash = normalizeHash(proofData?.stableHash) || fabricResult.blockchainHash;
+  const blockchainTransactionId = proofData?.txId || proofData?.transactionId || null;
+
+  const sourceResult = await findCurrentPostgresSourceRowFromFabricProof(proofData);
+
+  if (!sourceResult.sourceRowFound) {
+    const response = buildVerificationResponse({
+      verificationResult: VERIFICATION_RESULTS.NOT_FOUND,
+      moduleName,
+      sourceRecordId,
+      blockchainKey,
+      blockchainHash,
+      blockchainTransactionId,
+      blockchainProofFound: true,
+      sourceRowFound: false,
+      message: 'Hyperledger Fabric proof was found, but the current PostgreSQL source row was not found.',
+      verifiedBy
+    });
+
+    response.database.verificationId = await insertVerificationLog(response);
+    response.database.sourceView = sourceResult.sourceView;
+
+    return response;
+  }
+
+  const currentHashResult = generateStableHashFromSourceRow(sourceResult.sourceRow);
+  const postgresHash = currentHashResult.currentHash;
+
+  const postgresMatchesBlockchain = Boolean(
+    postgresHash &&
+    blockchainHash &&
+    postgresHash === blockchainHash
+  );
+
+  const verificationResult = postgresMatchesBlockchain
+    ? VERIFICATION_RESULTS.VERIFIED
+    : VERIFICATION_RESULTS.MISMATCH;
+
+  const response = buildVerificationResponse({
+    verificationResult,
+    moduleName,
+    sourceRecordId,
+    blockchainKey,
+    postgresHash,
+    blockchainHash,
+    postgresMatchesBlockchain,
+    postgresMatchesStoredProof: null,
+    blockchainTransactionId,
+    blockchainProofFound: true,
+    sourceRowFound: true,
+    message: postgresMatchesBlockchain
+      ? 'Current PostgreSQL hash matches the Hyperledger Fabric proof hash.'
+      : 'Current PostgreSQL hash does not match the Hyperledger Fabric proof hash.',
+    verifiedBy
+  });
+
+  response.hashes.hashMethod = currentHashResult.hashMethod;
+  response.database.sourceView = sourceResult.sourceView;
+  response.database.verificationId = await insertVerificationLog(response);
+
+  return response;
+}
+
 async function readBlockchainProof(blockchainKey) {
   try {
     const rawResult = await fabricService.evaluateTransaction('GetProof', [blockchainKey], {
@@ -709,16 +886,7 @@ async function verifyByBlockchainKey(input = {}) {
     const historyRow = await getHistoryByBlockchainKey(blockchainKey);
 
     if (!historyRow) {
-      const response = buildVerificationResponse({
-        verificationResult: VERIFICATION_RESULTS.NOT_FOUND,
-        blockchainKey,
-        message: 'No PostgreSQL blockchain history record was found for this blockchain key.',
-        verifiedBy
-      });
-
-      response.database.verificationId = await insertVerificationLog(response);
-
-      return response;
+      return await verifyFabricOnlyBlockchainProof(blockchainKey, { verifiedBy });
     }
 
     return await verifyHistoryRow(historyRow, { verifiedBy });
