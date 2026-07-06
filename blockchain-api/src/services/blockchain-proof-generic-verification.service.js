@@ -209,6 +209,20 @@ function generateStableHashFromSourceRow(row) {
     };
   }
 
+  if (stableHashService && typeof stableHashService.generateRecordHash === 'function') {
+    const result = stableHashService.generateRecordHash(row);
+    const hash = typeof result === 'string'
+      ? normalizeHash(result)
+      : extractHashFromObject(result) || normalizeHash(result?.recordHash);
+
+    if (hash) {
+      return {
+        currentHash: hash,
+        hashMethod: 'STABLE_HASH_GENERATOR_SERVICE_GENERATE_RECORD_HASH'
+      };
+    }
+  }
+
   if (stableHashService && typeof stableHashService.generateStableHash === 'function') {
     const result = stableHashService.generateStableHash(row);
     const hash = typeof result === 'string'
