@@ -212,7 +212,9 @@ async function proofOnlySubmit(req, res) {
       {
         actionType: req.query.actionType || 'CREATE',
         postgresHistoryId: req.query.postgresHistoryId || 'PENDING_STEP_14',
-        dryRun: req.query.dryRun || 'true'
+        dryRun: String(req.query.dryRun || 'true').toLowerCase() === 'false'
+          ? false
+          : true
       }
     );
 
