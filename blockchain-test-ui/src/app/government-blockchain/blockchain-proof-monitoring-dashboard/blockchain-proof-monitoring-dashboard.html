@@ -50,7 +50,213 @@
     {{ error }}
   </div>
 
+  <section class="panel audit-filter-panel">
+    <div class="panel-header">
+      <div>
+        <h2>Audit Dashboard Controls</h2>
+        <p>Filter blockchain proof metrics by module, verification status, and date range.</p>
+      </div>
+
+      <div class="filter-actions">
+        <button class="refresh-button" type="button" (click)="refreshWithFilters()">
+          Apply Filters
+        </button>
+
+        <button class="secondary-button" type="button" (click)="clearFilters()">
+          Clear
+        </button>
+      </div>
+    </div>
+
+    <div class="filter-grid">
+      <label>
+        Limit
+        <input
+          type="number"
+          min="1"
+          max="50"
+          [(ngModel)]="dashboardFilters.limit"
+        />
+      </label>
+
+      <label>
+        Module
+        <select [(ngModel)]="dashboardFilters.moduleName">
+          <option value="ALL">All Modules</option>
+          <option value="KYC">KYC</option>
+          <option value="AML">AML</option>
+          <option value="AML_RULE">AML_RULE</option>
+          <option value="CUSTOMER_KYC">CUSTOMER_KYC</option>
+        </select>
+      </label>
+
+      <label>
+        Status
+        <select [(ngModel)]="dashboardFilters.status">
+          <option value="ALL">All Statuses</option>
+          <option value="VERIFIED">VERIFIED</option>
+          <option value="MISMATCH">MISMATCH</option>
+          <option value="NOT_FOUND">NOT_FOUND</option>
+          <option value="FAILED">FAILED</option>
+          <option value="NOT_VERIFIED">NOT_VERIFIED</option>
+          <option value="SUBMITTED">SUBMITTED</option>
+          <option value="PENDING">PENDING</option>
+        </select>
+      </label>
+
+      <label>
+        Date From
+        <input type="date" [(ngModel)]="dashboardFilters.dateFrom" />
+      </label>
+
+      <label>
+        Date To
+        <input type="date" [(ngModel)]="dashboardFilters.dateTo" />
+      </label>
+    </div>
+  </section>
+
   <ng-container *ngIf="data">
+    <section class="cards audit-cards">
+      <div class="card audit-card">
+        <div class="label">Submitted Proofs</div>
+        <div class="value">{{ number(auditMetrics.totalSubmittedProofs) }}</div>
+        <div class="hint">Proof records from blockchain history.</div>
+      </div>
+
+      <div class="card audit-card">
+        <div class="label">Verified Records</div>
+        <div class="value success-text">{{ number(auditMetrics.totalVerifiedRecords) }}</div>
+        <div class="hint">Records verified successfully.</div>
+      </div>
+
+      <div class="card audit-card">
+        <div class="label">Mismatches</div>
+        <div class="value warning-text">{{ number(auditMetrics.totalMismatches) }}</div>
+        <div class="hint">Records with proof/hash differences.</div>
+      </div>
+
+      <div class="card audit-card">
+        <div class="label">Failed Submissions</div>
+        <div class="value danger-text">{{ number(auditMetrics.failedSubmissions) }}</div>
+        <div class="hint">Failed blockchain submission rows.</div>
+      </div>
+
+      <div class="card audit-card">
+        <div class="label">Pending Approvals</div>
+        <div class="value">{{ number(auditMetrics.pendingApprovals) }}</div>
+        <div class="hint">Proof records waiting for approval.</div>
+      </div>
+
+      <div class="card audit-card">
+        <div class="label">Retry Queue</div>
+        <div class="value">{{ number(auditMetrics.retryQueueCount) }}</div>
+        <div class="hint">Rows requiring retry attention.</div>
+      </div>
+    </section>
+
+    <div class="grid-two audit-grid">
+      <section class="panel">
+        <h2>Records by Module</h2>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Module</th>
+              <th>Total</th>
+              <th>Submitted</th>
+              <th>Failed</th>
+              <th>Verified</th>
+              <th>Mismatch</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of auditRecordsByModule">
+              <td>{{ row.module }}</td>
+              <td>{{ number(row.total_records) }}</td>
+              <td>{{ number(row.submitted_records) }}</td>
+              <td>{{ number(row.failed_records) }}</td>
+              <td>{{ number(row.verified_records) }}</td>
+              <td>{{ number(row.mismatch_records) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="panel">
+        <h2>Records by Status</h2>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Blockchain</th>
+              <th>Approval</th>
+              <th>Verification</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of auditRecordsByStatus">
+              <td>{{ row.blockchain_status }}</td>
+              <td>{{ row.approval_status }}</td>
+              <td>{{ row.verification_status }}</td>
+              <td>{{ number(row.total_records) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </div>
+
+    <section class="panel">
+      <h2>Latest Blockchain Transactions</h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th>History ID</th>
+            <th>Module</th>
+            <th>Source Record</th>
+            <th>Blockchain Status</th>
+            <th>Verification</th>
+            <th>Transaction ID</th>
+            <th>Submitted At</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of latestBlockchainTransactions">
+            <td>{{ row.blockchain_history_id }}</td>
+            <td>{{ row.module_name }}</td>
+            <td class="mono">{{ row.source_record_id }}</td>
+            <td>{{ row.blockchain_status }}</td>
+            <td>{{ row.verification_status }}</td>
+            <td class="mono truncate">{{ row.blockchain_transaction_id || 'N/A' }}</td>
+            <td>{{ row.submitted_at || row.created_at }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="panel">
+      <h2>Verification Trend</h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Status</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of verificationTrend">
+            <td>{{ row.verification_date }}</td>
+            <td>{{ row.verification_status }}</td>
+            <td>{{ number(row.total_records) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
     <section class="cards">
       <div class="card">
         <div class="label">Total Proof History Rows</div>

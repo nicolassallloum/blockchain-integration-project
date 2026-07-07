@@ -1,10 +1,11 @@
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 
 @Component({
   selector: 'app-blockchain-proof-monitoring-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './blockchain-proof-monitoring-dashboard.html',
   styleUrls: ['./blockchain-proof-monitoring-dashboard.css']
 })

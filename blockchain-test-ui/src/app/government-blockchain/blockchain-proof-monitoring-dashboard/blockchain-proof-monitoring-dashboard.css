@@ -210,3 +210,129 @@
         grid-template-columns: 1fr;
       }
     }
+
+
+/* Phase 19 audit metrics dashboard */
+
+.panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.panel-header h2 {
+  margin-bottom: 6px;
+}
+
+.panel-header p {
+  margin: 0;
+  color: #9fb0c8;
+  font-size: 13px;
+}
+
+.audit-filter-panel {
+  margin-bottom: 18px;
+}
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(140px, 1fr));
+  gap: 14px;
+}
+
+.filter-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: #9fb0c8;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.filter-grid input,
+.filter-grid select {
+  min-height: 38px;
+  border: 1px solid rgba(80, 137, 255, 0.28);
+  border-radius: 10px;
+  background: rgba(8, 15, 32, 0.9);
+  color: #e6f0ff;
+  padding: 0 12px;
+  outline: none;
+}
+
+.filter-grid input:focus,
+.filter-grid select:focus {
+  border-color: rgba(80, 137, 255, 0.75);
+  box-shadow: 0 0 0 3px rgba(80, 137, 255, 0.12);
+}
+
+.filter-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.secondary-button {
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.84);
+  color: #dbeafe;
+  cursor: pointer;
+  font-weight: 700;
+  padding: 10px 16px;
+}
+
+.secondary-button:hover {
+  border-color: rgba(96, 165, 250, 0.7);
+}
+
+.audit-cards {
+  margin-top: 0;
+}
+
+.audit-card {
+  border-color: rgba(56, 189, 248, 0.25);
+}
+
+.audit-grid {
+  margin-top: 18px;
+}
+
+.warning-text {
+  color: #fbbf24;
+}
+
+.truncate {
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 1100px) {
+  .filter-grid {
+    grid-template-columns: repeat(2, minmax(160px, 1fr));
+  }
+
+  .panel-header {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 640px) {
+  .filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-actions {
+    width: 100%;
+  }
+
+  .filter-actions button {
+    width: 100%;
+  }
+}
