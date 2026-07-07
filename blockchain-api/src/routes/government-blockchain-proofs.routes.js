@@ -60,6 +60,11 @@ router.get('/dashboard/audit-metrics', dashboardController.auditMetrics);
  */
 router.get('/dashboard/audit-report/export', dashboardController.auditReportExport);
 
+/**
+ * GET /api/v1/government-blockchain/blockchain-proofs/dashboard/full
+ */
+router.get('/dashboard/full', dashboardController.full);
+
 
 /**
  * GET /api/v1/government-blockchain/blockchain-proofs/summary
