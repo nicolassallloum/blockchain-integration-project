@@ -186,6 +186,36 @@ async function auditMetrics(req, res) {
   }
 }
 
+async function auditReportExport(req, res) {
+  try {
+    const result = await dashboardService.getAuditReportExport({
+      format: req.query.format,
+      limit: req.query.limit,
+      dateFrom: req.query.dateFrom,
+      dateTo: req.query.dateTo,
+      fromDate: req.query.fromDate,
+      toDate: req.query.toDate,
+      startDate: req.query.startDate,
+      endDate: req.query.endDate,
+      moduleName: req.query.moduleName,
+      module: req.query.module,
+      recordType: req.query.recordType,
+      status: req.query.status,
+      verificationStatus: req.query.verificationStatus,
+      blockchainStatus: req.query.blockchainStatus
+    });
+
+    res.setHeader('Content-Type', result.contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${result.fileName}"`);
+    res.setHeader('X-Blockchain-Audit-Report-Format', result.format);
+    res.setHeader('X-Blockchain-Audit-Report-Generated-At', result.report.generatedAt);
+
+    return res.status(200).send(result.content);
+  } catch (error) {
+    return errorResponse(res, error);
+  }
+}
+
 async function full(req, res) {
   try {
     const data = await dashboardService.getDashboardFull({
@@ -213,5 +243,6 @@ module.exports = {
   latestHistory,
   latestVerificationLogs,
   auditMetrics,
+  auditReportExport,
   full
 };
