@@ -92,6 +92,93 @@ function normalizeRecordType(value) {
   return String(value).trim().toUpperCase();
 }
 
+
+function normalizeDashboardFilters(options = {}) {
+  const moduleName = options.moduleName || options.module || options.recordType || null;
+  const status = options.status || options.verificationStatus || options.blockchainStatus || null;
+
+  return {
+    dateFrom: options.dateFrom || options.fromDate || options.startDate || null,
+    dateTo: options.dateTo || options.toDate || options.endDate || null,
+    moduleName: moduleName && String(moduleName).trim().toUpperCase() !== 'ALL'
+      ? String(moduleName).trim().toUpperCase()
+      : null,
+    status: status && String(status).trim().toUpperCase() !== 'ALL'
+      ? String(status).trim().toUpperCase()
+      : null,
+    limit: normalizeLimit(options.limit)
+  };
+}
+
+function buildHistoryFilterWhere(filters = {}, startIndex = 1) {
+  const clauses = [];
+  const values = [];
+  let index = startIndex;
+
+  if (filters.dateFrom) {
+    clauses.push(`created_at >= $${index++}`);
+    values.push(filters.dateFrom);
+  }
+
+  if (filters.dateTo) {
+    clauses.push(`created_at < ($${index++}::date + INTERVAL '1 day')`);
+    values.push(filters.dateTo);
+  }
+
+  if (filters.moduleName) {
+    clauses.push(`module_name = $${index++}`);
+    values.push(filters.moduleName);
+  }
+
+  if (filters.status) {
+    clauses.push(`(
+      blockchain_status = $${index}
+      OR approval_status = $${index}
+      OR verification_status = $${index}
+    )`);
+    values.push(filters.status);
+    index += 1;
+  }
+
+  return {
+    whereSql: clauses.length ? `WHERE ${clauses.join(' AND ')}` : '',
+    values,
+    nextIndex: index
+  };
+}
+
+function buildVerificationLogFilterWhere(filters = {}, startIndex = 1) {
+  const clauses = [];
+  const values = [];
+  let index = startIndex;
+
+  if (filters.dateFrom) {
+    clauses.push(`created_at >= $${index++}`);
+    values.push(filters.dateFrom);
+  }
+
+  if (filters.dateTo) {
+    clauses.push(`created_at < ($${index++}::date + INTERVAL '1 day')`);
+    values.push(filters.dateTo);
+  }
+
+  if (filters.moduleName) {
+    clauses.push(`record_type = $${index++}`);
+    values.push(filters.moduleName);
+  }
+
+  if (filters.status) {
+    clauses.push(`verification_status = $${index++}`);
+    values.push(filters.status);
+  }
+
+  return {
+    whereSql: clauses.length ? `WHERE ${clauses.join(' AND ')}` : '',
+    values,
+    nextIndex: index
+  };
+}
+
 function parseMetadata(metadata) {
   if (!metadata) {
     return {};
