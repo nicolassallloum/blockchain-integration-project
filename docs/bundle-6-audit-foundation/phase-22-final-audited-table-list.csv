@@ -1,0 +1,20 @@
+schema_name,table_name,include_in_phase_26,notes
+blockchain,aml_cases,yes,physical source table discovered behind blockchain-facing views
+blockchain,blockchain_customer_mapping,no,blockchain mapping platform table; exclude from source-data audit triggers
+blockchain,blockchain_history,no,blockchain proof/history platform table; exclude from source-data audit triggers
+blockchain,blockchain_history_attempts,no,blockchain proof attempt platform table; exclude from source-data audit triggers
+findba,fin_transaction,yes,physical source table discovered behind blockchain-facing views
+mdmdba,mdm_bsn_unit_group,yes,physical source table discovered behind blockchain-facing views
+sdedba,cfg_customer_def,yes,physical source table discovered behind blockchain-facing views
+sdedba,ref_com_risk_score_interval,yes,physical source table discovered behind blockchain-facing views
+sdedba,ref_com_sanction_list,yes,physical source table discovered behind blockchain-facing views
+sdedba,ref_com_snction_lst_cust_mtch,yes,physical source table discovered behind blockchain-facing views
+sdedba,ref_customer,yes,physical source table discovered behind blockchain-facing views
+sdedba,ref_customer_misc_info,yes,physical source table discovered behind blockchain-facing views
+ssdx_eng,v21_indisplay_logs,conditional,no primary key found; log_id is not unique and has nulls
+suitedba,br_business_rule_definition,yes,physical source table discovered behind blockchain-facing views
+suitedba,br_business_rule_message,yes,physical source table discovered behind blockchain-facing views
+suitedba,br_business_rule_message_info,yes,physical source table discovered behind blockchain-facing views
+suitedba,br_business_rule_msg_info_dstat,yes,physical source table discovered behind blockchain-facing views
+suitedba,br_business_rule_query,yes,physical source table discovered behind blockchain-facing views
+suitedba,cfg_object_api_def,yes,physical source table discovered behind blockchain-facing views
