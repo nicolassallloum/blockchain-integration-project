@@ -818,6 +818,188 @@ async function getAuditDashboardMetrics(options = {}) {
   };
 }
 
+
+function normalizeExportFormat(value) {
+  const format = String(value || 'JSON').trim().toUpperCase();
+
+  if (['JSON', 'CSV'].includes(format)) {
+    return format;
+  }
+
+  return 'JSON';
+}
+
+function escapeCsvValue(value) {
+  if (value === null || value === undefined) {
+    return '';
+  }
+
+  const text = String(value);
+
+  if (/[",\n\r]/.test(text)) {
+    return `"${text.replace(/"/g, '""')}"`;
+  }
+
+  return text;
+}
+
+function buildCsvContent(headers, rows) {
+  return [
+    headers.map((header) => escapeCsvValue(header.label)).join(','),
+    ...rows.map((row) => {
+      return headers
+        .map((header) => escapeCsvValue(row[header.key]))
+        .join(',');
+    })
+  ].join('\n');
+}
+
+function getExportTimestamp() {
+  return new Date()
+    .toISOString()
+    .replace(/[:.]/g, '-');
+}
+
+async function getAuditReportExport(options = {}) {
+  const filters = normalizeDashboardFilters(options);
+  const format = normalizeExportFormat(options.format);
+  const exportLimit = Math.min(Number(filters.limit || 100), 500);
+
+  const latestFilter = buildHistoryFilterWhere(filters);
+  const latestLimitParamIndex = latestFilter.nextIndex;
+
+  const metrics = await getAuditDashboardMetrics({
+    ...filters,
+    limit: exportLimit
+  });
+
+  const historyRowsResult = await db.query(
+    `
+    SELECT
+      blockchain_history_id,
+      module_name,
+      source_record_id,
+      blockchain_key,
+      record_hash,
+      blockchain_transaction_id,
+      blockchain_status,
+      approval_status,
+      verification_status,
+      submitted_by,
+      submitted_at,
+      created_at,
+      updated_at
+    FROM blockchain.blockchain_history
+    ${latestFilter.whereSql}
+    ORDER BY COALESCE(submitted_at, created_at) DESC, blockchain_history_id DESC
+    LIMIT $${latestLimitParamIndex}
+    `,
+    [...latestFilter.values, exportLimit]
+  );
+
+  const verificationFilter = buildVerificationLogFilterWhere(filters);
+  const verificationLimitParamIndex = verificationFilter.nextIndex;
+
+  const verificationRowsResult = await db.query(
+    `
+    SELECT
+      verification_id,
+      history_id,
+      record_type,
+      source_record_id,
+      blockchain_key,
+      blockchain_transaction_id,
+      verification_status,
+      verified_by,
+      error_message,
+      created_at
+    FROM blockchain.blockchain_verification_logs
+    ${verificationFilter.whereSql}
+    ORDER BY created_at DESC, verification_id DESC
+    LIMIT $${verificationLimitParamIndex}
+    `,
+    [...verificationFilter.values, exportLimit]
+  );
+
+  const report = {
+    title: 'Blockchain Proof Audit Report',
+    generatedAt: new Date().toISOString(),
+    filters: {
+      ...filters,
+      limit: exportLimit
+    },
+    metrics: metrics.metrics,
+    recordsByModule: metrics.recordsByModule,
+    recordsByStatus: metrics.recordsByStatus,
+    verificationTrend: metrics.verificationTrend,
+    blockchainHistoryRows: historyRowsResult.rows,
+    verificationLogRows: verificationRowsResult.rows
+  };
+
+  const timestamp = getExportTimestamp();
+
+  if (format === 'CSV') {
+    const headers = [
+      { key: 'section', label: 'Section' },
+      { key: 'id', label: 'ID' },
+      { key: 'module', label: 'Module' },
+      { key: 'sourceRecordId', label: 'Source Record ID' },
+      { key: 'blockchainKey', label: 'Blockchain Key' },
+      { key: 'transactionId', label: 'Transaction ID' },
+      { key: 'blockchainStatus', label: 'Blockchain Status' },
+      { key: 'approvalStatus', label: 'Approval Status' },
+      { key: 'verificationStatus', label: 'Verification Status' },
+      { key: 'createdAt', label: 'Created At' },
+      { key: 'message', label: 'Message' }
+    ];
+
+    const csvRows = [
+      ...historyRowsResult.rows.map((row) => ({
+        section: 'BLOCKCHAIN_HISTORY',
+        id: row.blockchain_history_id,
+        module: row.module_name,
+        sourceRecordId: row.source_record_id,
+        blockchainKey: row.blockchain_key,
+        transactionId: row.blockchain_transaction_id,
+        blockchainStatus: row.blockchain_status,
+        approvalStatus: row.approval_status,
+        verificationStatus: row.verification_status,
+        createdAt: row.created_at,
+        message: row.submitted_by || ''
+      })),
+      ...verificationRowsResult.rows.map((row) => ({
+        section: 'VERIFICATION_LOG',
+        id: row.verification_id,
+        module: row.record_type,
+        sourceRecordId: row.source_record_id,
+        blockchainKey: row.blockchain_key,
+        transactionId: row.blockchain_transaction_id,
+        blockchainStatus: '',
+        approvalStatus: '',
+        verificationStatus: row.verification_status,
+        createdAt: row.created_at,
+        message: row.error_message || row.verified_by || ''
+      }))
+    ];
+
+    return {
+      format,
+      fileName: `blockchain-proof-audit-report-${timestamp}.csv`,
+      contentType: 'text/csv; charset=utf-8',
+      report,
+      content: buildCsvContent(headers, csvRows)
+    };
+  }
+
+  return {
+    format,
+    fileName: `blockchain-proof-audit-report-${timestamp}.json`,
+    contentType: 'application/json; charset=utf-8',
+    report,
+    content: JSON.stringify(report, null, 2)
+  };
+}
+
 module.exports = {
   getDashboardHealth,
   getDashboardSummary,
@@ -829,5 +1011,6 @@ module.exports = {
   getLatestHistory,
   getLatestVerificationLogs,
   getDashboardFull,
-  getAuditDashboardMetrics
+  getAuditDashboardMetrics,
+  getAuditReportExport
 };
