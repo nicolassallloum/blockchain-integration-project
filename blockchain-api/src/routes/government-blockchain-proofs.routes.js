@@ -1,5 +1,6 @@
 const express = require('express');
 const { Pool } = require('pg');
+const dashboardController = require('../controllers/blockchain-proof-dashboard.controller');
 
 const router = express.Router();
 
@@ -47,6 +48,17 @@ function addFilter(filters, values, sqlCondition, value) {
   values.push(value);
   filters.push(sqlCondition.replace('?', `$${values.length}`));
 }
+
+
+/**
+ * GET /api/v1/government-blockchain/blockchain-proofs/dashboard/audit-metrics
+ */
+router.get('/dashboard/audit-metrics', dashboardController.auditMetrics);
+
+/**
+ * GET /api/v1/government-blockchain/blockchain-proofs/dashboard/audit-report/export
+ */
+router.get('/dashboard/audit-report/export', dashboardController.auditReportExport);
 
 
 /**
