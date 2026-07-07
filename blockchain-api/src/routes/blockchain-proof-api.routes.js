@@ -161,6 +161,7 @@ router.get('/dashboard/retry-summary', dashboardController.retrySummary);
 router.get('/dashboard/latest-runs', dashboardController.latestRuns);
 router.get('/dashboard/latest-history', dashboardController.latestHistory);
 router.get('/dashboard/latest-verification-logs', dashboardController.latestVerificationLogs);
+router.get('/dashboard/audit-metrics', dashboardController.auditMetrics);
 router.get('/dashboard/full', dashboardController.full);
 
 module.exports = router;

@@ -158,6 +158,34 @@ async function latestVerificationLogs(req, res) {
   }
 }
 
+async function auditMetrics(req, res) {
+  try {
+    const data = await dashboardService.getAuditDashboardMetrics({
+      limit: req.query.limit,
+      dateFrom: req.query.dateFrom,
+      dateTo: req.query.dateTo,
+      fromDate: req.query.fromDate,
+      toDate: req.query.toDate,
+      startDate: req.query.startDate,
+      endDate: req.query.endDate,
+      moduleName: req.query.moduleName,
+      module: req.query.module,
+      recordType: req.query.recordType,
+      status: req.query.status,
+      verificationStatus: req.query.verificationStatus,
+      blockchainStatus: req.query.blockchainStatus
+    });
+
+    return successResponse(
+      res,
+      'Blockchain proof audit dashboard metrics loaded successfully.',
+      data
+    );
+  } catch (error) {
+    return errorResponse(res, error);
+  }
+}
+
 async function full(req, res) {
   try {
     const data = await dashboardService.getDashboardFull({
@@ -184,5 +212,6 @@ module.exports = {
   latestRuns,
   latestHistory,
   latestVerificationLogs,
+  auditMetrics,
   full
 };
