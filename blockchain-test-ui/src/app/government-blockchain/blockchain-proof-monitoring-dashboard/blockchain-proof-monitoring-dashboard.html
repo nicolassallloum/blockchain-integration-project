@@ -65,6 +65,14 @@
         <button class="secondary-button" type="button" (click)="clearFilters()">
           Clear
         </button>
+
+        <button class="secondary-button export-button" type="button" (click)="downloadAuditReport('JSON')">
+          Export JSON
+        </button>
+
+        <button class="secondary-button export-button" type="button" (click)="downloadAuditReport('CSV')">
+          Export CSV
+        </button>
       </div>
     </div>
 

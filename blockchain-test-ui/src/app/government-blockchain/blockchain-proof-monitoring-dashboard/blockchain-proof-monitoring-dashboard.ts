@@ -175,6 +175,58 @@ export class BlockchainProofMonitoringDashboard implements OnInit, OnDestroy {
     this.loadDashboard(true);
   }
 
+  private getFileNameFromContentDisposition(contentDisposition: string | null, fallbackFileName: string): string {
+    if (!contentDisposition) {
+      return fallbackFileName;
+    }
+
+    const match = contentDisposition.match(/filename="?([^";]+)"?/i);
+
+    return match?.[1] || fallbackFileName;
+  }
+
+  async downloadAuditReport(format: 'JSON' | 'CSV'): Promise<void> {
+    this.error = '';
+
+    try {
+      const params = new URLSearchParams(this.buildDashboardQueryString());
+
+      params.set('format', format);
+
+      const response = await fetch(`${this.apiBaseUrl}/dashboard/audit-report/export?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+          Accept: format === 'CSV' ? 'text/csv' : 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || `Audit report export failed with HTTP ${response.status}`);
+      }
+
+      const blob = await response.blob();
+      const fallbackFileName = `blockchain-proof-audit-report.${format.toLowerCase()}`;
+      const fileName = this.getFileNameFromContentDisposition(
+        response.headers.get('Content-Disposition'),
+        fallbackFileName
+      );
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      URL.revokeObjectURL(url);
+    } catch (error: any) {
+      this.error = error?.message || 'Unable to export blockchain proof audit report.';
+    }
+  }
+
   async loadDashboard(showLoading = true): Promise<void> {
     if (showLoading) {
       this.loading = true;
