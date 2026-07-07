@@ -62,6 +62,13 @@ function resolveQueryClient() {
   );
 }
 
+
+function runDashboardQuery(sql, values = []) {
+  const query = resolveQueryClient();
+
+  return query(sql, values);
+}
+
 function quoteIdent(identifier) {
   if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(identifier)) {
     throw new Error(`Unsafe SQL identifier: ${identifier}`);
@@ -643,7 +650,7 @@ async function getAuditDashboardMetrics(options = {}) {
   const latestFilter = buildHistoryFilterWhere(filters);
   const latestLimitParamIndex = latestFilter.nextIndex;
 
-  const totalSubmittedProofsQuery = db.query(
+  const totalSubmittedProofsQuery = runDashboardQuery(
     `
     SELECT COUNT(*)::int AS count
     FROM blockchain.blockchain_history
@@ -652,7 +659,7 @@ async function getAuditDashboardMetrics(options = {}) {
     historyFilter.values
   );
 
-  const totalVerifiedRecordsQuery = db.query(
+  const totalVerifiedRecordsQuery = runDashboardQuery(
     `
     SELECT COUNT(*)::int AS count
     FROM blockchain.blockchain_verification_logs
@@ -662,7 +669,7 @@ async function getAuditDashboardMetrics(options = {}) {
     verificationFilter.values
   );
 
-  const totalMismatchesQuery = db.query(
+  const totalMismatchesQuery = runDashboardQuery(
     `
     SELECT COUNT(*)::int AS count
     FROM blockchain.blockchain_verification_logs
@@ -672,7 +679,7 @@ async function getAuditDashboardMetrics(options = {}) {
     verificationFilter.values
   );
 
-  const failedSubmissionsQuery = db.query(
+  const failedSubmissionsQuery = runDashboardQuery(
     `
     SELECT COUNT(*)::int AS count
     FROM blockchain.blockchain_history
@@ -682,7 +689,7 @@ async function getAuditDashboardMetrics(options = {}) {
     historyFilter.values
   );
 
-  const pendingApprovalsQuery = db.query(
+  const pendingApprovalsQuery = runDashboardQuery(
     `
     SELECT COUNT(*)::int AS count
     FROM blockchain.blockchain_history
@@ -692,7 +699,7 @@ async function getAuditDashboardMetrics(options = {}) {
     historyFilter.values
   );
 
-  const recordsByModuleQuery = db.query(
+  const recordsByModuleQuery = runDashboardQuery(
     `
     SELECT
       module_name AS module,
@@ -709,7 +716,7 @@ async function getAuditDashboardMetrics(options = {}) {
     historyFilter.values
   );
 
-  const recordsByStatusQuery = db.query(
+  const recordsByStatusQuery = runDashboardQuery(
     `
     SELECT
       blockchain_status,
@@ -724,7 +731,7 @@ async function getAuditDashboardMetrics(options = {}) {
     historyFilter.values
   );
 
-  const latestBlockchainTransactionsQuery = db.query(
+  const latestBlockchainTransactionsQuery = runDashboardQuery(
     `
     SELECT
       blockchain_history_id,
@@ -748,7 +755,7 @@ async function getAuditDashboardMetrics(options = {}) {
     [...latestFilter.values, latestLimit]
   );
 
-  const retryQueueCountQuery = db.query(
+  const retryQueueCountQuery = runDashboardQuery(
     `
     SELECT COUNT(*)::int AS count
     FROM blockchain.blockchain_history
@@ -761,7 +768,7 @@ async function getAuditDashboardMetrics(options = {}) {
     historyFilter.values
   );
 
-  const verificationTrendQuery = db.query(
+  const verificationTrendQuery = runDashboardQuery(
     `
     SELECT
       created_at::date AS verification_date,
@@ -873,7 +880,7 @@ async function getAuditReportExport(options = {}) {
     limit: exportLimit
   });
 
-  const historyRowsResult = await db.query(
+  const historyRowsResult = await runDashboardQuery(
     `
     SELECT
       blockchain_history_id,
@@ -900,7 +907,7 @@ async function getAuditReportExport(options = {}) {
   const verificationFilter = buildVerificationLogFilterWhere(filters);
   const verificationLimitParamIndex = verificationFilter.nextIndex;
 
-  const verificationRowsResult = await db.query(
+  const verificationRowsResult = await runDashboardQuery(
     `
     SELECT
       verification_id,
