@@ -10,10 +10,19 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 })
 export class BlockchainProofMonitoringDashboard implements OnInit, OnDestroy {
   data: any = null;
+  auditData: any = null;
   loading = false;
   error = '';
   autoRefresh = true;
   lastLoadedAt: string | null = null;
+
+  dashboardFilters = {
+    limit: 5,
+    moduleName: 'ALL',
+    status: 'ALL',
+    dateFrom: '',
+    dateTo: ''
+  };
 
   private refreshTimer: any = null;
 
@@ -92,6 +101,30 @@ export class BlockchainProofMonitoringDashboard implements OnInit, OnDestroy {
     return this.data?.latestVerificationLogs?.rows || [];
   }
 
+  get audit(): any {
+    return this.auditData || {};
+  }
+
+  get auditMetrics(): any {
+    return this.audit?.metrics || {};
+  }
+
+  get auditRecordsByModule(): any[] {
+    return this.audit?.recordsByModule || [];
+  }
+
+  get auditRecordsByStatus(): any[] {
+    return this.audit?.recordsByStatus || [];
+  }
+
+  get latestBlockchainTransactions(): any[] {
+    return this.audit?.latestBlockchainTransactions || [];
+  }
+
+  get verificationTrend(): any[] {
+    return this.audit?.verificationTrend || [];
+  }
+
   number(value: any): number {
     const parsed = Number(value);
     return Number.isFinite(parsed) ? parsed : 0;
@@ -99,6 +132,46 @@ export class BlockchainProofMonitoringDashboard implements OnInit, OnDestroy {
 
   toggleAutoRefresh(): void {
     this.autoRefresh = !this.autoRefresh;
+  }
+
+  private buildDashboardQueryString(): string {
+    const params = new URLSearchParams();
+
+    params.set('limit', String(this.dashboardFilters.limit || 5));
+
+    if (this.dashboardFilters.moduleName && this.dashboardFilters.moduleName !== 'ALL') {
+      params.set('moduleName', this.dashboardFilters.moduleName);
+    }
+
+    if (this.dashboardFilters.status && this.dashboardFilters.status !== 'ALL') {
+      params.set('status', this.dashboardFilters.status);
+    }
+
+    if (this.dashboardFilters.dateFrom) {
+      params.set('dateFrom', this.dashboardFilters.dateFrom);
+    }
+
+    if (this.dashboardFilters.dateTo) {
+      params.set('dateTo', this.dashboardFilters.dateTo);
+    }
+
+    return params.toString();
+  }
+
+  clearFilters(): void {
+    this.dashboardFilters = {
+      limit: 5,
+      moduleName: 'ALL',
+      status: 'ALL',
+      dateFrom: '',
+      dateTo: ''
+    };
+
+    this.loadDashboard(true);
+  }
+
+  refreshWithFilters(): void {
+    this.loadDashboard(true);
   }
 
   async loadDashboard(showLoading = true): Promise<void> {
@@ -109,7 +182,9 @@ export class BlockchainProofMonitoringDashboard implements OnInit, OnDestroy {
     this.error = '';
 
     try {
-      const response = await fetch(`${this.apiBaseUrl}/dashboard/full?limit=5`, {
+      const queryString = this.buildDashboardQueryString();
+
+      const response = await fetch(`${this.apiBaseUrl}/dashboard/full?limit=${this.dashboardFilters.limit || 5}`, {
         method: 'GET',
         headers: {
           Accept: 'application/json'
@@ -123,11 +198,46 @@ export class BlockchainProofMonitoringDashboard implements OnInit, OnDestroy {
       }
 
       this.data = payload.data;
+
+      await this.loadAuditMetrics(false, queryString);
+
       this.lastLoadedAt = new Date().toISOString();
     } catch (error: any) {
       this.error = error?.message || 'Unable to load blockchain proof monitoring dashboard.';
     } finally {
       this.loading = false;
+    }
+  }
+
+  async loadAuditMetrics(showLoading = true, queryString = this.buildDashboardQueryString()): Promise<void> {
+    if (showLoading) {
+      this.loading = true;
+    }
+
+    this.error = '';
+
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/dashboard/audit-metrics?${queryString}`, {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json'
+        }
+      });
+
+      const payload = await response.json();
+
+      if (!response.ok || !payload.success) {
+        throw new Error(payload.message || `Audit dashboard API failed with HTTP ${response.status}`);
+      }
+
+      this.auditData = payload.data;
+      this.lastLoadedAt = new Date().toISOString();
+    } catch (error: any) {
+      this.error = error?.message || 'Unable to load audit dashboard metrics.';
+    } finally {
+      if (showLoading) {
+        this.loading = false;
+      }
     }
   }
 }
