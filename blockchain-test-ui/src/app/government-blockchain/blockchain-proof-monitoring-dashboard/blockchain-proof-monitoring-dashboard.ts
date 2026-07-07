@@ -45,13 +45,13 @@ export class BlockchainProofMonitoringDashboard implements OnInit, OnDestroy {
 
   get apiBaseUrl(): string {
     if (typeof window === 'undefined') {
-      return 'http://localhost:3001/api/v1/blockchain-proof/api';
+      return 'http://localhost:3001/api/v1/government-blockchain/blockchain-proofs';
     }
 
     const protocol = window.location.protocol || 'http:';
     const hostname = window.location.hostname || 'localhost';
 
-    return `${protocol}//${hostname}:3001/api/v1/blockchain-proof/api`;
+    return `${protocol}//${hostname}:3001/api/v1/government-blockchain/blockchain-proofs`;
   }
 
   get health(): any {
