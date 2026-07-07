@@ -633,6 +633,191 @@ async function getDashboardFull(options = {}) {
   };
 }
 
+
+async function getAuditDashboardMetrics(options = {}) {
+  const filters = normalizeDashboardFilters(options);
+  const historyFilter = buildHistoryFilterWhere(filters);
+  const verificationFilter = buildVerificationLogFilterWhere(filters);
+
+  const latestLimit = filters.limit || 10;
+  const latestFilter = buildHistoryFilterWhere(filters);
+  const latestLimitParamIndex = latestFilter.nextIndex;
+
+  const totalSubmittedProofsQuery = db.query(
+    `
+    SELECT COUNT(*)::int AS count
+    FROM blockchain.blockchain_history
+    ${historyFilter.whereSql}
+    `,
+    historyFilter.values
+  );
+
+  const totalVerifiedRecordsQuery = db.query(
+    `
+    SELECT COUNT(*)::int AS count
+    FROM blockchain.blockchain_verification_logs
+    ${verificationFilter.whereSql}
+    ${verificationFilter.whereSql ? 'AND' : 'WHERE'} verification_status = 'VERIFIED'
+    `,
+    verificationFilter.values
+  );
+
+  const totalMismatchesQuery = db.query(
+    `
+    SELECT COUNT(*)::int AS count
+    FROM blockchain.blockchain_verification_logs
+    ${verificationFilter.whereSql}
+    ${verificationFilter.whereSql ? 'AND' : 'WHERE'} verification_status IN ('MISMATCH', 'MISMATCHED', 'TAMPERED')
+    `,
+    verificationFilter.values
+  );
+
+  const failedSubmissionsQuery = db.query(
+    `
+    SELECT COUNT(*)::int AS count
+    FROM blockchain.blockchain_history
+    ${historyFilter.whereSql}
+    ${historyFilter.whereSql ? 'AND' : 'WHERE'} blockchain_status = 'FAILED'
+    `,
+    historyFilter.values
+  );
+
+  const pendingApprovalsQuery = db.query(
+    `
+    SELECT COUNT(*)::int AS count
+    FROM blockchain.blockchain_history
+    ${historyFilter.whereSql}
+    ${historyFilter.whereSql ? 'AND' : 'WHERE'} approval_status = 'PENDING'
+    `,
+    historyFilter.values
+  );
+
+  const recordsByModuleQuery = db.query(
+    `
+    SELECT
+      module_name AS module,
+      COUNT(*)::int AS total_records,
+      COUNT(*) FILTER (WHERE blockchain_status = 'SUBMITTED')::int AS submitted_records,
+      COUNT(*) FILTER (WHERE blockchain_status = 'FAILED')::int AS failed_records,
+      COUNT(*) FILTER (WHERE verification_status = 'VERIFIED')::int AS verified_records,
+      COUNT(*) FILTER (WHERE verification_status IN ('MISMATCH', 'MISMATCHED', 'TAMPERED'))::int AS mismatch_records
+    FROM blockchain.blockchain_history
+    ${historyFilter.whereSql}
+    GROUP BY module_name
+    ORDER BY total_records DESC, module_name ASC
+    `,
+    historyFilter.values
+  );
+
+  const recordsByStatusQuery = db.query(
+    `
+    SELECT
+      blockchain_status,
+      approval_status,
+      verification_status,
+      COUNT(*)::int AS total_records
+    FROM blockchain.blockchain_history
+    ${historyFilter.whereSql}
+    GROUP BY blockchain_status, approval_status, verification_status
+    ORDER BY total_records DESC, blockchain_status ASC, approval_status ASC, verification_status ASC
+    `,
+    historyFilter.values
+  );
+
+  const latestBlockchainTransactionsQuery = db.query(
+    `
+    SELECT
+      blockchain_history_id,
+      module_name,
+      source_record_id,
+      blockchain_key,
+      record_hash,
+      blockchain_transaction_id,
+      blockchain_status,
+      approval_status,
+      verification_status,
+      submitted_by,
+      submitted_at,
+      created_at,
+      updated_at
+    FROM blockchain.blockchain_history
+    ${latestFilter.whereSql}
+    ORDER BY COALESCE(submitted_at, created_at) DESC, blockchain_history_id DESC
+    LIMIT $${latestLimitParamIndex}
+    `,
+    [...latestFilter.values, latestLimit]
+  );
+
+  const retryQueueCountQuery = db.query(
+    `
+    SELECT COUNT(*)::int AS count
+    FROM blockchain.blockchain_history
+    ${historyFilter.whereSql}
+    ${historyFilter.whereSql ? 'AND' : 'WHERE'} (
+      blockchain_status IN ('FAILED', 'RETRY_PENDING')
+      OR retry_count > 0
+    )
+    `,
+    historyFilter.values
+  );
+
+  const verificationTrendQuery = db.query(
+    `
+    SELECT
+      created_at::date AS verification_date,
+      verification_status,
+      COUNT(*)::int AS total_records
+    FROM blockchain.blockchain_verification_logs
+    ${verificationFilter.whereSql}
+    GROUP BY created_at::date, verification_status
+    ORDER BY verification_date DESC, verification_status ASC
+    LIMIT 60
+    `,
+    verificationFilter.values
+  );
+
+  const [
+    totalSubmittedProofs,
+    totalVerifiedRecords,
+    totalMismatches,
+    failedSubmissions,
+    pendingApprovals,
+    recordsByModule,
+    recordsByStatus,
+    latestBlockchainTransactions,
+    retryQueueCount,
+    verificationTrend
+  ] = await Promise.all([
+    totalSubmittedProofsQuery,
+    totalVerifiedRecordsQuery,
+    totalMismatchesQuery,
+    failedSubmissionsQuery,
+    pendingApprovalsQuery,
+    recordsByModuleQuery,
+    recordsByStatusQuery,
+    latestBlockchainTransactionsQuery,
+    retryQueueCountQuery,
+    verificationTrendQuery
+  ]);
+
+  return {
+    filters,
+    metrics: {
+      totalSubmittedProofs: totalSubmittedProofs.rows[0]?.count || 0,
+      totalVerifiedRecords: totalVerifiedRecords.rows[0]?.count || 0,
+      totalMismatches: totalMismatches.rows[0]?.count || 0,
+      failedSubmissions: failedSubmissions.rows[0]?.count || 0,
+      pendingApprovals: pendingApprovals.rows[0]?.count || 0,
+      retryQueueCount: retryQueueCount.rows[0]?.count || 0
+    },
+    recordsByModule: recordsByModule.rows,
+    recordsByStatus: recordsByStatus.rows,
+    latestBlockchainTransactions: latestBlockchainTransactions.rows,
+    verificationTrend: verificationTrend.rows,
+    generatedAt: new Date().toISOString()
+  };
+}
+
 module.exports = {
   getDashboardHealth,
   getDashboardSummary,
@@ -643,5 +828,6 @@ module.exports = {
   getLatestRuns,
   getLatestHistory,
   getLatestVerificationLogs,
-  getDashboardFull
+  getDashboardFull,
+  getAuditDashboardMetrics
 };
