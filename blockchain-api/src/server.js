@@ -41,6 +41,7 @@ const governmentAmlCasesRoutes = require('./routes/government-aml-cases.routes')
 const governmentReportsRoutes = require('./routes/government-reports.routes');
 const hashVerificationRoutes = require('./routes/hash-verification.routes');
 const governmentAuditLogsRoutes = require('./routes/government-audit-logs.routes');
+const auditBlockchainProofRoutes = require('./routes/audit-blockchain-proof.routes');
 const auditSessionContextMiddleware = require('./middleware/auditSessionContext.middleware');
 
 const app = express();
@@ -127,6 +128,8 @@ console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/valoores-customer-kyc
 
 app.use('/api/v1/government-blockchain/audit-logs', governmentAuditLogsRoutes);
 console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/audit-logs');
+app.use('/api/v1/government-blockchain/audit-proofs', auditBlockchainProofRoutes);
+console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/audit-proofs');
 
 app.use('/api/v1/government-blockchain/settings', governmentSettingsRoutes);
 console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/settings');
