@@ -203,6 +203,11 @@ function mapAuditEventRow(row) {
     complianceStatus: row.compliance_status,
     auditBatchId: row.audit_batch_id,
     riskLevel: row.risk_level,
+    highRiskAlertStatus: row.high_risk_alert_status,
+    highRiskAlertCount: Number(row.high_risk_alert_count || 0),
+    highestRiskLevel: row.highest_risk_level,
+    highestRiskScore: row.highest_risk_score === null || row.highest_risk_score === undefined ? null : Number(row.highest_risk_score),
+    latestHighRiskAlertAt: row.latest_high_risk_alert_at,
     sourceViewName: row.source_view_name,
     createdAt: row.created_at
   };
@@ -268,6 +273,15 @@ async function getMetrics(filters = {}) {
         COUNT(*) FILTER (
           WHERE compliance_status IN ('REVIEW', 'UNDER_REVIEW', 'PENDING_REVIEW')
         )::int AS records_under_compliance_review,
+        COUNT(*) FILTER (
+          WHERE COALESCE(high_risk_alert_count, 0) > 0
+        )::int AS high_risk_alerted_events,
+        COUNT(*) FILTER (
+          WHERE high_risk_alert_status IN ('OPEN', 'PENDING_REVIEW', 'UNDER_REVIEW', 'ESCALATED')
+        )::int AS open_high_risk_alert_events,
+        COUNT(*) FILTER (
+          WHERE highest_risk_level = 'CRITICAL'
+        )::int AS critical_high_risk_events,
         COUNT(*) FILTER (WHERE approval_status IN ('PENDING', 'BULK_PENDING'))::int AS bulk_approval_queue,
         COUNT(*) FILTER (WHERE approval_status = 'AUTO_APPROVED')::int AS auto_approved_changes,
         COUNT(*) FILTER (
@@ -292,6 +306,9 @@ async function getMetrics(filters = {}) {
     mismatchedEvents: Number(row.mismatched_events || 0),
     invalidRecords: Number(row.invalid_records || 0),
     recordsUnderComplianceReview: Number(row.records_under_compliance_review || 0),
+    highRiskAlertedEvents: Number(row.high_risk_alerted_events || 0),
+    openHighRiskAlertEvents: Number(row.open_high_risk_alert_events || 0),
+    criticalHighRiskEvents: Number(row.critical_high_risk_events || 0),
     bulkApprovalQueue: Number(row.bulk_approval_queue || 0),
     autoApprovedChanges: Number(row.auto_approved_changes || 0),
     manualApprovalRequired: Number(row.manual_approval_required || 0)
@@ -344,6 +361,11 @@ async function listAuditEvents(filters = {}, extraConditionSql = '') {
         a.compliance_status,
         a.audit_batch_id,
         ${RISK_LEVEL_SQL} AS risk_level,
+        a.high_risk_alert_status,
+        a.high_risk_alert_count,
+        a.highest_risk_level,
+        a.highest_risk_score,
+        a.latest_high_risk_alert_at,
         a.source_view_name,
         a.created_at
       FROM blockchain.data_change_audit a
@@ -419,6 +441,7 @@ async function getDashboard(filters = {}) {
     failedBlockchainSubmissions,
     invalidOrMismatchedRecords,
     complianceReviewQueue,
+    highRiskAlertQueue,
     bulkApprovalQueue,
     autoApprovedChanges,
     manualApprovalRequired,
@@ -436,6 +459,11 @@ async function getDashboard(filters = {}) {
     listAuditEvents(
       { ...filters, limit: tableLimit, offset: 0 },
       `a.compliance_status IN ('REVIEW', 'UNDER_REVIEW', 'PENDING_REVIEW')`
+    ),
+    listAuditEvents(
+      { ...filters, limit: tableLimit, offset: 0 },
+      `COALESCE(a.high_risk_alert_count, 0) > 0
+       AND a.high_risk_alert_status IN ('OPEN', 'PENDING_REVIEW', 'UNDER_REVIEW', 'ESCALATED')`
     ),
     listAuditEvents(
       { ...filters, limit: tableLimit, offset: 0 },
@@ -463,6 +491,7 @@ async function getDashboard(filters = {}) {
       userIpActivity,
       invalidOrMismatchedRecords: invalidOrMismatchedRecords.rows,
       complianceReviewQueue: complianceReviewQueue.rows,
+      highRiskAlertQueue: highRiskAlertQueue.rows,
       bulkApprovalQueue: bulkApprovalQueue.rows,
       autoApprovedChanges: autoApprovedChanges.rows,
       manualApprovalRequired: manualApprovalRequired.rows
@@ -599,6 +628,11 @@ function getExportHeaders() {
     { key: 'complianceStatus', label: 'Compliance Status' },
     { key: 'auditBatchId', label: 'Batch ID' },
     { key: 'riskLevel', label: 'Risk Level' },
+    { key: 'highRiskAlertStatus', label: 'High-Risk Alert Status' },
+    { key: 'highRiskAlertCount', label: 'High-Risk Alert Count' },
+    { key: 'highestRiskLevel', label: 'Highest Risk Level' },
+    { key: 'highestRiskScore', label: 'Highest Risk Score' },
+    { key: 'latestHighRiskAlertAt', label: 'Latest High-Risk Alert At' },
     { key: 'changedByUser', label: 'Changed By User' },
     { key: 'changedByRole', label: 'Changed By Role' },
     { key: 'clientIp', label: 'Client IP' },
@@ -634,6 +668,11 @@ function mapExportRow(row, options = {}) {
     complianceStatus: mapped.complianceStatus,
     auditBatchId: mapped.auditBatchId,
     riskLevel: mapped.riskLevel,
+    highRiskAlertStatus: mapped.highRiskAlertStatus,
+    highRiskAlertCount: mapped.highRiskAlertCount,
+    highestRiskLevel: mapped.highestRiskLevel,
+    highestRiskScore: mapped.highestRiskScore,
+    latestHighRiskAlertAt: mapped.latestHighRiskAlertAt,
     changedByUser: mapped.changedByUser,
     changedByRole: mapped.changedByRole,
     clientIp: mapped.clientIp,
@@ -702,6 +741,11 @@ async function getAuditExportReport(options = {}) {
         a.compliance_status,
         a.audit_batch_id,
         ${RISK_LEVEL_SQL} AS risk_level,
+        a.high_risk_alert_status,
+        a.high_risk_alert_count,
+        a.highest_risk_level,
+        a.highest_risk_score,
+        a.latest_high_risk_alert_at,
         a.source_view_name,
         a.created_at
       FROM blockchain.data_change_audit a
