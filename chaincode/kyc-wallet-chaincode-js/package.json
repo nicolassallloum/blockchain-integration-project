@@ -6,7 +6,7 @@
   "scripts": {
     "start": "fabric-chaincode-node start",
     "test": "node tests/phase10-proof.test.js",
-    "check:syntax": "node --check index.js && node --check lib/kycWalletContract.js && node --check tests/phase10-proof.test.js"
+    "check:syntax": "node --check index.js && node --check lib/kycWalletContract.js && node --check tests/phase10-proof.test.js && node --check tests/phase28-audit-proof.test.js"
   },
   "dependencies": {
     "fabric-contract-api": "^2.5.0",

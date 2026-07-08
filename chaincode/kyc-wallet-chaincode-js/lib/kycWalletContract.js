@@ -2439,6 +2439,464 @@ class KycWalletContract extends Contract {
         return JSON.stringify(results);
     }
 
+
+    /**
+     * SaveAuditEventProof
+     *
+     * Stores only audit event proof metadata and hashes on-chain.
+     * Raw old/new rows, PII, changed field values, and business payloads
+     * are intentionally rejected.
+     */
+    async SaveAuditEventProof(ctx, auditEventProofJson) {
+        const payload = this._parseAuditProofJsonObject(
+            auditEventProofJson,
+            'auditEventProofJson'
+        );
+
+        this._assertAllowedAuditEventProofFields(payload);
+
+        const auditId = this._normalizeAuditProofString(
+            payload.auditId || payload.audit_id || payload.auditEventId || payload.audit_event_id,
+            'auditId'
+        );
+
+        const auditEventHash = this._normalizeAuditProofString(
+            payload.auditEventHash || payload.audit_event_hash,
+            'auditEventHash'
+        );
+
+        const blockchainKey = this._normalizeOptionalAuditProofString(
+            payload.blockchainKey || payload.blockchain_key,
+            'blockchainKey',
+            this._auditEventProofKey(auditId)
+        );
+
+        const existingProofBytes = await ctx.stub.getState(blockchainKey);
+
+        if (existingProofBytes && existingProofBytes.length > 0) {
+            throw new Error(`Audit event proof already exists for key: ${blockchainKey}`);
+        }
+
+        const proof = this._compactAuditProofObject({
+            docType: 'AUDIT_EVENT_PROOF',
+            blockchainKey,
+            auditId,
+            auditEventHash,
+            oldRowHash: this._normalizeOptionalAuditProofString(payload.oldRowHash || payload.old_row_hash, 'oldRowHash'),
+            newRowHash: this._normalizeOptionalAuditProofString(payload.newRowHash || payload.new_row_hash, 'newRowHash'),
+            schemaHash: this._normalizeOptionalAuditProofString(payload.schemaHash || payload.schema_hash, 'schemaHash'),
+            tableHash: this._normalizeOptionalAuditProofString(payload.tableHash || payload.table_hash, 'tableHash'),
+            primaryKeyHash: this._normalizeOptionalAuditProofString(payload.primaryKeyHash || payload.primary_key_hash, 'primaryKeyHash'),
+            changedFieldsHash: this._normalizeOptionalAuditProofString(payload.changedFieldsHash || payload.changed_fields_hash, 'changedFieldsHash'),
+            actorHash: this._normalizeOptionalAuditProofString(payload.actorHash || payload.actor_hash, 'actorHash'),
+            clientIpHash: this._normalizeOptionalAuditProofString(payload.clientIpHash || payload.client_ip_hash, 'clientIpHash'),
+            clientHostnameHash: this._normalizeOptionalAuditProofString(payload.clientHostnameHash || payload.client_hostname_hash, 'clientHostnameHash'),
+            requestIdHash: this._normalizeOptionalAuditProofString(payload.requestIdHash || payload.request_id_hash, 'requestIdHash'),
+            operationType: this._normalizeOptionalAuditProofString(payload.operationType || payload.operation_type, 'operationType'),
+            hashAlgorithm: this._normalizeOptionalAuditProofString(payload.hashAlgorithm || payload.hash_algorithm, 'hashAlgorithm', 'SHA-256'),
+            hashVersion: this._normalizeOptionalAuditProofString(payload.hashVersion || payload.hash_version, 'hashVersion', 'v1'),
+            proofVersion: this._normalizeOptionalAuditProofString(payload.proofVersion || payload.proof_version, 'proofVersion', 'phase-28-audit-event-proof-v1'),
+            sourceSystem: this._normalizeOptionalAuditProofString(payload.sourceSystem || payload.source_system, 'sourceSystem', 'postgresql-data-change-audit'),
+            generatedAt: this._normalizeOptionalAuditProofString(payload.generatedAt || payload.generated_at, 'generatedAt'),
+            submittedBy: this._normalizeOptionalAuditProofString(payload.submittedBy || payload.submitted_by, 'submittedBy', 'audit-blockchain-outbox-worker'),
+            txId: ctx.stub.getTxID(),
+            createdAt: this._getAuditProofTimestamp(ctx)
+        });
+
+        await ctx.stub.putState(blockchainKey, Buffer.from(JSON.stringify(proof)));
+
+        await ctx.stub.putState(
+            ctx.stub.createCompositeKey('auditEventProof~auditId', [auditId]),
+            Buffer.from('\u0000')
+        );
+
+        await ctx.stub.putState(
+            ctx.stub.createCompositeKey('auditEventProof~auditEventHash~auditId', [auditEventHash, auditId]),
+            Buffer.from('\u0000')
+        );
+
+        return JSON.stringify(proof);
+    }
+
+    async GetAuditEventProof(ctx, auditIdOrBlockchainKey) {
+        const key = this._auditEventProofKey(auditIdOrBlockchainKey);
+        const proofBytes = await ctx.stub.getState(key);
+
+        if (!proofBytes || proofBytes.length === 0) {
+            throw new Error(`Audit event proof not found for key: ${key}`);
+        }
+
+        return proofBytes.toString();
+    }
+
+    async VerifyAuditEventProof(ctx, auditIdOrBlockchainKey, auditEventHash) {
+        const key = this._auditEventProofKey(auditIdOrBlockchainKey);
+        const expectedHash = this._normalizeAuditProofString(auditEventHash, 'auditEventHash');
+        const proofBytes = await ctx.stub.getState(key);
+
+        if (!proofBytes || proofBytes.length === 0) {
+            return JSON.stringify({
+                status: 'NOT_FOUND',
+                verified: false,
+                blockchainKey: key,
+                message: 'Audit event proof not found'
+            });
+        }
+
+        const proof = JSON.parse(proofBytes.toString());
+        const verified = proof.auditEventHash === expectedHash;
+
+        return JSON.stringify({
+            status: verified ? 'VERIFIED' : 'MISMATCH',
+            verified,
+            blockchainKey: key,
+            auditId: proof.auditId,
+            storedHash: proof.auditEventHash,
+            suppliedHash: expectedHash,
+            txId: proof.txId,
+            createdAt: proof.createdAt
+        });
+    }
+
+    async QueryAuditEventProofs(ctx, filterJson = '{}') {
+        const filters = filterJson && String(filterJson).trim() !== ''
+            ? this._parseAuditProofJsonObject(filterJson, 'filterJson')
+            : {};
+
+        const auditIdFilter = filters.auditId || filters.audit_id
+            ? this._normalizeAuditProofString(filters.auditId || filters.audit_id, 'auditId')
+            : null;
+
+        const hashFilter = filters.auditEventHash || filters.audit_event_hash
+            ? this._normalizeAuditProofString(filters.auditEventHash || filters.audit_event_hash, 'auditEventHash')
+            : null;
+
+        const limit = this._normalizeAuditProofLimit(filters.limit, 100);
+        const results = [];
+
+        const iterator = await ctx.stub.getStateByPartialCompositeKey(
+            'auditEventProof~auditId',
+            auditIdFilter ? [auditIdFilter] : []
+        );
+
+        try {
+            while (true) {
+                const response = await iterator.next();
+
+                if (response.value && response.value.key) {
+                    const composite = ctx.stub.splitCompositeKey(response.value.key);
+                    const auditId = composite.attributes[0];
+                    const proofKey = this._auditEventProofKey(auditId);
+                    const proofBytes = await ctx.stub.getState(proofKey);
+
+                    if (proofBytes && proofBytes.length > 0) {
+                        const proof = JSON.parse(proofBytes.toString());
+
+                        if (!hashFilter || proof.auditEventHash === hashFilter) {
+                            results.push(proof);
+                        }
+                    }
+                }
+
+                if (response.done || results.length >= limit) {
+                    break;
+                }
+            }
+        } finally {
+            if (iterator && typeof iterator.close === 'function') {
+                await iterator.close();
+            }
+        }
+
+        return JSON.stringify(results);
+    }
+
+    async SaveAuditBatchProof(ctx, auditBatchProofJson) {
+        const payload = this._parseAuditProofJsonObject(
+            auditBatchProofJson,
+            'auditBatchProofJson'
+        );
+
+        this._assertAllowedAuditBatchProofFields(payload);
+
+        const batchId = this._normalizeAuditProofString(
+            payload.batchId || payload.batch_id,
+            'batchId'
+        );
+
+        const batchHash = this._normalizeAuditProofString(
+            payload.batchHash || payload.batch_hash,
+            'batchHash'
+        );
+
+        const blockchainKey = this._normalizeOptionalAuditProofString(
+            payload.blockchainKey || payload.blockchain_key,
+            'blockchainKey',
+            this._auditBatchProofKey(batchId)
+        );
+
+        const existingProofBytes = await ctx.stub.getState(blockchainKey);
+
+        if (existingProofBytes && existingProofBytes.length > 0) {
+            throw new Error(`Audit batch proof already exists for key: ${blockchainKey}`);
+        }
+
+        const proof = this._compactAuditProofObject({
+            docType: 'AUDIT_BATCH_PROOF',
+            blockchainKey,
+            batchId,
+            batchHash,
+            merkleRootHash: this._normalizeOptionalAuditProofString(payload.merkleRootHash || payload.merkle_root_hash, 'merkleRootHash'),
+            auditEventCount: this._normalizeOptionalAuditProofInteger(payload.auditEventCount || payload.audit_event_count, 'auditEventCount'),
+            firstAuditId: this._normalizeOptionalAuditProofString(payload.firstAuditId || payload.first_audit_id, 'firstAuditId'),
+            lastAuditId: this._normalizeOptionalAuditProofString(payload.lastAuditId || payload.last_audit_id, 'lastAuditId'),
+            hashAlgorithm: this._normalizeOptionalAuditProofString(payload.hashAlgorithm || payload.hash_algorithm, 'hashAlgorithm', 'SHA-256'),
+            hashVersion: this._normalizeOptionalAuditProofString(payload.hashVersion || payload.hash_version, 'hashVersion', 'v1'),
+            proofVersion: this._normalizeOptionalAuditProofString(payload.proofVersion || payload.proof_version, 'proofVersion', 'phase-28-audit-batch-proof-v1'),
+            sourceSystem: this._normalizeOptionalAuditProofString(payload.sourceSystem || payload.source_system, 'sourceSystem', 'postgresql-data-change-audit'),
+            generatedAt: this._normalizeOptionalAuditProofString(payload.generatedAt || payload.generated_at, 'generatedAt'),
+            submittedBy: this._normalizeOptionalAuditProofString(payload.submittedBy || payload.submitted_by, 'submittedBy', 'audit-blockchain-outbox-worker'),
+            txId: ctx.stub.getTxID(),
+            createdAt: this._getAuditProofTimestamp(ctx)
+        });
+
+        await ctx.stub.putState(blockchainKey, Buffer.from(JSON.stringify(proof)));
+
+        await ctx.stub.putState(
+            ctx.stub.createCompositeKey('auditBatchProof~batchId', [batchId]),
+            Buffer.from('\u0000')
+        );
+
+        return JSON.stringify(proof);
+    }
+
+    async GetAuditBatchProof(ctx, batchIdOrBlockchainKey) {
+        const key = this._auditBatchProofKey(batchIdOrBlockchainKey);
+        const proofBytes = await ctx.stub.getState(key);
+
+        if (!proofBytes || proofBytes.length === 0) {
+            throw new Error(`Audit batch proof not found for key: ${key}`);
+        }
+
+        return proofBytes.toString();
+    }
+
+    async VerifyAuditBatchProof(ctx, batchIdOrBlockchainKey, batchHash) {
+        const key = this._auditBatchProofKey(batchIdOrBlockchainKey);
+        const expectedHash = this._normalizeAuditProofString(batchHash, 'batchHash');
+        const proofBytes = await ctx.stub.getState(key);
+
+        if (!proofBytes || proofBytes.length === 0) {
+            return JSON.stringify({
+                status: 'NOT_FOUND',
+                verified: false,
+                blockchainKey: key,
+                message: 'Audit batch proof not found'
+            });
+        }
+
+        const proof = JSON.parse(proofBytes.toString());
+        const verified = proof.batchHash === expectedHash;
+
+        return JSON.stringify({
+            status: verified ? 'VERIFIED' : 'MISMATCH',
+            verified,
+            blockchainKey: key,
+            batchId: proof.batchId,
+            storedHash: proof.batchHash,
+            suppliedHash: expectedHash,
+            txId: proof.txId,
+            createdAt: proof.createdAt
+        });
+    }
+
+    _auditEventProofKey(auditIdOrBlockchainKey) {
+        const value = this._normalizeAuditProofString(auditIdOrBlockchainKey, 'auditIdOrBlockchainKey');
+
+        return value.startsWith('audit_event_proof:')
+            ? value
+            : `audit_event_proof:${value}`;
+    }
+
+    _auditBatchProofKey(batchIdOrBlockchainKey) {
+        const value = this._normalizeAuditProofString(batchIdOrBlockchainKey, 'batchIdOrBlockchainKey');
+
+        return value.startsWith('audit_batch_proof:')
+            ? value
+            : `audit_batch_proof:${value}`;
+    }
+
+    _parseAuditProofJsonObject(jsonText, fieldName) {
+        if (!jsonText || String(jsonText).trim() === '') {
+            throw new Error(`${fieldName} is required`);
+        }
+
+        let payload;
+
+        try {
+            payload = JSON.parse(jsonText);
+        } catch (error) {
+            throw new Error(`Invalid ${fieldName}: ${error.message}`);
+        }
+
+        if (!payload || Array.isArray(payload) || typeof payload !== 'object') {
+            throw new Error(`${fieldName} must be a JSON object`);
+        }
+
+        return payload;
+    }
+
+    _assertAllowedAuditEventProofFields(payload) {
+        const allowedFields = new Set([
+            'auditId', 'audit_id', 'auditEventId', 'audit_event_id',
+            'blockchainKey', 'blockchain_key',
+            'auditEventHash', 'audit_event_hash',
+            'oldRowHash', 'old_row_hash',
+            'newRowHash', 'new_row_hash',
+            'schemaHash', 'schema_hash',
+            'tableHash', 'table_hash',
+            'primaryKeyHash', 'primary_key_hash',
+            'changedFieldsHash', 'changed_fields_hash',
+            'actorHash', 'actor_hash',
+            'clientIpHash', 'client_ip_hash',
+            'clientHostnameHash', 'client_hostname_hash',
+            'requestIdHash', 'request_id_hash',
+            'operationType', 'operation_type',
+            'hashAlgorithm', 'hash_algorithm',
+            'hashVersion', 'hash_version',
+            'proofVersion', 'proof_version',
+            'sourceSystem', 'source_system',
+            'generatedAt', 'generated_at',
+            'submittedBy', 'submitted_by'
+        ]);
+
+        this._assertAuditProofAllowedFields(payload, allowedFields, 'auditEventProofJson');
+    }
+
+    _assertAllowedAuditBatchProofFields(payload) {
+        const allowedFields = new Set([
+            'batchId', 'batch_id',
+            'blockchainKey', 'blockchain_key',
+            'batchHash', 'batch_hash',
+            'merkleRootHash', 'merkle_root_hash',
+            'auditEventCount', 'audit_event_count',
+            'firstAuditId', 'first_audit_id',
+            'lastAuditId', 'last_audit_id',
+            'hashAlgorithm', 'hash_algorithm',
+            'hashVersion', 'hash_version',
+            'proofVersion', 'proof_version',
+            'sourceSystem', 'source_system',
+            'generatedAt', 'generated_at',
+            'submittedBy', 'submitted_by'
+        ]);
+
+        this._assertAuditProofAllowedFields(payload, allowedFields, 'auditBatchProofJson');
+    }
+
+    _assertAuditProofAllowedFields(payload, allowedFields, payloadName) {
+        for (const field of Object.keys(payload)) {
+            if (!allowedFields.has(field)) {
+                throw new Error(
+                    `Field not allowed in ${payloadName}: ${field}. ` +
+                    'Only hashes and non-sensitive proof metadata may be stored on-chain.'
+                );
+            }
+
+            const value = payload[field];
+
+            if (value && typeof value === 'object') {
+                throw new Error(
+                    `Nested object not allowed in ${payloadName}: ${field}. ` +
+                    'Raw row data, PII, and business payloads must stay off-chain.'
+                );
+            }
+        }
+    }
+
+    _normalizeAuditProofString(value, fieldName, maxLength = 512) {
+        if (value === undefined || value === null) {
+            throw new Error(`${fieldName} is required`);
+        }
+
+        const normalized = String(value)
+            .replace(/[\u0000-\u001F\u007F]/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+        if (!normalized) {
+            throw new Error(`${fieldName} is required`);
+        }
+
+        if (normalized.length > maxLength) {
+            throw new Error(`${fieldName} exceeds maximum length ${maxLength}`);
+        }
+
+        return normalized;
+    }
+
+    _normalizeOptionalAuditProofString(value, fieldName, fallback = undefined) {
+        if (value === undefined || value === null || String(value).trim() === '') {
+            return fallback;
+        }
+
+        return this._normalizeAuditProofString(value, fieldName);
+    }
+
+    _normalizeOptionalAuditProofInteger(value, fieldName) {
+        if (value === undefined || value === null || String(value).trim() === '') {
+            return undefined;
+        }
+
+        const numberValue = Number(value);
+
+        if (!Number.isInteger(numberValue) || numberValue < 0) {
+            throw new Error(`${fieldName} must be a non-negative integer`);
+        }
+
+        return numberValue;
+    }
+
+    _normalizeAuditProofLimit(value, fallback) {
+        if (value === undefined || value === null || String(value).trim() === '') {
+            return fallback;
+        }
+
+        const numberValue = Number(value);
+
+        if (!Number.isInteger(numberValue) || numberValue < 1 || numberValue > 1000) {
+            throw new Error('limit must be an integer between 1 and 1000');
+        }
+
+        return numberValue;
+    }
+
+    _compactAuditProofObject(value) {
+        return Object.fromEntries(
+            Object.entries(value).filter(([, entryValue]) => entryValue !== undefined)
+        );
+    }
+
+    _getAuditProofTimestamp(ctx) {
+        try {
+            const timestamp = ctx.stub.getTxTimestamp();
+
+            if (!timestamp) {
+                return new Date(0).toISOString();
+            }
+
+            const seconds = timestamp.seconds && typeof timestamp.seconds === 'object'
+                ? Number(timestamp.seconds.low || timestamp.seconds.toNumber?.() || 0)
+                : Number(timestamp.seconds || 0);
+
+            const nanos = Number(timestamp.nanos || 0);
+
+            return new Date(seconds * 1000 + Math.floor(nanos / 1000000)).toISOString();
+        } catch (error) {
+            return new Date(0).toISOString();
+        }
+    }
+
+
     _parsePhase10ProofPayload(proofPayloadJson) {
         if (!proofPayloadJson || String(proofPayloadJson).trim() === '') {
             throw new Error('proofPayloadJson is required');
