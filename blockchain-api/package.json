@@ -15,7 +15,10 @@
     "format": "prettier --write src",
     "test:hash": "node --test tests/stable-hash-generator.service.test.js",
     "validate:hash": "node scripts/phase8-validate-stable-hash.js",
-    "test:key": "node --test tests/blockchain-key-generator.service.test.js"
+    "test:key": "node --test tests/blockchain-key-generator.service.test.js",
+    "audit:outbox:dry-run": "node scripts/audit-outbox-worker.js --dry-run --limit=5",
+    "audit:outbox:batch": "node scripts/audit-outbox-worker.js --limit=10 --delay-ms=250",
+    "audit:outbox:worker": "node scripts/audit-outbox-worker.js --loop --limit=10 --delay-ms=250 --interval-ms=30000"
   },
   "keywords": [
     "blockchain",
