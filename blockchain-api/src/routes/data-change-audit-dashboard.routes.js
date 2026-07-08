@@ -16,5 +16,7 @@ router.get('/metrics', controller.metrics);
 router.get('/events', controller.list);
 router.get('/events/:auditId', controller.detail);
 router.get('/dashboard', controller.dashboard);
+router.get('/export', controller.exportReport);
+router.get('/reports/export', controller.exportReport);
 
 module.exports = router;

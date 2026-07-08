@@ -144,6 +144,29 @@ export class DataChangeAuditDashboard implements OnInit {
     this.loadDashboard();
   }
 
+
+  private getFileNameFromContentDisposition(contentDisposition: string | null, fallbackFileName: string): string {
+    if (!contentDisposition) {
+      return fallbackFileName;
+    }
+
+    const match = contentDisposition.match(/filename="?([^";]+)"?/i);
+    return match?.[1] || fallbackFileName;
+  }
+
+  private downloadBlob(blob: Blob, fileName: string): void {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    URL.revokeObjectURL(url);
+  }
+
   async loadDashboard(): Promise<void> {
     this.loading = true;
     this.error = '';
@@ -211,7 +234,40 @@ export class DataChangeAuditDashboard implements OnInit {
     this.selectedEvent = null;
   }
 
-  exportEvidence(format: ExportFormat): void {
-    this.error = `Export ${format} will be enabled in Phase 32.`;
+  async exportEvidence(format: ExportFormat): Promise<void> {
+    this.error = '';
+    this.successMessage = '';
+
+    try {
+      const params = new URLSearchParams(this.buildQueryString());
+      params.set('format', format);
+      params.set('limit', '1000');
+
+      const response = await fetch(`${this.apiBaseUrl}/export?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+          Accept: format === 'CSV' ? 'text/csv' : 'application/json',
+          'x-user-role': 'AUDITOR'
+        }
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || `Export failed with HTTP ${response.status}`);
+      }
+
+      const fallbackFileName = `data-change-audit-evidence.${format.toLowerCase()}`;
+      const fileName = this.getFileNameFromContentDisposition(
+        response.headers.get('Content-Disposition'),
+        fallbackFileName
+      );
+
+      const blob = await response.blob();
+      this.downloadBlob(blob, fileName);
+
+      this.successMessage = `Data change audit ${format} evidence report exported successfully.`;
+    } catch (error: any) {
+      this.error = error?.message || `Unable to export data change audit ${format} report.`;
+    }
   }
 }

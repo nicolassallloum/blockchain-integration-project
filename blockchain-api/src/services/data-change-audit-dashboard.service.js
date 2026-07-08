@@ -530,11 +530,238 @@ async function getAuditEventDetail(auditId, options = {}) {
   };
 }
 
+
+function normalizeExportFormat(value) {
+  const format = String(value || 'JSON').trim().toUpperCase();
+
+  if (['JSON', 'CSV'].includes(format)) {
+    return format;
+  }
+
+  return 'JSON';
+}
+
+function escapeCsvValue(value) {
+  if (value === null || value === undefined) {
+    return '';
+  }
+
+  const text = typeof value === 'object'
+    ? JSON.stringify(value)
+    : String(value);
+
+  if (/[",\n\r]/.test(text)) {
+    return `"${text.replace(/"/g, '""')}"`;
+  }
+
+  return text;
+}
+
+function buildCsvContent(headers, rows) {
+  return [
+    headers.map((header) => escapeCsvValue(header.label)).join(','),
+    ...rows.map((row) =>
+      headers
+        .map((header) => escapeCsvValue(row[header.key]))
+        .join(',')
+    )
+  ].join('\n');
+}
+
+function getExportTimestamp() {
+  return new Date().toISOString().replace(/[:.]/g, '-');
+}
+
+function buildExportFileName(format) {
+  return `data-change-audit-evidence-${getExportTimestamp()}.${format.toLowerCase()}`;
+}
+
+function getExportHeaders() {
+  return [
+    { key: 'auditId', label: 'Audit ID' },
+    { key: 'changedAt', label: 'Changed At' },
+    { key: 'schemaName', label: 'Schema Name' },
+    { key: 'tableName', label: 'Table Name' },
+    { key: 'moduleName', label: 'Module Name' },
+    { key: 'operationType', label: 'Operation Type' },
+    { key: 'primaryKeyColumn', label: 'Primary Key Column' },
+    { key: 'primaryKeyValue', label: 'Primary Key Value' },
+    { key: 'changedFields', label: 'Changed Fields' },
+    { key: 'oldRowHash', label: 'Old Row Hash' },
+    { key: 'newRowHash', label: 'New Row Hash' },
+    { key: 'auditEventHash', label: 'Audit Event Hash' },
+    { key: 'blockchainKey', label: 'Blockchain Key' },
+    { key: 'blockchainTransactionId', label: 'Blockchain Transaction ID' },
+    { key: 'blockchainStatus', label: 'Blockchain Status' },
+    { key: 'verificationStatus', label: 'Verification Status' },
+    { key: 'validationStatus', label: 'Validation Status' },
+    { key: 'approvalStatus', label: 'Approval Status' },
+    { key: 'complianceStatus', label: 'Compliance Status' },
+    { key: 'auditBatchId', label: 'Batch ID' },
+    { key: 'riskLevel', label: 'Risk Level' },
+    { key: 'changedByUser', label: 'Changed By User' },
+    { key: 'changedByRole', label: 'Changed By Role' },
+    { key: 'clientIp', label: 'Client IP' },
+    { key: 'clientHostname', label: 'Client Hostname' },
+    { key: 'sourceViewName', label: 'Source View Name' },
+    { key: 'exportRedactionNote', label: 'Export Redaction Note' }
+  ];
+}
+
+function mapExportRow(row, options = {}) {
+  const mapped = mapAuditEventRow(row);
+  const includeSensitiveRows = options.includeSensitiveRows === true;
+
+  return {
+    auditId: mapped.auditId,
+    changedAt: mapped.changedAt,
+    schemaName: mapped.schemaName,
+    tableName: mapped.tableName,
+    moduleName: mapped.moduleName,
+    operationType: mapped.operationType,
+    primaryKeyColumn: mapped.primaryKeyColumn,
+    primaryKeyValue: mapped.primaryKeyValue,
+    changedFields: mapped.changedFields,
+    oldRowHash: mapped.oldRowHash,
+    newRowHash: mapped.newRowHash,
+    auditEventHash: mapped.auditEventHash,
+    blockchainKey: mapped.blockchainKey,
+    blockchainTransactionId: mapped.blockchainTransactionId,
+    blockchainStatus: mapped.blockchainStatus,
+    verificationStatus: mapped.verificationStatus,
+    validationStatus: mapped.validationStatus,
+    approvalStatus: mapped.approvalStatus,
+    complianceStatus: mapped.complianceStatus,
+    auditBatchId: mapped.auditBatchId,
+    riskLevel: mapped.riskLevel,
+    changedByUser: mapped.changedByUser,
+    changedByRole: mapped.changedByRole,
+    clientIp: mapped.clientIp,
+    clientHostname: mapped.clientHostname,
+    sourceViewName: mapped.sourceViewName,
+    exportRedactionNote: includeSensitiveRows
+      ? 'Privileged export. Raw old/new rows are still excluded from CSV evidence report.'
+      : 'Raw old/new row values excluded. Hashes and metadata exported only.'
+  };
+}
+
+async function getAuditExportReport(options = {}) {
+  const filters = {
+    tableName: options.tableName,
+    moduleName: options.moduleName,
+    operationType: options.operationType,
+    user: options.user || options.changedByUser,
+    clientIp: options.clientIp,
+    dateFrom: options.dateFrom,
+    dateTo: options.dateTo,
+    blockchainStatus: options.blockchainStatus,
+    verificationStatus: options.verificationStatus,
+    approvalStatus: options.approvalStatus,
+    batchId: options.batchId,
+    role: options.role,
+    clientHostname: options.clientHostname,
+    riskLevel: options.riskLevel
+  };
+
+  const format = normalizeExportFormat(options.format);
+  const limit = normalizeInteger(options.limit, 500, 1, 1000);
+  const filter = buildFilterWhere(filters);
+  const values = [...filter.values];
+  const limitParam = values.push(limit);
+
+  const result = await db.query(
+    `
+      SELECT
+        a.audit_id,
+        a.schema_name,
+        a.table_name,
+        a.module_name,
+        a.primary_key_column,
+        a.primary_key_value,
+        a.operation_type,
+        a.changed_fields,
+        a.old_row_hash,
+        a.new_row_hash,
+        a.audit_event_hash,
+        a.changed_by_app_user,
+        a.changed_by_db_user,
+        a.changed_by_role,
+        a.client_ip,
+        a.client_hostname,
+        a.application_name,
+        a.postgres_transaction_id,
+        a.changed_at,
+        a.blockchain_key,
+        a.blockchain_transaction_id,
+        a.blockchain_status,
+        a.blockchain_submitted_at,
+        a.blockchain_error,
+        a.validation_status,
+        ${VERIFICATION_STATUS_SQL} AS verification_status,
+        a.approval_status,
+        a.compliance_status,
+        a.audit_batch_id,
+        ${RISK_LEVEL_SQL} AS risk_level,
+        a.source_view_name,
+        a.created_at
+      FROM blockchain.data_change_audit a
+      ${filter.whereSql}
+      ORDER BY a.changed_at DESC, a.audit_id DESC
+      LIMIT $${limitParam}
+    `,
+    values
+  );
+
+  const headers = getExportHeaders();
+  const rows = result.rows.map((row) => mapExportRow(row, {
+    includeSensitiveRows: options.includeSensitiveRows === true
+  }));
+
+  const metadata = {
+    reportName: 'Data Change Audit Evidence Report',
+    generatedAt: new Date().toISOString(),
+    sourceOfTruth: 'PostgreSQL',
+    blockchainStorage: 'proof-only',
+    piiPolicy: 'No sensitive values are stored on-chain. Export excludes raw old/new row payloads by default.',
+    filters,
+    rowCount: rows.length,
+    limit
+  };
+
+  if (format === 'CSV') {
+    return {
+      format,
+      fileName: buildExportFileName(format),
+      contentType: 'text/csv; charset=utf-8',
+      content: buildCsvContent(headers, rows),
+      metadata
+    };
+  }
+
+  return {
+    format,
+    fileName: buildExportFileName(format),
+    contentType: 'application/json; charset=utf-8',
+    content: JSON.stringify(
+      {
+        metadata,
+        rows
+      },
+      null,
+      2
+    ),
+    metadata
+  };
+}
+
+
 module.exports = {
   DataChangeAuditDashboardError,
   roleAllowsSensitiveRows,
   getMetrics,
   listAuditEvents,
   getDashboard,
-  getAuditEventDetail
+  getAuditEventDetail,
+  getAuditExportReport,
+  normalizeExportFormat
 };

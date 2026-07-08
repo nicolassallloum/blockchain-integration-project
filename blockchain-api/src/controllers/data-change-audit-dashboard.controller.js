@@ -91,10 +91,31 @@ async function dashboard(req, res) {
   }
 }
 
+
+async function exportReport(req, res) {
+  try {
+    const data = await service.getAuditExportReport({
+      ...req.query,
+      includeSensitiveRows: shouldAllowSensitiveRows(req)
+    });
+
+    res.setHeader('Content-Type', data.contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${data.fileName}"`);
+    res.setHeader('X-Data-Change-Audit-Export-Format', data.format);
+    res.setHeader('X-Data-Change-Audit-Row-Count', String(data.metadata?.rowCount || 0));
+
+    return res.status(200).send(data.content);
+  } catch (error) {
+    return failure(res, error, 'Failed to export data change audit evidence report.');
+  }
+}
+
+
 module.exports = {
   health,
   metrics,
   list,
   detail,
-  dashboard
+  dashboard,
+  exportReport
 };

@@ -14,12 +14,12 @@
         {{ loading ? 'Loading...' : 'Refresh' }}
       </button>
 
-      <button type="button" class="secondary-button export-button" (click)="exportEvidence('JSON')" disabled>
-        Export JSON - Phase 32
+      <button type="button" class="secondary-button export-button" (click)="exportEvidence('JSON')" [disabled]="loading">
+        Export JSON
       </button>
 
-      <button type="button" class="secondary-button export-button" (click)="exportEvidence('CSV')" disabled>
-        Export CSV - Phase 32
+      <button type="button" class="secondary-button export-button" (click)="exportEvidence('CSV')" [disabled]="loading">
+        Export CSV
       </button>
     </div>
   </header>
@@ -257,7 +257,7 @@
             <button type="button" disabled>Approve Corrected Version</button>
             <button type="button" disabled>Reject Change</button>
             <button type="button" disabled>Generate New Proof</button>
-            <button type="button" disabled>Export Evidence</button>
+            <button type="button" (click)="exportEvidence('JSON')">Export Evidence</button>
           </td>
         </tr>
       </tbody>
