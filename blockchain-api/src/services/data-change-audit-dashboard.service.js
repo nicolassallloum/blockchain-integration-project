@@ -208,6 +208,16 @@ function mapAuditEventRow(row) {
     highestRiskLevel: row.highest_risk_level,
     highestRiskScore: row.highest_risk_score === null || row.highest_risk_score === undefined ? null : Number(row.highest_risk_score),
     latestHighRiskAlertAt: row.latest_high_risk_alert_at,
+    invalidReviewId: row.invalid_review_id === null || row.invalid_review_id === undefined ? null : Number(row.invalid_review_id),
+    invalidStatus: row.invalid_status,
+    invalidReason: row.invalid_reason,
+    invalidReviewStatus: row.invalid_review_status,
+    reactivationStatus: row.reactivation_status,
+    correctedAuditEventHash: row.corrected_audit_event_hash,
+    correctedBlockchainKey: row.corrected_blockchain_key,
+    correctedBlockchainTransactionId: row.corrected_blockchain_transaction_id,
+    invalidDetectedAt: row.invalid_detected_at,
+    invalidResolvedAt: row.invalid_resolved_at,
     sourceViewName: row.source_view_name,
     createdAt: row.created_at
   };
@@ -282,6 +292,15 @@ async function getMetrics(filters = {}) {
         COUNT(*) FILTER (
           WHERE highest_risk_level = 'CRITICAL'
         )::int AS critical_high_risk_events,
+        COUNT(*) FILTER (
+          WHERE COALESCE(invalid_review_status, 'NO_REVIEW') <> 'NO_REVIEW'
+        )::int AS invalid_review_events,
+        COUNT(*) FILTER (
+          WHERE invalid_review_status = 'UNDER_COMPLIANCE_REVIEW'
+        )::int AS invalid_records_under_review,
+        COUNT(*) FILTER (
+          WHERE reactivation_status = 'REACTIVATED'
+        )::int AS reactivated_records,
         COUNT(*) FILTER (WHERE approval_status IN ('PENDING', 'BULK_PENDING'))::int AS bulk_approval_queue,
         COUNT(*) FILTER (WHERE approval_status = 'AUTO_APPROVED')::int AS auto_approved_changes,
         COUNT(*) FILTER (
@@ -309,6 +328,9 @@ async function getMetrics(filters = {}) {
     highRiskAlertedEvents: Number(row.high_risk_alerted_events || 0),
     openHighRiskAlertEvents: Number(row.open_high_risk_alert_events || 0),
     criticalHighRiskEvents: Number(row.critical_high_risk_events || 0),
+    invalidReviewEvents: Number(row.invalid_review_events || 0),
+    invalidRecordsUnderReview: Number(row.invalid_records_under_review || 0),
+    reactivatedRecords: Number(row.reactivated_records || 0),
     bulkApprovalQueue: Number(row.bulk_approval_queue || 0),
     autoApprovedChanges: Number(row.auto_approved_changes || 0),
     manualApprovalRequired: Number(row.manual_approval_required || 0)
@@ -366,6 +388,16 @@ async function listAuditEvents(filters = {}, extraConditionSql = '') {
         a.highest_risk_level,
         a.highest_risk_score,
         a.latest_high_risk_alert_at,
+        a.invalid_review_id,
+        a.invalid_status,
+        a.invalid_reason,
+        a.invalid_review_status,
+        a.reactivation_status,
+        a.corrected_audit_event_hash,
+        a.corrected_blockchain_key,
+        a.corrected_blockchain_transaction_id,
+        a.invalid_detected_at,
+        a.invalid_resolved_at,
         a.source_view_name,
         a.created_at
       FROM blockchain.data_change_audit a
@@ -440,6 +472,7 @@ async function getDashboard(filters = {}) {
     deletedRecordsEvidence,
     failedBlockchainSubmissions,
     invalidOrMismatchedRecords,
+    invalidRecordReviewQueue,
     complianceReviewQueue,
     highRiskAlertQueue,
     bulkApprovalQueue,
@@ -455,6 +488,10 @@ async function getDashboard(filters = {}) {
     listAuditEvents(
       { ...filters, limit: tableLimit, offset: 0 },
       `(${VERIFICATION_STATUS_SQL} IN ('INVALID', 'MISMATCHED'))`
+    ),
+    listAuditEvents(
+      { ...filters, limit: tableLimit, offset: 0 },
+      `COALESCE(a.invalid_review_status, 'NO_REVIEW') <> 'NO_REVIEW'`
     ),
     listAuditEvents(
       { ...filters, limit: tableLimit, offset: 0 },
@@ -490,6 +527,7 @@ async function getDashboard(filters = {}) {
       failedBlockchainSubmissions: failedBlockchainSubmissions.rows,
       userIpActivity,
       invalidOrMismatchedRecords: invalidOrMismatchedRecords.rows,
+      invalidRecordReviewQueue: invalidRecordReviewQueue.rows,
       complianceReviewQueue: complianceReviewQueue.rows,
       highRiskAlertQueue: highRiskAlertQueue.rows,
       bulkApprovalQueue: bulkApprovalQueue.rows,
@@ -633,6 +671,14 @@ function getExportHeaders() {
     { key: 'highestRiskLevel', label: 'Highest Risk Level' },
     { key: 'highestRiskScore', label: 'Highest Risk Score' },
     { key: 'latestHighRiskAlertAt', label: 'Latest High-Risk Alert At' },
+    { key: 'invalidReviewId', label: 'Invalid Review ID' },
+    { key: 'invalidStatus', label: 'Invalid Status' },
+    { key: 'invalidReviewStatus', label: 'Invalid Review Status' },
+    { key: 'reactivationStatus', label: 'Reactivation Status' },
+    { key: 'correctedAuditEventHash', label: 'Corrected Audit Event Hash' },
+    { key: 'correctedBlockchainTransactionId', label: 'Corrected Blockchain Transaction ID' },
+    { key: 'invalidDetectedAt', label: 'Invalid Detected At' },
+    { key: 'invalidResolvedAt', label: 'Invalid Resolved At' },
     { key: 'changedByUser', label: 'Changed By User' },
     { key: 'changedByRole', label: 'Changed By Role' },
     { key: 'clientIp', label: 'Client IP' },
@@ -673,6 +719,14 @@ function mapExportRow(row, options = {}) {
     highestRiskLevel: mapped.highestRiskLevel,
     highestRiskScore: mapped.highestRiskScore,
     latestHighRiskAlertAt: mapped.latestHighRiskAlertAt,
+    invalidReviewId: mapped.invalidReviewId,
+    invalidStatus: mapped.invalidStatus,
+    invalidReviewStatus: mapped.invalidReviewStatus,
+    reactivationStatus: mapped.reactivationStatus,
+    correctedAuditEventHash: mapped.correctedAuditEventHash,
+    correctedBlockchainTransactionId: mapped.correctedBlockchainTransactionId,
+    invalidDetectedAt: mapped.invalidDetectedAt,
+    invalidResolvedAt: mapped.invalidResolvedAt,
     changedByUser: mapped.changedByUser,
     changedByRole: mapped.changedByRole,
     clientIp: mapped.clientIp,
@@ -746,6 +800,16 @@ async function getAuditExportReport(options = {}) {
         a.highest_risk_level,
         a.highest_risk_score,
         a.latest_high_risk_alert_at,
+        a.invalid_review_id,
+        a.invalid_status,
+        a.invalid_reason,
+        a.invalid_review_status,
+        a.reactivation_status,
+        a.corrected_audit_event_hash,
+        a.corrected_blockchain_key,
+        a.corrected_blockchain_transaction_id,
+        a.invalid_detected_at,
+        a.invalid_resolved_at,
         a.source_view_name,
         a.created_at
       FROM blockchain.data_change_audit a
