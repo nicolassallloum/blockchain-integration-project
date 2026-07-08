@@ -2160,13 +2160,7 @@ class KycWalletContract extends Contract {
             createdAt: txDate.toISOString()
         };
 
-        const proofBuffer = Buffer.from(JSON.stringify(proof));
-
-        await ctx.stub.putState(primaryStateKey, proofBuffer);
-
-        if (auditIdStateKey !== primaryStateKey) {
-            await ctx.stub.putState(auditIdStateKey, proofBuffer);
-        }
+        await ctx.stub.putState(blockchainKey, Buffer.from(JSON.stringify(proof)));
 
         const recordTypeIndexKey = ctx.stub.createCompositeKey(
             'proof~recordType~sourceRecordId',
@@ -2520,7 +2514,13 @@ class KycWalletContract extends Contract {
             createdAt: this._getAuditProofTimestamp(ctx)
         });
 
-        await ctx.stub.putState(blockchainKey, Buffer.from(JSON.stringify(proof)));
+        const proofBuffer = Buffer.from(JSON.stringify(proof));
+
+        await ctx.stub.putState(primaryStateKey, proofBuffer);
+
+        if (auditIdStateKey !== primaryStateKey) {
+            await ctx.stub.putState(auditIdStateKey, proofBuffer);
+        }
 
         await ctx.stub.putState(
             ctx.stub.createCompositeKey('auditEventProof~auditId', [auditId]),
