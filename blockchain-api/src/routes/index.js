@@ -37,6 +37,7 @@ const blockchainProofOwnershipRoutes = require('./blockchain-proof-ownership.rou
 const blockchainProofSourceViewsRoutes = require('./blockchain-proof-source-views.routes');
 const blockchainProofHistorySyncRoutes = require('./blockchain-proof-history-sync.routes');
 const blockchainProofApiRoutes = require('./blockchain-proof-api.routes');
+const dataChangeAuditDashboardRoutes = require('./data-change-audit-dashboard.routes');
 // const referenceRoutes = require('./reference.routes');
 // const residentRoutes = require('./resident.routes');
 
@@ -246,5 +247,8 @@ router.use('/blockchain-proof/source-views', blockchainProofSourceViewsRoutes);
 
 router.use('/blockchain-proof/history-sync', blockchainProofHistorySyncRoutes);
 router.use('/blockchain-proof/api', blockchainProofApiRoutes);
+
+router.use('/government-blockchain/data-change-audit-dashboard', dataChangeAuditDashboardRoutes);
+router.use('/data-change-audit-dashboard', dataChangeAuditDashboardRoutes);
 
 module.exports = router;

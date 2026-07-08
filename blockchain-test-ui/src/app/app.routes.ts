@@ -416,6 +416,14 @@ export const routes: Routes = [
   },
 
   {
+    path: 'government-blockchain/data-change-audit-dashboard',
+    loadComponent: () =>
+      import('./government-blockchain/data-change-audit-dashboard/data-change-audit-dashboard').then(
+        (m) => m.DataChangeAuditDashboard
+      )
+  },
+
+  {
     path: 'government-blockchain/blockchain-proof-monitoring-dashboard',
     loadComponent: () =>
       import('./government-blockchain/blockchain-proof-monitoring-dashboard/blockchain-proof-monitoring-dashboard').then(

@@ -1,0 +1,322 @@
+<section class="audit-dashboard-page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Compliance / Auditor Control</p>
+      <h1>Data Change Audit Dashboard</h1>
+      <p>
+        PostgreSQL data-change evidence dashboard with proof-only blockchain status,
+        compliance queues, verification indicators, and redacted row details.
+      </p>
+    </div>
+
+    <div class="header-actions">
+      <button type="button" class="primary-button" (click)="loadDashboard()" [disabled]="loading">
+        {{ loading ? 'Loading...' : 'Refresh' }}
+      </button>
+
+      <button type="button" class="secondary-button export-button" (click)="exportEvidence('JSON')" disabled>
+        Export JSON - Phase 32
+      </button>
+
+      <button type="button" class="secondary-button export-button" (click)="exportEvidence('CSV')" disabled>
+        Export CSV - Phase 32
+      </button>
+    </div>
+  </header>
+
+  <div class="status-row">
+    <span class="status-pill">Source of Truth: PostgreSQL</span>
+    <span class="status-pill">Blockchain: Proof Only</span>
+    <span class="status-pill">No PII On-Chain</span>
+    <span class="status-pill">Last Loaded: {{ lastLoadedAt || 'Not loaded yet' }}</span>
+  </div>
+
+  <div *ngIf="error" class="message error-message">{{ error }}</div>
+  <div *ngIf="successMessage && !error" class="message success-message">{{ successMessage }}</div>
+
+  <section class="panel filter-panel">
+    <div class="panel-title-row">
+      <div>
+        <h2>Filters</h2>
+        <p>Filter by table, module, operation, user, role, IP, host, date, status, batch, and risk.</p>
+      </div>
+
+      <div class="filter-actions">
+        <button type="button" class="primary-button" (click)="loadDashboard()" [disabled]="loading">
+          Apply Filters
+        </button>
+        <button type="button" class="secondary-button" (click)="clearFilters()" [disabled]="loading">
+          Clear
+        </button>
+      </div>
+    </div>
+
+    <div class="filter-grid">
+      <label>
+        Table Name
+        <input [(ngModel)]="filters.tableName" placeholder="tableName" />
+      </label>
+
+      <label>
+        Module Name
+        <input [(ngModel)]="filters.moduleName" placeholder="moduleName" />
+      </label>
+
+      <label>
+        Operation Type
+        <select [(ngModel)]="filters.operationType">
+          <option value="ALL">All</option>
+          <option value="INSERT">INSERT</option>
+          <option value="UPDATE">UPDATE</option>
+          <option value="DELETE">DELETE</option>
+        </select>
+      </label>
+
+      <label>
+        User
+        <input [(ngModel)]="filters.user" placeholder="application/db user" />
+      </label>
+
+      <label>
+        Role
+        <input [(ngModel)]="filters.role" placeholder="role" />
+      </label>
+
+      <label>
+        Client IP
+        <input [(ngModel)]="filters.clientIp" placeholder="clientIp" />
+      </label>
+
+      <label>
+        Client Hostname
+        <input [(ngModel)]="filters.clientHostname" placeholder="clientHostname" />
+      </label>
+
+      <label>
+        Date From
+        <input type="date" [(ngModel)]="filters.dateFrom" />
+      </label>
+
+      <label>
+        Date To
+        <input type="date" [(ngModel)]="filters.dateTo" />
+      </label>
+
+      <label>
+        Blockchain Status
+        <select [(ngModel)]="filters.blockchainStatus">
+          <option value="ALL">All</option>
+          <option value="PENDING">PENDING</option>
+          <option value="SUBMITTED">SUBMITTED</option>
+          <option value="CONFIRMED">CONFIRMED</option>
+          <option value="FAILED">FAILED</option>
+          <option value="DISABLED">DISABLED</option>
+        </select>
+      </label>
+
+      <label>
+        Verification Status
+        <select [(ngModel)]="filters.verificationStatus">
+          <option value="ALL">All</option>
+          <option value="VERIFIED">VERIFIED</option>
+          <option value="NOT_VERIFIED">NOT_VERIFIED</option>
+          <option value="MISMATCHED">MISMATCHED</option>
+          <option value="INVALID">INVALID</option>
+        </select>
+      </label>
+
+      <label>
+        Approval Status
+        <select [(ngModel)]="filters.approvalStatus">
+          <option value="ALL">All</option>
+          <option value="PENDING">PENDING</option>
+          <option value="AUTO_APPROVED">AUTO_APPROVED</option>
+          <option value="MANUAL_REQUIRED">MANUAL_REQUIRED</option>
+          <option value="APPROVED">APPROVED</option>
+          <option value="REJECTED">REJECTED</option>
+        </select>
+      </label>
+
+      <label>
+        Batch ID
+        <input [(ngModel)]="filters.batchId" placeholder="batchId" />
+      </label>
+
+      <label>
+        Risk Level
+        <select [(ngModel)]="filters.riskLevel">
+          <option value="ALL">All</option>
+          <option value="LOW">LOW</option>
+          <option value="MEDIUM">MEDIUM</option>
+          <option value="HIGH">HIGH</option>
+          <option value="CRITICAL">CRITICAL</option>
+        </select>
+      </label>
+
+      <label>
+        Table Limit
+        <input type="number" min="1" max="50" [(ngModel)]="filters.limit" />
+      </label>
+    </div>
+  </section>
+
+  <section class="metrics-grid">
+    <article
+      *ngFor="let card of metricCards"
+      class="metric-card"
+      [class.success-card]="card.tone === 'success'"
+      [class.warning-card]="card.tone === 'warning'"
+      [class.danger-card]="card.tone === 'danger'"
+    >
+      <div class="metric-label">{{ card.label }}</div>
+      <div class="metric-value">{{ number(metrics[card.key]) }}</div>
+    </article>
+  </section>
+
+  <section class="panel">
+    <h2>User/IP Activity</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Actor</th>
+          <th>Role</th>
+          <th>Client IP</th>
+          <th>Hostname</th>
+          <th>Total</th>
+          <th>Deletes</th>
+          <th>Failed Blockchain</th>
+          <th>Latest Activity</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let row of tables.userIpActivity || []">
+          <td>{{ row.actor }}</td>
+          <td>{{ row.role }}</td>
+          <td class="mono">{{ row.client_ip }}</td>
+          <td>{{ row.client_hostname }}</td>
+          <td>{{ number(row.total_events) }}</td>
+          <td>{{ number(row.delete_events) }}</td>
+          <td>{{ number(row.failed_blockchain_events) }}</td>
+          <td>{{ row.latest_activity_at }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div *ngIf="!(tables.userIpActivity || []).length" class="empty-state">
+      No User/IP Activity rows found.
+    </div>
+  </section>
+
+  <section *ngFor="let section of tableSections" class="panel">
+    <h2>{{ section.title }}</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Audit ID</th>
+          <th>Changed At</th>
+          <th>Module</th>
+          <th>Table</th>
+          <th>Operation</th>
+          <th>Risk</th>
+          <th>Blockchain</th>
+          <th>Verification</th>
+          <th>Approval</th>
+          <th>User / IP</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let row of getTableRows(section.key)">
+          <td>{{ row.auditId }}</td>
+          <td>{{ row.changedAt }}</td>
+          <td>{{ row.moduleName }}</td>
+          <td class="mono">{{ row.schemaName }}.{{ row.tableName }}</td>
+          <td>
+            <span class="badge">{{ row.operationType }}</span>
+          </td>
+          <td>
+            <span class="badge" [class.high-risk]="row.riskLevel === 'HIGH' || row.riskLevel === 'CRITICAL'">
+              {{ row.riskLevel }}
+            </span>
+          </td>
+          <td>{{ row.blockchainStatus }}</td>
+          <td>{{ row.verificationStatus }}</td>
+          <td>{{ row.approvalStatus }}</td>
+          <td>
+            <div>{{ row.changedByUser || 'N/A' }}</div>
+            <div class="muted mono">{{ row.clientIp || 'N/A' }}</div>
+          </td>
+          <td class="action-cell">
+            <button type="button" (click)="viewAuditEvent(row, 'summary')">View Audit Event</button>
+            <button type="button" (click)="viewAuditEvent(row, 'oldNew')">Old vs New</button>
+            <button type="button" (click)="viewAuditEvent(row, 'fields')">Changed Fields</button>
+            <button type="button" disabled>Verify Against Blockchain</button>
+            <button type="button" disabled>Send to Compliance Review</button>
+            <button type="button" disabled>Approve Corrected Version</button>
+            <button type="button" disabled>Reject Change</button>
+            <button type="button" disabled>Generate New Proof</button>
+            <button type="button" disabled>Export Evidence</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div *ngIf="!getTableRows(section.key).length" class="empty-state">
+      No rows found for {{ section.title }}.
+    </div>
+  </section>
+
+  <div *ngIf="selectedEvent" class="modal-backdrop">
+    <section class="detail-modal">
+      <header>
+        <div>
+          <p class="eyebrow">Audit Event Detail</p>
+          <h2>Audit ID {{ selectedEvent.auditId }}</h2>
+          <p>{{ selectedEvent.schemaName }}.{{ selectedEvent.tableName }} — {{ selectedEvent.operationType }}</p>
+        </div>
+
+        <button type="button" class="secondary-button" (click)="closeDetail()">Close</button>
+      </header>
+
+      <div *ngIf="detailLoading" class="loading-state">Loading event detail...</div>
+
+      <div class="tab-row">
+        <button type="button" [class.active]="activeDetailTab === 'summary'" (click)="activeDetailTab = 'summary'">
+          Summary
+        </button>
+        <button type="button" [class.active]="activeDetailTab === 'oldNew'" (click)="activeDetailTab = 'oldNew'">
+          Old vs New
+        </button>
+        <button type="button" [class.active]="activeDetailTab === 'fields'" (click)="activeDetailTab = 'fields'">
+          Changed Fields
+        </button>
+      </div>
+
+      <div *ngIf="activeDetailTab === 'summary'" class="detail-grid">
+        <div><strong>Blockchain Key</strong><span class="mono">{{ selectedEvent.blockchainKey }}</span></div>
+        <div><strong>Audit Hash</strong><span class="mono">{{ selectedEvent.auditEventHash }}</span></div>
+        <div><strong>Old Row Hash</strong><span class="mono">{{ selectedEvent.oldRowHash || 'N/A' }}</span></div>
+        <div><strong>New Row Hash</strong><span class="mono">{{ selectedEvent.newRowHash || 'N/A' }}</span></div>
+        <div><strong>Access</strong><span>{{ selectedEvent.access?.message }}</span></div>
+      </div>
+
+      <div *ngIf="activeDetailTab === 'oldNew'" class="two-column-json">
+        <div>
+          <h3>Old Row</h3>
+          <pre>{{ json(selectedEvent.oldRowJson) }}</pre>
+        </div>
+        <div>
+          <h3>New Row</h3>
+          <pre>{{ json(selectedEvent.newRowJson) }}</pre>
+        </div>
+      </div>
+
+      <div *ngIf="activeDetailTab === 'fields'">
+        <h3>Changed Fields</h3>
+        <pre>{{ json(selectedEvent.changedFields) }}</pre>
+      </div>
+    </section>
+  </div>
+</section>
