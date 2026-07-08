@@ -2160,7 +2160,13 @@ class KycWalletContract extends Contract {
             createdAt: txDate.toISOString()
         };
 
-        await ctx.stub.putState(blockchainKey, Buffer.from(JSON.stringify(proof)));
+        const proofBuffer = Buffer.from(JSON.stringify(proof));
+
+        await ctx.stub.putState(primaryStateKey, proofBuffer);
+
+        if (auditIdStateKey !== primaryStateKey) {
+            await ctx.stub.putState(auditIdStateKey, proofBuffer);
+        }
 
         const recordTypeIndexKey = ctx.stub.createCompositeKey(
             'proof~recordType~sourceRecordId',
@@ -2471,10 +2477,21 @@ class KycWalletContract extends Contract {
             this._auditEventProofKey(auditId)
         );
 
-        const existingProofBytes = await ctx.stub.getState(blockchainKey);
+        const primaryStateKey = this._auditEventProofKey(blockchainKey);
+        const auditIdStateKey = this._auditEventProofKey(auditId);
 
-        if (existingProofBytes && existingProofBytes.length > 0) {
-            throw new Error(`Audit event proof already exists for key: ${blockchainKey}`);
+        const existingPrimaryProofBytes = await ctx.stub.getState(primaryStateKey);
+
+        if (existingPrimaryProofBytes && existingPrimaryProofBytes.length > 0) {
+            throw new Error(`Audit event proof already exists for key: ${primaryStateKey}`);
+        }
+
+        if (auditIdStateKey !== primaryStateKey) {
+            const existingAuditIdProofBytes = await ctx.stub.getState(auditIdStateKey);
+
+            if (existingAuditIdProofBytes && existingAuditIdProofBytes.length > 0) {
+                throw new Error(`Audit event proof already exists for key: ${auditIdStateKey}`);
+            }
         }
 
         const proof = this._compactAuditProofObject({
