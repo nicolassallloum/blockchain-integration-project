@@ -46,6 +46,7 @@ const auditBatchProofRoutes = require('./routes/audit-batch-proof.routes');
 const dataChangeHighRiskAlertRoutes = require('./routes/data-change-high-risk-alert.routes');
 const dataChangeInvalidRecordReviewRoutes = require('./routes/data-change-invalid-record-review.routes');
 const dataChangeComplianceProofRuleRoutes = require('./routes/data-change-compliance-proof-rule.routes');
+const dataChangeBulkComplianceApprovalRoutes = require('./routes/data-change-bulk-compliance-approval.routes');
 const auditSessionContextMiddleware = require('./middleware/auditSessionContext.middleware');
 
 const app = express();
@@ -142,6 +143,8 @@ app.use('/api/v1/government-blockchain/invalid-record-reviews', dataChangeInvali
 console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/invalid-record-reviews');
 app.use('/api/v1/government-blockchain/compliance-proof-rules', dataChangeComplianceProofRuleRoutes);
 console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/compliance-proof-rules');
+app.use('/api/v1/government-blockchain/bulk-compliance-approvals', dataChangeBulkComplianceApprovalRoutes);
+console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/bulk-compliance-approvals');
 
 app.use('/api/v1/government-blockchain/settings', governmentSettingsRoutes);
 console.log('[ROUTE MOUNTED] /api/v1/government-blockchain/settings');

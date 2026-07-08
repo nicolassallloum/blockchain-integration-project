@@ -224,6 +224,14 @@ function mapAuditEventRow(row) {
     complianceRuleCodes: row.compliance_rule_codes,
     complianceRuleEvaluatedAt: row.compliance_rule_evaluated_at,
     complianceRuleEvaluatedBy: row.compliance_rule_evaluated_by,
+    bulkApprovalBatchId: row.bulk_approval_batch_id === null || row.bulk_approval_batch_id === undefined ? null : Number(row.bulk_approval_batch_id),
+    bulkApprovalStatus: row.bulk_approval_status,
+    bulkApprovalDecision: row.bulk_approval_decision,
+    bulkApprovalRequestedBy: row.bulk_approval_requested_by,
+    bulkApprovalRequestedAt: row.bulk_approval_requested_at,
+    bulkApprovalAppliedBy: row.bulk_approval_applied_by,
+    bulkApprovalAppliedAt: row.bulk_approval_applied_at,
+    bulkApprovalNotes: row.bulk_approval_notes,
     sourceViewName: row.source_view_name,
     createdAt: row.created_at
   };
@@ -316,6 +324,15 @@ async function getMetrics(filters = {}) {
         COUNT(*) FILTER (
           WHERE compliance_rule_decision = 'AUTO_APPROVE'
         )::int AS compliance_rule_auto_approved_events,
+        COUNT(*) FILTER (
+          WHERE bulk_approval_status = 'PENDING_APPROVAL'
+        )::int AS bulk_approval_pending_events,
+        COUNT(*) FILTER (
+          WHERE bulk_approval_status = 'APPROVED'
+        )::int AS bulk_approval_approved_events,
+        COUNT(*) FILTER (
+          WHERE bulk_approval_status = 'REJECTED'
+        )::int AS bulk_approval_rejected_events,
         COUNT(*) FILTER (WHERE approval_status IN ('PENDING', 'BULK_PENDING'))::int AS bulk_approval_queue,
         COUNT(*) FILTER (WHERE approval_status = 'AUTO_APPROVED')::int AS auto_approved_changes,
         COUNT(*) FILTER (
@@ -349,6 +366,9 @@ async function getMetrics(filters = {}) {
     complianceRuleEvaluatedEvents: Number(row.compliance_rule_evaluated_events || 0),
     complianceRuleManualReviewEvents: Number(row.compliance_rule_manual_review_events || 0),
     complianceRuleAutoApprovedEvents: Number(row.compliance_rule_auto_approved_events || 0),
+    bulkApprovalPendingEvents: Number(row.bulk_approval_pending_events || 0),
+    bulkApprovalApprovedEvents: Number(row.bulk_approval_approved_events || 0),
+    bulkApprovalRejectedEvents: Number(row.bulk_approval_rejected_events || 0),
     bulkApprovalQueue: Number(row.bulk_approval_queue || 0),
     autoApprovedChanges: Number(row.auto_approved_changes || 0),
     manualApprovalRequired: Number(row.manual_approval_required || 0)
@@ -422,6 +442,14 @@ async function listAuditEvents(filters = {}, extraConditionSql = '') {
         a.compliance_rule_codes,
         a.compliance_rule_evaluated_at,
         a.compliance_rule_evaluated_by,
+        a.bulk_approval_batch_id,
+        a.bulk_approval_status,
+        a.bulk_approval_decision,
+        a.bulk_approval_requested_by,
+        a.bulk_approval_requested_at,
+        a.bulk_approval_applied_by,
+        a.bulk_approval_applied_at,
+        a.bulk_approval_notes,
         a.source_view_name,
         a.created_at
       FROM blockchain.data_change_audit a
@@ -533,7 +561,7 @@ async function getDashboard(filters = {}) {
     ),
     listAuditEvents(
       { ...filters, limit: tableLimit, offset: 0 },
-      `a.approval_status IN ('PENDING', 'BULK_PENDING')`
+      `(a.approval_status IN ('PENDING', 'BULK_PENDING') OR a.bulk_approval_status = 'PENDING_APPROVAL')`
     ),
     listAuditEvents(
       { ...filters, limit: tableLimit, offset: 0 },
@@ -715,6 +743,13 @@ function getExportHeaders() {
     { key: 'complianceRuleCodes', label: 'Compliance Rule Codes' },
     { key: 'complianceRuleEvaluatedAt', label: 'Compliance Rule Evaluated At' },
     { key: 'complianceRuleEvaluatedBy', label: 'Compliance Rule Evaluated By' },
+    { key: 'bulkApprovalBatchId', label: 'Bulk Approval Batch ID' },
+    { key: 'bulkApprovalStatus', label: 'Bulk Approval Status' },
+    { key: 'bulkApprovalDecision', label: 'Bulk Approval Decision' },
+    { key: 'bulkApprovalRequestedBy', label: 'Bulk Approval Requested By' },
+    { key: 'bulkApprovalRequestedAt', label: 'Bulk Approval Requested At' },
+    { key: 'bulkApprovalAppliedBy', label: 'Bulk Approval Applied By' },
+    { key: 'bulkApprovalAppliedAt', label: 'Bulk Approval Applied At' },
     { key: 'changedByUser', label: 'Changed By User' },
     { key: 'changedByRole', label: 'Changed By Role' },
     { key: 'clientIp', label: 'Client IP' },
@@ -769,6 +804,13 @@ function mapExportRow(row, options = {}) {
     complianceRuleCodes: mapped.complianceRuleCodes,
     complianceRuleEvaluatedAt: mapped.complianceRuleEvaluatedAt,
     complianceRuleEvaluatedBy: mapped.complianceRuleEvaluatedBy,
+    bulkApprovalBatchId: mapped.bulkApprovalBatchId,
+    bulkApprovalStatus: mapped.bulkApprovalStatus,
+    bulkApprovalDecision: mapped.bulkApprovalDecision,
+    bulkApprovalRequestedBy: mapped.bulkApprovalRequestedBy,
+    bulkApprovalRequestedAt: mapped.bulkApprovalRequestedAt,
+    bulkApprovalAppliedBy: mapped.bulkApprovalAppliedBy,
+    bulkApprovalAppliedAt: mapped.bulkApprovalAppliedAt,
     changedByUser: mapped.changedByUser,
     changedByRole: mapped.changedByRole,
     clientIp: mapped.clientIp,
@@ -858,6 +900,14 @@ async function getAuditExportReport(options = {}) {
         a.compliance_rule_codes,
         a.compliance_rule_evaluated_at,
         a.compliance_rule_evaluated_by,
+        a.bulk_approval_batch_id,
+        a.bulk_approval_status,
+        a.bulk_approval_decision,
+        a.bulk_approval_requested_by,
+        a.bulk_approval_requested_at,
+        a.bulk_approval_applied_by,
+        a.bulk_approval_applied_at,
+        a.bulk_approval_notes,
         a.source_view_name,
         a.created_at
       FROM blockchain.data_change_audit a
