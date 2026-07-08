@@ -218,6 +218,12 @@ function mapAuditEventRow(row) {
     correctedBlockchainTransactionId: row.corrected_blockchain_transaction_id,
     invalidDetectedAt: row.invalid_detected_at,
     invalidResolvedAt: row.invalid_resolved_at,
+    complianceRuleStatus: row.compliance_rule_status,
+    complianceRuleDecision: row.compliance_rule_decision,
+    complianceRuleScore: row.compliance_rule_score === null || row.compliance_rule_score === undefined ? null : Number(row.compliance_rule_score),
+    complianceRuleCodes: row.compliance_rule_codes,
+    complianceRuleEvaluatedAt: row.compliance_rule_evaluated_at,
+    complianceRuleEvaluatedBy: row.compliance_rule_evaluated_by,
     sourceViewName: row.source_view_name,
     createdAt: row.created_at
   };
@@ -301,6 +307,15 @@ async function getMetrics(filters = {}) {
         COUNT(*) FILTER (
           WHERE reactivation_status = 'REACTIVATED'
         )::int AS reactivated_records,
+        COUNT(*) FILTER (
+          WHERE compliance_rule_status = 'EVALUATED'
+        )::int AS compliance_rule_evaluated_events,
+        COUNT(*) FILTER (
+          WHERE compliance_rule_decision = 'MANUAL_REVIEW'
+        )::int AS compliance_rule_manual_review_events,
+        COUNT(*) FILTER (
+          WHERE compliance_rule_decision = 'AUTO_APPROVE'
+        )::int AS compliance_rule_auto_approved_events,
         COUNT(*) FILTER (WHERE approval_status IN ('PENDING', 'BULK_PENDING'))::int AS bulk_approval_queue,
         COUNT(*) FILTER (WHERE approval_status = 'AUTO_APPROVED')::int AS auto_approved_changes,
         COUNT(*) FILTER (
@@ -331,6 +346,9 @@ async function getMetrics(filters = {}) {
     invalidReviewEvents: Number(row.invalid_review_events || 0),
     invalidRecordsUnderReview: Number(row.invalid_records_under_review || 0),
     reactivatedRecords: Number(row.reactivated_records || 0),
+    complianceRuleEvaluatedEvents: Number(row.compliance_rule_evaluated_events || 0),
+    complianceRuleManualReviewEvents: Number(row.compliance_rule_manual_review_events || 0),
+    complianceRuleAutoApprovedEvents: Number(row.compliance_rule_auto_approved_events || 0),
     bulkApprovalQueue: Number(row.bulk_approval_queue || 0),
     autoApprovedChanges: Number(row.auto_approved_changes || 0),
     manualApprovalRequired: Number(row.manual_approval_required || 0)
@@ -398,6 +416,12 @@ async function listAuditEvents(filters = {}, extraConditionSql = '') {
         a.corrected_blockchain_transaction_id,
         a.invalid_detected_at,
         a.invalid_resolved_at,
+        a.compliance_rule_status,
+        a.compliance_rule_decision,
+        a.compliance_rule_score,
+        a.compliance_rule_codes,
+        a.compliance_rule_evaluated_at,
+        a.compliance_rule_evaluated_by,
         a.source_view_name,
         a.created_at
       FROM blockchain.data_change_audit a
@@ -474,6 +498,7 @@ async function getDashboard(filters = {}) {
     invalidOrMismatchedRecords,
     invalidRecordReviewQueue,
     complianceReviewQueue,
+    complianceRuleReviewQueue,
     highRiskAlertQueue,
     bulkApprovalQueue,
     autoApprovedChanges,
@@ -496,6 +521,10 @@ async function getDashboard(filters = {}) {
     listAuditEvents(
       { ...filters, limit: tableLimit, offset: 0 },
       `a.compliance_status IN ('REVIEW', 'UNDER_REVIEW', 'PENDING_REVIEW')`
+    ),
+    listAuditEvents(
+      { ...filters, limit: tableLimit, offset: 0 },
+      `a.compliance_rule_decision IN ('MANUAL_REVIEW', 'PROOF_REQUIRED', 'BLOCK', 'REJECT')`
     ),
     listAuditEvents(
       { ...filters, limit: tableLimit, offset: 0 },
@@ -529,6 +558,7 @@ async function getDashboard(filters = {}) {
       invalidOrMismatchedRecords: invalidOrMismatchedRecords.rows,
       invalidRecordReviewQueue: invalidRecordReviewQueue.rows,
       complianceReviewQueue: complianceReviewQueue.rows,
+      complianceRuleReviewQueue: complianceRuleReviewQueue.rows,
       highRiskAlertQueue: highRiskAlertQueue.rows,
       bulkApprovalQueue: bulkApprovalQueue.rows,
       autoApprovedChanges: autoApprovedChanges.rows,
@@ -679,6 +709,12 @@ function getExportHeaders() {
     { key: 'correctedBlockchainTransactionId', label: 'Corrected Blockchain Transaction ID' },
     { key: 'invalidDetectedAt', label: 'Invalid Detected At' },
     { key: 'invalidResolvedAt', label: 'Invalid Resolved At' },
+    { key: 'complianceRuleStatus', label: 'Compliance Rule Status' },
+    { key: 'complianceRuleDecision', label: 'Compliance Rule Decision' },
+    { key: 'complianceRuleScore', label: 'Compliance Rule Score' },
+    { key: 'complianceRuleCodes', label: 'Compliance Rule Codes' },
+    { key: 'complianceRuleEvaluatedAt', label: 'Compliance Rule Evaluated At' },
+    { key: 'complianceRuleEvaluatedBy', label: 'Compliance Rule Evaluated By' },
     { key: 'changedByUser', label: 'Changed By User' },
     { key: 'changedByRole', label: 'Changed By Role' },
     { key: 'clientIp', label: 'Client IP' },
@@ -727,6 +763,12 @@ function mapExportRow(row, options = {}) {
     correctedBlockchainTransactionId: mapped.correctedBlockchainTransactionId,
     invalidDetectedAt: mapped.invalidDetectedAt,
     invalidResolvedAt: mapped.invalidResolvedAt,
+    complianceRuleStatus: mapped.complianceRuleStatus,
+    complianceRuleDecision: mapped.complianceRuleDecision,
+    complianceRuleScore: mapped.complianceRuleScore,
+    complianceRuleCodes: mapped.complianceRuleCodes,
+    complianceRuleEvaluatedAt: mapped.complianceRuleEvaluatedAt,
+    complianceRuleEvaluatedBy: mapped.complianceRuleEvaluatedBy,
     changedByUser: mapped.changedByUser,
     changedByRole: mapped.changedByRole,
     clientIp: mapped.clientIp,
@@ -810,6 +852,12 @@ async function getAuditExportReport(options = {}) {
         a.corrected_blockchain_transaction_id,
         a.invalid_detected_at,
         a.invalid_resolved_at,
+        a.compliance_rule_status,
+        a.compliance_rule_decision,
+        a.compliance_rule_score,
+        a.compliance_rule_codes,
+        a.compliance_rule_evaluated_at,
+        a.compliance_rule_evaluated_by,
         a.source_view_name,
         a.created_at
       FROM blockchain.data_change_audit a
