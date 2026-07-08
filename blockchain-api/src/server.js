@@ -41,6 +41,8 @@ const governmentAmlCasesRoutes = require('./routes/government-aml-cases.routes')
 const governmentReportsRoutes = require('./routes/government-reports.routes');
 const hashVerificationRoutes = require('./routes/hash-verification.routes');
 const governmentAuditLogsRoutes = require('./routes/government-audit-logs.routes');
+const auditSessionContextMiddleware = require('./middleware/auditSessionContext.middleware');
+
 const app = express();
 
 // Serve internal UI files from /public
@@ -62,6 +64,9 @@ try {
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+// Phase 27: capture application user/request context for PostgreSQL audit triggers.
+app.use(auditSessionContextMiddleware);
 
 
 const earlyGovernmentCors = cors({
