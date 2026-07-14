@@ -20,6 +20,7 @@ const app = express();
 const governmentReferenceRoutes = require('./routes/government-blockchain/reference.routes');
 const paymentsDigitalStampsRoutes = require('./routes/payments-digital-stamps.routes');
 const postgresBrowserRoutes = require('./routes/postgres-browser.routes');
+const auditValidationRoutes = require('./routes/audit-validation.routes');
 
 /**
  * ---------------------------------------------------------
@@ -108,7 +109,8 @@ app.use(helmet({
     policy: 'same-origin'
   }
 }));
-
+app.use('/api/v1/audit-validation', auditValidationRoutes);
+console.log('[ROUTE MOUNTED] /api/v1/audit-validation');
 /**
  * ---------------------------------------------------------
  * 4. BODY PARSERS
