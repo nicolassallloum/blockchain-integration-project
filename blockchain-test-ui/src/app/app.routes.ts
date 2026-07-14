@@ -113,7 +113,12 @@ export const routes: Routes = [
         .then(m => m.ResidentWalletLoginComponent),
     title: 'Resident Wallet Login'
   },
-
+  {
+    path: 'blockchain/audit-validation',
+    loadComponent: () =>
+      import('./pages/blockchain/audit-validation/audit-validation.component')
+        .then(m => m.AuditValidationComponent)
+  },
   {
     path: 'government-blockchain/transaction-list',
     component: TransactionList
