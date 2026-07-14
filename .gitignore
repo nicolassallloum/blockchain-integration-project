@@ -28,3 +28,19 @@ coverage/
 # Generated PostgreSQL export files
 blockchain-api/postgres_export_*/
 *.csv
+
+# Local env / secrets
+.env
+*.env
+blockchain-api/.env
+blockchain-test-ui/.env
+
+# Local backups
+*.bak
+*.bak_*
+backups/
+inspection-output/
+
+# Uploaded/generated bundles
+*.zip
+audit-validation-real-objects/
