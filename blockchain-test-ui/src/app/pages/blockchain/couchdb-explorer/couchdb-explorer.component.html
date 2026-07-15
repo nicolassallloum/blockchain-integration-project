@@ -2,7 +2,7 @@
   <section class="hero">
     <div>
       <p class="eyebrow">Blockchain Services</p>
-      <h1>Blockchain World State Explorer</h1>
+      <h1>{{ pageTitle }}</h1>
       <p class="subtitle">
         Read-only CouchDB / Hyperledger Fabric world-state explorer. No delete, edit, create, clone,
         or attachment actions are available.
@@ -113,7 +113,7 @@
                   </div>
                   <small class="error-text" *ngIf="db.error">{{ db.error }}</small>
                 </td>
-                <td>{{ formatBytes(db.sizes?.file || db.disk_size) }}</td>
+                <td>{{ formatBytes(db.sizes.file || db.disk_size) }}</td>
                 <td>{{ db.doc_count }}</td>
                 <td>{{ db.doc_del_count }}</td>
                 <td>{{ db.partitioned ? 'Yes' : 'No' }}</td>
@@ -220,19 +220,19 @@
                   <span class="status-badge">{{ docLabel(row) }}</span>
                 </td>
                 <td>
-                  <span class="mono">{{ row.summary?.auditId || '-' }}</span>
+                  <span class="mono">{{ row.summary.auditId || '-' }}</span>
                 </td>
                 <td>
-                  <span class="mono">{{ shortHash(row.summary?.blockchainKey, 22, 12) }}</span>
+                  <span class="mono">{{ shortHash(row.summary.blockchainKey, 22, 12) }}</span>
                 </td>
                 <td>
-                  <span class="mono">{{ shortHash(row.summary?.auditEventHash) }}</span>
+                  <span class="mono">{{ shortHash(row.summary.auditEventHash) }}</span>
                 </td>
                 <td>
-                  <span class="mono">{{ shortHash(row.summary?.txId) }}</span>
+                  <span class="mono">{{ shortHash(row.summary.txId) }}</span>
                 </td>
                 <td>
-                  {{ row.summary?.createdAt ? (row.summary.createdAt | date: 'medium') : '-' }}
+                  {{ row.summary.createdAt ? (row.summary.createdAt | date: 'medium') : '-' }}
                 </td>
                 <td>
                   <button type="button" class="btn btn-small btn-primary" (click)="viewDocument(row)">

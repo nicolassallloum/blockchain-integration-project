@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Title } from '@angular/platform-browser';
 import {
   CouchDbDatabase,
   CouchDbDocumentDetailsResponse,
@@ -18,6 +19,7 @@ type DetailsTab = 'summary' | 'metadata' | 'json';
   styleUrls: ['./couchdb-explorer.component.scss'],
 })
 export class CouchdbExplorerComponent implements OnInit {
+  pageTitle = 'Valoores Audit Logs';
   databases: CouchDbDatabase[] = [];
   selectedDatabase: CouchDbDatabase | null = null;
 
@@ -53,9 +55,13 @@ export class CouchdbExplorerComponent implements OnInit {
     'CUSTOMER_KYC_PROOF',
   ];
 
-  constructor(private couchDbExplorerService: CouchDbExplorerService) {}
+  constructor(
+    private couchDbExplorerService: CouchDbExplorerService,
+    private titleService: Title
+  ) {}
 
   ngOnInit(): void {
+    this.setPageTitle();
     this.loadDatabases();
   }
 
@@ -89,6 +95,7 @@ export class CouchdbExplorerComponent implements OnInit {
     this.skip = 0;
     this.documents = [];
     this.selectedDocument = null;
+    this.setPageTitle(database.name);
     this.loadDocuments();
   }
 
@@ -157,6 +164,7 @@ export class CouchdbExplorerComponent implements OnInit {
     this.loadingDocumentDetails = true;
     this.selectedDocument = null;
     this.detailsTab = 'summary';
+    this.setPageTitle(row.id);
 
     this.couchDbExplorerService.getDocument(this.selectedDatabase.name, row.id).subscribe({
       next: (response) => {
@@ -174,6 +182,7 @@ export class CouchdbExplorerComponent implements OnInit {
   closeDocument(): void {
     this.selectedDocument = null;
     this.detailsTab = 'summary';
+    this.setPageTitle(this.selectedDatabase?.name);
   }
 
   setDetailsTab(tab: DetailsTab): void {

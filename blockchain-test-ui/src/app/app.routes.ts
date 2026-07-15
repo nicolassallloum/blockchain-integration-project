@@ -114,6 +114,15 @@ export const routes: Routes = [
     title: 'Resident Wallet Login'
   },
   {
+    path: 'blockchain/valoores-audit-logs',
+    loadComponent: () =>
+      import('./pages/blockchain/couchdb-explorer/couchdb-explorer.component').then(
+        (m) => m.CouchdbExplorerComponent
+      ),
+    title: 'Valoores Audit Logs'
+  },
+
+  {
     path: 'blockchain/audit-validation',
     loadComponent: () =>
       import('./pages/blockchain/audit-validation/audit-validation.component')
@@ -123,11 +132,8 @@ export const routes: Routes = [
 
   {
     path: 'blockchain/couchdb-explorer',
-    loadComponent: () =>
-      import('./pages/blockchain/couchdb-explorer/couchdb-explorer.component').then(
-        (m) => m.CouchdbExplorerComponent
-      ),
-    title: 'CouchDB Explorer'
+    redirectTo: 'blockchain/valoores-audit-logs',
+    pathMatch: 'full'
   },
   {
     path: 'government-blockchain/transaction-list',
