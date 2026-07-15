@@ -1,37 +1,3 @@
 /* You can add global styles to this file, and also import other style files */
 
-/* Full-screen mode only for Blockchain Audit Validation page */
-body.audit-validation-fullscreen app-sidebar,
-body.audit-validation-fullscreen .sidebar,
-body.audit-validation-fullscreen .side-bar,
-body.audit-validation-fullscreen .main-sidebar,
-body.audit-validation-fullscreen .app-sidebar,
-body.audit-validation-fullscreen .layout-sidebar,
-body.audit-validation-fullscreen aside {
-  display: none !important;
-}
-
-body.audit-validation-fullscreen .main-content,
-body.audit-validation-fullscreen .content,
-body.audit-validation-fullscreen .page-content,
-body.audit-validation-fullscreen .layout-content,
-body.audit-validation-fullscreen .app-content,
-body.audit-validation-fullscreen main {
-  margin-left: 0 !important;
-  padding-left: 0 !important;
-  width: 100% !important;
-  max-width: 100% !important;
-}
-
-body.audit-validation-fullscreen app-audit-validation {
-  display: block;
-  width: 100%;
-}
-
-body.audit-validation-fullscreen .audit-validation,
-body.audit-validation-fullscreen .audit-validation-page,
-body.audit-validation-fullscreen .container,
-body.audit-validation-fullscreen .container-fluid {
-  width: 100% !important;
-  max-width: 100% !important;
-}
+/* Audit Validation fullscreen mode disabled: sidebar must remain visible. */

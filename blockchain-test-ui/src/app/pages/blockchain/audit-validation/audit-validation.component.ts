@@ -52,7 +52,6 @@ export class AuditValidationComponent implements OnInit, OnDestroy {
   constructor(private auditValidationService: AuditValidationService) {}
 
   ngOnInit(): void {
-    document.body.classList.add('audit-validation-fullscreen');
     this.loadDashboard();
     this.loadEvents();
   }
@@ -319,10 +318,6 @@ export class AuditValidationComponent implements OnInit, OnDestroy {
       text: line,
       changed: line !== (oppositeLines[index] ?? ''),
     }));
-  }
-
-  ngOnDestroy(): void {
-    document.body.classList.remove('audit-validation-fullscreen');
   }
 
 }
