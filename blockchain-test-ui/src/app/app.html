@@ -77,8 +77,38 @@
       </a>
 
 
+      <!-- Audit Portal Main Menu -->
+      <div class="audit-portal-sidebar-block">
+        <div class="audit-portal-main-menu">
+          <span class="nav-dot audit-portal-dot"></span>
+          <span class="menu-text">Audit Portal</span>
+        </div>
 
-      <!-- Government Blockchain Services Main Menu -->
+        <div class="audit-portal-submenu">
+          <a
+            routerLink="/blockchain/audit-validation"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: true }"
+          >
+            <span class="nav-dot"></span>
+            <span class="menu-text">Audit Validation</span>
+          </a>
+
+          <a
+            routerLink="/blockchain/valoores-audit-logs"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: true }"
+          >
+            <span class="nav-dot"></span>
+            <span class="menu-text">Valoores Audit Logs</span>
+          </a>
+        </div>
+      </div>
+
+
+
+
+      <!-- Blockchain Services Main Menu -->
       <button
         type="button"
         class="government-main-menu"
@@ -138,7 +168,7 @@
           class="nav-item"
         >
           <span class="nav-dot"></span>
-          <span class="menu-text">CouchDB Explorer</span>
+          <span class="menu-text">Valoores Audit Logs</span>
         </a>
 
         <a routerLink="/government-blockchain/new-transaction" routerLinkActive="active">
@@ -238,9 +268,9 @@
   <main class="main">
     <header class="topbar">
       <div class="breadcrumb">
-        <span>Government Blockchain Services</span>
+        <span>Blockchain Services</span>
         <span class="breadcrumb-separator">›</span>
-        <span>Government Portal</span>
+        <span>Audit Portal</span>
       </div>
 
       <div class="header-actions" aria-label="Header actions">

@@ -38,6 +38,7 @@ const blockchainProofSourceViewsRoutes = require('./blockchain-proof-source-view
 const blockchainProofHistorySyncRoutes = require('./blockchain-proof-history-sync.routes');
 const blockchainProofApiRoutes = require('./blockchain-proof-api.routes');
 const dataChangeAuditDashboardRoutes = require('./data-change-audit-dashboard.routes');
+const couchdbExplorerRoutes = require('./couchdb-explorer.routes');
 // const referenceRoutes = require('./reference.routes');
 // const residentRoutes = require('./resident.routes');
 
@@ -250,5 +251,7 @@ router.use('/blockchain-proof/api', blockchainProofApiRoutes);
 
 router.use('/government-blockchain/data-change-audit-dashboard', dataChangeAuditDashboardRoutes);
 router.use('/data-change-audit-dashboard', dataChangeAuditDashboardRoutes);
+
+router.use('/couchdb-explorer', couchdbExplorerRoutes);
 
 module.exports = router;

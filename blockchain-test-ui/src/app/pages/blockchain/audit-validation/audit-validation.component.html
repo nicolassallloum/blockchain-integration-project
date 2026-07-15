@@ -1,0 +1,265 @@
+<!-- src/app/blockchain/audit-validation/audit-validation.component.html -->
+
+<div class="audit-page">
+  <div class="page-header">
+    <div>
+      <h2>Blockchain Audit Validation</h2>
+      <p>Real PostgreSQL audit events for AML, customers, transactions, queries, and AML rules.</p>
+
+
+
+<div class="audit-dashboard" *ngIf="dashboard as dashboardData">
+  <div class="dashboard-header">
+    <div>
+      <h3>Audit Dashboard</h3>
+      <p>{{ activeDashboardTitle }}</p>
+    </div>
+    <button class="btn" (click)="selectDashboard('All Audit Events', {})">Show All</button>
+  </div>
+
+  <div class="chart-grid">
+    <div class="metric-card" (click)="selectTodayChart('Today Deletes', 'DELETE')">
+      <span>Today Deletes</span>
+      <strong>{{ todayCount('DELETE') }}</strong>
+    </div>
+
+    <div class="metric-card" (click)="selectTodayChart('Today Inserts', 'INSERT')">
+      <span>Today Inserts</span>
+      <strong>{{ todayCount('INSERT') }}</strong>
+    </div>
+
+    <div class="metric-card" (click)="selectTodayChart('Today Updates', 'UPDATE')">
+      <span>Today Updates</span>
+      <strong>{{ todayCount('UPDATE') }}</strong>
+    </div>
+
+    <div class="metric-card" (click)="selectDashboard('Total Updates', { action_type: 'UPDATE' })">
+      <span>Total Updates</span>
+      <strong>{{ dashboardData.totals.UPDATE }}</strong>
+    </div>
+
+    <div class="metric-card" (click)="selectDashboard('Total Inserts', { action_type: 'INSERT' })">
+      <span>Total Inserts</span>
+      <strong>{{ dashboardData.totals.INSERT }}</strong>
+    </div>
+
+    <div class="metric-card" (click)="selectDashboard('Total Deletes', { action_type: 'DELETE' })">
+      <span>Total Deletes</span>
+      <strong>{{ dashboardData.totals.DELETE }}</strong>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">Hash Status</div>
+      <div class="status-row" *ngFor="let item of dashboardData.hashStatus"
+           (click)="selectDashboard('Hash - ' + item.status, { hash_status: item.status })">
+        <span>{{ item.status }}</span>
+        <b>{{ item.total_count }}</b>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">Validation Status</div>
+      <div class="status-row" *ngFor="let item of dashboardData.validationStatus"
+           (click)="selectDashboard('Validation - ' + item.status, { validation_status: item.status })">
+        <span>{{ item.status }}</span>
+        <b>{{ item.total_count }}</b>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">Blockchain Status</div>
+      <div class="status-row" *ngFor="let item of dashboardData.blockchainStatus"
+           (click)="selectDashboard('Blockchain - ' + item.status, { blockchain_status: item.status })">
+        <span>{{ item.status }}</span>
+        <b>{{ item.total_count }}</b>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">Action</div>
+      <div class="status-row" *ngFor="let item of dashboardData.actionCounts"
+           (click)="selectDashboard('Action - ' + item.action_type, { action_type: item.action_type })">
+        <span>{{ item.action_type }}</span>
+        <b>{{ item.total_count }}</b>
+      </div>
+    </div>
+
+    <div class="chart-card object-chart">
+      <div class="chart-title">Objects</div>
+      <div class="status-row" *ngFor="let item of dashboardData.objectCounts"
+           (click)="selectObjectChart(item.object_label || item.source_object || '', item.source_object || '')">
+        <span>{{ item.object_label }}</span>
+        <b>{{ item.total_count }}</b>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="filters">
+    <label>
+      Object
+      <select [(ngModel)]="filters.source_object">
+        <option value="">All</option>
+        <option *ngFor="let item of sourceObjects" [value]="item">{{ item }}</option>
+      </select>
+    </label>
+
+    <label>
+      Action
+      <select [(ngModel)]="filters.action_type">
+        <option value="">All</option>
+        <option value="INSERT">INSERT</option>
+        <option value="UPDATE">UPDATE</option>
+        <option value="DELETE">DELETE</option>
+      </select>
+    </label>
+
+    <label>
+      Hash
+      <select [(ngModel)]="filters.hash_status">
+        <option value="">All</option>
+        <option value="PENDING">PENDING</option>
+        <option value="VALID">VALID</option>
+        <option value="INVALID">INVALID</option>
+      </select>
+    </label>
+
+    <label>
+      Validation
+      <select [(ngModel)]="filters.validation_status">
+        <option value="">All</option>
+        <option value="PENDING">PENDING</option>
+        <option value="APPROVED">APPROVED</option>
+        <option value="REJECTED">REJECTED</option>
+      </select>
+    </label>
+
+    <label>
+      Blockchain
+      <select [(ngModel)]="filters.blockchain_status">
+        <option value="">All</option>
+        <option value="NOT_SUBMITTED">NOT_SUBMITTED</option>
+        <option value="SUBMITTED">SUBMITTED</option>
+        <option value="FAILED">FAILED</option>
+      </select>
+    </label>
+
+    <label>
+      From
+      <input type="datetime-local" [(ngModel)]="filters.date_from" />
+    </label>
+
+    <label>
+      To
+      <input type="datetime-local" [(ngModel)]="filters.date_to" />
+    </label>
+
+    <div class="filter-actions">
+      <button class="btn btn-primary" (click)="refreshEvents()">Apply</button>
+      <button class="btn" (click)="resetFilters()">Reset</button>
+    </div>
+  </div>
+
+  <div class="summary">
+    <strong>{{ total }}</strong> audit events
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Event ID</th>
+          <th>Object</th>
+          <th>Action</th>
+          <th>Record PK</th>
+          <th>Changed By</th>
+          <th>Changed At</th>
+          <th>Hash</th>
+          <th>Validation</th>
+          <th>Blockchain</th>
+          <th>Ledger</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let event of events">
+          <td class="mono">{{ event.event_id }}</td>
+          <td>{{ event.source_object }}</td>
+          <td><span [class]="statusClass(event.action_type)">{{ event.action_type }}</span></td>
+          <td class="mono">{{ event.record_pk }}</td>
+          <td>{{ event.changed_by }}</td>
+          <td>{{ event.application_user || '-' }}</td>
+          <td>{{ event.changed_at | date: 'medium' }}</td>
+          <td><span [class]="statusClass(event.hash_status)">{{ event.hash_status }}</span></td>
+          <td><span [class]="statusClass(event.validation_status)">{{ event.validation_status }}</span></td>
+          <td><span [class]="statusClass(event.blockchain_status)">{{ event.blockchain_status }}</span></td>
+          <td>
+            <div class="mono small" *ngIf="event.blockchain_tx_id">TX: {{ event.blockchain_tx_id }}</div>
+            <div class="mono small" *ngIf="event.ledger_key">Key: {{ event.ledger_key }}</div>
+          </td>
+          <td class="actions">
+            <button class="btn" (click)="viewDetails(event)">View</button>
+            <button class="btn" (click)="validate(event)">Validate</button>
+            <button class="btn" (click)="approve(event)" [disabled]="!canApprove(event)">Approve</button>
+            <button class="btn btn-danger" (click)="reject(event)">Reject</button>
+            <button class="btn btn-primary" (click)="submitBlockchain(event)" [disabled]="!canSubmit(event)">
+              Submit
+            </button>
+          </td>
+        </tr>
+
+        <tr *ngIf="!events.length && !loading">
+          <td colspan="11" class="empty">No audit events found.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="details" *ngIf="selectedEvent as selectedEventDetails">
+    <div class="details-header">
+      <h3>Audit Event Details</h3>
+      <button class="btn" (click)="selectedEvent = null">Close</button>
+    </div>
+
+    <div class="details-grid">
+      <div><strong>Event ID:</strong> <span class="mono">{{ selectedEventDetails.event_id }}</span></div>
+      <div><strong>Source Object:</strong> {{ selectedEventDetails.source_object }}</div>
+      <div><strong>Source Table:</strong> {{ selectedEventDetails.source_table }}</div>
+      <div><strong>Source View:</strong> {{ selectedEventDetails.source_view || '-' }}</div>
+      <div><strong>Record PK:</strong> <span class="mono">{{ selectedEventDetails.record_pk }}</span></div>
+      <div><strong>Action:</strong> {{ selectedEventDetails.action_type }}</div>
+      <div><strong>Changed By:</strong> {{ selectedEventDetails.changed_by }}</div>
+      <div><strong>Application User:</strong> {{ selectedEventDetails.application_user || '-' }}</div>
+      <div><strong>Changed At:</strong> {{ selectedEventDetails.changed_at | date: 'medium' }}</div>
+      <div><strong>Hash:</strong> <span class="mono">{{ selectedEventDetails.hash_value }}</span></div>
+      <div><strong>Recalculated:</strong> <span class="mono">{{ selectedEventDetails.recalculated_hash || '-' }}</span></div>
+      <div><strong>Blockchain TX:</strong> <span class="mono">{{ selectedEventDetails.blockchain_tx_id || '-' }}</span></div>
+      <div><strong>Ledger Key:</strong> <span class="mono">{{ selectedEventDetails.ledger_key || '-' }}</span></div>
+    </div>
+
+    <div class="json-compare">
+      <div>
+        <h4>Old Data</h4>
+        <pre class="json-diff">
+          <span
+            *ngFor="let line of getJsonDiffLines(selectedEventDetails.old_data, selectedEventDetails.new_data)"
+            class="json-line"
+            [class.changed-line]="line.changed"
+          >{{ line.text }}</span>
+        </pre>
+      </div>
+
+      <div>
+        <h4>New Data</h4>
+        <pre class="json-diff">
+          <span
+            *ngFor="let line of getJsonDiffLines(selectedEventDetails.new_data, selectedEventDetails.old_data)"
+            class="json-line"
+            [class.changed-line]="line.changed"
+          >{{ line.text }}</span>
+        </pre>
+      </div>
+    </div>
+  </div>
+</div>

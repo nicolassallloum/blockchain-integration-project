@@ -48,7 +48,7 @@ const dataChangeInvalidRecordReviewRoutes = require('./routes/data-change-invali
 const dataChangeComplianceProofRuleRoutes = require('./routes/data-change-compliance-proof-rule.routes');
 const dataChangeBulkComplianceApprovalRoutes = require('./routes/data-change-bulk-compliance-approval.routes');
 const auditSessionContextMiddleware = require('./middleware/auditSessionContext.middleware');
-
+const auditValidationRoutes = require('./routes/audit-validation.routes');
 const app = express();
 
 // Serve internal UI files from /public
@@ -73,7 +73,8 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Phase 27: capture application user/request context for PostgreSQL audit triggers.
 app.use(auditSessionContextMiddleware);
-
+app.use('/api/v1/audit-validation', auditValidationRoutes);
+console.log('[ROUTE MOUNTED] /api/v1/audit-validation');
 
 const earlyGovernmentCors = cors({
   origin: [
