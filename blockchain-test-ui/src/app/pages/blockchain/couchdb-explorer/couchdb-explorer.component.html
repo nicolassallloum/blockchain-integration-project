@@ -273,32 +273,29 @@
     </main>
   </section>
 
-  <div class="modal-backdrop" *ngIf="selectedDocument || loadingDocumentDetails">
+  <div class="modal-backdrop" *ngIf="selectedDocument || loadingDocumentDetails || selectedDocumentError">
     <section class="document-modal">
       <header class="modal-header">
         <div>
           <p class="eyebrow">Read-only Document</p>
-          <h2>{{ selectedDocument?.id || 'Loading document...' }}</h2>
+          <h2 *ngIf="loadingDocumentDetails || selectedDocumentLoading">Loading document...</h2>
+          <h2 *ngIf="!loadingDocumentDetails && !selectedDocumentLoading && selectedDocumentError">Document load failed</h2>
+          <h2 *ngIf="!loadingDocumentDetails && !selectedDocumentLoading && !selectedDocumentError && selectedDocument">
+            {{ selectedDocument.id || selectedDocument._id || 'Document Details' }}
+          </h2>
           <p>{{ selectedDocument?.database }}</p>
         </div>
 
         <button type="button" class="btn btn-secondary" (click)="closeDocument()">Close</button>
       </header>
 
-      <div class="loading" *ngIf="loadingDocumentDetails"><div *ngIf="selectedDocumentLoading" class="document-loading">
-          Loading document details...
-        </div>
+      <div class="loading" *ngIf="loadingDocumentDetails || selectedDocumentLoading">
+        Loading document details...
+      </div>
 
-        <div *ngIf="!selectedDocumentLoading && selectedDocumentError" class="document-error">
-          {{ selectedDocumentError }}
-        </div>
-
-        <div *ngIf="!selectedDocumentLoading && !selectedDocumentError && !selectedDocument" class="document-error">
-          No document details returned from CouchDB.
-        </div>
-        <div *ngIf="selectedDocumentError" class="document-error">
-          {{ selectedDocumentError }}
-        </div></div>
+      <div *ngIf="!loadingDocumentDetails && !selectedDocumentLoading && selectedDocumentError" class="document-error">
+        {{ selectedDocumentError }}
+      </div>
 
       <ng-container *ngIf="selectedDocument as selected">
         <nav class="modal-tabs">

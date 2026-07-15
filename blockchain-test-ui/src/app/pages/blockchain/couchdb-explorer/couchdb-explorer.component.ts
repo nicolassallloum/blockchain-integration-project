@@ -174,26 +174,88 @@ defaultDatabase = '';
     this.loadDocuments();
   }
 
+  private getRealCouchDbDocumentId(row: CouchDbDocumentRow): string {
+    const rawId = row?.id || '';
+    const summary = (row as any)?.summary || {};
+
+    const auditId =
+      summary.auditId ||
+      summary.audit_id ||
+      rawId.match(/AUDIT-[A-Za-z0-9-]+/)?.[0];
+
+    if (rawId.startsWith('audit_event_proof:')) {
+      return rawId;
+    }
+
+    if (
+      auditId &&
+      (
+        rawId.includes('auditEventProof') ||
+        rawId.includes('AUDIT_EVENT_PROOF') ||
+        summary.docType === 'AUDIT_EVENT_PROOF' ||
+        summary.doc_type === 'AUDIT_EVENT_PROOF'
+      )
+    ) {
+      return `audit_event_proof:${auditId}`;
+    }
+
+    return rawId;
+  }
+
   viewDocument(row: CouchDbDocumentRow): void {
     if (!this.selectedDatabase) {
       return;
     }
 
-    this.loadingDocumentDetails = true;
-    this.selectedDocument = null;
-    this.detailsTab = 'summary';
-    this.setPageTitle(row.id);
+    const documentId = this.getRealCouchDbDocumentId(row);
 
-    this.couchDbExplorerService.getDocument(this.selectedDatabase.name, row.id).subscribe({
-      next: (response) => {
-        this.selectedDocument = response;
+    this.selectedDocument = null;
+    this.loadingDocumentDetails = true;
+    this.selectedDocumentLoading = true;
+    this.selectedDocumentError = '';
+    this.setPageTitle(documentId);
+
+    if (this.selectedDocumentTimeout) {
+      clearTimeout(this.selectedDocumentTimeout);
+    }
+
+    this.selectedDocumentTimeout = setTimeout(() => {
+      if (this.selectedDocumentLoading || this.loadingDocumentDetails) {
         this.loadingDocumentDetails = false;
+        this.selectedDocumentLoading = false;
+        this.selectedDocumentError =
+          'Document loading timed out after 15 seconds. Please check the CouchDB document details API.';
+      }
+    }, 15000);
+
+    this.couchDbExplorerService.getDocument(this.selectedDatabase.name, documentId).subscribe({
+      next: (response) => {
+        const details = (response as any)?.data ?? response;
+
+        this.selectedDocument = details;
+        this.loadingDocumentDetails = false;
+        this.selectedDocumentLoading = false;
+
+        if (this.selectedDocumentTimeout) {
+          clearTimeout(this.selectedDocumentTimeout);
+        }
       },
       error: (error) => {
         console.error('Failed to load document details', error);
-        this.errorMessage = error?.error?.message || 'Failed to load document details';
+
         this.loadingDocumentDetails = false;
-      },
+        this.selectedDocumentLoading = false;
+        this.selectedDocumentError =
+          error?.error?.message ||
+          error?.message ||
+          'Failed to load document details.';
+
+        this.errorMessage = this.selectedDocumentError;
+
+        if (this.selectedDocumentTimeout) {
+          clearTimeout(this.selectedDocumentTimeout);
+        }
+      }
     });
   }
 
