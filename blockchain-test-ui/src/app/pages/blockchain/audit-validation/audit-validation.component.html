@@ -189,6 +189,7 @@
           <td><span [class]="statusClass(event.action_type)">{{ event.action_type }}</span></td>
           <td class="mono">{{ event.record_pk }}</td>
           <td>{{ event.changed_by }}</td>
+          <td>{{ event.application_user || '-' }}</td>
           <td>{{ event.changed_at | date: 'medium' }}</td>
           <td><span [class]="statusClass(event.hash_status)">{{ event.hash_status }}</span></td>
           <td><span [class]="statusClass(event.validation_status)">{{ event.validation_status }}</span></td>
@@ -229,6 +230,7 @@
       <div><strong>Record PK:</strong> <span class="mono">{{ selectedEventDetails.record_pk }}</span></div>
       <div><strong>Action:</strong> {{ selectedEventDetails.action_type }}</div>
       <div><strong>Changed By:</strong> {{ selectedEventDetails.changed_by }}</div>
+      <div><strong>Application User:</strong> {{ selectedEventDetails.application_user || '-' }}</div>
       <div><strong>Changed At:</strong> {{ selectedEventDetails.changed_at | date: 'medium' }}</div>
       <div><strong>Hash:</strong> <span class="mono">{{ selectedEventDetails.hash_value }}</span></div>
       <div><strong>Recalculated:</strong> <span class="mono">{{ selectedEventDetails.recalculated_hash || '-' }}</span></div>
