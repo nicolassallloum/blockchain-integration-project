@@ -285,7 +285,17 @@
         <button type="button" class="btn btn-secondary" (click)="closeDocument()">Close</button>
       </header>
 
-      <div class="loading" *ngIf="loadingDocumentDetails">Loading document details...
+      <div class="loading" *ngIf="loadingDocumentDetails"><div *ngIf="selectedDocumentLoading" class="document-loading">
+          Loading document details...
+        </div>
+
+        <div *ngIf="!selectedDocumentLoading && selectedDocumentError" class="document-error">
+          {{ selectedDocumentError }}
+        </div>
+
+        <div *ngIf="!selectedDocumentLoading && !selectedDocumentError && !selectedDocument" class="document-error">
+          No document details returned from CouchDB.
+        </div>
         <div *ngIf="selectedDocumentError" class="document-error">
           {{ selectedDocumentError }}
         </div></div>

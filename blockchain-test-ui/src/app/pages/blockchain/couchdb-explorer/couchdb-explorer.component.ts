@@ -29,6 +29,7 @@ export class CouchdbExplorerComponent implements OnInit {
   
   selectedDocumentLoading = false;
   selectedDocumentError = '';
+  selectedDocumentTimeout: ReturnType<typeof setTimeout> | null = null;
 defaultDatabase = '';
   activePanel: 'databases' | 'documents' | 'changes' = 'databases';
   detailsTab: DetailsTab = 'summary';
@@ -110,6 +111,8 @@ defaultDatabase = '';
     this.skip = 0;
     this.documents = [];
     this.selectedDocument = null;
+        this.selectedDocumentLoading = false;
+        if (this.selectedDocumentTimeout) { clearTimeout(this.selectedDocumentTimeout); }
     this.setPageTitle(database.name);
     this.loadDocuments();
   }
