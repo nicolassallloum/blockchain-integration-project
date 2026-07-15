@@ -1,3 +1,4 @@
+import { finalize, timeout } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -210,53 +211,48 @@ defaultDatabase = '';
     const documentId = this.getRealCouchDbDocumentId(row);
 
     this.selectedDocument = null;
+    this.selectedDocumentError = '';
     this.loadingDocumentDetails = true;
     this.selectedDocumentLoading = true;
-    this.selectedDocumentError = '';
     this.setPageTitle(documentId);
 
-    if (this.selectedDocumentTimeout) {
-      clearTimeout(this.selectedDocumentTimeout);
-    }
-
-    this.selectedDocumentTimeout = setTimeout(() => {
-      if (this.selectedDocumentLoading || this.loadingDocumentDetails) {
-        this.loadingDocumentDetails = false;
-        this.selectedDocumentLoading = false;
-        this.selectedDocumentError =
-          'Document loading timed out after 15 seconds. Please check the CouchDB document details API.';
-      }
-    }, 15000);
-
-    this.couchDbExplorerService.getDocument(this.selectedDatabase.name, documentId).subscribe({
-      next: (response) => {
-        const details = (response as any)?.data ?? response;
-
-        this.selectedDocument = details;
-        this.loadingDocumentDetails = false;
-        this.selectedDocumentLoading = false;
-
-        if (this.selectedDocumentTimeout) {
-          clearTimeout(this.selectedDocumentTimeout);
-        }
-      },
-      error: (error) => {
-        console.error('Failed to load document details', error);
-
-        this.loadingDocumentDetails = false;
-        this.selectedDocumentLoading = false;
-        this.selectedDocumentError =
-          error?.error?.message ||
-          error?.message ||
-          'Failed to load document details.';
-
-        this.errorMessage = this.selectedDocumentError;
-
-        if (this.selectedDocumentTimeout) {
-          clearTimeout(this.selectedDocumentTimeout);
-        }
-      }
+    console.log('[Valoores Audit Logs] Open document request', {
+      database: this.selectedDatabase.name,
+      rawRowId: row.id,
+      normalizedDocumentId: documentId
     });
+
+    this.couchDbExplorerService
+      .getDocument(this.selectedDatabase.name, documentId)
+      .pipe(
+        timeout(15000),
+        finalize(() => {
+          this.loadingDocumentDetails = false;
+          this.selectedDocumentLoading = false;
+        })
+      )
+      .subscribe({
+        next: (response) => {
+          const details = (response as any)?.data ?? response;
+
+          console.log('[Valoores Audit Logs] Document response', details);
+
+          if (!details || !details.doc) {
+            this.selectedDocumentError = 'No document details returned from CouchDB.';
+            return;
+          }
+
+          this.selectedDocument = details;
+        },
+        error: (error) => {
+          console.error('[Valoores Audit Logs] Document load failed', error);
+
+          this.selectedDocumentError =
+            error?.error?.message ||
+            error?.message ||
+            'Failed to load document details.';
+        }
+      });
   }
 
   closeDocument(): void {

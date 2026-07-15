@@ -281,7 +281,7 @@
           <h2 *ngIf="loadingDocumentDetails || selectedDocumentLoading">Loading document...</h2>
           <h2 *ngIf="!loadingDocumentDetails && !selectedDocumentLoading && selectedDocumentError">Document load failed</h2>
           <h2 *ngIf="!loadingDocumentDetails && !selectedDocumentLoading && !selectedDocumentError && selectedDocument">
-            {{ selectedDocument.id || selectedDocument._id || 'Document Details' }}
+            {{ selectedDocument.id || 'Document Details' }}
           </h2>
           <p>{{ selectedDocument?.database }}</p>
         </div>
@@ -291,6 +291,10 @@
 
       <div class="loading" *ngIf="loadingDocumentDetails || selectedDocumentLoading">
         Loading document details...
+      </div>
+
+      <div *ngIf="!loadingDocumentDetails && !selectedDocumentLoading && selectedDocumentError" class="document-error">
+        {{ selectedDocumentError }}
       </div>
 
       <div *ngIf="!loadingDocumentDetails && !selectedDocumentLoading && selectedDocumentError" class="document-error">
