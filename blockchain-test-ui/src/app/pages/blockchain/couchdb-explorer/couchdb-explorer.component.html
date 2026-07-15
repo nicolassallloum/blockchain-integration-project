@@ -1,0 +1,444 @@
+<div class="world-state-page">
+  <section class="hero">
+    <div>
+      <p class="eyebrow">Blockchain Services</p>
+      <h1>Blockchain World State Explorer</h1>
+      <p class="subtitle">
+        Read-only CouchDB / Hyperledger Fabric world-state explorer. No delete, edit, create, clone,
+        or attachment actions are available.
+      </p>
+    </div>
+
+    <div class="hero-actions">
+      <button type="button" class="btn btn-secondary" (click)="loadDatabases()">
+        Refresh Databases
+      </button>
+      <button
+        type="button"
+        class="btn btn-primary"
+        [disabled]="!selectedDatabase"
+        (click)="loadDocuments()"
+      >
+        Refresh Documents
+      </button>
+    </div>
+  </section>
+
+  <div class="alert alert-danger" *ngIf="errorMessage">{{ errorMessage }}</div>
+  <div class="alert alert-success" *ngIf="successMessage">{{ successMessage }}</div>
+  <div class="alert alert-warning" *ngIf="warningMessage">{{ warningMessage }}</div>
+
+  <section class="explorer-shell">
+    <aside class="explorer-sidebar">
+      <div class="sidebar-title">Explorer</div>
+
+      <button
+        type="button"
+        class="sidebar-item"
+        [class.active]="activePanel === 'databases'"
+        (click)="activePanel = 'databases'"
+      >
+        <span class="icon">🗄️</span>
+        Databases
+      </button>
+
+      <button
+        type="button"
+        class="sidebar-item"
+        [class.active]="activePanel === 'documents'"
+        [disabled]="!selectedDatabase"
+        (click)="activePanel = 'documents'"
+      >
+        <span class="icon">📄</span>
+        All Documents
+      </button>
+
+      <button
+        type="button"
+        class="sidebar-item"
+        [disabled]="true"
+        title="Read-only version does not include destructive admin actions"
+      >
+        <span class="icon">🔒</span>
+        Read Only Mode
+      </button>
+
+      <div class="selected-db-card" *ngIf="selectedDatabase">
+        <span class="label">Selected Database</span>
+        <strong>{{ selectedDatabase.name }}</strong>
+        <small>{{ selectedDatabase.doc_count }} docs</small>
+      </div>
+    </aside>
+
+    <main class="explorer-main">
+      <section class="panel" *ngIf="activePanel === 'databases'">
+        <div class="panel-header">
+          <div>
+            <h2>Databases</h2>
+            <p>
+              Select a CouchDB database to view world-state documents.
+            </p>
+          </div>
+
+          <span class="pill">{{ databases.length }} databases</span>
+        </div>
+
+        <div class="loading" *ngIf="loadingDatabases">Loading databases...</div>
+
+        <div class="table-wrap" *ngIf="!loadingDatabases">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Size</th>
+                <th># Docs</th>
+                <th>Deleted Docs</th>
+                <th>Partitioned</th>
+                <th>Compact</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr
+                *ngFor="let db of databases; trackBy: trackByDatabase"
+                [class.default-db]="db.name === defaultDatabase"
+              >
+                <td>
+                  <div class="db-name">
+                    {{ db.name }}
+                    <span class="default-badge" *ngIf="db.name === defaultDatabase">
+                      default
+                    </span>
+                  </div>
+                  <small class="error-text" *ngIf="db.error">{{ db.error }}</small>
+                </td>
+                <td>{{ formatBytes(db.sizes?.file || db.disk_size) }}</td>
+                <td>{{ db.doc_count }}</td>
+                <td>{{ db.doc_del_count }}</td>
+                <td>{{ db.partitioned ? 'Yes' : 'No' }}</td>
+                <td>{{ db.compact_running ? 'Running' : 'No' }}</td>
+                <td>
+                  <button type="button" class="btn btn-small btn-primary" (click)="openDatabase(db)">
+                    Open
+                  </button>
+                </td>
+              </tr>
+
+              <tr *ngIf="!databases.length">
+                <td colspan="7" class="empty">No databases found.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel" *ngIf="activePanel === 'documents'">
+        <div class="panel-header">
+          <div>
+            <h2>All Documents</h2>
+            <p *ngIf="selectedDatabase">
+              Database:
+              <strong>{{ selectedDatabase.name }}</strong>
+            </p>
+          </div>
+
+          <span class="pill" *ngIf="total !== null">Total {{ total }}</span>
+          <span class="pill" *ngIf="total === null">Filtered</span>
+        </div>
+
+        <div class="filters">
+          <label>
+            Document ID / Hash / TX
+            <input
+              type="text"
+              [(ngModel)]="search"
+              placeholder="Search document id, audit id, tx id, hash..."
+              (keyup.enter)="applyFilters()"
+            />
+          </label>
+
+          <label>
+            Audit ID
+            <input
+              type="text"
+              [(ngModel)]="auditId"
+              placeholder="AUDIT-..."
+              (keyup.enter)="applyFilters()"
+            />
+          </label>
+
+          <label>
+            Doc Type
+            <select [(ngModel)]="docType">
+              <option *ngFor="let type of docTypeOptions" [value]="type">
+                {{ type || 'All' }}
+              </option>
+            </select>
+          </label>
+
+          <label>
+            Page Size
+            <select [(ngModel)]="limit">
+              <option [ngValue]="25">25</option>
+              <option [ngValue]="50">50</option>
+              <option [ngValue]="100">100</option>
+              <option [ngValue]="200">200</option>
+              <option [ngValue]="500">500</option>
+            </select>
+          </label>
+
+          <div class="filter-actions">
+            <button type="button" class="btn btn-primary" (click)="applyFilters()">Apply</button>
+            <button type="button" class="btn btn-secondary" (click)="resetFilters()">Reset</button>
+          </div>
+        </div>
+
+        <div class="loading" *ngIf="loadingDocuments">Loading documents...</div>
+
+        <div class="table-wrap documents-table" *ngIf="!loadingDocuments">
+          <table>
+            <thead>
+              <tr>
+                <th>Document ID</th>
+                <th>Doc Type</th>
+                <th>Audit ID</th>
+                <th>Blockchain Key</th>
+                <th>Audit Hash</th>
+                <th>TX ID</th>
+                <th>Created At</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr *ngFor="let row of documents; trackBy: trackByDocument">
+                <td>
+                  <span class="mono">{{ row.id }}</span>
+                </td>
+                <td>
+                  <span class="status-badge">{{ docLabel(row) }}</span>
+                </td>
+                <td>
+                  <span class="mono">{{ row.summary?.auditId || '-' }}</span>
+                </td>
+                <td>
+                  <span class="mono">{{ shortHash(row.summary?.blockchainKey, 22, 12) }}</span>
+                </td>
+                <td>
+                  <span class="mono">{{ shortHash(row.summary?.auditEventHash) }}</span>
+                </td>
+                <td>
+                  <span class="mono">{{ shortHash(row.summary?.txId) }}</span>
+                </td>
+                <td>
+                  {{ row.summary?.createdAt ? (row.summary.createdAt | date: 'medium') : '-' }}
+                </td>
+                <td>
+                  <button type="button" class="btn btn-small btn-primary" (click)="viewDocument(row)">
+                    View
+                  </button>
+                </td>
+              </tr>
+
+              <tr *ngIf="!documents.length">
+                <td colspan="8" class="empty">No documents found.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="pagination">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            [disabled]="skip === 0 || loadingDocuments"
+            (click)="previousPage()"
+          >
+            Previous
+          </button>
+
+          <span>Showing {{ skip + 1 }} - {{ skip + documents.length }}</span>
+
+          <button
+            type="button"
+            class="btn btn-secondary"
+            [disabled]="documents.length < limit || loadingDocuments"
+            (click)="nextPage()"
+          >
+            Next
+          </button>
+        </div>
+      </section>
+    </main>
+  </section>
+
+  <div class="modal-backdrop" *ngIf="selectedDocument || loadingDocumentDetails">
+    <section class="document-modal">
+      <header class="modal-header">
+        <div>
+          <p class="eyebrow">Read-only Document</p>
+          <h2>{{ selectedDocument?.id || 'Loading document...' }}</h2>
+          <p>{{ selectedDocument?.database }}</p>
+        </div>
+
+        <button type="button" class="btn btn-secondary" (click)="closeDocument()">Close</button>
+      </header>
+
+      <div class="loading" *ngIf="loadingDocumentDetails">Loading document details...</div>
+
+      <ng-container *ngIf="selectedDocument as selected">
+        <nav class="modal-tabs">
+          <button
+            type="button"
+            [class.active]="detailsTab === 'summary'"
+            (click)="setDetailsTab('summary')"
+          >
+            Summary
+          </button>
+
+          <button
+            type="button"
+            [class.active]="detailsTab === 'metadata'"
+            (click)="setDetailsTab('metadata')"
+          >
+            Metadata
+          </button>
+
+          <button
+            type="button"
+            [class.active]="detailsTab === 'json'"
+            (click)="setDetailsTab('json')"
+          >
+            JSON
+          </button>
+
+          <button type="button" class="copy-json" (click)="copyJson(selected.doc)">
+            Copy JSON
+          </button>
+        </nav>
+
+        <section class="details-body" *ngIf="detailsTab === 'summary'">
+          <div class="summary-grid">
+            <div>
+              <label>Document ID</label>
+              <div class="value mono">
+                {{ selected.summary._id || '-' }}
+                <button type="button" (click)="copyText(selected.summary._id)">Copy</button>
+              </div>
+            </div>
+
+            <div>
+              <label>Doc Type</label>
+              <div class="value">{{ selected.summary.docType || '-' }}</div>
+            </div>
+
+            <div>
+              <label>Audit ID</label>
+              <div class="value mono">
+                {{ selected.summary.auditId || '-' }}
+                <button type="button" (click)="copyText(selected.summary.auditId)">Copy</button>
+              </div>
+            </div>
+
+            <div>
+              <label>Blockchain Key</label>
+              <div class="value mono">
+                {{ selected.summary.blockchainKey || '-' }}
+                <button type="button" (click)="copyText(selected.summary.blockchainKey)">Copy</button>
+              </div>
+            </div>
+
+            <div>
+              <label>Audit Event Hash</label>
+              <div class="value mono">
+                {{ selected.summary.auditEventHash || '-' }}
+                <button type="button" (click)="copyText(selected.summary.auditEventHash)">
+                  Copy
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label>Changed Fields Hash</label>
+              <div class="value mono">{{ selected.summary.changedFieldsHash || '-' }}</div>
+            </div>
+
+            <div>
+              <label>Primary Key Hash</label>
+              <div class="value mono">{{ selected.summary.primaryKeyHash || '-' }}</div>
+            </div>
+
+            <div>
+              <label>Schema Hash</label>
+              <div class="value mono">{{ selected.summary.schemaHash || '-' }}</div>
+            </div>
+
+            <div>
+              <label>Table Hash</label>
+              <div class="value mono">{{ selected.summary.tableHash || '-' }}</div>
+            </div>
+
+            <div>
+              <label>Transaction ID</label>
+              <div class="value mono">
+                {{ selected.summary.txId || '-' }}
+                <button type="button" (click)="copyText(selected.summary.txId)">Copy</button>
+              </div>
+            </div>
+
+            <div>
+              <label>Submitted By</label>
+              <div class="value">{{ selected.summary.submittedBy || '-' }}</div>
+            </div>
+
+            <div>
+              <label>Created At</label>
+              <div class="value">
+                {{ selected.summary.createdAt ? (selected.summary.createdAt | date: 'medium') : '-' }}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="details-body" *ngIf="detailsTab === 'metadata'">
+          <div class="summary-grid">
+            <div>
+              <label>Revision</label>
+              <div class="value mono">{{ selected.doc?._rev || '-' }}</div>
+            </div>
+
+            <div>
+              <label>Source System</label>
+              <div class="value">{{ selected.summary.sourceSystem || '-' }}</div>
+            </div>
+
+            <div>
+              <label>Hash Algorithm</label>
+              <div class="value">{{ selected.doc?.hashAlgorithm || '-' }}</div>
+            </div>
+
+            <div>
+              <label>Hash Version</label>
+              <div class="value">{{ selected.doc?.hashVersion || '-' }}</div>
+            </div>
+
+            <div>
+              <label>Proof Version</label>
+              <div class="value">{{ selected.doc?.proofVersion || '-' }}</div>
+            </div>
+
+            <div>
+              <label>Fabric Version</label>
+              <div class="value mono">{{ selected.doc?.['~version'] || '-' }}</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="details-body json-body" *ngIf="detailsTab === 'json'">
+          <pre>{{ formatJson(selected.doc) }}</pre>
+        </section>
+      </ng-container>
+    </section>
+  </div>
+</div>

@@ -119,6 +119,14 @@ export const routes: Routes = [
       import('./pages/blockchain/audit-validation/audit-validation.component')
         .then(m => m.AuditValidationComponent)
   },
+
+  {
+    path: 'blockchain/couchdb-explorer',
+    loadComponent: () =>
+      import('./pages/blockchain/couchdb-explorer/couchdb-explorer.component').then(
+        (m) => m.CouchdbExplorerComponent
+      ),
+  },
   {
     path: 'government-blockchain/transaction-list',
     component: TransactionList
