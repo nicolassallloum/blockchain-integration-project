@@ -26,7 +26,10 @@ export class CouchdbExplorerComponent implements OnInit {
   documents: CouchDbDocumentRow[] = [];
   selectedDocument: CouchDbDocumentDetailsResponse | null = null;
 
-  defaultDatabase = '';
+  
+  selectedDocumentLoading = false;
+  selectedDocumentError = '';
+defaultDatabase = '';
   activePanel: 'databases' | 'documents' | 'changes' = 'databases';
   detailsTab: DetailsTab = 'summary';
 
