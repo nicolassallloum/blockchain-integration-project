@@ -285,7 +285,10 @@
         <button type="button" class="btn btn-secondary" (click)="closeDocument()">Close</button>
       </header>
 
-      <div class="loading" *ngIf="loadingDocumentDetails">Loading document details...</div>
+      <div class="loading" *ngIf="loadingDocumentDetails">Loading document details...
+        <div *ngIf="selectedDocumentError" class="document-error">
+          {{ selectedDocumentError }}
+        </div></div>
 
       <ng-container *ngIf="selectedDocument as selected">
         <nav class="modal-tabs">

@@ -65,6 +65,11 @@ export class CouchdbExplorerComponent implements OnInit {
     this.loadDatabases();
   }
 
+
+  private finishDocumentLoading(): void {
+    this.selectedDocumentLoading = false;
+  }
+
   setPageTitle(extra?: string): void {
     const title = extra ? `${this.pageTitle} - ${extra}` : this.pageTitle;
     this.titleService.setTitle(title);
@@ -87,6 +92,8 @@ export class CouchdbExplorerComponent implements OnInit {
         }
       },
       error: (error) => {
+        this.selectedDocumentError = error?.error?.message || error?.message || 'Failed to load document details.';
+        this.selectedDocumentLoading = false;
         console.error('Failed to load CouchDB databases', error);
         this.errorMessage = error?.error?.message || 'Failed to load CouchDB databases';
         this.loadingDatabases = false;
