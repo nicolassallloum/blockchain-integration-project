@@ -65,6 +65,11 @@ export class CouchdbExplorerComponent implements OnInit {
     this.loadDatabases();
   }
 
+  setPageTitle(extra?: string): void {
+    const title = extra ? `${this.pageTitle} - ${extra}` : this.pageTitle;
+    this.titleService.setTitle(title);
+  }
+
   loadDatabases(): void {
     this.loadingDatabases = true;
     this.errorMessage = '';

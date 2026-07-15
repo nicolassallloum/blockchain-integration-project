@@ -2,7 +2,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 // src/app/blockchain/audit-validation/audit-validation.component.ts
 
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 interface JsonDiffLine {
   text: string;
   changed: boolean;
@@ -22,7 +22,7 @@ import {
   standalone: true,
   imports: [CommonModule, FormsModule, DatePipe],
 })
-export class AuditValidationComponent implements OnInit, OnDestroy {
+export class AuditValidationComponent implements OnInit {
   events: AuditEvent[] = [];
   dashboard: AuditDashboardResponse | null = null;
   activeDashboardTitle = 'All Audit Events';
