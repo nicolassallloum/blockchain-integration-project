@@ -107,13 +107,13 @@ export class CouchDbExplorerService {
       { params }
     );
   }
+  getDocument(database: string, docId: string): Observable<CouchDbDocumentDetailsResponse> {
+    const databaseName = encodeURIComponent(database);
+    const documentId = encodeURIComponent(docId);
 
-  getDocument(database: string, documentId: string): Observable<CouchDbDocumentDetailsResponse> {
-    return this.http.get<CouchDbDocumentDetailsResponse>(
-      `${this.baseUrl}/databases/${encodeURIComponent(database)}/documents/${encodeURIComponent(
-        documentId
-      )}`
-    );
+    return this.http
+      .get<any>(`${this.baseUrl}/databases/${databaseName}/documents/${documentId}`)
+      .pipe(map((response) => response?.data ?? response));
   }
 
   getChanges(database: string, limit = 50): Observable<any> {
