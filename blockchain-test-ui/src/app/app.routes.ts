@@ -4,7 +4,6 @@ import { BlockchainKycComponent } from './pages/blockchain-kyc/blockchain-kyc.co
 import { DashboardComponent } from './features/dashboard/dashboard.component';
 import { GovernmentBlockchainDashboardComponent } from './pages/government-blockchain/government-blockchain-dashboard/government-blockchain-dashboard.component';
 import { GovernmentServicesComponent } from './pages/government-blockchain/government-services/government-services.component';
-import { CouchDbExplorerComponent } from './features/government-blockchain/couchdb-explorer/couchdb-explorer.component';
 import { WalletCreate } from './pages/wallet-create/wallet-create';
 import { OrganizationWalletCreate } from './pages/organization-wallet-create/organization-wallet-create';
 import { WalletLogin } from './pages/wallet-login/wallet-login';
@@ -75,7 +74,8 @@ export const routes: Routes = [
   },
   {
     path: 'government-blockchain/couchdb-explorer',
-    component: CouchDbExplorerComponent,
+    redirectTo: 'blockchain/couchdb-explorer',
+    pathMatch: 'full'
   },
   {
     path: 'government-blockchain/new-transaction',
@@ -117,7 +117,8 @@ export const routes: Routes = [
     path: 'blockchain/audit-validation',
     loadComponent: () =>
       import('./pages/blockchain/audit-validation/audit-validation.component')
-        .then(m => m.AuditValidationComponent)
+        .then(m => m.AuditValidationComponent),
+    title: 'Audit Validation'
   },
 
   {
@@ -126,6 +127,7 @@ export const routes: Routes = [
       import('./pages/blockchain/couchdb-explorer/couchdb-explorer.component').then(
         (m) => m.CouchdbExplorerComponent
       ),
+    title: 'CouchDB Explorer'
   },
   {
     path: 'government-blockchain/transaction-list',

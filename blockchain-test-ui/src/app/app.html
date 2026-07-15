@@ -77,6 +77,36 @@
       </a>
 
 
+      <!-- Audit Portal Main Menu -->
+      <div class="audit-portal-sidebar-block">
+        <div class="audit-portal-main-menu">
+          <span class="nav-dot audit-portal-dot"></span>
+          <span class="menu-text">Audit Portal</span>
+        </div>
+
+        <div class="audit-portal-submenu">
+          <a
+            routerLink="/blockchain/audit-validation"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: true }"
+          >
+            <span class="nav-dot"></span>
+            <span class="menu-text">Audit Validation</span>
+          </a>
+
+          <a
+            routerLink="/blockchain/couchdb-explorer"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: true }"
+          >
+            <span class="nav-dot"></span>
+            <span class="menu-text">CouchDB Explorer</span>
+          </a>
+        </div>
+      </div>
+
+
+
 
       <!-- Blockchain Services Main Menu -->
       <button
