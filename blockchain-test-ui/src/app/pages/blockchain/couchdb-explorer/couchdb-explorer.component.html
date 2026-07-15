@@ -273,22 +273,28 @@
     </main>
   </section>
 
-  <div class="modal-backdrop" *ngIf="selectedDocument || loadingDocumentDetails || selectedDocumentError">
-    <section class="document-modal">
-      <header class="modal-header">
-        <div>
-          <p class="eyebrow">Read-only Document</p>
-          <h2 *ngIf="loadingDocumentDetails || selectedDocumentLoading">Loading document...</h2>
-          <h2 *ngIf="!loadingDocumentDetails && !selectedDocumentLoading && selectedDocumentError">Document load failed</h2>
-          <h2 *ngIf="!loadingDocumentDetails && !selectedDocumentLoading && !selectedDocumentError && selectedDocument">
-            {{ selectedDocument.id || 'Document Details' }}
-          </h2>
-          <p>{{ selectedDocument?.database }}</p>
-        </div>
+  
+<div class="modal-backdrop" *ngIf="loadingDocumentDetails || selectedDocumentError || selectedDocument">
+  <div class="document-modal">
+    <div class="modal-header">
+      <div>
+        <div class="eyebrow">READ-ONLY DOCUMENT</div>
 
-        <button type="button" class="btn btn-secondary" (click)="closeDocument()">Close</button>
-      </header>
+        <h2 *ngIf="loadingDocumentDetails || selectedDocumentLoading">Loading document...</h2>
+        <h2 *ngIf="!loadingDocumentDetails && !selectedDocumentLoading && selectedDocumentError">
+          Document load failed
+        </h2>
+        <h2 *ngIf="!loadingDocumentDetails && !selectedDocumentLoading && !selectedDocumentError && selectedDocument">
+          {{ selectedDocument.id || 'Document Details' }}
+        </h2>
 
+        <p *ngIf="selectedDocument">{{ selectedDocument.database }}</p>
+      </div>
+
+      <button type="button" class="btn btn-light" (click)="closeDocumentDetails()">Close</button>
+    </div>
+
+    <div class="modal-body">
       <div class="loading" *ngIf="loadingDocumentDetails || selectedDocumentLoading">
         Loading document details...
       </div>
@@ -297,162 +303,33 @@
         {{ selectedDocumentError }}
       </div>
 
-      <div *ngIf="!loadingDocumentDetails && !selectedDocumentLoading && selectedDocumentError" class="document-error">
-        {{ selectedDocumentError }}
-      </div>
-
-      <ng-container *ngIf="selectedDocument as selected">
-        <nav class="modal-tabs">
-          <button
-            type="button"
-            [class.active]="detailsTab === 'summary'"
-            (click)="setDetailsTab('summary')"
-          >
-            Summary
-          </button>
-
-          <button
-            type="button"
-            [class.active]="detailsTab === 'metadata'"
-            (click)="setDetailsTab('metadata')"
-          >
-            Metadata
-          </button>
-
-          <button
-            type="button"
-            [class.active]="detailsTab === 'json'"
-            (click)="setDetailsTab('json')"
-          >
-            JSON
-          </button>
-
-          <button type="button" class="copy-json" (click)="copyJson(selected.doc)">
-            Copy JSON
-          </button>
-        </nav>
-
-        <section class="details-body" *ngIf="detailsTab === 'summary'">
-          <div class="summary-grid">
-            <div>
-              <label>Document ID</label>
-              <div class="value mono">
-                {{ selected.summary._id || '-' }}
-                <button type="button" (click)="copyText(selected.summary._id)">Copy</button>
-              </div>
-            </div>
-
-            <div>
-              <label>Doc Type</label>
-              <div class="value">{{ selected.summary.docType || '-' }}</div>
-            </div>
-
-            <div>
-              <label>Audit ID</label>
-              <div class="value mono">
-                {{ selected.summary.auditId || '-' }}
-                <button type="button" (click)="copyText(selected.summary.auditId)">Copy</button>
-              </div>
-            </div>
-
-            <div>
-              <label>Blockchain Key</label>
-              <div class="value mono">
-                {{ selected.summary.blockchainKey || '-' }}
-                <button type="button" (click)="copyText(selected.summary.blockchainKey)">Copy</button>
-              </div>
-            </div>
-
-            <div>
-              <label>Audit Event Hash</label>
-              <div class="value mono">
-                {{ selected.summary.auditEventHash || '-' }}
-                <button type="button" (click)="copyText(selected.summary.auditEventHash)">
-                  Copy
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <label>Changed Fields Hash</label>
-              <div class="value mono">{{ selected.summary.changedFieldsHash || '-' }}</div>
-            </div>
-
-            <div>
-              <label>Primary Key Hash</label>
-              <div class="value mono">{{ selected.summary.primaryKeyHash || '-' }}</div>
-            </div>
-
-            <div>
-              <label>Schema Hash</label>
-              <div class="value mono">{{ selected.summary.schemaHash || '-' }}</div>
-            </div>
-
-            <div>
-              <label>Table Hash</label>
-              <div class="value mono">{{ selected.summary.tableHash || '-' }}</div>
-            </div>
-
-            <div>
-              <label>Transaction ID</label>
-              <div class="value mono">
-                {{ selected.summary.txId || '-' }}
-                <button type="button" (click)="copyText(selected.summary.txId)">Copy</button>
-              </div>
-            </div>
-
-            <div>
-              <label>Submitted By</label>
-              <div class="value">{{ selected.summary.submittedBy || '-' }}</div>
-            </div>
-
-            <div>
-              <label>Created At</label>
-              <div class="value">
-                {{ selected.summary.createdAt ? (selected.summary.createdAt | date: 'medium') : '-' }}
-              </div>
-            </div>
+      <ng-container *ngIf="!loadingDocumentDetails && !selectedDocumentLoading && !selectedDocumentError && selectedDocument as selected">
+        <div class="detail-grid">
+          <div>
+            <span>Document ID</span>
+            <strong class="mono">{{ selected.id }}</strong>
           </div>
-        </section>
-
-        <section class="details-body" *ngIf="detailsTab === 'metadata'">
-          <div class="summary-grid">
-            <div>
-              <label>Revision</label>
-              <div class="value mono">{{ selected.doc?._rev || '-' }}</div>
-            </div>
-
-            <div>
-              <label>Source System</label>
-              <div class="value">{{ selected.summary.sourceSystem || '-' }}</div>
-            </div>
-
-            <div>
-              <label>Hash Algorithm</label>
-              <div class="value">{{ selected.doc?.hashAlgorithm || '-' }}</div>
-            </div>
-
-            <div>
-              <label>Hash Version</label>
-              <div class="value">{{ selected.doc?.hashVersion || '-' }}</div>
-            </div>
-
-            <div>
-              <label>Proof Version</label>
-              <div class="value">{{ selected.doc?.proofVersion || '-' }}</div>
-            </div>
-
-            <div>
-              <label>Fabric Version</label>
-              <div class="value mono">{{ selected.doc?.['~version'] || '-' }}</div>
-            </div>
+          <div>
+            <span>Database</span>
+            <strong class="mono">{{ selected.database }}</strong>
           </div>
-        </section>
+          <div>
+            <span>Doc Type</span>
+            <strong>{{ $any(selected).summary?.docType || $any(selected).doc?.docType || '-' }}</strong>
+          </div>
+          <div>
+            <span>Audit ID</span>
+            <strong class="mono">{{ $any(selected).summary?.auditId || $any(selected).doc?.auditId || '-' }}</strong>
+          </div>
+          <div>
+            <span>TX ID</span>
+            <strong class="mono">{{ $any(selected).summary?.txId || $any(selected).doc?.txId || '-' }}</strong>
+          </div>
+        </div>
 
-        <section class="details-body json-body" *ngIf="detailsTab === 'json'">
-          <pre>{{ formatJson(selected.doc) }}</pre>
-        </section>
+        <h3>Document JSON</h3>
+        <pre class="json-view">{{ $any(selected).doc | json }}</pre>
       </ng-container>
-    </section>
+    </div>
   </div>
 </div>

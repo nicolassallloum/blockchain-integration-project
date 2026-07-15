@@ -203,12 +203,21 @@ defaultDatabase = '';
     return rawId;
   }
 
-  viewDocument(row: CouchDbDocumentRow): void {
+  closeDocumentDetails(): void {
+    this.selectedDocument = null;
+    this.selectedDocumentError = '';
+    this.loadingDocumentDetails = false;
+    this.selectedDocumentLoading = false;
+    this.setPageTitle(this.selectedDatabase?.name);
+  }
+
+  async viewDocument(row: CouchDbDocumentRow): Promise<void> {
     if (!this.selectedDatabase) {
       return;
     }
 
     const documentId = this.getRealCouchDbDocumentId(row);
+    const databaseName = this.selectedDatabase.name;
 
     this.selectedDocument = null;
     this.selectedDocumentError = '';
@@ -216,43 +225,58 @@ defaultDatabase = '';
     this.selectedDocumentLoading = true;
     this.setPageTitle(documentId);
 
-    console.log('[Valoores Audit Logs] Open document request', {
-      database: this.selectedDatabase.name,
+    const url =
+      `/api/v1/couchdb-explorer/databases/${encodeURIComponent(databaseName)}` +
+      `/documents/${encodeURIComponent(documentId)}`;
+
+    console.log('[Valoores Audit Logs] Direct document fetch', {
+      databaseName,
       rawRowId: row.id,
-      normalizedDocumentId: documentId
+      documentId,
+      url
     });
 
-    this.couchDbExplorerService
-      .getDocument(this.selectedDatabase.name, documentId)
-      .pipe(
-        timeout(15000),
-        finalize(() => {
-          this.loadingDocumentDetails = false;
-          this.selectedDocumentLoading = false;
-        })
-      )
-      .subscribe({
-        next: (response) => {
-          const details = (response as any)?.data ?? response;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 15000);
 
-          console.log('[Valoores Audit Logs] Document response', details);
-
-          if (!details || !details.doc) {
-            this.selectedDocumentError = 'No document details returned from CouchDB.';
-            return;
-          }
-
-          this.selectedDocument = details;
-        },
-        error: (error) => {
-          console.error('[Valoores Audit Logs] Document load failed', error);
-
-          this.selectedDocumentError =
-            error?.error?.message ||
-            error?.message ||
-            'Failed to load document details.';
-        }
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        signal: controller.signal
       });
+
+      const payload = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(
+          payload?.message ||
+          payload?.error ||
+          `Document API failed with HTTP ${response.status}`
+        );
+      }
+
+      const details = payload?.data ?? payload;
+
+      console.log('[Valoores Audit Logs] Direct document response', details);
+
+      if (!details || !details.doc) {
+        this.selectedDocumentError = 'No document details returned from CouchDB.';
+        return;
+      }
+
+      this.selectedDocument = details as CouchDbDocumentDetailsResponse;
+    } catch (error: any) {
+      console.error('[Valoores Audit Logs] Direct document fetch failed', error);
+
+      this.selectedDocumentError =
+        error?.name === 'AbortError'
+          ? 'Document loading timed out after 15 seconds.'
+          : error?.message || 'Failed to load document details.';
+    } finally {
+      clearTimeout(timer);
+      this.loadingDocumentDetails = false;
+      this.selectedDocumentLoading = false;
+    }
   }
 
   closeDocument(): void {
