@@ -549,4 +549,131 @@ this.selectedDocumentError = '';
     this.cdr.detectChanges();
   }
 
+
+
+  openDocumentNative(rowDoc: any): void {
+    const rawDocumentId =
+      rowDoc?._id ||
+      rowDoc?.id ||
+      rowDoc?.document_id ||
+      rowDoc?.doc_id ||
+      rowDoc?.key ||
+      rowDoc?.documentId;
+
+    const rawDatabase =
+      (this as any).selectedDatabase ||
+      (this as any).selectedDatabaseName ||
+      (this as any).currentDatabase ||
+      'kycchannelnix1_kyc-wallet-chaincode-js';
+
+    const databaseName =
+      typeof rawDatabase === 'string'
+        ? rawDatabase
+        : rawDatabase?.name ||
+          rawDatabase?.db_name ||
+          rawDatabase?.database_name ||
+          rawDatabase?.id ||
+          'kycchannelnix1_kyc-wallet-chaincode-js';
+
+    const overlayId = 'valoores-native-document-viewer-overlay';
+    const existing = window.document.getElementById(overlayId);
+    if (existing) {
+      existing.remove();
+    }
+
+    const overlay = window.document.createElement('div');
+    overlay.id = overlayId;
+    overlay.style.position = 'fixed';
+    overlay.style.inset = '0';
+    overlay.style.zIndex = '999999';
+    overlay.style.background = 'rgba(15, 23, 42, 0.65)';
+    overlay.style.display = 'flex';
+    overlay.style.alignItems = 'center';
+    overlay.style.justifyContent = 'center';
+    overlay.style.padding = '32px';
+
+    const modal = window.document.createElement('div');
+    modal.style.width = 'min(1100px, 92vw)';
+    modal.style.maxHeight = '86vh';
+    modal.style.background = '#fff';
+    modal.style.borderRadius = '14px';
+    modal.style.boxShadow = '0 30px 80px rgba(0,0,0,0.35)';
+    modal.style.overflow = 'hidden';
+    modal.style.display = 'flex';
+    modal.style.flexDirection = 'column';
+
+    const header = window.document.createElement('div');
+    header.style.padding = '18px 22px';
+    header.style.borderBottom = '1px solid #e5e7eb';
+    header.style.display = 'flex';
+    header.style.justifyContent = 'space-between';
+    header.style.alignItems = 'center';
+
+    const title = window.document.createElement('div');
+    title.innerHTML = '<div style="font-size:12px;font-weight:800;color:#1d4ed8;letter-spacing:.08em;">READ-ONLY DOCUMENT</div><h2 style="margin:4px 0 0;font-size:20px;">Valoores Audit Log Document</h2>';
+
+    const closeBtn = window.document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.textContent = 'Close';
+    closeBtn.style.border = '1px solid #cbd5e1';
+    closeBtn.style.borderRadius = '8px';
+    closeBtn.style.background = '#fff';
+    closeBtn.style.padding = '8px 14px';
+    closeBtn.style.cursor = 'pointer';
+    closeBtn.onclick = () => overlay.remove();
+
+    header.appendChild(title);
+    header.appendChild(closeBtn);
+
+    const body = window.document.createElement('div');
+    body.style.padding = '18px 22px';
+    body.style.overflow = 'auto';
+    body.style.fontFamily = 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace';
+    body.style.fontSize = '13px';
+    body.textContent = 'Loading document details...';
+
+    modal.appendChild(header);
+    modal.appendChild(body);
+    overlay.appendChild(modal);
+    window.document.body.appendChild(overlay);
+
+    if (!rawDocumentId) {
+      body.textContent = 'Document ID was not found for this row.';
+      return;
+    }
+
+    const url =
+      `/api/v1/couchdb-explorer/databases/${encodeURIComponent(String(databaseName))}` +
+      `/documents/${encodeURIComponent(String(rawDocumentId))}?_ts=${Date.now()}`;
+
+    fetch(url, {
+      method: 'GET',
+      cache: 'no-store',
+      headers: {
+        Accept: 'application/json',
+        'Cache-Control': 'no-cache',
+        Pragma: 'no-cache'
+      }
+    })
+      .then(async response => {
+        const bodyText = await response.text();
+
+        let payload: any;
+        try {
+          payload = bodyText ? JSON.parse(bodyText) : {};
+        } catch {
+          payload = { raw: bodyText };
+        }
+
+        if (!response.ok) {
+          throw new Error(payload?.message || payload?.error?.reason || `HTTP ${response.status}`);
+        }
+
+        body.textContent = JSON.stringify(payload?.doc || payload?.document || payload?.data || payload, null, 2);
+      })
+      .catch(error => {
+        body.textContent = `Failed to load document details:\n${error?.message || error}`;
+      });
+  }
+
 }
