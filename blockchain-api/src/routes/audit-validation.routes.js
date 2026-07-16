@@ -192,13 +192,13 @@ function addStrictRecordPkFieldValueFilter(state, field, value) {
 
   if (cleanField) {
     state.values.push(`${cleanField}=${cleanValue}`);
-    state.clauses.push(`record_pk::text = $${state.values.length}`);
+    state.clauses.push(`REPLACE(record_pk::text, ' ', '') = REPLACE($${state.values.length}, ' ', '')`);
     return;
   }
 
   if (cleanValue.includes('=')) {
     state.values.push(cleanValue);
-    state.clauses.push(`record_pk::text = $${state.values.length}`);
+    state.clauses.push(`REPLACE(record_pk::text, ' ', '') = REPLACE($${state.values.length}, ' ', '')`);
     return;
   }
 
