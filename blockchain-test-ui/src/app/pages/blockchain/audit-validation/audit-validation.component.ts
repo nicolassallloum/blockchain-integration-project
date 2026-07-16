@@ -351,8 +351,14 @@ offset: this.offset,
     const selected = this.getSelectedObjectConfig();
 
     this.filters.source_object = selected?.sourceObjects?.[0] || '';
-    this.filters.record_pk = this.recordPkSearchValue?.trim() || '';
-    this.filters.record_pk_field = this.selectedRecordPkField || '';
+    const cleanRecordPkValue = this.recordPkSearchValue?.trim() || '';
+
+    this.filters.record_pk =
+      this.selectedRecordPkField && cleanRecordPkValue
+        ? `${this.selectedRecordPkField}=${cleanRecordPkValue}`
+        : cleanRecordPkValue;
+
+    this.filters.record_pk_field = '';
     this.loadEvents();
   }
 

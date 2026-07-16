@@ -151,60 +151,27 @@ function addBusinessObjectFilter(state, value) {
   for (const source of sources) {
     state.values.push(`%${source}%`);
     const paramIndex = state.values.length;
-
     parts.push(`source_object::text ILIKE $${paramIndex}`);
   }
 
   state.clauses.push(`(${parts.join(' OR ')})`);
 }
 
-function addRecordPkSearchFilter(state, value, field = '') {
+function addRecordPkSearchFilter(state, value) {
   const cleanValue = String(value || '').trim();
-  const cleanField = String(field || '').trim();
 
   if (!cleanValue) return;
 
-  if (cleanField) {
-    state.values.push(`${cleanField}=${cleanValue}`);
-    state.clauses.push(`record_pk::text = $${state.values.length}`);
-    return;
-  }
-
-  if (cleanValue.includes('=')) {
-    state.values.push(cleanValue);
-    state.clauses.push(`record_pk::text = $${state.values.length}`);
-    return;
-  }
-
-  state.values.push(`%=${cleanValue}`);
-  state.clauses.push(`record_pk::text ILIKE $${state.values.length}`);
-}
-
-
-
-function addStrictRecordPkFieldValueFilter(state, field, value) {
-  const cleanField = String(field || '').trim();
-  const cleanValue = String(value || '').trim();
-
-  if (!cleanValue) {
-    return;
-  }
-
-  if (cleanField) {
-    state.values.push(`${cleanField}=${cleanValue}`);
-    state.clauses.push(`REPLACE(record_pk::text, ' ', '') = REPLACE($${state.values.length}, ' ', '')`);
-    return;
-  }
-
   if (cleanValue.includes('=')) {
     state.values.push(cleanValue);
     state.clauses.push(`REPLACE(record_pk::text, ' ', '') = REPLACE($${state.values.length}, ' ', '')`);
     return;
   }
 
-  state.values.push(`%=${cleanValue}`);
+  state.values.push(`%${cleanValue}%`);
   state.clauses.push(`record_pk::text ILIKE $${state.values.length}`);
 }
+
 
 router.get('/events', async (req, res, next) => {
   try {
@@ -229,7 +196,6 @@ router.get('/events', async (req, res, next) => {
         source_table,
         source_view,
         record_pk,
-        record_pk_field,
         action_type,
         changed_by,
         changed_at,
