@@ -41,6 +41,7 @@ export interface AuditEvent {
 
 export interface AuditEventFilters {
   source_object?: string;
+  source_table?: string;
   record_pk?: string;
   record_pk_field?: string;
   page_size?: number;

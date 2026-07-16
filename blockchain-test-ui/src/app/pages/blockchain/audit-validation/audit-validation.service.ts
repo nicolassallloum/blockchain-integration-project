@@ -45,6 +45,7 @@ export interface AuditEventFilters {
   page_size?: number;
   limit?: number;
   source_object?: string;
+  source_table?: string;
   action_type?: string;
   hash_status?: string;
   validation_status?: string;

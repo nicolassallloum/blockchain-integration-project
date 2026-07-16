@@ -88,6 +88,7 @@ offset: this.offset,
   selectedBusinessObject = '';
   selectedRecordPkField = '';
   recordPkSearchValue = '';
+  selectedDashboardTitle = 'All Audit Events';
 
   constructor(private auditValidationService: AuditValidationService) {}
 
@@ -117,11 +118,27 @@ offset: this.offset,
   }
 
   resetFilters(): void {
+    this.selectedDashboardTitle = 'All Audit Events';
+    this.selectedBusinessObject = '';
+    this.selectedRecordPkField = '';
+    this.recordPkSearchValue = '';
+
     this.filters = {
-      limit: 50,
-      offset: 0,
+      page_size: this.filters.page_size || 50,
+      limit: this.filters.page_size || 50,
+      source_object: '',
+      source_table: '',
+      record_pk: '',
+      record_pk_field: '',
+      action_type: '',
+      hash_status: '',
+      validation_status: '',
+      blockchain_status: '',
+      date_from: '',
+      date_to: ''
     };
-    this.refreshEvents();
+
+    this.loadEvents();
   }
 
   viewDetails(event: AuditEvent): void {
