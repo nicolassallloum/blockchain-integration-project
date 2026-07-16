@@ -295,42 +295,23 @@
     </div>
 
     <div class="modal-body">
-      <div class="loading" *ngIf="loadingDocumentDetails || selectedDocumentLoading">
+      <div class="document-loading" *ngIf="loadingDocumentDetails || selectedDocumentLoading">
         Loading document details...
       </div>
 
-      <div *ngIf="!loadingDocumentDetails && !selectedDocumentLoading && selectedDocumentError" class="document-error">
+      <div class="document-error" *ngIf="!(loadingDocumentDetails || selectedDocumentLoading) && selectedDocumentError">
         {{ selectedDocumentError }}
       </div>
 
-      <ng-container *ngIf="!loadingDocumentDetails && !selectedDocumentLoading && !selectedDocumentError && selectedDocument as selected">
-        <div class="detail-grid">
-          <div>
-            <span>Document ID</span>
-            <strong class="mono">{{ selected.id }}</strong>
-          </div>
-          <div>
-            <span>Database</span>
-            <strong class="mono">{{ selected.database }}</strong>
-          </div>
-          <div>
-            <span>Doc Type</span>
-            <strong>{{ $any(selected).summary?.docType || $any(selected).doc?.docType || '-' }}</strong>
-          </div>
-          <div>
-            <span>Audit ID</span>
-            <strong class="mono">{{ $any(selected).summary?.auditId || $any(selected).doc?.auditId || '-' }}</strong>
-          </div>
-          <div>
-            <span>TX ID</span>
-            <strong class="mono">{{ $any(selected).summary?.txId || $any(selected).doc?.txId || '-' }}</strong>
-          </div>
-        </div>
-
-        <h3>Document JSON</h3>
-        <pre class="json-view">{{ $any(selected).doc | json }}</pre>
+      <ng-container *ngIf="!(loadingDocumentDetails || selectedDocumentLoading) && selectedDocument">
+        <h4>Document JSON</h4>
+        <pre class="document-json">{{ $any(selectedDocument) | json }}</pre>
       </ng-container>
-    </div>
+
+      <div class="document-error" *ngIf="!(loadingDocumentDetails || selectedDocumentLoading) && !selectedDocument && !selectedDocumentError">
+        No document details were returned.
+      </div>
+</div>
   </div>
 </div>
 
@@ -354,33 +335,7 @@
         {{ selectedDocumentError }}
       </div>
 
-      <ng-container *ngIf="!loadingDocumentDetails && selectedDocument">
-        <div class="document-summary-grid">
-          <div>
-            <strong>Document ID</strong>
-            <span>{{ selectedDocument._id || selectedDocument.id || selectedDocument.document_id || '-' }}</span>
-          </div>
-          <div>
-            <strong>Doc Type</strong>
-            <span>{{ selectedDocument.docType || selectedDocument.doc_type || selectedDocument.type || '-' }}</span>
-          </div>
-          <div>
-            <strong>Audit ID</strong>
-            <span>{{ selectedDocument.auditId || selectedDocument.audit_id || selectedDocument.summary?.auditId || '-' }}</span>
-          </div>
-          <div>
-            <strong>TX ID</strong>
-            <span>{{ selectedDocument.txId || selectedDocument.tx_id || selectedDocument.transactionId || '-' }}</span>
-          </div>
-        </div>
-
-        <h4>Document JSON</h4>
-        <pre class="document-json">{{ selectedDocument | json }}</pre>
-      </ng-container>
-
-      <div class="document-error" *ngIf="!loadingDocumentDetails && !selectedDocument && !selectedDocumentError">
-        No document details were returned.
-      </div>
-</div>
+      <pre class="document-json" *ngIf="!loadingDocumentDetails && selectedDocument">{{ selectedDocument | json }}</pre>
+    </div>
   </div>
 </div>

@@ -20,8 +20,6 @@ type DetailsTab = 'summary' | 'metadata' | 'json';
   styleUrls: ['./couchdb-explorer.component.scss'],
 })
 export class CouchdbExplorerComponent implements OnInit {
-  selectedDocument: any = null;
-
   documentModalOpen = false;
 
   pageTitle = 'Valoores Audit Logs';
@@ -113,14 +111,7 @@ defaultDatabase = '';
     this.activePanel = 'documents';
     this.skip = 0;
     this.documents = [];
-    this.selectedDocument =
-          payload?.doc ||
-          payload?.document ||
-          payload?.data ||
-          payload?.result ||
-          payload;
-
-        console.log('[Valoores Audit Logs] Final selectedDocument:', this.selectedDocument);
+    this.selectedDocument = null;
         this.selectedDocumentLoading = false;
         if (this.selectedDocumentTimeout) { clearTimeout(this.selectedDocumentTimeout); }
     this.setPageTitle(database.name);
@@ -439,14 +430,7 @@ defaultDatabase = '';
         if (!response.ok) {
           throw new Error(payload?.message || payload?.error?.reason || `HTTP ${response.status}`);
         }
-
-        this.selectedDocument =
-          payload?.doc ||
-          payload?.document ||
-          payload?.data ||
-          payload;
-
-        this.selectedDocumentError = '';
+this.selectedDocumentError = '';
       })
       .catch(error => {
         console.error('[Valoores Audit Logs] Safe document load failed:', error);
