@@ -81,7 +81,22 @@ function buildEventsFilter(query) {
     clauses.push(`changed_at < $${values.length}::timestamptz`);
   }
 
-  return {
+  
+  // Exact Record PK filter for Object History Search.
+  // Example query value: record_pk=customer_id=3274451958
+  const strictRecordPk = String(query.record_pk || '').trim();
+
+  if (strictRecordPk) {
+    if (strictRecordPk.includes('=')) {
+      values.push(strictRecordPk);
+      clauses.push(`REPLACE(record_pk::text, ' ', '') = REPLACE($${values.length}, ' ', '')`);
+    } else {
+      values.push(`%${strictRecordPk}%`);
+      clauses.push(`record_pk::text ILIKE $${values.length}`);
+    }
+  }
+
+return {
     whereSql: clauses.length ? `WHERE ${clauses.join(' AND ')}` : '',
     values,
   };
