@@ -235,7 +235,7 @@
                   {{ row.summary.createdAt ? (row.summary.createdAt | date: 'medium') : '-' }}
                 </td>
                 <td>
-                  <button (click)="openDocumentSafe(row)" type="button" class="btn btn-small btn-primary">
+                  <button (click)="openDocumentStable(row)" type="button" class="btn btn-small btn-primary">
                     View
                   </button>
                 </td>
@@ -274,68 +274,37 @@
   </section>
 
   
-<div class="modal-backdrop" *ngIf="loadingDocumentDetails || selectedDocumentError || selectedDocument">
-  <div class="document-modal">
-    <div class="modal-header">
-      <div>
-        <div class="eyebrow">READ-ONLY DOCUMENT</div>
 
-        <h2 *ngIf="loadingDocumentDetails || selectedDocumentLoading">Loading document...</h2>
-        <h2 *ngIf="!loadingDocumentDetails && !selectedDocumentLoading && selectedDocumentError">
-          Document load failed
-        </h2>
-        <h2 *ngIf="!loadingDocumentDetails && !selectedDocumentLoading && !selectedDocumentError && selectedDocument">
-          {{ selectedDocument.id || 'Document Details' }}
-        </h2>
-
-        <p *ngIf="selectedDocument">{{ selectedDocument.database }}</p>
-      </div>
-
-      <button type="button" class="btn btn-light" (click)="closeDocumentDetails()">Close</button>
-    </div>
-
-    <div class="modal-body">
-      <div class="document-loading" *ngIf="loadingDocumentDetails || selectedDocumentLoading">
-        Loading document details...
-      </div>
-
-      <div class="document-error" *ngIf="!(loadingDocumentDetails || selectedDocumentLoading) && selectedDocumentError">
-        {{ selectedDocumentError }}
-      </div>
-
-      <ng-container *ngIf="!(loadingDocumentDetails || selectedDocumentLoading) && selectedDocument">
-        <h4>Document JSON</h4>
-        <pre class="document-json">{{ $any(selectedDocument) | json }}</pre>
-      </ng-container>
-
-      <div class="document-error" *ngIf="!(loadingDocumentDetails || selectedDocumentLoading) && !selectedDocument && !selectedDocumentError">
-        No document details were returned.
-      </div>
-</div>
-  </div>
 </div>
 
 
-<div class="document-modal-backdrop" *ngIf="documentModalOpen">
+
+
+
+<div class="document-modal-backdrop" *ngIf="stableDocumentModalOpen">
   <div class="document-modal">
     <div class="document-modal-header">
       <div>
         <div class="eyebrow">READ-ONLY DOCUMENT</div>
         <h3>Document Details</h3>
       </div>
-      <button type="button" class="secondary-btn" (click)="closeDocumentModalSafe()">Close</button>
+      <button type="button" class="secondary-btn" (click)="closeDocumentStable()">Close</button>
     </div>
 
     <div class="document-modal-body">
-      <div class="document-loading" *ngIf="loadingDocumentDetails">
+      <div class="document-loading" *ngIf="stableDocumentLoading">
         Loading document details...
       </div>
 
-      <div class="document-error" *ngIf="!loadingDocumentDetails && selectedDocumentError">
-        {{ selectedDocumentError }}
+      <div class="document-error" *ngIf="!stableDocumentLoading && stableDocumentError">
+        {{ stableDocumentError }}
       </div>
 
-      <pre class="document-json" *ngIf="!loadingDocumentDetails && selectedDocument">{{ selectedDocument | json }}</pre>
+      <pre class="document-json" *ngIf="!stableDocumentLoading && stableDocumentData">{{ $any(stableDocumentData) | json }}</pre>
+
+      <div class="document-error" *ngIf="!stableDocumentLoading && !stableDocumentData && !stableDocumentError">
+        No document details were returned.
+      </div>
     </div>
   </div>
 </div>
