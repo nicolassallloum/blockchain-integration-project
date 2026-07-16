@@ -235,7 +235,7 @@
                   {{ row.summary.createdAt ? (row.summary.createdAt | date: 'medium') : '-' }}
                 </td>
                 <td>
-                  <button type="button" (click)="openDocumentStable(db)" type="button" class="btn btn-small btn-primary">
+                  <button type="button" (click)="openDocumentStable(row)" class="btn btn-small btn-primary">
                     View
                   </button>
                 </td>
