@@ -45,7 +45,7 @@ function buildEventsFilter(query) {
   const clauses = [];
   const values = [];
 
-  addFilter({ clauses, values }, 'source_object', query.source_object);
+  addBusinessObjectFilter({ clauses, values }, query.source_object);
   addFilter(
     { clauses, values },
     'action_type',
@@ -86,6 +86,90 @@ function buildEventsFilter(query) {
     values,
   };
 }
+
+
+const AUDIT_BUSINESS_OBJECT_SOURCE_MAP = {
+  transactions: [
+    'Transactions',
+    'findba.fin_transaction',
+    'blockchain.v_transactions',
+    'fin_transaction'
+  ],
+  aml_alerts: [
+    'AML Alerts',
+    'sdedba.ref_com_snction_lst_cust_mtch',
+    'blockchain.v_aml_alert_by_customer',
+    'ref_com_snction_lst_cust_mtch'
+  ],
+  queries: [
+    'Queries',
+    'qbedba.qbe_user_query',
+    'qbedba.qbe_user_query_details',
+    'blockchain.v_queries',
+    'qbe_user_query',
+    'qbe_user_query_details'
+  ],
+  customers: [
+    'Customers',
+    'sdedba.ref_customer',
+    'sdedba.cfg_customer_def',
+    'sdedba.ref_customer_misc_info',
+    'blockchain.v_customers',
+    'ref_customer',
+    'cfg_customer_def',
+    'ref_customer_misc_info'
+  ],
+  aml_rules: [
+    'AML Rules',
+    'suitedba.br_business_rule_definition',
+    'suitedba.br_business_rule_query',
+    'suitedba.br_business_rule_message',
+    'blockchain.v_aml_rules',
+    'br_business_rule_definition',
+    'br_business_rule_query',
+    'br_business_rule_message'
+  ]
+};
+
+function normalizeBusinessObjectKey(value = '') {
+  return String(value)
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, 'and')
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+}
+
+function addBusinessObjectFilter(state, value) {
+  if (!value) return;
+
+  const key = normalizeBusinessObjectKey(value);
+  const sources = AUDIT_BUSINESS_OBJECT_SOURCE_MAP[key] || [value];
+
+  const parts = [];
+
+  for (const source of sources) {
+    state.values.push(`%${source}%`);
+    const paramIndex = state.values.length;
+
+    parts.push(
+      `(source_object::text ILIKE $${paramIndex} OR source_table::text ILIKE $${paramIndex})`
+    );
+  }
+
+  state.clauses.push(`(${parts.join(' OR ')})`);
+}
+
+function addRecordPkSearchFilter(state, value) {
+  if (!value) return;
+
+  const cleanValue = String(value).trim();
+  if (!cleanValue) return;
+
+  state.values.push(`%${cleanValue}%`);
+  state.clauses.push(`record_pk::text ILIKE $${state.values.length}`);
+}
+
 
 router.get('/events', async (req, res, next) => {
   try {
