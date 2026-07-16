@@ -46,8 +46,7 @@ export class AuditValidationComponent implements OnInit {
 
   filters: AuditEventFilters = {
     page_size: 50,
-    limit: this.limit,
-    offset: this.offset,
+offset: this.offset,
   };
 
 
@@ -360,8 +359,7 @@ export class AuditValidationComponent implements OnInit {
       ...this.filters,
       page_size: this.filters.page_size || 50,
       limit: this.filters.page_size || 50,
-      limit: this.limit,
-      offset: this.offset,
+offset: this.offset,
     };
 
     this.auditValidationService.getEvents(filters).subscribe({
