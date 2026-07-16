@@ -359,6 +359,7 @@ export class AuditValidationComponent implements OnInit {
     const filters: AuditEventFilters = {
       ...this.filters,
       page_size: this.filters.page_size || 50,
+      limit: this.filters.page_size || 50,
       limit: this.limit,
       offset: this.offset,
     };

@@ -40,6 +40,9 @@ export interface AuditEvent {
 }
 
 export interface AuditEventFilters {
+  record_pk?: string;
+  page_size?: number;
+  limit?: number;
   source_object?: string;
   action_type?: string;
   hash_status?: string;
@@ -99,9 +102,14 @@ export class AuditValidationService {
   }
 
   getEvents(filters: AuditEventFilters = {}): Observable<AuditEventsResponse> {
+    const normalizedFilters: AuditEventFilters = {
+      ...filters,
+      limit: filters.page_size || filters.limit || 50
+    };
+
     let params = new HttpParams();
 
-    Object.entries(filters).forEach(([key, value]) => {
+    Object.entries(normalizedFilters).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== '') {
         params = params.set(key, String(value));
       }
