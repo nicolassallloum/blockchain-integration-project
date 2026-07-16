@@ -235,7 +235,7 @@
                   {{ row.summary.createdAt ? (row.summary.createdAt | date: 'medium') : '-' }}
                 </td>
                 <td>
-                  <button type="button" class="btn btn-small btn-primary" (click)="viewDocument(row)">
+                  <button (click)="openDocumentSafe(row)" type="button" class="btn btn-small btn-primary">
                     View
                   </button>
                 </td>
@@ -330,6 +330,31 @@
         <h3>Document JSON</h3>
         <pre class="json-view">{{ $any(selected).doc | json }}</pre>
       </ng-container>
+    </div>
+  </div>
+</div>
+
+
+<div class="document-modal-backdrop" *ngIf="documentModalOpen">
+  <div class="document-modal">
+    <div class="document-modal-header">
+      <div>
+        <div class="eyebrow">READ-ONLY DOCUMENT</div>
+        <h3>Document Details</h3>
+      </div>
+      <button type="button" class="secondary-btn" (click)="closeDocumentModalSafe()">Close</button>
+    </div>
+
+    <div class="document-modal-body">
+      <div class="document-loading" *ngIf="loadingDocumentDetails">
+        Loading document details...
+      </div>
+
+      <div class="document-error" *ngIf="!loadingDocumentDetails && selectedDocumentError">
+        {{ selectedDocumentError }}
+      </div>
+
+      <pre class="document-json" *ngIf="!loadingDocumentDetails && selectedDocument">{{ selectedDocument | json }}</pre>
     </div>
   </div>
 </div>

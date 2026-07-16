@@ -1,6 +1,6 @@
 import { finalize, timeout } from 'rxjs';
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import {Component, OnInit, ChangeDetectorRef} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Title } from '@angular/platform-browser';
 import {
@@ -20,6 +20,8 @@ type DetailsTab = 'summary' | 'metadata' | 'json';
   styleUrls: ['./couchdb-explorer.component.scss'],
 })
 export class CouchdbExplorerComponent implements OnInit {
+  documentModalOpen = false;
+
   pageTitle = 'Valoores Audit Logs';
   databases: CouchDbDatabase[] = [];
   selectedDatabase: CouchDbDatabase | null = null;
@@ -60,10 +62,8 @@ defaultDatabase = '';
     'CUSTOMER_KYC_PROOF',
   ];
 
-  constructor(
-    private couchDbExplorerService: CouchDbExplorerService,
-    private titleService: Title
-  ) {}
+  constructor(private couchDbExplorerService: CouchDbExplorerService,
+    private titleService: Title, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     this.setPageTitle();
@@ -362,4 +362,100 @@ defaultDatabase = '';
   trackByDocument(index: number, item: CouchDbDocumentRow): string {
     return item.id;
   }
+
+
+  openDocumentSafe(document: any): void {
+    const rawDocumentId =
+      document?._id ||
+      document?.id ||
+      document?.document_id ||
+      document?.doc_id ||
+      document?.key ||
+      document?.documentId;
+
+    const rawDatabase =
+      (this as any).selectedDatabase ||
+      (this as any).selectedDatabaseName ||
+      (this as any).currentDatabase ||
+      'kycchannelnix1_kyc-wallet-chaincode-js';
+
+    const databaseName =
+      typeof rawDatabase === 'string'
+        ? rawDatabase
+        : rawDatabase?.name ||
+          rawDatabase?.db_name ||
+          rawDatabase?.database_name ||
+          rawDatabase?.id ||
+          'kycchannelnix1_kyc-wallet-chaincode-js';
+
+    this.documentModalOpen = true;
+    this.selectedDocument = null;
+    this.selectedDocumentError = '';
+    this.loadingDocumentDetails = true;
+    this.cdr.detectChanges();
+
+    if (!rawDocumentId) {
+      this.selectedDocumentError = 'Document ID was not found for this row.';
+      this.loadingDocumentDetails = false;
+      this.cdr.detectChanges();
+      return;
+    }
+
+    const url =
+      `/api/v1/couchdb-explorer/databases/${encodeURIComponent(String(databaseName))}` +
+      `/documents/${encodeURIComponent(String(rawDocumentId))}?_ts=${Date.now()}`;
+
+    console.log('[Valoores Audit Logs] Safe open document row:', document);
+    console.log('[Valoores Audit Logs] Safe open document URL:', url);
+
+    fetch(url, {
+      method: 'GET',
+      cache: 'no-store',
+      headers: {
+        Accept: 'application/json',
+        'Cache-Control': 'no-cache',
+        Pragma: 'no-cache'
+      }
+    })
+      .then(async response => {
+        const bodyText = await response.text();
+
+        let payload: any = {};
+        try {
+          payload = bodyText ? JSON.parse(bodyText) : {};
+        } catch {
+          payload = { raw: bodyText };
+        }
+
+        if (!response.ok) {
+          throw new Error(payload?.message || payload?.error?.reason || `HTTP ${response.status}`);
+        }
+
+        this.selectedDocument =
+          payload?.doc ||
+          payload?.document ||
+          payload?.data ||
+          payload;
+
+        this.selectedDocumentError = '';
+      })
+      .catch(error => {
+        console.error('[Valoores Audit Logs] Safe document load failed:', error);
+        this.selectedDocument = null;
+        this.selectedDocumentError = error?.message || 'Failed to load document details.';
+      })
+      .finally(() => {
+        this.loadingDocumentDetails = false;
+        this.cdr.detectChanges();
+      });
+  }
+
+  closeDocumentModalSafe(): void {
+    this.documentModalOpen = false;
+    this.selectedDocument = null;
+    this.selectedDocumentError = '';
+    this.loadingDocumentDetails = false;
+    this.cdr.detectChanges();
+  }
+
 }
