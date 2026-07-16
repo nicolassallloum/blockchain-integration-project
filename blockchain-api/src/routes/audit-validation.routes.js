@@ -181,6 +181,31 @@ function addRecordPkSearchFilter(state, value, field = '') {
 }
 
 
+
+function addStrictRecordPkFieldValueFilter(state, field, value) {
+  const cleanField = String(field || '').trim();
+  const cleanValue = String(value || '').trim();
+
+  if (!cleanValue) {
+    return;
+  }
+
+  if (cleanField) {
+    state.values.push(`${cleanField}=${cleanValue}`);
+    state.clauses.push(`record_pk::text = $${state.values.length}`);
+    return;
+  }
+
+  if (cleanValue.includes('=')) {
+    state.values.push(cleanValue);
+    state.clauses.push(`record_pk::text = $${state.values.length}`);
+    return;
+  }
+
+  state.values.push(`%=${cleanValue}`);
+  state.clauses.push(`record_pk::text ILIKE $${state.values.length}`);
+}
+
 router.get('/events', async (req, res, next) => {
   try {
     const limit = intOrDefault(req.query.limit, 50, 1, 500);
@@ -204,6 +229,7 @@ router.get('/events', async (req, res, next) => {
         source_table,
         source_view,
         record_pk,
+        record_pk_field,
         action_type,
         changed_by,
         changed_at,
