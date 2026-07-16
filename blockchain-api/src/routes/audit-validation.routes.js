@@ -160,13 +160,21 @@ function addBusinessObjectFilter(state, value) {
   state.clauses.push(`(${parts.join(' OR ')})`);
 }
 
-function addRecordPkSearchFilter(state, value) {
+function addRecordPkSearchFilter(state, value, field = '') {
   if (!value) return;
 
   const cleanValue = String(value).trim();
+  const cleanField = String(field || '').trim();
+
   if (!cleanValue) return;
 
-  state.values.push(`%${cleanValue}%`);
+  if (cleanField) {
+    state.values.push(`${cleanField}=${cleanValue}`);
+    state.clauses.push(`record_pk::text = $${state.values.length}`);
+    return;
+  }
+
+  state.values.push(`%=${cleanValue}`);
   state.clauses.push(`record_pk::text ILIKE $${state.values.length}`);
 }
 

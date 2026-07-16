@@ -335,6 +335,7 @@ offset: this.offset,
 
     this.filters.source_object = selected?.sourceObjects?.[0] || '';
     this.filters.record_pk = this.recordPkSearchValue?.trim() || '';
+    this.filters.record_pk_field = this.selectedRecordPkField || '';
     this.loadEvents();
   }
 
@@ -344,6 +345,7 @@ offset: this.offset,
     this.recordPkSearchValue = '';
     this.filters.source_object = '';
     this.filters.record_pk = '';
+    this.filters.record_pk_field = '';
     this.loadEvents();
   }
 
