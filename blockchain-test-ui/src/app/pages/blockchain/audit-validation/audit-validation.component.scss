@@ -648,3 +648,60 @@ body.audit-validation-fullscreen .header-spacer {
   background: #2563eb;
   border-radius: 999px;
 }
+
+.object-history-search {
+  margin: 14px 0;
+  padding: 14px;
+  border: 1px solid #d8e3f3;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.history-title {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.history-title strong {
+  font-size: 14px;
+  color: #0f172a;
+}
+
+.history-title span {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.history-controls {
+  display: grid;
+  grid-template-columns: 1.2fr 1.2fr 1.6fr auto auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.history-controls label,
+.page-size-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #334155;
+}
+
+.history-controls select,
+.history-controls input,
+.page-size-selector select {
+  height: 34px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 0 10px;
+  background: #ffffff;
+}
+
+.page-size-selector {
+  max-width: 140px;
+  margin-left: auto;
+}

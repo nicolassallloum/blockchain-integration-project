@@ -45,9 +45,50 @@ export class AuditValidationComponent implements OnInit {
   ];
 
   filters: AuditEventFilters = {
+    page_size: 50,
     limit: this.limit,
     offset: this.offset,
   };
+
+
+  pageSizeOptions = [10, 25, 50, 100, 250, 500];
+
+  businessObjectOptions = [
+    {
+      label: 'Transactions',
+      value: 'transactions',
+      sourceObjects: ['Transactions', 'findba.fin_transaction', 'blockchain.v_transactions', 'fin_transaction'],
+      recordPkFields: ['transaction_id', 'trx_id', 'fin_transaction_id', 'record_pk']
+    },
+    {
+      label: 'AML Alerts',
+      value: 'aml_alerts',
+      sourceObjects: ['AML Alerts', 'sdedba.ref_com_snction_lst_cust_mtch', 'blockchain.v_aml_alert_by_customer', 'ref_com_snction_lst_cust_mtch'],
+      recordPkFields: ['alert_id', 'customer_id', 'sanction_match_id', 'record_pk']
+    },
+    {
+      label: 'Queries',
+      value: 'queries',
+      sourceObjects: ['Queries', 'qbedba.qbe_user_query', 'qbedba.qbe_user_query_details', 'blockchain.v_queries', 'qbe_user_query', 'qbe_user_query_details'],
+      recordPkFields: ['qb_id', 'query_id', 'query_detail_id', 'record_pk']
+    },
+    {
+      label: 'Customers',
+      value: 'customers',
+      sourceObjects: ['Customers', 'sdedba.ref_customer', 'sdedba.cfg_customer_def', 'sdedba.ref_customer_misc_info', 'blockchain.v_customers', 'ref_customer', 'cfg_customer_def'],
+      recordPkFields: ['customer_id', 'customer_def_id', 'cust_id', 'record_pk']
+    },
+    {
+      label: 'AML Rules',
+      value: 'aml_rules',
+      sourceObjects: ['AML Rules', 'suitedba.br_business_rule_definition', 'suitedba.br_business_rule_query', 'suitedba.br_business_rule_message', 'blockchain.v_aml_rules', 'br_business_rule_definition'],
+      recordPkFields: ['rule_id', 'rule_query_id', 'business_rule_id', 'record_pk']
+    }
+  ];
+
+  selectedBusinessObject = '';
+  selectedRecordPkField = '';
+  recordPkSearchValue = '';
 
   constructor(private auditValidationService: AuditValidationService) {}
 
@@ -263,12 +304,61 @@ export class AuditValidationComponent implements OnInit {
   }
 
 
+
+  getSelectedObjectConfig(): any {
+    return this.businessObjectOptions.find((item) => item.value === this.selectedBusinessObject) || null;
+  }
+
+  getRecordPkFields(): string[] {
+    const selected = this.getSelectedObjectConfig();
+    return selected?.recordPkFields || ['record_pk'];
+  }
+
+  getFriendlyObjectName(sourceObject: string = '', sourceTable: string = ''): string {
+    const value = `${sourceObject} ${sourceTable}`.toLowerCase();
+
+    const found = this.businessObjectOptions.find((item) =>
+      item.sourceObjects.some((source: string) => value.includes(source.toLowerCase()))
+    );
+
+    return found?.label || sourceObject || sourceTable || '-';
+  }
+
+  onBusinessObjectChange(): void {
+    const selected = this.getSelectedObjectConfig();
+
+    this.selectedRecordPkField = selected?.recordPkFields?.[0] || '';
+    this.filters.source_object = selected?.sourceObjects?.[0] || '';
+  }
+
+  applyObjectHistorySearch(): void {
+    const selected = this.getSelectedObjectConfig();
+
+    this.filters.source_object = selected?.sourceObjects?.[0] || '';
+    this.filters.record_pk = this.recordPkSearchValue?.trim() || '';
+    this.loadEvents();
+  }
+
+  clearObjectHistorySearch(): void {
+    this.selectedBusinessObject = '';
+    this.selectedRecordPkField = '';
+    this.recordPkSearchValue = '';
+    this.filters.source_object = '';
+    this.filters.record_pk = '';
+    this.loadEvents();
+  }
+
+  onPageSizeChange(): void {
+    this.loadEvents();
+  }
+
   loadEvents(): void {
     this.loading = true;
     this.errorMessage = '';
 
     const filters: AuditEventFilters = {
       ...this.filters,
+      page_size: this.filters.page_size || 50,
       limit: this.limit,
       offset: this.offset,
     };

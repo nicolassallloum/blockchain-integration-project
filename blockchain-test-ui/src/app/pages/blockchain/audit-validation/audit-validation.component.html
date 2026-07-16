@@ -95,12 +95,57 @@
   </div>
 </div>
 
+
+<div class="object-history-search">
+  <div class="history-title">
+    <strong>Object History Search</strong>
+    <span>Choose an object, choose the Record PK field, then enter the ID to check its full audit history.</span>
+  </div>
+
+  <div class="history-controls">
+    <label>
+      Object
+      <select [(ngModel)]="selectedBusinessObject" (change)="onBusinessObjectChange()">
+        <option value="">Select Object</option>
+        <option *ngFor="let object of businessObjectOptions" [value]="object.value">
+          {{ object.label }}
+        </option>
+      </select>
+    </label>
+
+    <label>
+      Record PK
+      <select [(ngModel)]="selectedRecordPkField">
+        <option value="">Select Record PK</option>
+        <option *ngFor="let pk of getRecordPkFields()" [value]="pk">
+          {{ pk }}
+        </option>
+      </select>
+    </label>
+
+    <label>
+      ID / Value
+      <input
+        type="text"
+        [(ngModel)]="recordPkSearchValue"
+        placeholder="Write the ID to search history"
+        (keyup.enter)="applyObjectHistorySearch()"
+      />
+    </label>
+
+    <button type="button" class="btn btn-primary" (click)="applyObjectHistorySearch()">Check History</button>
+    <button type="button" class="btn btn-light" (click)="clearObjectHistorySearch()">Clear</button>
+  </div>
+</div>
+
 <div class="filters">
     <label>
       Object
-      <select [(ngModel)]="filters.source_object">
-        <option value="">All</option>
-        <option *ngFor="let item of sourceObjects" [value]="item">{{ item }}</option>
+      <select [(ngModel)]="selectedBusinessObject" (change)="onBusinessObjectChange()">
+        <option value="">All Objects</option>
+        <option *ngFor="let object of businessObjectOptions" [value]="object.value">
+          {{ object.label }}
+        </option>
       </select>
     </label>
 
@@ -162,6 +207,13 @@
 
   <div class="summary">
     <strong>{{ total }}</strong> audit events
+
+    <label class="page-size-selector">
+      Rows per page
+      <select [(ngModel)]="filters.page_size" (change)="onPageSizeChange()">
+        <option *ngFor="let size of pageSizeOptions" [ngValue]="size">{{ size }}</option>
+      </select>
+    </label>
   </div>
 
   <div class="table-wrap">
@@ -185,7 +237,7 @@
       <tbody>
         <tr *ngFor="let event of events">
           <td class="mono">{{ event.event_id }}</td>
-          <td>{{ event.source_object }}</td>
+          <td>{{ getFriendlyObjectName(event.source_object, event.source_table) }}</td>
           <td><span [class]="statusClass(event.action_type)">{{ event.action_type }}</span></td>
           <td class="mono">{{ event.record_pk }}</td>
           <td>{{ event.changed_by }}</td>
@@ -224,7 +276,7 @@
 
     <div class="details-grid">
       <div><strong>Event ID:</strong> <span class="mono">{{ selectedEventDetails.event_id }}</span></div>
-      <div><strong>Source Object:</strong> {{ selectedEventDetails.source_object }}</div>
+      <div><strong>Source Object:</strong> {{ getFriendlyObjectName(selectedEventDetails.source_object, selectedEventDetails.source_table) }}</div>
       <div><strong>Source Table:</strong> {{ selectedEventDetails.source_table }}</div>
       <div><strong>Source View:</strong> {{ selectedEventDetails.source_view || '-' }}</div>
       <div><strong>Record PK:</strong> <span class="mono">{{ selectedEventDetails.record_pk }}</span></div>
