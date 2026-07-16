@@ -152,24 +152,26 @@ function addBusinessObjectFilter(state, value) {
     state.values.push(`%${source}%`);
     const paramIndex = state.values.length;
 
-    parts.push(
-      `(source_object::text ILIKE $${paramIndex} OR source_table::text ILIKE $${paramIndex})`
-    );
+    parts.push(`source_object::text ILIKE $${paramIndex}`);
   }
 
   state.clauses.push(`(${parts.join(' OR ')})`);
 }
 
 function addRecordPkSearchFilter(state, value, field = '') {
-  if (!value) return;
-
-  const cleanValue = String(value).trim();
+  const cleanValue = String(value || '').trim();
   const cleanField = String(field || '').trim();
 
   if (!cleanValue) return;
 
   if (cleanField) {
     state.values.push(`${cleanField}=${cleanValue}`);
+    state.clauses.push(`record_pk::text = $${state.values.length}`);
+    return;
+  }
+
+  if (cleanValue.includes('=')) {
+    state.values.push(cleanValue);
     state.clauses.push(`record_pk::text = $${state.values.length}`);
     return;
   }
