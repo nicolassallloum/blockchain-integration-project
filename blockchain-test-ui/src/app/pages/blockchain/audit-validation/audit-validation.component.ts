@@ -970,4 +970,153 @@ offset: this.offset,
     this.showHighRiskAlertsPanel = false;
   }
 
+
+
+  openHighRiskAlertsViewer(): void {
+    const alerts = this.getHighRiskAlerts();
+
+    const overlayId = 'valoores-high-risk-alerts-viewer';
+    const existing = window.document.getElementById(overlayId);
+    if (existing) {
+      existing.remove();
+    }
+
+    const overlay = window.document.createElement('div');
+    overlay.id = overlayId;
+    overlay.style.position = 'fixed';
+    overlay.style.inset = '0';
+    overlay.style.zIndex = '999999';
+    overlay.style.background = 'rgba(15, 23, 42, 0.70)';
+    overlay.style.display = 'flex';
+    overlay.style.alignItems = 'center';
+    overlay.style.justifyContent = 'center';
+    overlay.style.padding = '32px';
+
+    const modal = window.document.createElement('div');
+    modal.style.width = 'min(1180px, 94vw)';
+    modal.style.maxHeight = '88vh';
+    modal.style.background = '#ffffff';
+    modal.style.borderRadius = '18px';
+    modal.style.boxShadow = '0 35px 90px rgba(0,0,0,0.38)';
+    modal.style.overflow = 'hidden';
+    modal.style.display = 'flex';
+    modal.style.flexDirection = 'column';
+    modal.style.border = '1px solid #fecaca';
+
+    const header = window.document.createElement('div');
+    header.style.padding = '20px 24px';
+    header.style.borderBottom = '1px solid #fee2e2';
+    header.style.display = 'flex';
+    header.style.justifyContent = 'space-between';
+    header.style.alignItems = 'center';
+    header.style.background = 'linear-gradient(135deg, #fff7ed, #fef2f2)';
+
+    const title = window.document.createElement('div');
+    title.innerHTML = `
+      <div style="font-size:11px;font-weight:900;color:#dc2626;letter-spacing:.12em;text-transform:uppercase;">Compliance Risk Monitor</div>
+      <h2 style="margin:5px 0 0;font-size:21px;color:#0f172a;">High Risk Data Change Alerts</h2>
+      <div style="margin-top:4px;font-size:12px;color:#64748b;">Customer and query changes requiring compliance review</div>
+    `;
+
+    const right = window.document.createElement('div');
+    right.style.display = 'flex';
+    right.style.alignItems = 'center';
+    right.style.gap = '10px';
+
+    const count = window.document.createElement('span');
+    count.textContent = `${alerts.length} alerts`;
+    count.style.background = '#fee2e2';
+    count.style.color = '#991b1b';
+    count.style.border = '1px solid #fecaca';
+    count.style.borderRadius = '999px';
+    count.style.padding = '7px 12px';
+    count.style.fontSize = '12px';
+    count.style.fontWeight = '900';
+
+    const closeBtn = window.document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.textContent = 'Close';
+    closeBtn.style.border = '1px solid #cbd5e1';
+    closeBtn.style.borderRadius = '8px';
+    closeBtn.style.background = '#ffffff';
+    closeBtn.style.padding = '8px 14px';
+    closeBtn.style.cursor = 'pointer';
+    closeBtn.onclick = () => overlay.remove();
+
+    right.appendChild(count);
+    right.appendChild(closeBtn);
+    header.appendChild(title);
+    header.appendChild(right);
+
+    const body = window.document.createElement('div');
+    body.style.padding = '18px 24px';
+    body.style.overflow = 'auto';
+
+    const table = window.document.createElement('table');
+    table.style.width = '100%';
+    table.style.borderCollapse = 'separate';
+    table.style.borderSpacing = '0 8px';
+
+    table.innerHTML = `
+      <thead>
+        <tr>
+          <th style="text-align:left;padding:10px;font-size:11px;color:#475569;text-transform:uppercase;">Severity</th>
+          <th style="text-align:left;padding:10px;font-size:11px;color:#475569;text-transform:uppercase;">Reason</th>
+          <th style="text-align:left;padding:10px;font-size:11px;color:#475569;text-transform:uppercase;">Object</th>
+          <th style="text-align:left;padding:10px;font-size:11px;color:#475569;text-transform:uppercase;">Record PK</th>
+          <th style="text-align:left;padding:10px;font-size:11px;color:#475569;text-transform:uppercase;">Changed By</th>
+          <th style="text-align:left;padding:10px;font-size:11px;color:#475569;text-transform:uppercase;">Changed At</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    `;
+
+    const tbody = table.querySelector('tbody');
+
+    if (!alerts.length && tbody) {
+      const tr = window.document.createElement('tr');
+      tr.innerHTML = `
+        <td colspan="6" style="padding:18px;text-align:center;color:#64748b;border:1px solid #e2e8f0;border-radius:12px;">
+          No high risk alerts found for the current result set.
+        </td>
+      `;
+      tbody.appendChild(tr);
+    }
+
+    alerts.slice(0, 100).forEach((alert: any) => {
+      const tr = window.document.createElement('tr');
+      tr.style.background = '#fff7ed';
+      tr.style.borderRadius = '12px';
+      tr.innerHTML = `
+        <td style="padding:10px;border-top:1px solid #fed7aa;border-bottom:1px solid #fed7aa;border-left:1px solid #fed7aa;border-radius:10px 0 0 10px;">
+          <span style="display:inline-flex;min-width:82px;justify-content:center;padding:4px 8px;border-radius:999px;background:#fee2e2;color:#991b1b;font-size:11px;font-weight:900;">
+            ${alert?.severity || 'HIGH'}
+          </span>
+        </td>
+        <td style="padding:10px;border-top:1px solid #fed7aa;border-bottom:1px solid #fed7aa;font-size:12px;color:#0f172a;font-weight:700;">
+          ${alert?.reason || '-'}
+        </td>
+        <td style="padding:10px;border-top:1px solid #fed7aa;border-bottom:1px solid #fed7aa;font-size:12px;color:#0f172a;">
+          ${alert?.source_object || '-'}
+        </td>
+        <td style="padding:10px;border-top:1px solid #fed7aa;border-bottom:1px solid #fed7aa;font-size:12px;color:#0f172a;word-break:break-all;">
+          ${alert?.record_pk || '-'}
+        </td>
+        <td style="padding:10px;border-top:1px solid #fed7aa;border-bottom:1px solid #fed7aa;font-size:12px;color:#0f172a;">
+          ${alert?.changed_by || '-'}
+        </td>
+        <td style="padding:10px;border-top:1px solid #fed7aa;border-bottom:1px solid #fed7aa;border-right:1px solid #fed7aa;border-radius:0 10px 10px 0;font-size:12px;color:#0f172a;">
+          ${alert?.changed_at || '-'}
+        </td>
+      `;
+      tbody?.appendChild(tr);
+    });
+
+    body.appendChild(table);
+    modal.appendChild(header);
+    modal.appendChild(body);
+    overlay.appendChild(modal);
+    window.document.body.appendChild(overlay);
+  }
+
 }
