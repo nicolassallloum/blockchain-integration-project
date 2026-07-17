@@ -987,3 +987,76 @@ body.audit-validation-fullscreen .header-spacer {
   font-size: 11px;
   line-height: 1.35;
 }
+
+
+/* Final professional audit grid widths */
+.audit-table-section {
+  width: 100%;
+  overflow-x: auto !important;
+  overflow-y: visible;
+}
+
+.audit-table-section table {
+  width: 2100px !important;
+  min-width: 2100px !important;
+  table-layout: fixed !important;
+  border-collapse: collapse;
+}
+
+.audit-table-section col.col-select { width: 70px; }
+.audit-table-section col.col-event { width: 170px; }
+.audit-table-section col.col-object { width: 130px; }
+.audit-table-section col.col-action { width: 105px; }
+.audit-table-section col.col-record { width: 185px; }
+.audit-table-section col.col-user { width: 140px; }
+.audit-table-section col.col-date { width: 160px; }
+.audit-table-section col.col-hash { width: 140px; }
+.audit-table-section col.col-validation { width: 160px; }
+.audit-table-section col.col-blockchain { width: 170px; }
+.audit-table-section col.col-ledger { width: 420px; }
+.audit-table-section col.col-actions { width: 150px; }
+
+.audit-table-section th {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  padding: 12px 10px !important;
+  font-size: 11px !important;
+  line-height: 1.2 !important;
+  text-align: left;
+}
+
+.audit-table-section td {
+  padding: 12px 10px !important;
+  vertical-align: top;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.audit-table-section th:first-child,
+.audit-table-section td:first-child {
+  text-align: center;
+}
+
+.audit-table-section th:nth-child(8),
+.audit-table-section td:nth-child(8),
+.audit-table-section th:nth-child(9),
+.audit-table-section td:nth-child(9),
+.audit-table-section th:nth-child(10),
+.audit-table-section td:nth-child(10) {
+  text-align: center;
+}
+
+.audit-table-section td:nth-child(11) {
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.audit-table-section td:last-child {
+  text-align: center;
+}
+
+.audit-table-section td:last-child button {
+  width: 82px;
+  margin-bottom: 6px;
+}
