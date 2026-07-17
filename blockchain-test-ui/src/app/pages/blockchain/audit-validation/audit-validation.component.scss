@@ -1060,3 +1060,71 @@ body.audit-validation-fullscreen .header-spacer {
   width: 82px;
   margin-bottom: 6px;
 }
+
+
+/* Exact Audit Validation business grid fields */
+.audit-table-section {
+  width: 100%;
+  overflow-x: auto !important;
+}
+
+.audit-table-section table {
+  width: 2220px !important;
+  min-width: 2220px !important;
+  table-layout: fixed !important;
+  border-collapse: collapse;
+}
+
+.audit-table-section col.col-select { width: 70px; }
+.audit-table-section col.col-event { width: 180px; }
+.audit-table-section col.col-object { width: 140px; }
+.audit-table-section col.col-action { width: 110px; }
+.audit-table-section col.col-record { width: 190px; }
+.audit-table-section col.col-ip { width: 150px; }
+.audit-table-section col.col-user { width: 145px; }
+.audit-table-section col.col-date { width: 175px; }
+.audit-table-section col.col-hash { width: 125px; }
+.audit-table-section col.col-validation { width: 150px; }
+.audit-table-section col.col-blockchain { width: 155px; }
+.audit-table-section col.col-ledger { width: 430px; }
+.audit-table-section col.col-actions { width: 150px; }
+
+.audit-table-section th {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  padding: 12px 10px !important;
+  font-size: 11px !important;
+  line-height: 1.2 !important;
+  text-align: left;
+}
+
+.audit-table-section td {
+  padding: 12px 10px !important;
+  vertical-align: top;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.audit-table-section th:first-child,
+.audit-table-section td:first-child,
+.audit-table-section th:nth-child(9),
+.audit-table-section td:nth-child(9),
+.audit-table-section th:nth-child(10),
+.audit-table-section td:nth-child(10),
+.audit-table-section th:nth-child(11),
+.audit-table-section td:nth-child(11),
+.audit-table-section th:last-child,
+.audit-table-section td:last-child {
+  text-align: center;
+}
+
+.audit-table-section td:nth-child(12) {
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.audit-table-section td:last-child button {
+  width: 82px;
+  margin-bottom: 6px;
+}

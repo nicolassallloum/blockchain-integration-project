@@ -241,11 +241,12 @@
       <thead>
       <tr>
         <th class="select-col">SELECT</th>
-        <th>EVENT ID</th>
+        <th>EVENT_ID</th>
         <th>OBJECT</th>
         <th>ACTION</th>
         <th>RECORD PK</th>
-        <th>CHANGED BY</th>
+        <th>CHANGED BY IP</th>
+        <th>CHANGED BY USER</th>
         <th>CHANGED AT</th>
         <th>HASH</th>
         <th>VALIDATION</th>
@@ -284,7 +285,7 @@
         </tr>
 
         <tr *ngIf="!events.length && !loading">
-          <td colspan="12" class="empty">No audit events found.</td>
+          <td colspan="13" class="empty">No audit events found.</td>
         </tr>
       </tbody>
     </table>
