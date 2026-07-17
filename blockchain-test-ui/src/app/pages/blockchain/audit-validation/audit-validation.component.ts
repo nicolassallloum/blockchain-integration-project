@@ -937,4 +937,25 @@ offset: this.offset,
     this.loadEvents();
   }
 
+
+
+  selectAllCurrentPage(): void {
+    (this.events || []).forEach((event: any) => {
+      if (event?.event_id) {
+        this.selectedBatchEventIds.add(event.event_id);
+      }
+    });
+  }
+
+  clearSelectedAuditEvents(): void {
+    this.selectedBatchEventIds.clear();
+    this.batchProofMessage = '';
+    this.batchProofError = '';
+  }
+
+  areAllCurrentPageSelected(): boolean {
+    const rows = this.events || [];
+    return rows.length > 0 && rows.every((event: any) => this.selectedBatchEventIds.has(event?.event_id));
+  }
+
 }

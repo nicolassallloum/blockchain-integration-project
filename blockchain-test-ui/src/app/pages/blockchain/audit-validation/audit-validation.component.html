@@ -213,6 +213,19 @@
       
       
       
+      
+      <div class="selection-actions">
+        <button type="button" class="secondary-btn" (click)="selectAllCurrentPage()" [disabled]="areAllCurrentPageSelected()">
+          Select All Page
+        </button>
+        <button type="button" class="secondary-btn" (click)="clearSelectedAuditEvents()" [disabled]="!getSelectedBatchCount()">
+          Clear Selection
+        </button>
+        <span class="selected-count" *ngIf="getSelectedBatchCount()">
+          Selected: {{ getSelectedBatchCount() }}
+        </span>
+      </div>
+
       <div class="workflow-note">
         Workflow: Validate → Approve → Submit
       </div>
