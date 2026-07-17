@@ -676,4 +676,228 @@ this.selectedDocumentError = '';
       });
   }
 
+
+
+  openProfessionalDocumentViewer(rowDoc: any): void {
+    const rawDocumentId =
+      rowDoc?._id ||
+      rowDoc?.id ||
+      rowDoc?.document_id ||
+      rowDoc?.doc_id ||
+      rowDoc?.key ||
+      rowDoc?.documentId;
+
+    const rawDatabase =
+      (this as any).selectedDatabase ||
+      (this as any).selectedDatabaseName ||
+      (this as any).currentDatabase ||
+      'kycchannelnix1_kyc-wallet-chaincode-js';
+
+    const databaseName =
+      typeof rawDatabase === 'string'
+        ? rawDatabase
+        : rawDatabase?.name ||
+          rawDatabase?.db_name ||
+          rawDatabase?.database_name ||
+          rawDatabase?.id ||
+          'kycchannelnix1_kyc-wallet-chaincode-js';
+
+    const overlayId = 'valoores-professional-document-viewer';
+    const existing = window.document.getElementById(overlayId);
+    if (existing) {
+      existing.remove();
+    }
+
+    const overlay = window.document.createElement('div');
+    overlay.id = overlayId;
+    overlay.style.position = 'fixed';
+    overlay.style.inset = '0';
+    overlay.style.zIndex = '999999';
+    overlay.style.background = 'rgba(15, 23, 42, 0.72)';
+    overlay.style.display = 'flex';
+    overlay.style.alignItems = 'center';
+    overlay.style.justifyContent = 'center';
+    overlay.style.padding = '30px';
+
+    const modal = window.document.createElement('div');
+    modal.style.width = 'min(1180px, 94vw)';
+    modal.style.maxHeight = '88vh';
+    modal.style.background = '#ffffff';
+    modal.style.borderRadius = '16px';
+    modal.style.boxShadow = '0 35px 90px rgba(0,0,0,0.38)';
+    modal.style.overflow = 'hidden';
+    modal.style.display = 'flex';
+    modal.style.flexDirection = 'column';
+    modal.style.border = '1px solid #dbeafe';
+
+    const header = window.document.createElement('div');
+    header.style.padding = '18px 24px';
+    header.style.borderBottom = '1px solid #e5e7eb';
+    header.style.display = 'flex';
+    header.style.justifyContent = 'space-between';
+    header.style.alignItems = 'center';
+    header.style.background = 'linear-gradient(135deg, #f8fafc, #eff6ff)';
+
+    const title = window.document.createElement('div');
+    title.innerHTML = `
+      <div style="font-size:11px;font-weight:900;color:#1d4ed8;letter-spacing:.12em;text-transform:uppercase;">Read-only blockchain document</div>
+      <h2 style="margin:5px 0 0;font-size:21px;color:#0f172a;">Valoores Audit Log Document</h2>
+      <div style="margin-top:4px;font-size:12px;color:#64748b;">CouchDB / Hyperledger Fabric world-state proof viewer</div>
+    `;
+
+    const actions = window.document.createElement('div');
+    actions.style.display = 'flex';
+    actions.style.gap = '8px';
+
+    const copyBtn = window.document.createElement('button');
+    copyBtn.type = 'button';
+    copyBtn.textContent = 'Copy JSON';
+    copyBtn.style.border = '1px solid #2563eb';
+    copyBtn.style.borderRadius = '8px';
+    copyBtn.style.background = '#2563eb';
+    copyBtn.style.color = '#fff';
+    copyBtn.style.padding = '8px 13px';
+    copyBtn.style.cursor = 'pointer';
+    copyBtn.disabled = true;
+
+    const closeBtn = window.document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.textContent = 'Close';
+    closeBtn.style.border = '1px solid #cbd5e1';
+    closeBtn.style.borderRadius = '8px';
+    closeBtn.style.background = '#ffffff';
+    closeBtn.style.color = '#0f172a';
+    closeBtn.style.padding = '8px 13px';
+    closeBtn.style.cursor = 'pointer';
+    closeBtn.onclick = () => overlay.remove();
+
+    actions.appendChild(copyBtn);
+    actions.appendChild(closeBtn);
+    header.appendChild(title);
+    header.appendChild(actions);
+
+    const body = window.document.createElement('div');
+    body.style.padding = '18px 24px';
+    body.style.overflow = 'auto';
+    body.style.background = '#ffffff';
+
+    const summary = window.document.createElement('div');
+    summary.style.display = 'grid';
+    summary.style.gridTemplateColumns = 'repeat(4, minmax(0, 1fr))';
+    summary.style.gap = '12px';
+    summary.style.marginBottom = '16px';
+
+    const jsonTitle = window.document.createElement('h3');
+    jsonTitle.textContent = 'Document JSON';
+    jsonTitle.style.margin = '10px 0 8px';
+    jsonTitle.style.fontSize = '15px';
+    jsonTitle.style.color = '#0f172a';
+
+    const pre = window.document.createElement('pre');
+    pre.textContent = 'Loading document details...';
+    pre.style.margin = '0';
+    pre.style.padding = '16px';
+    pre.style.background = '#0f172a';
+    pre.style.color = '#e5e7eb';
+    pre.style.borderRadius = '12px';
+    pre.style.fontSize = '12px';
+    pre.style.lineHeight = '1.55';
+    pre.style.overflow = 'auto';
+    pre.style.maxHeight = '52vh';
+    pre.style.whiteSpace = 'pre-wrap';
+    pre.style.wordBreak = 'break-word';
+
+    body.appendChild(summary);
+    body.appendChild(jsonTitle);
+    body.appendChild(pre);
+
+    modal.appendChild(header);
+    modal.appendChild(body);
+    overlay.appendChild(modal);
+    window.document.body.appendChild(overlay);
+
+    const renderCard = (label: string, value: string) => {
+      const card = window.document.createElement('div');
+      card.style.border = '1px solid #e2e8f0';
+      card.style.borderRadius = '12px';
+      card.style.padding = '10px 12px';
+      card.style.background = '#f8fafc';
+
+      const labelEl = window.document.createElement('div');
+      labelEl.textContent = label;
+      labelEl.style.fontSize = '11px';
+      labelEl.style.fontWeight = '800';
+      labelEl.style.color = '#64748b';
+      labelEl.style.textTransform = 'uppercase';
+
+      const valueEl = window.document.createElement('div');
+      valueEl.textContent = value || '-';
+      valueEl.style.marginTop = '5px';
+      valueEl.style.fontSize = '12px';
+      valueEl.style.color = '#0f172a';
+      valueEl.style.fontWeight = '700';
+      valueEl.style.wordBreak = 'break-all';
+
+      card.appendChild(labelEl);
+      card.appendChild(valueEl);
+      summary.appendChild(card);
+    };
+
+    if (!rawDocumentId) {
+      pre.textContent = 'Document ID was not found for this row.';
+      return;
+    }
+
+    const url =
+      `/api/v1/couchdb-explorer/databases/${encodeURIComponent(String(databaseName))}` +
+      `/documents/${encodeURIComponent(String(rawDocumentId))}?_ts=${Date.now()}`;
+
+    fetch(url, {
+      method: 'GET',
+      cache: 'no-store',
+      headers: {
+        Accept: 'application/json',
+        'Cache-Control': 'no-cache',
+        Pragma: 'no-cache'
+      }
+    })
+      .then(async response => {
+        const bodyText = await response.text();
+
+        let payload: any;
+        try {
+          payload = bodyText ? JSON.parse(bodyText) : {};
+        } catch {
+          payload = { raw: bodyText };
+        }
+
+        if (!response.ok) {
+          throw new Error(payload?.message || payload?.error?.reason || `HTTP ${response.status}`);
+        }
+
+        const doc = payload?.doc || payload?.document || payload?.data || payload;
+        const json = JSON.stringify(doc, null, 2);
+
+        summary.innerHTML = '';
+        renderCard('Document ID', doc?._id || doc?.id || rawDocumentId);
+        renderCard('Doc Type', doc?.docType || doc?.doc_type || doc?.type || doc?.documentType || '-');
+        renderCard('Audit ID', doc?.auditId || doc?.audit_id || doc?.summary?.auditId || '-');
+        renderCard('TX ID', doc?.txId || doc?.tx_id || doc?.transactionId || doc?.summary?.txId || '-');
+
+        pre.textContent = json;
+        copyBtn.disabled = false;
+        copyBtn.onclick = async () => {
+          await navigator.clipboard.writeText(json);
+          copyBtn.textContent = 'Copied';
+          window.setTimeout(() => copyBtn.textContent = 'Copy JSON', 1200);
+        };
+      })
+      .catch(error => {
+        summary.innerHTML = '';
+        renderCard('Document ID', String(rawDocumentId));
+        renderCard('Database', String(databaseName));
+        pre.textContent = `Failed to load document details:\\n${error?.message || error}`;
+      });
+  }
+
 }
