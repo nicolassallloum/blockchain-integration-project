@@ -945,3 +945,45 @@ body.audit-validation-fullscreen .header-spacer {
   min-width: 115px;
   text-align: center;
 }
+
+
+/* Final grid spacing fix */
+.audit-table-section {
+  overflow-x: auto;
+}
+
+.audit-table-section table {
+  min-width: 1740px !important;
+  table-layout: fixed;
+}
+
+.audit-table-section th,
+.audit-table-section td {
+  box-sizing: border-box;
+}
+
+.audit-table-section th {
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.audit-table-section td {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.audit-table-section th:nth-child(9),
+.audit-table-section th:nth-child(10),
+.audit-table-section th:nth-child(11) {
+  min-width: 170px;
+  padding-left: 14px;
+  padding-right: 14px;
+}
+
+.audit-table-section td:nth-child(11) {
+  font-size: 11px;
+  line-height: 1.35;
+}
