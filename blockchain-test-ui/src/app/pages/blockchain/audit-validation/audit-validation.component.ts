@@ -594,6 +594,7 @@ offset: this.offset,
     };
 
     const candidateUrls = [
+      '/api/v1/government-blockchain/audit-batch-proofs/batches',
       '/api/v1/government-blockchain/audit-batch-proofs',
       '/api/v1/government-blockchain/audit-batch-proofs/create',
       '/api/v1/audit-validation/batch-proof',
