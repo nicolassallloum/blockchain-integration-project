@@ -23,6 +23,11 @@ import {
   imports: [CommonModule, FormsModule, DatePipe],
 })
 export class AuditValidationComponent implements OnInit {
+  selectedBatchEventIds = new Set<string>();
+  batchProofLoading = false;
+  batchProofMessage = '';
+  batchProofError = '';
+
   events: AuditEvent[] = [];
   dashboard: AuditDashboardResponse | null = null;
   activeDashboardTitle = 'All Audit Events';
@@ -525,6 +530,122 @@ offset: this.offset,
       lines.join('\n'),
       'text/plain;charset=utf-8;'
     );
+  }
+
+
+
+  isBatchSelected(eventId: string): boolean {
+    return this.selectedBatchEventIds.has(eventId);
+  }
+
+  toggleBatchSelection(eventId: string, checked: boolean): void {
+    if (!eventId) return;
+
+    if (checked) {
+      this.selectedBatchEventIds.add(eventId);
+    } else {
+      this.selectedBatchEventIds.delete(eventId);
+    }
+  }
+
+  toggleSelectAllBatch(checked: boolean): void {
+    if (checked) {
+      (this.events || []).forEach((event: any) => {
+        if (event?.event_id) {
+          this.selectedBatchEventIds.add(event.event_id);
+        }
+      });
+    } else {
+      (this.events || []).forEach((event: any) => {
+        if (event?.event_id) {
+          this.selectedBatchEventIds.delete(event.event_id);
+        }
+      });
+    }
+  }
+
+  getSelectedBatchCount(): number {
+    return this.selectedBatchEventIds.size;
+  }
+
+  async createBatchProof(): Promise<void> {
+    const eventIds = Array.from(this.selectedBatchEventIds);
+
+    this.batchProofMessage = '';
+    this.batchProofError = '';
+
+    if (!eventIds.length) {
+      this.batchProofError = 'Please select at least one audit event to create a batch proof.';
+      return;
+    }
+
+    const confirmed = window.confirm(`Create batch proof for ${eventIds.length} selected audit event(s)?`);
+    if (!confirmed) {
+      return;
+    }
+
+    this.batchProofLoading = true;
+
+    const payload = {
+      event_ids: eventIds,
+      audit_event_ids: eventIds,
+      selected_event_ids: eventIds,
+      source: 'AUDIT_VALIDATION_UI'
+    };
+
+    const candidateUrls = [
+      '/api/v1/government-blockchain/audit-batch-proofs',
+      '/api/v1/government-blockchain/audit-batch-proofs/create',
+      '/api/v1/audit-validation/batch-proof',
+      '/api/v1/audit-validation/batch-proofs'
+    ];
+
+    let lastError = '';
+
+    for (const url of candidateUrls) {
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const text = await response.text();
+        let result: any = {};
+
+        try {
+          result = text ? JSON.parse(text) : {};
+        } catch {
+          result = { raw: text };
+        }
+
+        if (!response.ok) {
+          lastError = result?.message || result?.error || `HTTP ${response.status}`;
+          continue;
+        }
+
+        const batchId =
+          result?.batch_id ||
+          result?.batchId ||
+          result?.data?.batch_id ||
+          result?.data?.batchId ||
+          result?.id ||
+          'Batch proof created';
+
+        this.batchProofMessage = `Batch proof created successfully: ${batchId}`;
+        this.selectedBatchEventIds.clear();
+        this.loadEvents();
+        return;
+      } catch (error: any) {
+        lastError = error?.message || String(error);
+      }
+    }
+
+    this.batchProofError = `Failed to create batch proof. ${lastError}`;
+    this.batchProofLoading = false;
   }
 
 }

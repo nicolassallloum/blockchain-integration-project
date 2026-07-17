@@ -210,6 +210,19 @@
 
     <label class="page-size-selector">
       
+      
+      <div class="batch-proof-actions">
+        <button type="button" class="primary-btn" [disabled]="batchProofLoading || !getSelectedBatchCount()" (click)="createBatchProof()">
+          {{ batchProofLoading ? 'Creating Batch Proof...' : 'Create Batch Proof' }}
+        </button>
+        <span class="selected-count" *ngIf="getSelectedBatchCount()">
+          Selected: {{ getSelectedBatchCount() }}
+        </span>
+      </div>
+
+      <div class="success-message" *ngIf="batchProofMessage">{{ batchProofMessage }}</div>
+      <div class="error-message" *ngIf="batchProofError">{{ batchProofError }}</div>
+
       <div class="export-actions">
         <button type="button" class="secondary-btn" (click)="exportAuditReportCsv()">Export CSV</button>
         <button type="button" class="secondary-btn" (click)="exportAuditReportTxt()">Export TXT</button>
@@ -242,6 +255,7 @@
 
       <tbody>
         <tr *ngFor="let event of events">
+          <td><input type="checkbox" [checked]="isBatchSelected(event.event_id)" (change)="toggleBatchSelection(event.event_id, $any($event.target).checked)" /></td>
           <td class="mono">{{ event.event_id }}</td>
           <td>{{ getFriendlyObjectName(event.source_object, event.source_table) }}</td>
           <td><span [class]="statusClass(event.action_type)">{{ event.action_type }}</span></td>
@@ -268,7 +282,7 @@
         </tr>
 
         <tr *ngIf="!events.length && !loading">
-          <td colspan="11" class="empty">No audit events found.</td>
+          <td colspan="12" class="empty">No audit events found.</td>
         </tr>
       </tbody>
     </table>
