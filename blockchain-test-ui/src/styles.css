@@ -1,0 +1,41 @@
+
+/* Full Sidebar Menu Visibility */
+.sidebar,
+.app-sidebar,
+.layout-sidebar,
+.main-sidebar,
+.left-sidebar,
+.sidenav,
+.side-nav,
+aside {
+  width: 285px !important;
+  min-width: 285px !important;
+  max-width: 285px !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+.sidebar a,
+.app-sidebar a,
+.layout-sidebar a,
+.main-sidebar a,
+.left-sidebar a,
+.sidenav a,
+.side-nav a,
+aside a,
+.sidebar button,
+.app-sidebar button,
+.layout-sidebar button,
+.main-sidebar button,
+.left-sidebar button,
+.sidenav button,
+.side-nav button,
+aside button {
+  white-space: normal !important;
+  line-height: 1.25 !important;
+  font-size: 13px !important;
+  min-height: 34px !important;
+}
+
