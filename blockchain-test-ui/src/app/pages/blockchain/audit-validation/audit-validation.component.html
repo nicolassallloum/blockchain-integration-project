@@ -214,50 +214,20 @@
       
       
       
-      <div class="selection-actions">
-        <button type="button" class="secondary-btn" (click)="selectAllCurrentPage()" [disabled]="areAllCurrentPageSelected()">
-          Select All Page
-        </button>
-        <button type="button" class="secondary-btn" (click)="clearSelectedAuditEvents()" [disabled]="!getSelectedBatchCount()">
-          Clear Selection
-        </button>
-        <span class="selected-count" *ngIf="getSelectedBatchCount()">
-          Selected: {{ getSelectedBatchCount() }}
-        </span>
-      </div>
+      
 
       <div class="workflow-note">
-        Workflow: Validate → Approve → Submit
+        
       </div>
 
-      <div class="bulk-approval-actions workflow-actions">
-        <button type="button" class="secondary-btn" [disabled]="batchProofLoading || !canBulkValidateSelected()" (click)="bulkValidateSelected()">
-          1. Bulk Validate
-        </button>
-        <button type="button" class="secondary-btn" [disabled]="batchProofLoading || !canBulkApproveSelected()" (click)="bulkApproveSelected()">
-          2. Bulk Approve
-        </button>
-        <button type="button" class="primary-btn" [disabled]="batchProofLoading || !canBulkSubmitSelected()" (click)="bulkSubmitSelected()">
-          3. Bulk Submit
-        </button>
-      </div>
+      
 
-      <div class="batch-proof-actions">
-        <button type="button" class="primary-btn" [disabled]="batchProofLoading || !getSelectedBatchCount()" (click)="createBatchProof()">
-          {{ batchProofLoading ? 'Creating Batch Proof...' : 'Create Batch Proof' }}
-        </button>
-        <span class="selected-count" *ngIf="getSelectedBatchCount()">
-          Selected: {{ getSelectedBatchCount() }}
-        </span>
-      </div>
+      
 
       <div class="success-message" *ngIf="batchProofMessage">{{ batchProofMessage }}</div>
       <div class="error-message" *ngIf="batchProofError">{{ batchProofError }}</div>
 
-      <div class="export-actions">
-        <button type="button" class="secondary-btn" (click)="exportAuditReportCsv()">Export CSV</button>
-        <button type="button" class="secondary-btn" (click)="exportAuditReportTxt()">Export TXT</button>
-      </div>
+      
 
         Rows per page
       <select [(ngModel)]="filters.page_size" (change)="onPageSizeChange()">
