@@ -335,3 +335,24 @@
     </div>
   </div>
 </div>
+
+
+  <section class="high-risk-alerts-panel" *ngIf="getHighRiskAlertCount()">
+    <div class="section-header">
+      <div>
+        <h3>High Risk Data Change Alerts</h3>
+        <p>Customer and Query changes requiring compliance review.</p>
+      </div>
+      <strong>{{ getHighRiskAlertCount() }} alerts</strong>
+    </div>
+
+    <div class="alert-grid">
+      <div class="alert-row" *ngFor="let alert of getHighRiskAlerts() | slice:0:8">
+        <span class="severity-badge">{{ alert.severity }}</span>
+        <span>{{ alert.reason }}</span>
+        <span>{{ alert.source_object || '-' }}</span>
+        <span>{{ alert.record_pk || '-' }}</span>
+        <span>{{ alert.changed_by || '-' }}</span>
+      </div>
+    </div>
+  </section>
