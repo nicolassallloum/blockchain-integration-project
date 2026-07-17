@@ -1661,3 +1661,125 @@ body.audit-validation-fullscreen .header-spacer {
     justify-content: flex-start;
   }
 }
+
+
+/* FINAL visible toolbar above Audit Validation grid */
+.audit-final-toolbar {
+  width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 16px !important;
+  margin: 18px 0 14px !important;
+  padding: 14px 16px !important;
+  background: #ffffff !important;
+  border: 1px solid #d8e2ef !important;
+  border-radius: 14px !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06) !important;
+  clear: both !important;
+  position: static !important;
+  z-index: 1 !important;
+}
+
+.audit-final-toolbar-left {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  color: #0f172a !important;
+  font-size: 13px !important;
+  white-space: nowrap !important;
+}
+
+.audit-final-toolbar-left strong {
+  font-size: 18px !important;
+  font-weight: 900 !important;
+}
+
+.audit-final-toolbar-right {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 8px !important;
+  flex-wrap: wrap !important;
+}
+
+.audit-final-btn,
+.audit-final-primary,
+.audit-final-risk {
+  min-height: 34px !important;
+  padding: 7px 12px !important;
+  border-radius: 9px !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  cursor: pointer !important;
+  border: 1px solid #cbd5e1 !important;
+  background: #ffffff !important;
+  color: #0f172a !important;
+}
+
+.audit-final-primary {
+  background: #2563eb !important;
+  border-color: #2563eb !important;
+  color: #ffffff !important;
+}
+
+.audit-final-risk {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  background: linear-gradient(135deg, #fff7ed, #fef2f2) !important;
+  border-color: #dc2626 !important;
+  color: #991b1b !important;
+}
+
+.audit-final-risk strong {
+  min-width: 24px !important;
+  height: 20px !important;
+  padding: 0 7px !important;
+  border-radius: 999px !important;
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 11px !important;
+}
+
+.audit-final-selected {
+  background: #eef2ff !important;
+  color: #1d4ed8 !important;
+  border: 1px solid #c7d2fe !important;
+  padding: 5px 9px !important;
+  border-radius: 999px !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+}
+
+.audit-final-btn:disabled,
+.audit-final-primary:disabled {
+  opacity: 0.45 !important;
+  cursor: not-allowed !important;
+}
+
+/* Hide old floating controls */
+.audit-grid-top-toolbar,
+.audit-action-toolbar,
+.audit-risk-toolbar,
+.high-risk-toggle-section,
+.selection-actions,
+.bulk-approval-actions,
+.batch-proof-actions,
+.export-actions {
+  display: none !important;
+}
+
+@media (max-width: 1300px) {
+  .audit-final-toolbar {
+    align-items: flex-start !important;
+    flex-direction: column !important;
+  }
+
+  .audit-final-toolbar-right {
+    justify-content: flex-start !important;
+  }
+}

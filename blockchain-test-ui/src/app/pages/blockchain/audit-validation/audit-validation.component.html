@@ -237,7 +237,52 @@
   </div>
 
   <div class="table-wrap">
-    <table>
+    
+  <section class="audit-final-toolbar">
+    <div class="audit-final-toolbar-left">
+      <strong>{{ total }}</strong>
+      <span>audit events</span>
+      <span class="audit-final-selected" *ngIf="getSelectedBatchCount()">
+        Selected: {{ getSelectedBatchCount() }}
+      </span>
+    </div>
+
+    <div class="audit-final-toolbar-right">
+      <button type="button" class="audit-final-btn" (click)="selectAllCurrentPage()" [disabled]="areAllCurrentPageSelected()">
+        Select All Page
+      </button>
+
+      <button type="button" class="audit-final-btn" (click)="clearSelectedAuditEvents()" [disabled]="!getSelectedBatchCount()">
+        Clear Selection
+      </button>
+
+      <button type="button" class="audit-final-btn" [disabled]="batchProofLoading || !canBulkValidateSelected()" (click)="bulkValidateSelected()">
+        1. Validate
+      </button>
+
+      <button type="button" class="audit-final-btn" [disabled]="batchProofLoading || !canBulkApproveSelected()" (click)="bulkApproveSelected()">
+        2. Approve
+      </button>
+
+      <button type="button" class="audit-final-primary" [disabled]="batchProofLoading || !canBulkSubmitSelected()" (click)="bulkSubmitSelected()">
+        3. Submit
+      </button>
+
+      <button type="button" class="audit-final-primary" [disabled]="batchProofLoading || !getSelectedBatchCount()" (click)="createBatchProof()">
+        {{ batchProofLoading ? 'Creating...' : 'Create Batch Proof' }}
+      </button>
+
+      <button type="button" class="audit-final-risk" (click)="openHighRiskAlertsViewer()">
+        ⚠ High Risk Alerts
+        <strong>{{ getHighRiskAlertCount() }}</strong>
+      </button>
+
+      <button type="button" class="audit-final-btn" (click)="exportAuditReportCsv()">Export CSV</button>
+      <button type="button" class="audit-final-btn" (click)="exportAuditReportTxt()">Export TXT</button>
+    </div>
+  </section>
+
+<table>
       <thead>
       <tr>
         <th class="select-col">SELECT</th>
