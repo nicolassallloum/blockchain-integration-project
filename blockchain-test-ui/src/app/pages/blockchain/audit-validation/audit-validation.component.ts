@@ -637,6 +637,7 @@ offset: this.offset,
           'Batch proof created';
 
         this.batchProofMessage = `Batch proof created successfully: ${batchId}`;
+        this.batchProofLoading = false;
         this.selectedBatchEventIds.clear();
         this.loadEvents();
         return;
@@ -838,6 +839,7 @@ offset: this.offset,
         }
 
         this.batchProofMessage = `Bulk ${action} completed for ${eventIds.length} selected audit event(s).`;
+        this.batchProofLoading = false;
         this.selectedBatchEventIds.clear();
         this.loadEvents();
         return;
@@ -848,6 +850,91 @@ offset: this.offset,
 
     this.batchProofError = `Bulk ${action} failed. ${lastError}`;
     this.batchProofLoading = false;
+  }
+
+
+
+  getSelectedAuditEvents(): any[] {
+    const selectedIds = this.selectedBatchEventIds || new Set<string>();
+    return (this.events || []).filter((event: any) => selectedIds.has(event?.event_id));
+  }
+
+  canBulkValidateSelected(): boolean {
+    const selected = this.getSelectedAuditEvents();
+    return selected.length > 0 && selected.some((event: any) => {
+      const validation = String(event?.validation_status || '').toUpperCase();
+      return !['VALID', 'VALIDATED', 'APPROVED', 'VERIFIED'].includes(validation);
+    });
+  }
+
+  canBulkApproveSelected(): boolean {
+    const selected = this.getSelectedAuditEvents();
+    return selected.length > 0 && selected.every((event: any) => {
+      const validation = String(event?.validation_status || '').toUpperCase();
+      return ['VALID', 'VALIDATED', 'VERIFIED'].includes(validation);
+    });
+  }
+
+  canBulkSubmitSelected(): boolean {
+    const selected = this.getSelectedAuditEvents();
+    return selected.length > 0 && selected.every((event: any) => {
+      const validation = String(event?.validation_status || '').toUpperCase();
+      const blockchain = String(event?.blockchain_status || '').toUpperCase();
+
+      return ['APPROVED'].includes(validation) && !['SUBMITTED', 'SUCCESS', 'DONE'].includes(blockchain);
+    });
+  }
+
+  async bulkValidateSelected(): Promise<void> {
+    const selected = this.getSelectedAuditEvents();
+
+    this.batchProofMessage = '';
+    this.batchProofError = '';
+
+    if (!selected.length) {
+      this.batchProofError = 'Please select at least one audit event.';
+      return;
+    }
+
+    const confirmed = window.confirm(`Validate ${selected.length} selected audit event(s)?`);
+    if (!confirmed) {
+      return;
+    }
+
+    this.batchProofLoading = true;
+
+    let successCount = 0;
+    let failedCount = 0;
+
+    for (const event of selected) {
+      try {
+        if (typeof (this as any).validateEvent === 'function') {
+          await (this as any).validateEvent(event);
+          successCount += 1;
+        } else if (typeof (this as any).validateAuditEvent === 'function') {
+          await (this as any).validateAuditEvent(event);
+          successCount += 1;
+        } else {
+          const response = await fetch(`/api/v1/audit-validation/events/${encodeURIComponent(event.event_id)}/validate`, {
+            method: 'POST',
+            headers: { Accept: 'application/json' }
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+
+          successCount += 1;
+        }
+      } catch (error) {
+        failedCount += 1;
+      }
+    }
+
+    this.batchProofLoading = false;
+    this.batchProofMessage = `Bulk VALIDATE completed. Success: ${successCount}, Failed: ${failedCount}.`;
+    this.selectedBatchEventIds.clear();
+    this.loadEvents();
   }
 
 }

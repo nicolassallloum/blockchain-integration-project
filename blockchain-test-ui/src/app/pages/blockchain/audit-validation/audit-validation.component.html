@@ -212,10 +212,21 @@
       
       
       
-      <div class="bulk-approval-actions">
-        <button type="button" class="secondary-btn" [disabled]="batchProofLoading || !getSelectedBatchCount()" (click)="bulkApproveSelected()">Bulk Approve</button>
-        <button type="button" class="secondary-btn danger" [disabled]="batchProofLoading || !getSelectedBatchCount()" (click)="bulkRejectSelected()">Bulk Reject</button>
-        <button type="button" class="primary-btn" [disabled]="batchProofLoading || !getSelectedBatchCount()" (click)="bulkSubmitSelected()">Bulk Submit</button>
+      
+      <div class="workflow-note">
+        Workflow: Validate → Approve → Submit
+      </div>
+
+      <div class="bulk-approval-actions workflow-actions">
+        <button type="button" class="secondary-btn" [disabled]="batchProofLoading || !canBulkValidateSelected()" (click)="bulkValidateSelected()">
+          1. Bulk Validate
+        </button>
+        <button type="button" class="secondary-btn" [disabled]="batchProofLoading || !canBulkApproveSelected()" (click)="bulkApproveSelected()">
+          2. Bulk Approve
+        </button>
+        <button type="button" class="primary-btn" [disabled]="batchProofLoading || !canBulkSubmitSelected()" (click)="bulkSubmitSelected()">
+          3. Bulk Submit
+        </button>
       </div>
 
       <div class="batch-proof-actions">
