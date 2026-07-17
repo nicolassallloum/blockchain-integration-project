@@ -760,4 +760,94 @@ offset: this.offset,
     this.total = this.events.length;
   }
 
+
+
+  async bulkApproveSelected(): Promise<void> {
+    await this.runBulkApprovalAction('APPROVED');
+  }
+
+  async bulkRejectSelected(): Promise<void> {
+    await this.runBulkApprovalAction('REJECTED');
+  }
+
+  async bulkSubmitSelected(): Promise<void> {
+    await this.runBulkApprovalAction('SUBMIT');
+  }
+
+  private async runBulkApprovalAction(action: 'APPROVED' | 'REJECTED' | 'SUBMIT'): Promise<void> {
+    const eventIds = Array.from(this.selectedBatchEventIds || []);
+
+    this.batchProofMessage = '';
+    this.batchProofError = '';
+
+    if (!eventIds.length) {
+      this.batchProofError = 'Please select at least one audit event.';
+      return;
+    }
+
+    const confirmed = window.confirm(`${action} ${eventIds.length} selected audit event(s)?`);
+    if (!confirmed) {
+      return;
+    }
+
+    this.batchProofLoading = true;
+
+    const payload = {
+      event_ids: eventIds,
+      audit_event_ids: eventIds,
+      selected_event_ids: eventIds,
+      action,
+      decision: action,
+      status: action,
+      source: 'AUDIT_VALIDATION_UI'
+    };
+
+    const candidateUrls = [
+      '/api/v1/government-blockchain/bulk-compliance-approvals',
+      '/api/v1/government-blockchain/bulk-compliance-approvals/batches',
+      '/api/v1/government-blockchain/bulk-compliance-approvals/create',
+      '/api/v1/audit-validation/bulk-approval',
+      '/api/v1/audit-validation/bulk-approvals'
+    ];
+
+    let lastError = '';
+
+    for (const url of candidateUrls) {
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const text = await response.text();
+        let result: any = {};
+
+        try {
+          result = text ? JSON.parse(text) : {};
+        } catch {
+          result = { raw: text };
+        }
+
+        if (!response.ok) {
+          lastError = result?.message || result?.error || `HTTP ${response.status}`;
+          continue;
+        }
+
+        this.batchProofMessage = `Bulk ${action} completed for ${eventIds.length} selected audit event(s).`;
+        this.selectedBatchEventIds.clear();
+        this.loadEvents();
+        return;
+      } catch (error: any) {
+        lastError = error?.message || String(error);
+      }
+    }
+
+    this.batchProofError = `Bulk ${action} failed. ${lastError}`;
+    this.batchProofLoading = false;
+  }
+
 }

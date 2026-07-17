@@ -211,6 +211,13 @@
     <label class="page-size-selector">
       
       
+      
+      <div class="bulk-approval-actions">
+        <button type="button" class="secondary-btn" [disabled]="batchProofLoading || !getSelectedBatchCount()" (click)="bulkApproveSelected()">Bulk Approve</button>
+        <button type="button" class="secondary-btn danger" [disabled]="batchProofLoading || !getSelectedBatchCount()" (click)="bulkRejectSelected()">Bulk Reject</button>
+        <button type="button" class="primary-btn" [disabled]="batchProofLoading || !getSelectedBatchCount()" (click)="bulkSubmitSelected()">Bulk Submit</button>
+      </div>
+
       <div class="batch-proof-actions">
         <button type="button" class="primary-btn" [disabled]="batchProofLoading || !getSelectedBatchCount()" (click)="createBatchProof()">
           {{ batchProofLoading ? 'Creating Batch Proof...' : 'Create Batch Proof' }}
