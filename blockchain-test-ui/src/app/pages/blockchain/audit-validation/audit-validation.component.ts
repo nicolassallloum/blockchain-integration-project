@@ -434,4 +434,97 @@ offset: this.offset,
     }));
   }
 
+
+
+  private getExportRows(): any[] {
+    const candidateKeys = ['events', 'auditEvents', 'filteredEvents', 'rows', 'auditEventRows'];
+
+    for (const key of candidateKeys) {
+      const value = (this as any)[key];
+      if (Array.isArray(value)) {
+        return value;
+      }
+    }
+
+    return [];
+  }
+
+  private downloadAuditReport(filename: string, content: string, mimeType: string): void {
+    const blob = new Blob([content], { type: mimeType });
+    const url = window.URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+
+    window.URL.revokeObjectURL(url);
+  }
+
+  exportAuditReportCsv(): void {
+    const rows = this.getExportRows();
+
+    const columns = [
+      'event_id',
+      'source_object',
+      'action_type',
+      'record_pk',
+      'changed_by',
+      'changed_at',
+      'hash_status',
+      'validation_status',
+      'blockchain_status',
+      'ledger_status',
+      'tx_id'
+    ];
+
+    const escapeCsv = (value: any): string => {
+      const text = value === null || value === undefined ? '' : String(value);
+      return `"${text.replace(/"/g, '""')}"`;
+    };
+
+    const csv = [
+      columns.join(','),
+      ...rows.map(row => columns.map(col => escapeCsv(row?.[col])).join(','))
+    ].join('\n');
+
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+    this.downloadAuditReport(`audit-validation-report-${stamp}.csv`, csv, 'text/csv;charset=utf-8;');
+  }
+
+  exportAuditReportTxt(): void {
+    const rows = this.getExportRows();
+    const stamp = new Date().toISOString();
+
+    const lines: string[] = [];
+    lines.push('VALOORES BLOCKCHAIN AUDIT VALIDATION REPORT');
+    lines.push(`Generated At: ${stamp}`);
+    lines.push(`Total Rows: ${rows.length}`);
+    lines.push('='.repeat(80));
+    lines.push('');
+
+    rows.forEach((row, index) => {
+      lines.push(`Record #${index + 1}`);
+      lines.push(`Event ID          : ${row?.event_id ?? '-'}`);
+      lines.push(`Object            : ${row?.source_object ?? '-'}`);
+      lines.push(`Action            : ${row?.action_type ?? '-'}`);
+      lines.push(`Record PK         : ${row?.record_pk ?? '-'}`);
+      lines.push(`Changed By        : ${row?.changed_by ?? '-'}`);
+      lines.push(`Changed At        : ${row?.changed_at ?? '-'}`);
+      lines.push(`Hash Status       : ${row?.hash_status ?? '-'}`);
+      lines.push(`Validation Status : ${row?.validation_status ?? '-'}`);
+      lines.push(`Blockchain Status : ${row?.blockchain_status ?? '-'}`);
+      lines.push(`Ledger Status     : ${row?.ledger_status ?? '-'}`);
+      lines.push(`TX ID             : ${row?.tx_id ?? '-'}`);
+      lines.push('-'.repeat(80));
+    });
+
+    const filenameStamp = new Date().toISOString().replace(/[:.]/g, '-');
+    this.downloadAuditReport(
+      `audit-validation-report-${filenameStamp}.txt`,
+      lines.join('\n'),
+      'text/plain;charset=utf-8;'
+    );
+  }
+
 }

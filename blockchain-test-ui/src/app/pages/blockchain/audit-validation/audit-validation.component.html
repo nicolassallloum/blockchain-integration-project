@@ -209,7 +209,13 @@
     <strong>{{ total }}</strong> audit events
 
     <label class="page-size-selector">
-      Rows per page
+      
+      <div class="export-actions">
+        <button type="button" class="secondary-btn" (click)="exportAuditReportCsv()">Export CSV</button>
+        <button type="button" class="secondary-btn" (click)="exportAuditReportTxt()">Export TXT</button>
+      </div>
+
+        Rows per page
       <select [(ngModel)]="filters.page_size" (change)="onPageSizeChange()">
         <option *ngFor="let size of pageSizeOptions" [ngValue]="size">{{ size }}</option>
       </select>
