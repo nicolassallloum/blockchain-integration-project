@@ -1,3 +1,127 @@
 /* You can add global styles to this file, and also import other style files */
 
 /* Audit Validation fullscreen mode disabled: sidebar must remain visible. */
+
+
+/* Full Sidebar Display Fix */
+:root {
+  --valoores-sidebar-width: 270px;
+}
+
+.sidebar,
+.side-bar,
+.app-sidebar,
+.layout-sidebar,
+.main-sidebar,
+.left-sidebar,
+.navigation-sidebar,
+.menu-sidebar,
+.sidenav,
+.side-nav,
+aside {
+  width: var(--valoores-sidebar-width) !important;
+  min-width: var(--valoores-sidebar-width) !important;
+  max-width: var(--valoores-sidebar-width) !important;
+}
+
+.sidebar,
+.side-bar,
+.app-sidebar,
+.layout-sidebar,
+.main-sidebar,
+.left-sidebar,
+.navigation-sidebar,
+.menu-sidebar,
+.sidenav,
+.side-nav {
+  height: 100vh !important;
+  max-height: 100vh !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  scrollbar-width: thin;
+}
+
+.sidebar *,
+.side-bar *,
+.app-sidebar *,
+.layout-sidebar *,
+.main-sidebar *,
+.left-sidebar *,
+.navigation-sidebar *,
+.menu-sidebar *,
+.sidenav *,
+.side-nav * {
+  box-sizing: border-box;
+}
+
+.sidebar a,
+.side-bar a,
+.app-sidebar a,
+.layout-sidebar a,
+.main-sidebar a,
+.left-sidebar a,
+.navigation-sidebar a,
+.menu-sidebar a,
+.sidenav a,
+.side-nav a,
+.sidebar button,
+.side-bar button,
+.app-sidebar button,
+.layout-sidebar button,
+.main-sidebar button,
+.left-sidebar button,
+.navigation-sidebar button,
+.menu-sidebar button,
+.sidenav button,
+.side-nav button {
+  min-height: 34px !important;
+  padding-top: 7px !important;
+  padding-bottom: 7px !important;
+  font-size: 13px !important;
+  line-height: 1.25 !important;
+  white-space: normal !important;
+}
+
+.sidebar .menu-item,
+.side-bar .menu-item,
+.app-sidebar .menu-item,
+.layout-sidebar .menu-item,
+.main-sidebar .menu-item,
+.left-sidebar .menu-item,
+.navigation-sidebar .menu-item,
+.menu-sidebar .menu-item,
+.sidenav .menu-item,
+.side-nav .menu-item {
+  margin-bottom: 3px !important;
+}
+
+.content,
+.main-content,
+.page-content,
+.app-content,
+.layout-content,
+.router-content,
+main {
+  margin-left: 0;
+}
+
+@media (min-width: 900px) {
+  .content,
+  .main-content,
+  .page-content,
+  .app-content,
+  .layout-content,
+  .router-content,
+  main {
+    max-width: calc(100vw - var(--valoores-sidebar-width)) !important;
+  }
+}
+
+/* Keep sidebar footer/version visible and readable */
+.sidebar-footer,
+.version-footer,
+.app-version {
+  font-size: 11px !important;
+  padding: 8px 10px !important;
+  white-space: normal !important;
+}
