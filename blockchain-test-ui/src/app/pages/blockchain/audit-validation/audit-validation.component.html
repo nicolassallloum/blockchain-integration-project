@@ -239,20 +239,21 @@
   <div class="table-wrap">
     <table>
       <thead>
-        <tr>
-          <th>Event ID</th>
-          <th>Object</th>
-          <th>Action</th>
-          <th>Record PK</th>
-          <th>Changed By</th>
-          <th>Changed At</th>
-          <th>Hash</th>
-          <th>Validation</th>
-          <th>Blockchain</th>
-          <th>Ledger</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
+      <tr>
+        <th class="select-col">SELECT</th>
+        <th>EVENT ID</th>
+        <th>OBJECT</th>
+        <th>ACTION</th>
+        <th>RECORD PK</th>
+        <th>CHANGED BY</th>
+        <th>CHANGED AT</th>
+        <th>HASH STATUS</th>
+        <th>VALIDATION STATUS</th>
+        <th>BLOCKCHAIN STATUS</th>
+        <th>LEDGER / TX</th>
+        <th>ACTIONS</th>
+      </tr>
+    </thead>
 
       <tbody>
         <tr *ngFor="let event of events">
