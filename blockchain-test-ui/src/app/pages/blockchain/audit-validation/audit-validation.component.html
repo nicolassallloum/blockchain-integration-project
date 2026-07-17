@@ -340,17 +340,36 @@
 </div>
 
 
-  <section class="high-risk-alerts-panel" *ngIf="getHighRiskAlertCount()">
-    <div class="section-header">
+  <section class="high-risk-toggle-section">
+    <button type="button" class="high-risk-toggle-btn" (click)="toggleHighRiskAlertsPanel()">
+      High Risk Data Change Alerts
+      <span>{{ getHighRiskAlertCount() }}</span>
+    </button>
+  </section>
+
+  <section class="high-risk-alerts-panel" *ngIf="showHighRiskAlertsPanel">
+    <div class="high-risk-header">
       <div>
         <h3>High Risk Data Change Alerts</h3>
         <p>Customer and Query changes requiring compliance review.</p>
       </div>
-      <strong>{{ getHighRiskAlertCount() }} alerts</strong>
+
+      <div class="high-risk-header-actions">
+        <span class="high-risk-count">{{ getHighRiskAlertCount() }} alerts</span>
+        <button type="button" class="secondary-btn" (click)="closeHighRiskAlertsPanel()">Close</button>
+      </div>
     </div>
 
-    <div class="alert-grid">
-      <div class="alert-row" *ngFor="let alert of getHighRiskAlerts() | slice:0:8">
+    <div class="high-risk-grid">
+      <div class="high-risk-row high-risk-row-header">
+        <span>Severity</span>
+        <span>Reason</span>
+        <span>Object</span>
+        <span>Record PK</span>
+        <span>Changed By</span>
+      </div>
+
+      <div class="high-risk-row" *ngFor="let alert of getHighRiskAlerts() | slice:0:8">
         <span class="severity-badge">{{ alert.severity }}</span>
         <span>{{ alert.reason }}</span>
         <span>{{ alert.source_object || '-' }}</span>

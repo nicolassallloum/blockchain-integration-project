@@ -1128,3 +1128,227 @@ body.audit-validation-fullscreen .header-spacer {
   width: 82px;
   margin-bottom: 6px;
 }
+
+
+/* Professional High Risk Alerts Layout */
+.high-risk-alerts-panel {
+  width: 100%;
+  margin: 18px 0 16px;
+  padding: 16px;
+  background: #ffffff;
+  border: 1px solid #fecaca;
+  border-left: 5px solid #dc2626;
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+}
+
+.high-risk-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.high-risk-header h3 {
+  margin: 0;
+  color: #991b1b;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.high-risk-header p {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.high-risk-count {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.high-risk-grid {
+  display: grid;
+  gap: 6px;
+}
+
+.high-risk-row {
+  display: grid;
+  grid-template-columns: 120px 1.4fr 1fr 1.2fr 120px;
+  gap: 10px;
+  align-items: center;
+  padding: 9px 10px;
+  border: 1px solid #f1f5f9;
+  border-radius: 10px;
+  background: #fff7ed;
+  font-size: 12px;
+}
+
+.high-risk-row-header {
+  background: #f8fafc;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.severity-badge {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: fit-content;
+  min-width: 80px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #fee2e2;
+  color: #991b1b;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+@media (max-width: 1100px) {
+  .high-risk-row {
+    grid-template-columns: 1fr;
+  }
+
+  .high-risk-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+
+/* High Risk Alerts toggle button */
+.high-risk-toggle-section {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  margin: 14px 0 10px;
+}
+
+.high-risk-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid #dc2626;
+  background: #ffffff;
+  color: #991b1b;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.high-risk-toggle-btn span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #fee2e2;
+  color: #991b1b;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+/* High Risk Alerts opens only after click */
+.high-risk-alerts-panel {
+  width: 100% !important;
+  display: block !important;
+  clear: both;
+  margin: 0 0 16px !important;
+  padding: 16px;
+  background: #ffffff;
+  border: 1px solid #fecaca;
+  border-left: 5px solid #dc2626;
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+}
+
+.high-risk-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.high-risk-header h3 {
+  margin: 0;
+  color: #991b1b;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.high-risk-header p {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.high-risk-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.high-risk-count {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.high-risk-grid {
+  display: grid;
+  gap: 6px;
+}
+
+.high-risk-row {
+  display: grid;
+  grid-template-columns: 120px 1.4fr 1fr 1.2fr 130px;
+  gap: 10px;
+  align-items: center;
+  padding: 9px 10px;
+  border: 1px solid #f1f5f9;
+  border-radius: 10px;
+  background: #fff7ed;
+  font-size: 12px;
+}
+
+.high-risk-row-header {
+  background: #f8fafc;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.severity-badge {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: fit-content;
+  min-width: 80px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #fee2e2;
+  color: #991b1b;
+  font-size: 11px;
+  font-weight: 900;
+}

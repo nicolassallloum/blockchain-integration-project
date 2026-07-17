@@ -23,6 +23,8 @@ import {
   imports: [CommonModule, FormsModule, DatePipe],
 })
 export class AuditValidationComponent implements OnInit {
+  showHighRiskAlertsPanel = false;
+
   selectedBatchEventIds = new Set<string>();
   batchProofLoading = false;
   batchProofMessage = '';
@@ -956,6 +958,16 @@ offset: this.offset,
   areAllCurrentPageSelected(): boolean {
     const rows = this.events || [];
     return rows.length > 0 && rows.every((event: any) => this.selectedBatchEventIds.has(event?.event_id));
+  }
+
+
+
+  toggleHighRiskAlertsPanel(): void {
+    this.showHighRiskAlertsPanel = !this.showHighRiskAlertsPanel;
+  }
+
+  closeHighRiskAlertsPanel(): void {
+    this.showHighRiskAlertsPanel = false;
   }
 
 }
