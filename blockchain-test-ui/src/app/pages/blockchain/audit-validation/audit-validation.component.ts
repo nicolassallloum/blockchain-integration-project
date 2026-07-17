@@ -649,4 +649,115 @@ offset: this.offset,
     this.batchProofLoading = false;
   }
 
+
+
+  getHighRiskAlerts(): any[] {
+    const rows = this.events || [];
+
+    return rows
+      .filter((event: any) => this.isHighRiskAuditEvent(event))
+      .map((event: any) => ({
+        ...event,
+        severity: this.getHighRiskSeverity(event),
+        reason: this.getHighRiskReason(event)
+      }));
+  }
+
+  getHighRiskAlertCount(): number {
+    return this.getHighRiskAlerts().length;
+  }
+
+  private isHighRiskAuditEvent(event: any): boolean {
+    const objectText = String(event?.source_object || event?.object || '').toLowerCase();
+    const tableText = String(event?.source_table || '').toLowerCase();
+    const action = String(event?.action_type || '').toUpperCase();
+    const validation = String(event?.validation_status || '').toUpperCase();
+    const blockchain = String(event?.blockchain_status || '').toUpperCase();
+    const hash = String(event?.hash_status || '').toUpperCase();
+
+    const isCustomer =
+      objectText.includes('customer') ||
+      tableText.includes('customer');
+
+    const isQuery =
+      objectText.includes('quer') ||
+      tableText.includes('quer');
+
+    return (
+      (isCustomer && ['DELETE', 'UPDATE'].includes(action)) ||
+      (isQuery && ['DELETE', 'UPDATE'].includes(action)) ||
+      validation.includes('MISMATCH') ||
+      validation.includes('FAILED') ||
+      blockchain.includes('FAILED') ||
+      hash.includes('MISMATCH') ||
+      hash.includes('INVALID')
+    );
+  }
+
+  private getHighRiskSeverity(event: any): string {
+    const action = String(event?.action_type || '').toUpperCase();
+    const validation = String(event?.validation_status || '').toUpperCase();
+    const blockchain = String(event?.blockchain_status || '').toUpperCase();
+    const hash = String(event?.hash_status || '').toUpperCase();
+
+    if (
+      action === 'DELETE' ||
+      validation.includes('MISMATCH') ||
+      blockchain.includes('FAILED') ||
+      hash.includes('MISMATCH') ||
+      hash.includes('INVALID')
+    ) {
+      return 'CRITICAL';
+    }
+
+    if (action === 'UPDATE') {
+      return 'HIGH';
+    }
+
+    return 'MEDIUM';
+  }
+
+  private getHighRiskReason(event: any): string {
+    const objectText = String(event?.source_object || event?.object || '').toLowerCase();
+    const tableText = String(event?.source_table || '').toLowerCase();
+    const action = String(event?.action_type || '').toUpperCase();
+    const validation = String(event?.validation_status || '').toUpperCase();
+    const blockchain = String(event?.blockchain_status || '').toUpperCase();
+    const hash = String(event?.hash_status || '').toUpperCase();
+
+    if (validation.includes('MISMATCH')) return 'Validation mismatch detected';
+    if (blockchain.includes('FAILED')) return 'Blockchain submission failed';
+    if (hash.includes('MISMATCH') || hash.includes('INVALID')) return 'Hash integrity issue detected';
+
+    if ((objectText.includes('customer') || tableText.includes('customer')) && action === 'DELETE') {
+      return 'Customer record deleted';
+    }
+
+    if ((objectText.includes('customer') || tableText.includes('customer')) && action === 'UPDATE') {
+      return 'Customer data updated';
+    }
+
+    if ((objectText.includes('quer') || tableText.includes('quer')) && action === 'DELETE') {
+      return 'Query record deleted';
+    }
+
+    if ((objectText.includes('quer') || tableText.includes('quer')) && action === 'UPDATE') {
+      return 'Query data updated';
+    }
+
+    return 'High risk audit condition detected';
+  }
+
+  applyHighRiskFilter(): void {
+    this.filters.source_object = '';
+    this.filters.action_type = '';
+    this.filters.validation_status = '';
+    this.filters.blockchain_status = '';
+    this.filters.hash_status = '';
+    this.selectedDashboardTitle = 'High Risk Data Changes';
+
+    this.events = this.getHighRiskAlerts();
+    this.total = this.events.length;
+  }
+
 }
