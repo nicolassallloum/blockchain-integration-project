@@ -917,7 +917,7 @@ offset: this.offset,
           await (this as any).validateAuditEvent(event);
           successCount += 1;
         } else {
-          const response = await fetch(`/api/v1/audit-validation/events/${encodeURIComponent(event.event_id)}/validate`, {
+          const response = await fetch(`/api/v1/audit-validation/events/${encodeURIComponent(event.event_id)}/hash-verify`, {
             method: 'POST',
             headers: { Accept: 'application/json' }
           });
