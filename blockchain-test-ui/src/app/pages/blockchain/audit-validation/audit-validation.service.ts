@@ -125,7 +125,7 @@ export class AuditValidationService {
 
   validate(eventId: string): Observable<{ message: string; event: AuditEvent }> {
     return this.http.post<{ message: string; event: AuditEvent }>(
-      `${this.baseUrl}/events/${eventId}/validate`,
+      `${this.baseUrl}/events/${eventId}/hash-verify`,
       {}
     );
   }
