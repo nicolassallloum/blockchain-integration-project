@@ -776,7 +776,7 @@ router.post('/events/:eventId/hash-verify', async (req, res) => {
   const eventId = req.params.eventId;
 
   try {
-    const eventResult = await pool.query(
+    const eventResult = await applicationPostgres.query(
       `
       SELECT
         event_id,
@@ -819,7 +819,7 @@ router.post('/events/:eventId/hash-verify', async (req, res) => {
       hashStatus = 'INVALID';
     }
 
-    await pool.query(
+    await applicationPostgres.query(
       `
       UPDATE blockchain.audit_events
       SET hash_value = COALESCE(hash_value, $2),
