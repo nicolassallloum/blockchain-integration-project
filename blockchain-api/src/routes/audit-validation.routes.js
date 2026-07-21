@@ -785,12 +785,12 @@ router.post('/events/:eventId/hash-verify', async (req, res) => {
         action_type,
         record_pk,
         changed_by,
-        changed_by_ip,
-        changed_by_user,
+        changed_by AS changed_by_ip,
+        application_user AS changed_by_user,
         application_user,
         changed_at,
-        old_data_hash,
-        new_data_hash,
+        NULL::text AS old_data_hash,
+        NULL::text AS new_data_hash,
         hash_value,
         hash_status
       FROM blockchain.audit_events
