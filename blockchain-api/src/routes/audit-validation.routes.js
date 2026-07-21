@@ -627,13 +627,46 @@ router.get('/events/:eventId/blockchain-proof', async (req, res, next) => {
       });
     }
 
+    let finalEvent = event;
+
+    if (verified) {
+      const proofTxId =
+        proof?.data?.txId ||
+        proof?.txId ||
+        event.blockchain_tx_id ||
+        null;
+
+      const reconciledResult = await applicationPostgres.query(
+        `
+        UPDATE blockchain.audit_events
+        SET
+          blockchain_status = 'SUBMITTED',
+          blockchain_tx_id = COALESCE($2, blockchain_tx_id),
+          submit_error = NULL,
+          updated_at = NOW()
+        WHERE event_id = $1
+        RETURNING
+          event_id,
+          hash_value,
+          blockchain_status,
+          blockchain_tx_id,
+          ledger_key,
+          submit_error
+        `,
+        [event.event_id, proofTxId]
+      );
+
+      finalEvent = reconciledResult.rows[0] || event;
+    }
+
     return res.json({
       exists: true,
       verified,
       postgresql_event_exists: true,
-      blockchain_status: event.blockchain_status,
-      blockchain_tx_id: event.blockchain_tx_id,
-      ledger_key: event.ledger_key,
+      blockchain_status: finalEvent.blockchain_status,
+      blockchain_tx_id: finalEvent.blockchain_tx_id,
+      ledger_key: finalEvent.ledger_key,
+      submit_error: finalEvent.submit_error,
       proof,
     });
   } catch (err) {
