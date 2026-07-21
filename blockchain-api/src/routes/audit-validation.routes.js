@@ -8,7 +8,6 @@ const router = express.Router();
 const { applicationPostgres } = require('../db/applicationPostgres');
 const { submitAuditValidationProof } = require('../services/auditProof.service');
 const fabricService = require('../services/fabric.service');
-const { generateAuditEventHash, buildAuditEventHashPayload } = require('../services/audit-proof/audit-hash.service');
 
 const ALLOWED_ACTION_TYPES = new Set(['INSERT', 'UPDATE', 'DELETE']);
 const ALLOWED_HASH_STATUSES = new Set(['PENDING', 'VALID', 'INVALID']);
@@ -766,41 +765,32 @@ router.get('/dashboard', async (req, res, next) => {
 
 
 
+
 /**
- * Verify audit event business hash.
+ * Verify audit event business hash using the official PostgreSQL hash function.
  * PostgreSQL audit event = source of truth.
- * hash_value = stored fingerprint.
- * current_hash = regenerated fingerprint from stable business fields.
+ * blockchain.audit_event_hash(...) = canonical hash generator.
  */
 router.post('/events/:eventId/hash-verify', async (req, res) => {
   const eventId = req.params.eventId;
+  const client = await applicationPostgres.connect();
 
   try {
-    const eventResult = await applicationPostgres.query(
+    await client.query('BEGIN');
+
+    const result = await client.query(
       `
-      SELECT
-        event_id,
-        source_object,
-        source_table,
-        action_type,
-        record_pk,
-        changed_by,
-        changed_by AS changed_by_ip,
-        application_user AS changed_by_user,
-        application_user,
-        changed_at,
-        NULL::text AS old_data_hash,
-        NULL::text AS new_data_hash,
-        hash_value,
-        hash_status
+      SELECT *
       FROM blockchain.audit_events
       WHERE event_id = $1
-      LIMIT 1
+      FOR UPDATE
       `,
       [eventId]
     );
 
-    if (!eventResult.rows.length) {
+    if (!result.rowCount) {
+      await client.query('ROLLBACK');
+
       return res.status(404).json({
         success: false,
         status: 'NOT_FOUND',
@@ -809,40 +799,68 @@ router.post('/events/:eventId/hash-verify', async (req, res) => {
       });
     }
 
-    const event = eventResult.rows[0];
-    const currentHash = generateAuditEventHash(event);
-    const storedHash = event.hash_value || null;
+    const event = result.rows[0];
 
-    let hashStatus = 'VALID';
-
-    if (storedHash && storedHash !== currentHash) {
-      hashStatus = 'INVALID';
-    }
-
-    await applicationPostgres.query(
+    const hashResult = await client.query(
       `
-      UPDATE blockchain.audit_events
-      SET hash_value = COALESCE(hash_value, $2),
-          hash_status = $3
+      SELECT blockchain.audit_event_hash(
+        event_id,
+        source_system,
+        source_database,
+        source_schema,
+        source_object,
+        source_table,
+        source_view,
+        record_pk,
+        action_type,
+        old_data,
+        new_data,
+        changed_by,
+        changed_at,
+        application_user,
+        request_id,
+        correlation_id
+      ) AS recalculated_hash
+      FROM blockchain.audit_events
       WHERE event_id = $1
       `,
-      [eventId, currentHash, hashStatus]
+      [event.event_id]
     );
+
+    const recalculatedHash = hashResult.rows[0].recalculated_hash;
+    const storedHash = event.hash_value || null;
+    const hashStatus = recalculatedHash === storedHash ? 'VALID' : 'INVALID';
+
+    const updateResult = await client.query(
+      `
+      UPDATE blockchain.audit_events
+      SET
+        recalculated_hash = $2,
+        hash_status = $3
+      WHERE event_id = $1
+      RETURNING *
+      `,
+      [event.event_id, recalculatedHash, hashStatus]
+    );
+
+    await client.query('COMMIT');
 
     return res.json({
       success: true,
-      event_id: eventId,
+      event_id: event.event_id,
       status: hashStatus,
       hash_status: hashStatus,
-      current_hash: currentHash,
+      current_hash: recalculatedHash,
       stored_hash: storedHash,
-      hash_payload: buildAuditEventHashPayload(event),
       message:
         hashStatus === 'VALID'
           ? 'Audit event hash is valid'
-          : 'Audit event hash mismatch detected'
+          : 'Audit event hash mismatch detected',
+      event: updateResult.rows[0]
     });
   } catch (error) {
+    await client.query('ROLLBACK');
+
     console.error('[AUDIT_HASH_VERIFY_ERROR]', error);
 
     return res.status(500).json({
@@ -851,6 +869,8 @@ router.post('/events/:eventId/hash-verify', async (req, res) => {
       message: 'Failed to verify audit event hash',
       error: error.message
     });
+  } finally {
+    client.release();
   }
 });
 
