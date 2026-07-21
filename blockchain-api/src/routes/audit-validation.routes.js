@@ -8,6 +8,7 @@ const router = express.Router();
 const { applicationPostgres } = require('../db/applicationPostgres');
 const { submitAuditValidationProof } = require('../services/auditProof.service');
 const fabricService = require('../services/fabric.service');
+const { generateAuditEventHash, buildAuditEventHashPayload } = require('../services/audit-proof/audit-hash.service');
 
 const ALLOWED_ACTION_TYPES = new Set(['INSERT', 'UPDATE', 'DELETE']);
 const ALLOWED_HASH_STATUSES = new Set(['PENDING', 'VALID', 'INVALID']);
@@ -760,6 +761,96 @@ router.get('/dashboard', async (req, res, next) => {
     });
   } catch (err) {
     next(err);
+  }
+});
+
+
+
+/**
+ * Verify audit event business hash.
+ * PostgreSQL audit event = source of truth.
+ * hash_value = stored fingerprint.
+ * current_hash = regenerated fingerprint from stable business fields.
+ */
+router.post('/events/:eventId/hash-verify', async (req, res) => {
+  const eventId = req.params.eventId;
+
+  try {
+    const eventResult = await pool.query(
+      `
+      SELECT
+        event_id,
+        source_object,
+        source_table,
+        action_type,
+        record_pk,
+        changed_by,
+        changed_by_ip,
+        changed_by_user,
+        application_user,
+        changed_at,
+        old_data_hash,
+        new_data_hash,
+        hash_value,
+        hash_status
+      FROM blockchain.audit_events
+      WHERE event_id = $1
+      LIMIT 1
+      `,
+      [eventId]
+    );
+
+    if (!eventResult.rows.length) {
+      return res.status(404).json({
+        success: false,
+        status: 'NOT_FOUND',
+        message: 'Audit event not found',
+        event_id: eventId
+      });
+    }
+
+    const event = eventResult.rows[0];
+    const currentHash = generateAuditEventHash(event);
+    const storedHash = event.hash_value || null;
+
+    let hashStatus = 'VALID';
+
+    if (storedHash && storedHash !== currentHash) {
+      hashStatus = 'INVALID';
+    }
+
+    await pool.query(
+      `
+      UPDATE blockchain.audit_events
+      SET hash_value = COALESCE(hash_value, $2),
+          hash_status = $3
+      WHERE event_id = $1
+      `,
+      [eventId, currentHash, hashStatus]
+    );
+
+    return res.json({
+      success: true,
+      event_id: eventId,
+      status: hashStatus,
+      hash_status: hashStatus,
+      current_hash: currentHash,
+      stored_hash: storedHash,
+      hash_payload: buildAuditEventHashPayload(event),
+      message:
+        hashStatus === 'VALID'
+          ? 'Audit event hash is valid'
+          : 'Audit event hash mismatch detected'
+    });
+  } catch (error) {
+    console.error('[AUDIT_HASH_VERIFY_ERROR]', error);
+
+    return res.status(500).json({
+      success: false,
+      status: 'FAILED',
+      message: 'Failed to verify audit event hash',
+      error: error.message
+    });
   }
 });
 
