@@ -47,6 +47,39 @@ export const routes: Routes = [
     loadComponent: () => import('./government-blockchain/kyc-daily-created/kyc-daily-created').then(m => m.KycDailyCreatedComponent)
   },
   {
+    path: 'government-blockchain/license-wallet-create',
+    loadComponent: () =>
+      import(
+        './pages/license-wallet-create/license-wallet-create.component'
+      ).then(
+        (component) =>
+          component.LicenseWalletCreateComponent
+      ),
+    title: 'Create License Recovery Wallet'
+  },
+  {
+    path: 'government-blockchain/licenses',
+    loadComponent: () =>
+      import(
+        './pages/licenses/licenses.component'
+      ).then(
+        (component) =>
+          component.LicensesComponent
+      ),
+    title: 'Application Licenses'
+  },
+  {
+    path: 'government-blockchain/license-recovery',
+    loadComponent: () =>
+      import(
+        './pages/license-recovery/license-recovery.component'
+      ).then(
+        (component) =>
+          component.LicenseRecoveryComponent
+      ),
+    title: 'Recover Application License'
+  },
+  {
     path: '',
     redirectTo: 'government-blockchain/dashboard',
     pathMatch: 'full'
@@ -459,6 +492,19 @@ export const routes: Routes = [
         (m) => m.BlockchainProofHistoryScreens
       )
   },
+  /* ===== KYC VERSION AUDIT ROUTE START ===== */
+  {
+    path: 'blockchain-full-kyc/audit-logs',
+    loadComponent: () =>
+      import(
+        './pages/blockchain-full-kyc/kyc-audit-logs/kyc-audit-logs.component'
+      ).then(
+        (m) => m.KycAuditLogsComponent
+      ),
+    title: 'KYC Version Audit'
+  },
+  /* ===== KYC VERSION AUDIT ROUTE END ===== */
+
 {
     path: '**',
     redirectTo: 'government-blockchain/dashboard'

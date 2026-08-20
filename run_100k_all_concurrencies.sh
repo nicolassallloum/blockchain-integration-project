@@ -1,0 +1,554 @@
+#!/usr/bin/env bash
+
+set -uo pipefail
+
+# ============================================================
+# Configuration
+# ============================================================
+
+API_BASE_URL="${API_BASE_URL:-http://127.0.0.1:3001}"
+PROJECT_DIR="${PROJECT_DIR:-$HOME/u01/blockchain-integration}"
+RESULT_ROOT="${RESULT_ROOT:-$PROJECT_DIR/benchmark-results}"
+
+COUNT="${COUNT:-100000}"
+TIMEOUT_MS="${TIMEOUT_MS:-600000}"
+COOLDOWN_SECONDS="${COOLDOWN_SECONDS:-60}"
+
+read -r -a CONCURRENCIES <<< \
+  "${CONCURRENCIES_OVERRIDE:-50 75 100 150 200 300 400 500}"
+
+EXTREME_CONFIRMATION="I_UNDERSTAND_BLOCKCHAIN_HISTORY_IS_PERMANENT"
+
+SUITE_TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
+SUITE_ID="BKYC_100K_ALL_CONCURRENCIES_${SUITE_TIMESTAMP}"
+SUITE_DIR="$RESULT_ROOT/$SUITE_ID"
+
+MASTER_LOG="$SUITE_DIR/${SUITE_ID}_master.log"
+SUMMARY_CSV="$SUITE_DIR/${SUITE_ID}_summary.csv"
+SUMMARY_JSON="$SUITE_DIR/${SUITE_ID}_summary.json"
+RUN_MANIFEST="$SUITE_DIR/${SUITE_ID}_runs.jsonl"
+CREATED_MANIFEST_LIST="$SUITE_DIR/${SUITE_ID}_created_manifests.txt"
+
+STOP_ON_FAILURE="${STOP_ON_FAILURE:-true}"
+
+mkdir -p "$SUITE_DIR"
+
+cd "$PROJECT_DIR" || {
+  echo "Unable to enter project directory: $PROJECT_DIR"
+  exit 1
+}
+
+# Send everything printed by this orchestration script to both
+# the terminal and the master log.
+exec > >(tee -a "$MASTER_LOG") 2>&1
+
+# ============================================================
+# Utility functions
+# ============================================================
+
+timestamp() {
+  date --iso-8601=seconds
+}
+
+get_customer_count() {
+  local output
+
+  output="$(
+    curl --silent --show-error --fail \
+      "$API_BASE_URL/api/v1/valoores-blockchain/customers/count"
+  )" || return 1
+
+  jq -r '.data.totalCustomers // empty' <<<"$output"
+}
+
+check_health() {
+  curl --silent --show-error --fail \
+    "$API_BASE_URL/api/v1/health" \
+    | jq .
+}
+
+validate_benchmark_script() {
+  node --check benchmark_kyc.js || return 1
+
+  local count_limit
+  local concurrency_limit
+
+  count_limit="$(
+    grep -E \
+      'const count = positiveInt\(args\.count, 1, [0-9]+\);' \
+      benchmark_kyc.js \
+      | head -1 \
+      | grep -oE '[0-9]+\);$' \
+      | grep -oE '[0-9]+'
+  )"
+
+  concurrency_limit="$(
+    grep -E \
+      'const concurrency = positiveInt\(args\.concurrency, 1, [0-9]+\);' \
+      benchmark_kyc.js \
+      | head -1 \
+      | grep -oE '[0-9]+\);$' \
+      | grep -oE '[0-9]+'
+  )"
+
+  echo "Detected count limit       : ${count_limit:-UNKNOWN}"
+  echo "Detected concurrency limit : ${concurrency_limit:-UNKNOWN}"
+
+  if [[ -z "${count_limit:-}" || "$count_limit" -lt "$COUNT" ]]; then
+    echo "[FATAL] benchmark_kyc.js does not support count=$COUNT."
+    return 1
+  fi
+
+  local highest_concurrency
+  highest_concurrency="${CONCURRENCIES[${#CONCURRENCIES[@]}-1]}"
+
+  if [[ -z "${concurrency_limit:-}" ||
+        "$concurrency_limit" -lt "$highest_concurrency" ]]; then
+    echo "[FATAL] benchmark_kyc.js does not support concurrency=$highest_concurrency."
+    return 1
+  fi
+}
+
+start_monitoring() {
+  local run_id="$1"
+  local run_dir="$2"
+
+  vmstat 5 \
+    > "$run_dir/${run_id}_vmstat.log" &
+  VMSTAT_PID=$!
+
+  (
+    while true; do
+      echo "============================================================"
+      timestamp
+
+      docker stats \
+        --no-stream \
+        --format \
+        "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.NetIO}}\t{{.BlockIO}}\t{{.PIDs}}"
+
+      sleep 5
+    done
+  ) > "$run_dir/${run_id}_docker_stats.log" &
+  DOCKER_STATS_PID=$!
+
+  IOSTAT_PID=""
+
+  if command -v iostat >/dev/null 2>&1; then
+    iostat -xz 5 \
+      > "$run_dir/${run_id}_iostat.log" &
+    IOSTAT_PID=$!
+  fi
+}
+
+stop_monitoring() {
+  if [[ -n "${VMSTAT_PID:-}" ]]; then
+    kill "$VMSTAT_PID" 2>/dev/null || true
+    wait "$VMSTAT_PID" 2>/dev/null || true
+    VMSTAT_PID=""
+  fi
+
+  if [[ -n "${DOCKER_STATS_PID:-}" ]]; then
+    kill "$DOCKER_STATS_PID" 2>/dev/null || true
+    wait "$DOCKER_STATS_PID" 2>/dev/null || true
+    DOCKER_STATS_PID=""
+  fi
+
+  if [[ -n "${IOSTAT_PID:-}" ]]; then
+    kill "$IOSTAT_PID" 2>/dev/null || true
+    wait "$IOSTAT_PID" 2>/dev/null || true
+    IOSTAT_PID=""
+  fi
+}
+
+cleanup_background_processes() {
+  stop_monitoring
+}
+
+trap cleanup_background_processes EXIT INT TERM
+
+# ============================================================
+# Initialize suite files
+# ============================================================
+
+echo \
+"run_id,started_at,finished_at,count,concurrency,count_before,count_after,count_delta,attempted,created,failed,duration_ms,tps,success_rate_percent,min_ms,average_ms,p50_ms,p95_ms,p99_ms,max_ms,cleanup_enabled,report_exists,exit_code,status" \
+> "$SUMMARY_CSV"
+
+echo "============================================================"
+echo "100,000 CUSTOMER — ALL CONCURRENCIES TEST"
+echo "============================================================"
+echo "Suite ID             : $SUITE_ID"
+echo "Started              : $(timestamp)"
+echo "API                  : $API_BASE_URL"
+echo "Project              : $PROJECT_DIR"
+echo "Result directory     : $SUITE_DIR"
+echo "Count per test       : $COUNT"
+echo "Concurrency levels   : ${CONCURRENCIES[*]}"
+echo "Cleanup per test     : DISABLED"
+echo "Cooldown             : $COOLDOWN_SECONDS seconds"
+echo "Stop on failure      : $STOP_ON_FAILURE"
+echo
+echo "WARNING:"
+echo "This suite can create up to:"
+echo "$((COUNT * ${#CONCURRENCIES[@]})) customer records."
+echo "Blockchain history is permanent."
+echo "============================================================"
+
+# ============================================================
+# Pre-flight validation
+# ============================================================
+
+echo
+echo "================ PRE-FLIGHT VALIDATION ====================="
+
+validate_benchmark_script || exit 1
+
+echo
+echo "API health:"
+check_health || {
+  echo "[FATAL] API health check failed."
+  exit 1
+}
+
+INITIAL_COUNT="$(get_customer_count)" || {
+  echo "[FATAL] Unable to read initial blockchain customer count."
+  exit 1
+}
+
+echo "Initial blockchain count: $INITIAL_COUNT"
+
+SUITE_FAILURES=0
+COMPLETED_RUNS=0
+TOTAL_CREATED=0
+
+# ============================================================
+# Execute each concurrency level
+# ============================================================
+
+for CONCURRENCY in "${CONCURRENCIES[@]}"; do
+  RUN_TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
+  RUN_ID="BKYC_${COUNT}_C${CONCURRENCY}_${RUN_TIMESTAMP}"
+  RUN_DIR="$SUITE_DIR/$RUN_ID"
+
+  mkdir -p "$RUN_DIR"
+
+  CONSOLE_LOG="$RUN_DIR/${RUN_ID}_console.log"
+  REPORT_FILE="$RESULT_ROOT/${RUN_ID}_report.json"
+  CREATED_MANIFEST="$RESULT_ROOT/${RUN_ID}_created.jsonl"
+  PAYLOAD_SAMPLE="$RESULT_ROOT/${RUN_ID}_payload_sample.json"
+
+  STARTED_AT="$(timestamp)"
+
+  echo
+  echo "============================================================"
+  echo "STARTING CONCURRENCY TEST"
+  echo "============================================================"
+  echo "Run ID        : $RUN_ID"
+  echo "Started       : $STARTED_AT"
+  echo "Count         : $COUNT"
+  echo "Concurrency   : $CONCURRENCY"
+  echo "Cleanup       : DISABLED"
+  echo "Run directory : $RUN_DIR"
+  echo "============================================================"
+
+  COUNT_BEFORE="$(get_customer_count)" || COUNT_BEFORE=""
+
+  if [[ -z "$COUNT_BEFORE" ]]; then
+    echo "[ERROR] Could not read count before the test."
+    COUNT_BEFORE=-1
+  fi
+
+  echo "Count before: $COUNT_BEFORE"
+
+  start_monitoring "$RUN_ID" "$RUN_DIR"
+
+  set +e
+
+  node benchmark_kyc.js \
+    --count "$COUNT" \
+    --concurrency "$CONCURRENCY" \
+    --timeout-ms "$TIMEOUT_MS" \
+    --confirm-large \
+    --confirm-extreme "$EXTREME_CONFIRMATION" \
+    --keep \
+    --run-id "$RUN_ID" \
+    2>&1 | tee "$CONSOLE_LOG"
+
+  BENCHMARK_EXIT_CODE=${PIPESTATUS[0]}
+
+  set -e
+
+  stop_monitoring
+
+  FINISHED_AT="$(timestamp)"
+
+  COUNT_AFTER="$(get_customer_count)" || COUNT_AFTER=""
+
+  if [[ -z "$COUNT_AFTER" ]]; then
+    echo "[ERROR] Could not read count after the test."
+    COUNT_AFTER=-1
+  fi
+
+  if [[ "$COUNT_BEFORE" =~ ^[0-9]+$ &&
+        "$COUNT_AFTER" =~ ^[0-9]+$ ]]; then
+    COUNT_DELTA=$((COUNT_AFTER - COUNT_BEFORE))
+  else
+    COUNT_DELTA=-1
+  fi
+
+  REPORT_EXISTS=false
+  STATUS="FAILED"
+
+  ATTEMPTED=0
+  CREATED=0
+  FAILED="$COUNT"
+  DURATION_MS=0
+  TPS=0
+  SUCCESS_RATE=0
+  MIN_MS=0
+  AVERAGE_MS=0
+  P50_MS=0
+  P95_MS=0
+  P99_MS=0
+  MAX_MS=0
+  CLEANUP_ENABLED=false
+
+  if [[ -f "$REPORT_FILE" ]]; then
+    REPORT_EXISTS=true
+
+    cp "$REPORT_FILE" "$RUN_DIR/"
+    [[ -f "$CREATED_MANIFEST" ]] &&
+      cp "$CREATED_MANIFEST" "$RUN_DIR/"
+
+    [[ -f "$PAYLOAD_SAMPLE" ]] &&
+      cp "$PAYLOAD_SAMPLE" "$RUN_DIR/"
+
+    ATTEMPTED="$(jq -r '.creation.attempted // 0' "$REPORT_FILE")"
+    CREATED="$(jq -r '.creation.created // 0' "$REPORT_FILE")"
+    FAILED="$(jq -r '.creation.failed // 0' "$REPORT_FILE")"
+    DURATION_MS="$(jq -r '.creation.durationMs // 0' "$REPORT_FILE")"
+    TPS="$(jq -r '.creation.throughputTps // 0' "$REPORT_FILE")"
+    SUCCESS_RATE="$(jq -r '.creation.successRatePercent // 0' "$REPORT_FILE")"
+    MIN_MS="$(jq -r '.creation.minLatencyMs // 0' "$REPORT_FILE")"
+    AVERAGE_MS="$(jq -r '.creation.averageLatencyMs // 0' "$REPORT_FILE")"
+    P50_MS="$(jq -r '.creation.p50LatencyMs // 0' "$REPORT_FILE")"
+    P95_MS="$(jq -r '.creation.p95LatencyMs // 0' "$REPORT_FILE")"
+    P99_MS="$(jq -r '.creation.p99LatencyMs // 0' "$REPORT_FILE")"
+    MAX_MS="$(jq -r '.creation.maxLatencyMs // 0' "$REPORT_FILE")"
+    CLEANUP_ENABLED="$(jq -r '.configuration.cleanup // false' "$REPORT_FILE")"
+
+    if [[ -f "$CREATED_MANIFEST" ]]; then
+      printf '%s\n' "$CREATED_MANIFEST" \
+        >> "$CREATED_MANIFEST_LIST"
+    fi
+  fi
+
+  # The CountValooresCustomers endpoint appears capped at
+  # 100,000. Therefore, count delta is informational only.
+  # The benchmark report and created manifest determine success.
+  if [[ "$BENCHMARK_EXIT_CODE" -eq 0 &&
+        "$CREATED" -eq "$COUNT" &&
+        "$FAILED" -eq 0 ]]; then
+    STATUS="PASSED"
+  elif [[ "$BENCHMARK_EXIT_CODE" -eq 0 &&
+          "$CREATED" -gt 0 ]]; then
+    STATUS="PARTIAL"
+  else
+    STATUS="FAILED"
+  fi
+
+  jq -n \
+    --arg runId "$RUN_ID" \
+    --arg startedAt "$STARTED_AT" \
+    --arg finishedAt "$FINISHED_AT" \
+    --argjson count "$COUNT" \
+    --argjson concurrency "$CONCURRENCY" \
+    --argjson countBefore "$COUNT_BEFORE" \
+    --argjson countAfter "$COUNT_AFTER" \
+    --argjson countDelta "$COUNT_DELTA" \
+    --argjson attempted "$ATTEMPTED" \
+    --argjson created "$CREATED" \
+    --argjson failed "$FAILED" \
+    --argjson durationMs "$DURATION_MS" \
+    --argjson throughputTps "$TPS" \
+    --argjson successRatePercent "$SUCCESS_RATE" \
+    --argjson minLatencyMs "$MIN_MS" \
+    --argjson averageLatencyMs "$AVERAGE_MS" \
+    --argjson p50LatencyMs "$P50_MS" \
+    --argjson p95LatencyMs "$P95_MS" \
+    --argjson p99LatencyMs "$P99_MS" \
+    --argjson maxLatencyMs "$MAX_MS" \
+    --argjson exitCode "$BENCHMARK_EXIT_CODE" \
+    --arg status "$STATUS" \
+    --arg reportFile "$REPORT_FILE" \
+    --arg createdManifest "$CREATED_MANIFEST" \
+    '{
+      runId: $runId,
+      startedAt: $startedAt,
+      finishedAt: $finishedAt,
+      count: $count,
+      concurrency: $concurrency,
+      blockchainCount: {
+        before: $countBefore,
+        after: $countAfter,
+        delta: $countDelta
+      },
+      creation: {
+        attempted: $attempted,
+        created: $created,
+        failed: $failed,
+        durationMs: $durationMs,
+        throughputTps: $throughputTps,
+        successRatePercent: $successRatePercent,
+        minLatencyMs: $minLatencyMs,
+        averageLatencyMs: $averageLatencyMs,
+        p50LatencyMs: $p50LatencyMs,
+        p95LatencyMs: $p95LatencyMs,
+        p99LatencyMs: $p99LatencyMs,
+        maxLatencyMs: $maxLatencyMs
+      },
+      cleanupEnabled: false,
+      exitCode: $exitCode,
+      status: $status,
+      reportFile: $reportFile,
+      createdManifest: $createdManifest
+    }' >> "$RUN_MANIFEST"
+
+  printf '"%s","%s","%s",%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,"%s"\n' \
+    "$RUN_ID" \
+    "$STARTED_AT" \
+    "$FINISHED_AT" \
+    "$COUNT" \
+    "$CONCURRENCY" \
+    "$COUNT_BEFORE" \
+    "$COUNT_AFTER" \
+    "$COUNT_DELTA" \
+    "$ATTEMPTED" \
+    "$CREATED" \
+    "$FAILED" \
+    "$DURATION_MS" \
+    "$TPS" \
+    "$SUCCESS_RATE" \
+    "$MIN_MS" \
+    "$AVERAGE_MS" \
+    "$P50_MS" \
+    "$P95_MS" \
+    "$P99_MS" \
+    "$MAX_MS" \
+    "$CLEANUP_ENABLED" \
+    "$REPORT_EXISTS" \
+    "$BENCHMARK_EXIT_CODE" \
+    "$STATUS" \
+    "$STATUS" >> "$SUMMARY_CSV"
+
+  TOTAL_CREATED=$((TOTAL_CREATED + CREATED))
+  COMPLETED_RUNS=$((COMPLETED_RUNS + 1))
+
+  if [[ "$STATUS" != "PASSED" ]]; then
+    SUITE_FAILURES=$((SUITE_FAILURES + 1))
+  fi
+
+  echo
+  echo "================ RUN RESULT ======================"
+  echo "Run ID          : $RUN_ID"
+  echo "Status          : $STATUS"
+  echo "Exit code       : $BENCHMARK_EXIT_CODE"
+  echo "Created         : $CREATED"
+  echo "Failed          : $FAILED"
+  echo "TPS             : $TPS"
+  echo "Average latency : $AVERAGE_MS ms"
+  echo "P95 latency     : $P95_MS ms"
+  echo "P99 latency     : $P99_MS ms"
+  echo "Count before    : $COUNT_BEFORE"
+  echo "Count after     : $COUNT_AFTER"
+  echo "Count delta     : $COUNT_DELTA"
+  echo "=================================================="
+
+  if [[ "$STATUS" != "PASSED" &&
+        "$STOP_ON_FAILURE" == "true" ]]; then
+    echo
+    echo "[STOP] Test did not pass. Higher concurrency levels will not run."
+    break
+  fi
+
+  if [[ "$CONCURRENCY" != "${CONCURRENCIES[-1]}" ]]; then
+    echo
+    echo "Cooling down for $COOLDOWN_SECONDS seconds..."
+    sleep "$COOLDOWN_SECONDS"
+  fi
+done
+
+# ============================================================
+# Generate consolidated JSON summary
+# ============================================================
+
+FINAL_COUNT="$(get_customer_count)" || FINAL_COUNT=-1
+FINISHED_SUITE_AT="$(timestamp)"
+
+jq -s \
+  --arg suiteId "$SUITE_ID" \
+  --arg startedAt "$SUITE_TIMESTAMP" \
+  --arg finishedAt "$FINISHED_SUITE_AT" \
+  --argjson initialCount "$INITIAL_COUNT" \
+  --argjson finalCount "$FINAL_COUNT" \
+  --argjson completedRuns "$COMPLETED_RUNS" \
+  --argjson suiteFailures "$SUITE_FAILURES" \
+  --argjson totalCreated "$TOTAL_CREATED" \
+  '{
+    suiteId: $suiteId,
+    startedAt: $startedAt,
+    finishedAt: $finishedAt,
+    cleanupEnabled: false,
+    initialBlockchainCount: $initialCount,
+    finalBlockchainCount: $finalCount,
+    blockchainCountDelta: ($finalCount - $initialCount),
+    completedRuns: $completedRuns,
+    failedOrPartialRuns: $suiteFailures,
+    totalCreatedAccordingToReports: $totalCreated,
+    countReconciliationMatches:
+      (($finalCount - $initialCount) == $totalCreated),
+    runs: .
+  }' "$RUN_MANIFEST" > "$SUMMARY_JSON"
+
+echo
+echo "============================================================"
+echo "TEST SUITE FINISHED"
+echo "============================================================"
+echo "Finished                   : $FINISHED_SUITE_AT"
+echo "Completed runs             : $COMPLETED_RUNS"
+echo "Failed or partial runs     : $SUITE_FAILURES"
+echo "Initial blockchain count   : $INITIAL_COUNT"
+echo "Final blockchain count     : $FINAL_COUNT"
+echo "Total created from reports : $TOTAL_CREATED"
+echo
+echo "Master log:"
+echo "$MASTER_LOG"
+echo
+echo "CSV summary:"
+echo "$SUMMARY_CSV"
+echo
+echo "JSON summary:"
+echo "$SUMMARY_JSON"
+echo
+echo "Run manifest:"
+echo "$RUN_MANIFEST"
+echo
+echo "Created manifest list:"
+echo "$CREATED_MANIFEST_LIST"
+echo "============================================================"
+
+echo
+echo "================ FINAL CSV RESULTS =========================="
+
+if command -v column >/dev/null 2>&1; then
+  column -s, -t "$SUMMARY_CSV"
+else
+  cat "$SUMMARY_CSV"
+fi
+
+if [[ "$SUITE_FAILURES" -gt 0 ]]; then
+  exit 1
+fi
+
+exit 0

@@ -1,0 +1,29 @@
+blockchain-api/src/server.js:416:const blockchainKycRoutes = safeRoute('./routes/blockchain-kyc.routes', 'blockchain-kyc.routes');
+blockchain-api/src/services/blockchain-kyc.service.js:211:async function createBlockchainKycWallet(payload, files) {
+blockchain-api/src/services/blockchain-kyc.service.js:269:        'blockchain-kyc-module'
+blockchain-api/src/services/blockchain-kyc.service.js:302:  createBlockchainKycWallet
+blockchain-api/src/utils/jwt.util.js:6:const JWT_AUDIENCE = process.env.JWT_AUDIENCE || "blockchain-wallet-users";
+blockchain-api/src/app.js:18:const blockchainKycRoutes = require('./routes/blockchain-kyc.routes');
+blockchain-api/src/controllers/blockchain-kyc.controller.js:3:const blockchainKycService = require('../services/blockchain-kyc.service');
+blockchain-api/src/controllers/blockchain-kyc.controller.js:5:async function createBlockchainKycWallet(req, res) {
+blockchain-api/src/controllers/blockchain-kyc.controller.js:7:    const data = await blockchainKycService.createBlockchainKycWallet(
+blockchain-api/src/controllers/blockchain-kyc.controller.js:50:  createBlockchainKycWallet
+blockchain-api/src/routes/blockchain-kyc.routes.js:4:const blockchainKycController = require('../controllers/blockchain-kyc.controller');
+blockchain-api/src/routes/blockchain-kyc.routes.js:8:  '/blockchain-wallet',
+blockchain-api/src/routes/blockchain-kyc.routes.js:10:  blockchainKycController.createBlockchainKycWallet
+blockchain-test-ui/src/app/pages/blockchain-kyc/blockchain-kyc.html:1:<p>blockchain-kyc works!</p>
+blockchain-test-ui/src/app/pages/blockchain-kyc/blockchain-kyc.ts:4:  selector: 'app-blockchain-kyc',
+blockchain-test-ui/src/app/pages/blockchain-kyc/blockchain-kyc.ts:6:  templateUrl: './blockchain-kyc.html',
+blockchain-test-ui/src/app/pages/blockchain-kyc/blockchain-kyc.ts:7:  styleUrl: './blockchain-kyc.scss',
+blockchain-test-ui/src/app/pages/blockchain-kyc/blockchain-kyc.component.ts:94:  selector: 'app-blockchain-kyc',
+blockchain-test-ui/src/app/pages/blockchain-kyc/blockchain-kyc.component.ts:97:  templateUrl: './blockchain-kyc.component.html',
+blockchain-test-ui/src/app/pages/blockchain-kyc/blockchain-kyc.component.ts:98:  styleUrls: ['./blockchain-kyc.component.scss']
+blockchain-test-ui/src/app/pages/blockchain-kyc/blockchain-kyc.component.ts:681:      .post<ApiResponse<any>>(`${this.API_BASE_URL}/kyc/blockchain-wallet`, formData, {
+blockchain-test-ui/src/app/pages/blockchain-kyc/blockchain-kyc.component.scss:1:.blockchain-kyc-page {
+blockchain-test-ui/src/app/pages/blockchain-kyc/blockchain-kyc.component.scss:366:  .blockchain-kyc-page {
+blockchain-test-ui/src/app/pages/blockchain-kyc/blockchain-kyc.component.html:1:<div class="blockchain-kyc-page">
+blockchain-test-ui/src/app/services/blockchain-kyc.service.ts:41:  createBlockchainKycWallet(formData: FormData): Observable<any> {
+blockchain-test-ui/src/app/services/blockchain-kyc.service.ts:42:    return this.http.post(`${API_BASE_URL}/kyc/blockchain-wallet`, formData);
+blockchain-test-ui/src/app/layout/sidebar/sidebar.component.html:40:      <a routerLink="/digital-kyc/blockchain-kyc" routerLinkActive="active" class="sidebar-link">
+blockchain-test-ui/src/app/app.routes.ts:3:import { BlockchainKycComponent } from './pages/blockchain-kyc/blockchain-kyc.component';
+blockchain-test-ui/src/app/app.routes.ts:62:    path: 'digital-kyc/blockchain-kyc',

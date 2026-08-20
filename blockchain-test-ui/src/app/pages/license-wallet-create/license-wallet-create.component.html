@@ -1,0 +1,411 @@
+<div class="license-wallet-page">
+
+  <header class="page-header">
+    <div>
+      <span class="eyebrow">
+        Blockchain License Management
+      </span>
+
+      <h1>Create License Wallet</h1>
+
+      <p>
+        Select an application license and generate
+        its secure recovery wallet.
+      </p>
+    </div>
+
+    <div class="security-indicator">
+      <span class="security-dot"></span>
+      Credentials generated locally
+    </div>
+  </header>
+
+
+  <!-- STEP 1 -->
+  <section class="card">
+
+    <div class="step-heading">
+      <span class="step-number">1</span>
+
+      <div>
+        <h2>Select Application</h2>
+
+        <p>
+          Select the application license that
+          requires a recovery wallet.
+        </p>
+      </div>
+    </div>
+
+    <label class="field">
+      <span>Available Application License</span>
+
+      <select
+        [value]="selectedLicenseId"
+        [disabled]="creatingWallet"
+        (change)="
+          onLicenseSelected(
+            $any($event.target).value
+          )
+        "
+      >
+        <option value="">
+          {{
+            loadingLicenses
+              ? 'Loading Applications...'
+              : 'Select Application'
+          }}
+        </option>
+
+        <option
+          *ngFor="
+            let license of availableLicenses
+          "
+          [value]="license.licenseId"
+        >
+          {{ license.contractRef }}
+          — {{ license.licenseId }}
+        </option>
+      </select>
+
+      <small class="license-count">
+        {{
+          loadingLicenses
+            ? 'Loading applications...'
+            : availableLicenses.length +
+              ' application license(s) available'
+        }}
+      </small>
+
+    </label>
+
+
+    <div
+      class="license-summary"
+      *ngIf="selectedLicense as license"
+    >
+
+      <div>
+        <span>Contract Reference</span>
+        <strong>
+          {{ license.contractRef }}
+        </strong>
+      </div>
+
+      <div>
+        <span>Customer ID</span>
+        <strong>
+          {{ license.customerId }}
+        </strong>
+      </div>
+
+      <div>
+        <span>Installation ID</span>
+        <strong>
+          {{ license.installId }}
+        </strong>
+      </div>
+
+      <div>
+        <span>Maximum Users</span>
+        <strong>
+          {{ license.maxUsers }}
+        </strong>
+      </div>
+
+      <div>
+        <span>Product Modules</span>
+
+        <strong>
+          {{
+            formatModules(
+              license.productModules
+            )
+          }}
+        </strong>
+      </div>
+
+      <div>
+        <span>Valid Until</span>
+
+        <strong>
+          {{
+            license.validUntil |
+            date:'medium'
+          }}
+        </strong>
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- STEP 2 -->
+  <section class="card">
+
+    <div class="step-heading">
+      <span class="step-number">2</span>
+
+      <div>
+        <h2>Create Wallet</h2>
+
+        <p>
+          Wallet address, password and recovery
+          words will be generated automatically.
+        </p>
+      </div>
+    </div>
+
+    <div class="generation-box">
+
+      <div class="generation-icon">
+        🔐
+      </div>
+
+      <div>
+        <strong>
+          Secure License Wallet
+        </strong>
+
+        <p>
+          The password and recovery phrase are
+          generated inside your browser.
+        </p>
+      </div>
+
+    </div>
+
+    <div
+      class="message error-message"
+      *ngIf="errorMessage"
+    >
+      {{ errorMessage }}
+    </div>
+
+    <div
+      class="message success-message"
+      *ngIf="successMessage"
+    >
+      {{ successMessage }}
+    </div>
+
+    <div class="actions">
+      <button
+        type="button"
+        class="primary-button"
+        [disabled]="!canCreateWallet"
+        (click)="createWallet()"
+      >
+        {{
+          creatingWallet
+            ? 'Creating Wallet...'
+            : 'Create Wallet'
+        }}
+      </button>
+    </div>
+
+  </section>
+
+
+  <!-- STEP 3 POPUP -->
+  <div
+    class="credential-backdrop"
+    *ngIf="showCredentialPopup"
+  >
+
+    <section
+      class="credential-modal"
+      role="dialog"
+      aria-modal="true"
+    >
+
+      <header class="credential-header">
+
+        <div>
+          <span class="modal-eyebrow">
+            Wallet Created Successfully
+          </span>
+
+          <h2>
+            Save Your License Wallet
+          </h2>
+
+          <p>
+            This information will only be
+            displayed now.
+          </p>
+        </div>
+
+        <div class="success-icon">
+          ✓
+        </div>
+
+      </header>
+
+
+      <div class="credential-warning">
+        <strong>Important</strong>
+
+        Save the Wallet Address, Password and all
+        12 Recovery Words before closing this popup.
+      </div>
+
+
+      <div class="credential-section">
+
+        <label>Wallet Address</label>
+
+        <div class="credential-value-row">
+          <code>
+            {{ generatedWalletAddress }}
+          </code>
+
+          <button
+            type="button"
+            class="copy-button"
+            (click)="
+              copyValue(
+                generatedWalletAddress
+              )
+            "
+          >
+            Copy
+          </button>
+        </div>
+
+      </div>
+
+
+      <div class="credential-section">
+
+        <label>Wallet Password</label>
+
+        <div class="credential-value-row">
+
+          <code>
+            {{
+              showPassword
+                ? generatedPassword
+                : '••••••••••••••••••••••••'
+            }}
+          </code>
+
+          <button
+            type="button"
+            class="copy-button"
+            (click)="togglePassword()"
+          >
+            {{
+              showPassword
+                ? 'Hide'
+                : 'Show'
+            }}
+          </button>
+
+          <button
+            type="button"
+            class="copy-button"
+            (click)="
+              copyValue(
+                generatedPassword
+              )
+            "
+          >
+            Copy
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <div class="credential-section">
+
+        <div class="credential-title-row">
+
+          <label>
+            12 Recovery Words
+          </label>
+
+          <div>
+            <button
+              type="button"
+              class="copy-button"
+              (click)="toggleWords()"
+            >
+              {{
+                showWords
+                  ? 'Hide'
+                  : 'Show'
+              }}
+            </button>
+
+            <button
+              type="button"
+              class="copy-button"
+              (click)="copyRecoveryWords()"
+            >
+              Copy All
+            </button>
+          </div>
+
+        </div>
+
+
+        <div class="word-grid">
+
+          <div
+            class="word-item"
+            *ngFor="
+              let word of generatedRecoveryWords;
+              let index = index
+            "
+          >
+            <span>
+              {{
+                (index + 1)
+                  .toString()
+                  .padStart(2, '0')
+              }}
+            </span>
+
+            <strong>
+              {{
+                showWords
+                  ? word
+                  : '••••••••'
+              }}
+            </strong>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div class="security-warning">
+        The wallet password and recovery words
+        are not stored as plaintext in PostgreSQL
+        and will be cleared from this browser
+        when you continue.
+      </div>
+
+
+      <footer class="credential-footer">
+
+        <button
+          type="button"
+          class="primary-button save-button"
+          (click)="confirmSavedCredentials()"
+        >
+          I Saved My Recovery Information
+        </button>
+
+      </footer>
+
+    </section>
+
+  </div>
+
+</div>

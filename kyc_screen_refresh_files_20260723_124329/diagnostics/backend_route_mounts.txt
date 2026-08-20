@@ -1,0 +1,20 @@
+blockchain-api/src/server.js:416:const blockchainKycRoutes = safeRoute('./routes/blockchain-kyc.routes', 'blockchain-kyc.routes');
+blockchain-api/src/server.js:630:if (blockchainKycRoutes) {
+blockchain-api/src/server.js:631:  app.use('/api/v1/kyc', blockchainKycRoutes);
+blockchain-api/src/services/blockchain-kyc.service.js:61:    INSERT INTO blockchain.blockchain_kyc_wallet_requests (
+blockchain-api/src/services/blockchain-kyc.service.js:175:    UPDATE blockchain.blockchain_kyc_wallet_requests
+blockchain-api/src/services/blockchain-kyc.service.js:197:    UPDATE blockchain.blockchain_kyc_wallet_requests
+blockchain-api/src/services/blockchain-kyc.service.js:211:async function createBlockchainKycWallet(payload, files) {
+blockchain-api/src/services/blockchain-kyc.service.js:259:        'BLOCKCHAIN_KYC_MODULE',
+blockchain-api/src/services/blockchain-kyc.service.js:264:        'BLOCKCHAIN_KYC_MODULE',
+blockchain-api/src/services/blockchain-kyc.service.js:269:        'blockchain-kyc-module'
+blockchain-api/src/services/blockchain-kyc.service.js:302:  createBlockchainKycWallet
+blockchain-api/src/app.js:18:const blockchainKycRoutes = require('./routes/blockchain-kyc.routes');
+blockchain-api/src/app.js:122:app.use('/api/v1/kyc', blockchainKycRoutes);
+blockchain-api/src/controllers/blockchain-kyc.controller.js:3:const blockchainKycService = require('../services/blockchain-kyc.service');
+blockchain-api/src/controllers/blockchain-kyc.controller.js:5:async function createBlockchainKycWallet(req, res) {
+blockchain-api/src/controllers/blockchain-kyc.controller.js:7:    const data = await blockchainKycService.createBlockchainKycWallet(
+blockchain-api/src/controllers/blockchain-kyc.controller.js:18:    console.error('[BLOCKCHAIN_KYC_CREATE_ERROR]', {
+blockchain-api/src/controllers/blockchain-kyc.controller.js:50:  createBlockchainKycWallet
+blockchain-api/src/routes/blockchain-kyc.routes.js:4:const blockchainKycController = require('../controllers/blockchain-kyc.controller');
+blockchain-api/src/routes/blockchain-kyc.routes.js:10:  blockchainKycController.createBlockchainKycWallet

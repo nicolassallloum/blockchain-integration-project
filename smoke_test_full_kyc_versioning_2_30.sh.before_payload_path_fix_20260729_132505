@@ -1,0 +1,512 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+
+PROJECT_ROOT="${HOME}/u01/blockchain-integration"
+RESULT_DIR="${PROJECT_ROOT}/versioning-test-results"
+
+CHANNEL_NAME="kycchannelnix1"
+CHAINCODE_NAME="kyc-wallet-chaincode-js"
+
+PEER_ADDRESS="peer0.org1.blockchain.local:7051"
+PEER_HOSTNAME="peer0.org1.blockchain.local"
+
+ORDERER_ADDRESS="orderer.blockchain.local:7050"
+ORDERER_HOSTNAME="orderer.blockchain.local"
+
+ORG1_MSP="Org1MSP"
+
+ORG1_TLS_CA="/organizations/peerOrganizations/org1.blockchain.local/peers/peer0.org1.blockchain.local/tls/ca.crt"
+ORG1_ADMIN_MSP="/organizations/peerOrganizations/org1.blockchain.local/users/Admin@org1.blockchain.local/msp"
+
+mkdir -p "$RESULT_DIR"
+
+STAMP="$(date +%Y%m%d_%H%M%S)"
+
+CUSTOMER_ID="99$(date +%s%N | cut -c1-16)"
+RESIDENT_ID="VALOORES-${CUSTOMER_ID}"
+SESSION_ID="$(date +%s | tail -c 7)"
+
+RUN_ID="KYC_VERSIONING_TEST_${CUSTOMER_ID}_${STAMP}"
+RUN_DIR="${RESULT_DIR}/${RUN_ID}"
+
+mkdir -p "$RUN_DIR"
+
+MASTER_LOG="${RUN_DIR}/master.log"
+CREATE_LOG="${RUN_DIR}/create_version_1.log"
+UPDATE_LOG="${RUN_DIR}/update_version_2.log"
+
+LATEST_V1_FILE="${RUN_DIR}/latest_version_1.json"
+LATEST_V2_FILE="${RUN_DIR}/latest_version_2.json"
+
+VERSION_1_FILE="${RUN_DIR}/version_1.json"
+VERSION_2_FILE="${RUN_DIR}/version_2.json"
+
+VERSIONS_FILE="${RUN_DIR}/all_versions.json"
+COMPARE_FILE="${RUN_DIR}/comparison_1_2.json"
+
+exec > >(tee -a "$MASTER_LOG") 2>&1
+
+timestamp() {
+    date --iso-8601=seconds
+}
+
+section() {
+    echo
+    echo "======================================================================"
+    echo "$1"
+    echo "======================================================================"
+}
+
+fail() {
+    echo
+    echo "[FAIL] $1"
+    exit 1
+}
+
+peer_environment() {
+    printf '%s\n' \
+        -e "CORE_PEER_LOCALMSPID=${ORG1_MSP}" \
+        -e "CORE_PEER_ADDRESS=${PEER_ADDRESS}" \
+        -e "CORE_PEER_TLS_ENABLED=true" \
+        -e "CORE_PEER_TLS_ROOTCERT_FILE=${ORG1_TLS_CA}" \
+        -e "CORE_PEER_MSPCONFIGPATH=${ORG1_ADMIN_MSP}" \
+        -e "FABRIC_CFG_PATH=/etc/hyperledger/fabric"
+}
+
+query_chaincode() {
+    local function_name="$1"
+    shift
+
+    local invocation_spec
+
+    invocation_spec="$(
+        jq -cn \
+            --arg functionName "$function_name" \
+            '{
+                Function: $functionName,
+                Args: $ARGS.positional
+            }' \
+            --args "$@"
+    )"
+
+    docker exec \
+        -e "CORE_PEER_LOCALMSPID=${ORG1_MSP}" \
+        -e "CORE_PEER_ADDRESS=${PEER_ADDRESS}" \
+        -e "CORE_PEER_TLS_ENABLED=true" \
+        -e "CORE_PEER_TLS_ROOTCERT_FILE=${ORG1_TLS_CA}" \
+        -e "CORE_PEER_MSPCONFIGPATH=${ORG1_ADMIN_MSP}" \
+        -e "FABRIC_CFG_PATH=/etc/hyperledger/fabric" \
+        cli \
+        peer chaincode query \
+            --channelID "$CHANNEL_NAME" \
+            --name "$CHAINCODE_NAME" \
+            --peerAddresses "$PEER_ADDRESS" \
+            --tlsRootCertFiles "$ORG1_TLS_CA" \
+            --ctor "$invocation_spec"
+}
+
+invoke_chaincode() {
+    local function_name="$1"
+    shift
+
+    local invocation_spec
+
+    invocation_spec="$(
+        jq -cn \
+            --arg functionName "$function_name" \
+            '{
+                Function: $functionName,
+                Args: $ARGS.positional
+            }' \
+            --args "$@"
+    )"
+
+    docker exec \
+        -e "CORE_PEER_LOCALMSPID=${ORG1_MSP}" \
+        -e "CORE_PEER_ADDRESS=${PEER_ADDRESS}" \
+        -e "CORE_PEER_TLS_ENABLED=true" \
+        -e "CORE_PEER_TLS_ROOTCERT_FILE=${ORG1_TLS_CA}" \
+        -e "CORE_PEER_MSPCONFIGPATH=${ORG1_ADMIN_MSP}" \
+        -e "FABRIC_CFG_PATH=/etc/hyperledger/fabric" \
+        cli \
+        peer chaincode invoke \
+            --orderer "$ORDERER_ADDRESS" \
+            --ordererTLSHostnameOverride "$ORDERER_HOSTNAME" \
+            --tls \
+            --cafile "$ORDERER_TLS_CA" \
+            --channelID "$CHANNEL_NAME" \
+            --name "$CHAINCODE_NAME" \
+            --peerAddresses "$PEER_ADDRESS" \
+            --tlsRootCertFiles "$ORG1_TLS_CA" \
+            --ctor "$invocation_spec" \
+            --waitForEvent \
+            --waitForEventTimeout 120s
+}
+
+section "1. TEST CONFIGURATION"
+
+echo "Started              : $(timestamp)"
+echo "Run ID               : $RUN_ID"
+echo "Customer ID          : $CUSTOMER_ID"
+echo "Resident ID          : $RESIDENT_ID"
+echo "Session ID           : $SESSION_ID"
+echo "Channel              : $CHANNEL_NAME"
+echo "Chaincode            : $CHAINCODE_NAME"
+echo "Result directory     : $RUN_DIR"
+
+section "2. RESOLVE ORDERER TLS CERTIFICATE"
+
+ORDERER_TLS_CA="$(
+    docker exec cli sh -lc '
+        find /organizations/ordererOrganizations \
+            -type f \
+            -path "*/orderers/*/tls/ca.crt" \
+            -print \
+            | head -1
+    '
+)"
+
+if [ -z "$ORDERER_TLS_CA" ]; then
+    ORDERER_TLS_CA="$(
+        docker exec cli sh -lc '
+            find /organizations/ordererOrganizations \
+                -type f \
+                -path "*/msp/tlscacerts/*" \
+                -print \
+                | head -1
+        '
+    )"
+fi
+
+[ -n "$ORDERER_TLS_CA" ] ||
+    fail "Orderer TLS CA certificate could not be resolved."
+
+echo "Orderer TLS CA: $ORDERER_TLS_CA"
+
+section "3. VERIFY CHAINCODE DEFINITION"
+
+COMMITTED_DEFINITION="$(
+    docker exec \
+        -e "CORE_PEER_LOCALMSPID=${ORG1_MSP}" \
+        -e "CORE_PEER_ADDRESS=${PEER_ADDRESS}" \
+        -e "CORE_PEER_TLS_ENABLED=true" \
+        -e "CORE_PEER_TLS_ROOTCERT_FILE=${ORG1_TLS_CA}" \
+        -e "CORE_PEER_MSPCONFIGPATH=${ORG1_ADMIN_MSP}" \
+        -e "FABRIC_CFG_PATH=/etc/hyperledger/fabric" \
+        cli \
+        peer lifecycle chaincode querycommitted \
+            --channelID "$CHANNEL_NAME" \
+            --name "$CHAINCODE_NAME" \
+            --peerAddresses "$PEER_ADDRESS" \
+            --tlsRootCertFiles "$ORG1_TLS_CA" \
+            --output json
+)"
+
+echo "$COMMITTED_DEFINITION" |
+    jq . |
+    tee "${RUN_DIR}/committed_definition.json"
+
+echo "$COMMITTED_DEFINITION" |
+    jq -e '
+        .version == "2.30"
+        and
+        .sequence == 30
+        and
+        .approvals.Org1MSP == true
+        and
+        .approvals.Org2MSP == true
+    ' >/dev/null ||
+    fail "Chaincode version 2.30 sequence 30 is not committed correctly."
+
+echo "[PASS] Correct chaincode definition is active."
+
+section "4. BUILD COMPLETE VERSION 1 PAYLOAD"
+
+CREATE_PAYLOAD="$(
+    jq -cn \
+        --arg customerId "$CUSTOMER_ID" \
+        --arg residentId "$RESIDENT_ID" \
+        --arg sessionId "$SESSION_ID" \
+        '{
+            customer_id: $customerId,
+            customerId: $customerId,
+            residentId: $residentId,
+            session_id: $sessionId,
+            sessionId: $sessionId,
+
+            formData: {
+                SESSION_DESC: "Full blockchain versioning smoke test",
+                STATUS_NAME: "Draft",
+                PARTY_TYPE_CODE: "7",
+                CUSTOMER_ID: $customerId,
+                CUSTOMER_NAME: "Nathalie Nicola",
+                STATUS_CODE: "1193",
+                SESSION_ID: $sessionId,
+                IS_MAIN: "1",
+                SESSION_DTL_ID: "1",
+                BRANCH: "1038885",
+                INFO_COMPLETION_LEVEL: "1477",
+                UPLOAD_SELFIE: "",
+                FIRST_NAME: "Nathalie",
+                FATHER_NAME: "George",
+                LAST_NAME: "Nicola",
+                MAIN_NATIONALITY_ID: "1808",
+                DATE_OF_BIRTH: "01/11/2001",
+                GENDER: "2",
+                PLACE_0F_BIRTH: "Jbeil",
+                COUNTRY_OF_BIRTH: "Lebanon",
+                MOTHER_NAME: "Afaf",
+                MOTHER_MAIDEN_NAME: "Test Maiden Name",
+                COUNTRY_OF_REGISTRATION: "Lebanon",
+                DATE_OF_REGISTRATION: "07/23/2026",
+                CIVIL_REGISTER_PLACE: "Jbeil",
+                CIVIL_REGISTRE_NUMBER: "TEST-12345",
+                LEGAL_FORM: "5602",
+                STATUS_ID: "1193"
+            }
+        }'
+)"
+
+echo "$CREATE_PAYLOAD" |
+    jq . |
+    tee "${RUN_DIR}/submitted_version_1_payload.json"
+
+section "5. CREATE VERSION 1"
+
+invoke_chaincode \
+    "CreateResident" \
+    "$CREATE_PAYLOAD" |
+tee "$CREATE_LOG"
+
+sleep 5
+
+section "6. QUERY LATEST VERSION AFTER CREATE"
+
+query_chaincode \
+    "GetLatestResidentVersion" \
+    "$RESIDENT_ID" |
+tee "$LATEST_V1_FILE"
+
+jq . "$LATEST_V1_FILE"
+
+jq -e '
+    (.versionNumber | tonumber) == 1
+    and
+    .operation == "CREATE"
+    and
+    .formData.FIRST_NAME == "Nathalie"
+    and
+    .formData.LAST_NAME == "Nicola"
+    and
+    .formData.MOTHER_NAME == "Afaf"
+    and
+    .formData.CIVIL_REGISTRE_NUMBER == "TEST-12345"
+' "$LATEST_V1_FILE" >/dev/null ||
+fail "Version 1 does not contain the expected complete KYC payload."
+
+echo "[PASS] Version 1 contains the complete KYC payload."
+
+section "7. BUILD VERSION 2 UPDATE"
+
+UPDATE_PAYLOAD="$(
+    jq -cn \
+        --arg customerId "$CUSTOMER_ID" \
+        --arg residentId "$RESIDENT_ID" \
+        --arg sessionId "$SESSION_ID" \
+        '{
+            customer_id: $customerId,
+            customerId: $customerId,
+            residentId: $residentId,
+            session_id: $sessionId,
+            sessionId: $sessionId,
+
+            changeReason:
+                "Smoke test: status and completion level updated",
+
+            formData: {
+                SESSION_DESC:
+                    "Full blockchain versioning smoke test - Version 2",
+                STATUS_NAME: "Submitted",
+                PARTY_TYPE_CODE: "7",
+                CUSTOMER_ID: $customerId,
+                CUSTOMER_NAME: "Nathalie Nicola",
+                STATUS_CODE: "1194",
+                SESSION_ID: $sessionId,
+                IS_MAIN: "1",
+                SESSION_DTL_ID: "2",
+                BRANCH: "1038885",
+                INFO_COMPLETION_LEVEL: "1500",
+                UPLOAD_SELFIE: "",
+                FIRST_NAME: "Nathalie",
+                FATHER_NAME: "George",
+                LAST_NAME: "Nicola",
+                MAIN_NATIONALITY_ID: "1808",
+                DATE_OF_BIRTH: "01/11/2001",
+                GENDER: "2",
+                PLACE_0F_BIRTH: "Jbeil",
+                COUNTRY_OF_BIRTH: "Lebanon",
+                MOTHER_NAME: "Afaf",
+                MOTHER_MAIDEN_NAME: "Test Maiden Name",
+                COUNTRY_OF_REGISTRATION: "Lebanon",
+                DATE_OF_REGISTRATION: "07/23/2026",
+                CIVIL_REGISTER_PLACE: "Jbeil",
+                CIVIL_REGISTRE_NUMBER: "TEST-12345",
+                LEGAL_FORM: "5602",
+                STATUS_ID: "1194"
+            }
+        }'
+)"
+
+echo "$UPDATE_PAYLOAD" |
+    jq . |
+    tee "${RUN_DIR}/submitted_version_2_payload.json"
+
+section "8. CREATE VERSION 2"
+
+invoke_chaincode \
+    "UpdateResident" \
+    "$UPDATE_PAYLOAD" |
+tee "$UPDATE_LOG"
+
+sleep 5
+
+section "9. QUERY LATEST VERSION AFTER UPDATE"
+
+query_chaincode \
+    "GetLatestResidentVersion" \
+    "$RESIDENT_ID" |
+tee "$LATEST_V2_FILE"
+
+jq . "$LATEST_V2_FILE"
+
+jq -e '
+    (.versionNumber | tonumber) == 2
+    and
+    .operation == "UPDATE"
+    and
+    .formData.STATUS_NAME == "Submitted"
+    and
+    .formData.STATUS_CODE == "1194"
+    and
+    .formData.INFO_COMPLETION_LEVEL == "1500"
+    and
+    .formData.FIRST_NAME == "Nathalie"
+    and
+    .formData.MOTHER_NAME == "Afaf"
+' "$LATEST_V2_FILE" >/dev/null ||
+fail "Version 2 does not contain the expected updated complete payload."
+
+echo "[PASS] Version 2 contains the complete updated KYC payload."
+
+section "10. QUERY VERSION 1"
+
+query_chaincode \
+    "GetResidentVersion" \
+    "$RESIDENT_ID" \
+    "1" |
+tee "$VERSION_1_FILE"
+
+jq . "$VERSION_1_FILE"
+
+section "11. QUERY VERSION 2"
+
+query_chaincode \
+    "GetResidentVersion" \
+    "$RESIDENT_ID" \
+    "2" |
+tee "$VERSION_2_FILE"
+
+jq . "$VERSION_2_FILE"
+
+section "12. VERIFY VERSION 1 REMAINS UNCHANGED"
+
+jq -e '
+    (.versionNumber | tonumber) == 1
+    and
+    .formData.STATUS_NAME == "Draft"
+    and
+    .formData.STATUS_CODE == "1193"
+    and
+    .formData.INFO_COMPLETION_LEVEL == "1477"
+' "$VERSION_1_FILE" >/dev/null ||
+fail "Version 1 was overwritten or changed."
+
+echo "[PASS] Version 1 remains immutable."
+
+section "13. QUERY ALL VERSIONS"
+
+query_chaincode \
+    "GetResidentVersions" \
+    "$RESIDENT_ID" |
+tee "$VERSIONS_FILE"
+
+jq . "$VERSIONS_FILE"
+
+VERSION_COUNT="$(
+    jq '
+        if type == "array" then
+            length
+        elif has("versions") then
+            (.versions | length)
+        else
+            0
+        end
+    ' "$VERSIONS_FILE"
+)"
+
+if [ "$VERSION_COUNT" -ne 2 ]; then
+    fail "Expected exactly 2 versions, found ${VERSION_COUNT}."
+fi
+
+echo "[PASS] Exactly two immutable versions were returned."
+
+section "14. COMPARE VERSION 1 WITH VERSION 2"
+
+query_chaincode \
+    "CompareResidentVersions" \
+    "$RESIDENT_ID" \
+    "1" \
+    "2" |
+tee "$COMPARE_FILE"
+
+jq . "$COMPARE_FILE"
+
+section "15. GENERATE TEST SUMMARY"
+
+jq -n \
+    --arg runId "$RUN_ID" \
+    --arg customerId "$CUSTOMER_ID" \
+    --arg residentId "$RESIDENT_ID" \
+    --arg sessionId "$SESSION_ID" \
+    --arg startedAt "$(head -1 "$MASTER_LOG" 2>/dev/null || true)" \
+    --arg completedAt "$(timestamp)" \
+    --arg resultDirectory "$RUN_DIR" \
+    '{
+        runId: $runId,
+        status: "PASSED",
+        chaincodeVersion: "2.30",
+        chaincodeSequence: 30,
+        customerId: $customerId,
+        residentId: $residentId,
+        sessionId: $sessionId,
+        versionsCreated: 2,
+        version1Operation: "CREATE",
+        version2Operation: "UPDATE",
+        completePayloadStored: true,
+        version1Immutable: true,
+        resultDirectory: $resultDirectory,
+        completedAt: $completedAt
+    }' |
+tee "${RUN_DIR}/summary.json"
+
+section "FULL KYC VERSIONING TEST PASSED"
+
+echo "Customer ID      : $CUSTOMER_ID"
+echo "Resident ID      : $RESIDENT_ID"
+echo "Versions created : 2"
+echo "Complete data    : Stored"
+echo "Version 1        : Immutable"
+echo "Comparison       : Generated"
+echo "Results          : $RUN_DIR"
+echo "Completed        : $(timestamp)"

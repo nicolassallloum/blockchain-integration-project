@@ -1,0 +1,164 @@
+
+======================================================================
+CUSTOMER CRUD CHAINCODE CONTROLLED DEPLOYMENT
+======================================================================
+Generated At:     2026-07-24T15:25:42+03:00
+Project Root:     /home/nix/u01/blockchain-integration
+Channel:          kycchannelnix1
+Chaincode:        kyc-wallet-chaincode-js
+Version:          2.29
+Sequence:         29
+Label:            kyc-wallet-chaincode-js_2.29
+Policy:           OR('Org1MSP.peer','Org2MSP.peer')
+Evidence Dir:     /home/nix/u01/blockchain-integration/deployment-evidence/customer-crud-chaincode-2.29-20260724_152542
+Report:           /home/nix/u01/blockchain-integration/deployment-evidence/customer-crud-chaincode-2.29-20260724_152542/deployment-report.txt
+
+======================================================================
+1. SOURCE AND VERSION SAFETY CHECKS
+======================================================================
+UpdateResident count: 1
+DeleteResident count: 1
+
+> kyc-wallet-chaincode-js@2.7.0 check:syntax
+> node --check index.js && node --check lib/kycWalletContract.js && node --check tests/phase10-proof.test.js && node --check tests/phase28-audit-proof.test.js
+
+aba7a8ae44b10a34e6120babf04075cdeeec7d48356e7181ab462b9741da3bf2  /home/nix/u01/blockchain-integration/chaincode/kyc-wallet-chaincode-js/lib/kycWalletContract.js
+dcb33ff41d5f8d03c6024f5fce05d166af73e60f04a8aa499fc4bc58714ac3ec  /home/nix/u01/blockchain-integration/chaincode/kyc-wallet-chaincode-js/package.json
+
+======================================================================
+2. RESOLVE FABRIC IDENTITIES AND TLS
+======================================================================
+Org1:   Org1MSP | peer0.org1.blockchain.local:7051
+Org2:   Org2MSP | peer0.org2.blockchain.local:9051
+Orderer: orderer.blockchain.local:7050
+
+======================================================================
+3. VERIFY CURRENT COMMITTED DEFINITION
+======================================================================
+{
+  "sequence": 28,
+  "version": "2.28",
+  "endorsement_plugin": "escc",
+  "validation_plugin": "vscc",
+  "validation_parameter": "CiwSDBIKCAESAggAEgIIARoNEgsKB09yZzFNU1AQAxoNEgsKB09yZzJNU1AQAw==",
+  "collections": {},
+  "approvals": {
+    "Org1MSP": true,
+    "Org2MSP": true
+  }
+}
+
+======================================================================
+4. PACKAGE CHAINCODE
+======================================================================
+kyc-wallet-chaincode-js_2.29:efcd65e5bdeea19e94c0d7e2b6003e6a9ebd90cc61306dcec8accd1cd0ce7fd6
+kyc-wallet-chaincode-js_2.29:efcd65e5bdeea19e94c0d7e2b6003e6a9ebd90cc61306dcec8accd1cd0ce7fd6
+-rw------- 1 nix nix 102K Jul 24 15:25 /home/nix/u01/blockchain-integration/deployment-evidence/customer-crud-chaincode-2.29-20260724_152542/kyc-wallet-chaincode-js_2.29.tar.gz
+efcd65e5bdeea19e94c0d7e2b6003e6a9ebd90cc61306dcec8accd1cd0ce7fd6  /home/nix/u01/blockchain-integration/deployment-evidence/customer-crud-chaincode-2.29-20260724_152542/kyc-wallet-chaincode-js_2.29.tar.gz
+
+======================================================================
+5. INSTALL PACKAGE ON ORG1 AND ORG2
+======================================================================
+Installing package for Org1...
+[34m2026-07-24 12:25:54.472 UTC 0001 INFO[0m [cli.lifecycle.chaincode] [34;1msubmitInstallProposal[0m -> Installed remotely: response:<status:200 payload:"\n]kyc-wallet-chaincode-js_2.29:efcd65e5bdeea19e94c0d7e2b6003e6a9ebd90cc61306dcec8accd1cd0ce7fd6\022\034kyc-wallet-chaincode-js_2.29" > 
+[34m2026-07-24 12:25:54.472 UTC 0002 INFO[0m [cli.lifecycle.chaincode] [34;1msubmitInstallProposal[0m -> Chaincode code package identifier: kyc-wallet-chaincode-js_2.29:efcd65e5bdeea19e94c0d7e2b6003e6a9ebd90cc61306dcec8accd1cd0ce7fd6
+PASS: Org1 package installation confirmed.
+Installing package for Org2...
+[34m2026-07-24 12:26:03.223 UTC 0001 INFO[0m [cli.lifecycle.chaincode] [34;1msubmitInstallProposal[0m -> Installed remotely: response:<status:200 payload:"\n]kyc-wallet-chaincode-js_2.29:efcd65e5bdeea19e94c0d7e2b6003e6a9ebd90cc61306dcec8accd1cd0ce7fd6\022\034kyc-wallet-chaincode-js_2.29" > 
+[34m2026-07-24 12:26:03.224 UTC 0002 INFO[0m [cli.lifecycle.chaincode] [34;1msubmitInstallProposal[0m -> Chaincode code package identifier: kyc-wallet-chaincode-js_2.29:efcd65e5bdeea19e94c0d7e2b6003e6a9ebd90cc61306dcec8accd1cd0ce7fd6
+PASS: Org2 package installation confirmed.
+
+======================================================================
+6. APPROVE DEFINITION FOR BOTH ORGANIZATIONS
+======================================================================
+Submitting approval for Org1...
+[34m2026-07-24 12:26:05.694 UTC 0001 INFO[0m [chaincodeCmd] [34;1mClientWait[0m -> txid [8f20af1a1d66365eebaf077f2238da2be0dd72dfb34595274ecdbf1c0b3f7762] committed with status (VALID) at peer0.org1.blockchain.local:7051
+{
+  "sequence": 29,
+  "version": "2.29",
+  "endorsement_plugin": "escc",
+  "validation_plugin": "vscc",
+  "validation_parameter": "CiwSDBIKCAESAggAEgIIARoNEgsKB09yZzFNU1AQAxoNEgsKB09yZzJNU1AQAw==",
+  "collections": {},
+  "source": {
+    "Type": {
+      "LocalPackage": {
+        "package_id": "kyc-wallet-chaincode-js_2.29:efcd65e5bdeea19e94c0d7e2b6003e6a9ebd90cc61306dcec8accd1cd0ce7fd6"
+      }
+    }
+  }
+}
+PASS: Org1 approval confirmed.
+Submitting approval for Org2...
+[34m2026-07-24 12:26:08.198 UTC 0001 INFO[0m [chaincodeCmd] [34;1mClientWait[0m -> txid [b4180d57f715aa29938704e1dfb5b1a4795ca2a94b494c67d3208665cc0f2357] committed with status (VALID) at peer0.org2.blockchain.local:9051
+{
+  "sequence": 29,
+  "version": "2.29",
+  "endorsement_plugin": "escc",
+  "validation_plugin": "vscc",
+  "validation_parameter": "CiwSDBIKCAESAggAEgIIARoNEgsKB09yZzFNU1AQAxoNEgsKB09yZzJNU1AQAw==",
+  "collections": {},
+  "source": {
+    "Type": {
+      "LocalPackage": {
+        "package_id": "kyc-wallet-chaincode-js_2.29:efcd65e5bdeea19e94c0d7e2b6003e6a9ebd90cc61306dcec8accd1cd0ce7fd6"
+      }
+    }
+  }
+}
+PASS: Org2 approval confirmed.
+
+======================================================================
+7. CHECK COMMIT READINESS
+======================================================================
+{
+  "approvals": {
+    "Org1MSP": true,
+    "Org2MSP": true
+  }
+}
+PASS: Both organizations are ready to commit.
+
+======================================================================
+8. COMMIT VERSION 2.29 SEQUENCE 29
+======================================================================
+[34m2026-07-24 12:26:10.767 UTC 0001 INFO[0m [chaincodeCmd] [34;1mClientWait[0m -> txid [48b75d7bd89d1d622046af4a51c783eb73a1d305e46bb08e12f1d74d9769e074] committed with status (VALID) at peer0.org2.blockchain.local:9051
+[34m2026-07-24 12:26:10.774 UTC 0002 INFO[0m [chaincodeCmd] [34;1mClientWait[0m -> txid [48b75d7bd89d1d622046af4a51c783eb73a1d305e46bb08e12f1d74d9769e074] committed with status (VALID) at peer0.org1.blockchain.local:7051
+
+======================================================================
+9. VERIFY FINAL COMMITTED DEFINITION
+======================================================================
+{
+  "sequence": 29,
+  "version": "2.29",
+  "endorsement_plugin": "escc",
+  "validation_plugin": "vscc",
+  "validation_parameter": "CiwSDBIKCAESAggAEgIIARoNEgsKB09yZzFNU1AQAxoNEgsKB09yZzJNU1AQAw==",
+  "collections": {},
+  "approvals": {
+    "Org1MSP": true,
+    "Org2MSP": true
+  }
+}
+
+======================================================================
+10. VERIFY NEW CHAINCODE CONTAINERS
+======================================================================
+NAMES                                                                                                                           STATUS
+dev-peer0.org1.blockchain.local-kyc-wallet-chaincode-js_2.29-efcd65e5bdeea19e94c0d7e2b6003e6a9ebd90cc61306dcec8accd1cd0ce7fd6   Up 14 seconds
+dev-peer0.org2.blockchain.local-kyc-wallet-chaincode-js_2.29-efcd65e5bdeea19e94c0d7e2b6003e6a9ebd90cc61306dcec8accd1cd0ce7fd6   Up 14 seconds
+
+======================================================================
+DEPLOYMENT COMPLETED SUCCESSFULLY
+======================================================================
+Channel:             kycchannelnix1
+Chaincode:           kyc-wallet-chaincode-js
+Committed Version:   2.29
+Committed Sequence:  29
+Package Label:       kyc-wallet-chaincode-js_2.29
+Package ID:          kyc-wallet-chaincode-js_2.29:efcd65e5bdeea19e94c0d7e2b6003e6a9ebd90cc61306dcec8accd1cd0ce7fd6
+Endorsement Policy:  OR('Org1MSP.peer','Org2MSP.peer')
+Evidence Directory:  /home/nix/u01/blockchain-integration/deployment-evidence/customer-crud-chaincode-2.29-20260724_152542
+
+UpdateResident and DeleteResident are now part of the committed chaincode definition.
+No backend or frontend source file was modified by this deployment script.

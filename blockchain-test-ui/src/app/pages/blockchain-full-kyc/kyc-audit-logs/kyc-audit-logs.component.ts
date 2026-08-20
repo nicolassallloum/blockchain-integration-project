@@ -1,18 +1,613 @@
-import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import {
+  Component,
+  OnInit
+} from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import {
+  finalize,
+  forkJoin,
+  timeout
+} from 'rxjs';
+
+import {
+  KycBlockchainMetadata,
+  KycCustomerMetadata,
+  KycVersionAuditApiService,
+  KycVersionComparison,
+  KycVersionRecord
+} from './kyc-version-audit-api.service';
+
+interface PayloadComparisonRow {
+  field: string;
+  oldValue: unknown;
+  newValue: unknown;
+  changed: boolean;
+}
 
 @Component({
   selector: 'app-kyc-audit-logs',
   standalone: true,
-  template: `
-    <section class="page">
-      <h1>KYC Audit Logs</h1>
-      <p>Track every citizen KYC action, approval, rejection, blockchain submit, and verification.</p>
-    </section>
-  `,
-  styles: [`
-    .page { padding: 24px; background: #fff; border-radius: 14px; box-shadow: 0 8px 24px rgba(15,23,42,.06); }
-    h1 { margin: 0; color: #004b9b; font-size: 28px; font-weight: 900; }
-    p { margin-top: 8px; color: #536174; font-size: 15px; }
-  `]
+  imports: [
+    CommonModule,
+    FormsModule
+  ],
+  templateUrl: './kyc-audit-logs.html',
+  styleUrls: ['./kyc-audit-logs.scss']
 })
-export class KycAuditLogsComponent {}
+export class KycAuditLogsComponent implements OnInit {
+  readonly demoCustomerId =
+    '991785320715307182';
+
+  customerId = this.demoCustomerId;
+  normalizedCustomerId = '';
+
+  loading = false;
+  comparisonLoading = false;
+
+  errorMessage = '';
+  successMessage = '';
+  copyMessage = '';
+
+  versions: KycVersionRecord[] = [];
+  latestVersion: KycVersionRecord | null = null;
+  comparison: KycVersionComparison | null = null;
+
+  customer: KycCustomerMetadata | null = null;
+  blockchain: KycBlockchainMetadata | null = null;
+
+  selectedOldVersionNumber: number | null = null;
+  selectedNewVersionNumber: number | null = null;
+
+  activeEvidenceTab:
+    | 'changes'
+    | 'payload'
+    | 'metadata'
+    | 'json' = 'changes';
+
+  lastLoadedAt: Date | null = null;
+
+  constructor(
+    private readonly versionApi:
+      KycVersionAuditApiService
+  ) {}
+
+  ngOnInit(): void {
+    this.loadCustomerVersions();
+  }
+
+  get hasVersions(): boolean {
+    return this.versions.length > 0;
+  }
+
+  get isLegacyCustomer(): boolean {
+    const documentType = String(
+      this.latestVersion?.docType || ''
+    )
+      .trim()
+      .toUpperCase();
+
+    return (
+      !this.loading &&
+      this.versions.length === 0 &&
+      documentType === 'KYC_LEGACY_CURRENT'
+    );
+  }
+
+
+  get oldVersion(): KycVersionRecord | null {
+    return (
+      this.versions.find(
+        (version) =>
+          version.versionNumber ===
+          this.selectedOldVersionNumber
+      ) || null
+    );
+  }
+
+  get newVersion(): KycVersionRecord | null {
+    return (
+      this.versions.find(
+        (version) =>
+          version.versionNumber ===
+          this.selectedNewVersionNumber
+      ) || null
+    );
+  }
+
+  get changedFields(): string[] {
+    if (this.comparison?.changes?.length) {
+      return this.comparison.changes.map(
+        (change) => change.field
+      );
+    }
+
+    return this.newVersion?.versionChangedFields || [];
+  }
+
+  get payloadComparisonRows(): PayloadComparisonRow[] {
+    const oldFormData =
+      this.oldVersion?.payload?.formData || {};
+
+    const newFormData =
+      this.newVersion?.payload?.formData || {};
+
+    const fields = new Set<string>([
+      ...Object.keys(oldFormData),
+      ...Object.keys(newFormData)
+    ]);
+
+    return Array.from(fields)
+      .map((field) => {
+        const oldValue = oldFormData[field];
+        const newValue = newFormData[field];
+
+        return {
+          field,
+          oldValue,
+          newValue,
+          changed:
+            this.normalizeComparableValue(oldValue) !==
+            this.normalizeComparableValue(newValue)
+        };
+      })
+      .sort((first, second) => {
+        if (first.changed !== second.changed) {
+          return first.changed ? -1 : 1;
+        }
+
+        return first.field.localeCompare(second.field);
+      });
+  }
+
+  get changedPayloadFieldsCount(): number {
+    return this.payloadComparisonRows.filter(
+      (row) => row.changed
+    ).length;
+  }
+
+  loadCustomerVersions(): void {
+    const enteredCustomerId = String(
+      this.customerId || ''
+    ).trim();
+
+    const normalizedCustomerId = enteredCustomerId
+      .replace(/^KYC_VALOORES-/i, '')
+      .replace(/^VALOORES-/i, '');
+
+    if (!normalizedCustomerId) {
+      this.errorMessage =
+        'Enter a valid Customer ID before searching.';
+      return;
+    }
+
+    this.normalizedCustomerId =
+      normalizedCustomerId;
+
+    this.loading = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.copyMessage = '';
+
+    this.versions = [];
+    this.latestVersion = null;
+    this.comparison = null;
+    this.customer = null;
+    this.blockchain = null;
+
+    this.selectedOldVersionNumber = null;
+    this.selectedNewVersionNumber = null;
+
+    forkJoin({
+      latestResponse:
+        this.versionApi.getLatestVersion(
+          normalizedCustomerId
+        ),
+      versionsResponse:
+        this.versionApi.getVersions(
+          normalizedCustomerId
+        )
+    })
+      .pipe(
+        timeout(30000),
+        finalize(() => {
+          this.loading = false;
+        })
+      )
+      .subscribe({
+        next: ({
+          latestResponse,
+          versionsResponse
+        }: any) => {
+          const returnedVersions =
+            Array.isArray(
+              versionsResponse?.data?.versions
+            )
+              ? versionsResponse.data.versions
+              : [];
+
+          const latestData =
+            latestResponse?.data || null;
+
+          this.versions =
+            returnedVersions as KycVersionRecord[];
+
+          if (latestData) {
+            this.latestVersion = {
+              ...latestData,
+              customerId: String(
+                latestData.customerId ||
+                latestData.payload?.customerId ||
+                latestData.payload?.customer_id ||
+                normalizedCustomerId
+              ),
+              residentId: String(
+                latestData.residentId ||
+                latestData.payload?.residentId ||
+                `VALOORES-${normalizedCustomerId}`
+              ),
+              versionNumber:
+                latestData.versionNumber ?? null,
+              versionOperation:
+                latestData.versionOperation ||
+                (
+                  latestData.docType ===
+                  'KYC_LEGACY_CURRENT'
+                    ? 'LEGACY_CURRENT'
+                    : null
+                )
+            } as KycVersionRecord;
+          }
+
+          this.customer = (
+            latestResponse?.customer || {
+              customerId:
+                normalizedCustomerId,
+              residentId:
+                `VALOORES-${normalizedCustomerId}`,
+              ledgerKey:
+                `KYC_VALOORES-${normalizedCustomerId}`
+            }
+          ) as KycCustomerMetadata;
+
+          this.blockchain = (
+            versionsResponse?.blockchain ||
+            latestResponse?.blockchain ||
+            null
+          ) as KycBlockchainMetadata | null;
+
+          const isLegacyCurrent =
+            latestData?.docType ===
+              'KYC_LEGACY_CURRENT' &&
+            returnedVersions.length === 0;
+
+          if (isLegacyCurrent) {
+            this.successMessage =
+              `Customer ${normalizedCustomerId} exists on ` +
+              'Fabric Blockchain as a legacy customer. ' +
+              'No immutable KYC versions have been created yet.';
+
+            return;
+          }
+
+          if (returnedVersions.length === 0) {
+            this.errorMessage =
+              `Customer ${normalizedCustomerId} was found, ` +
+              'but no immutable version records were returned.';
+
+            return;
+          }
+
+          const firstVersion =
+            returnedVersions[0];
+
+          const lastVersion =
+            returnedVersions[
+              returnedVersions.length - 1
+            ];
+
+          const firstVersionNumber =
+            Number(firstVersion?.versionNumber);
+
+          const lastVersionNumber =
+            Number(lastVersion?.versionNumber);
+
+          this.selectedOldVersionNumber =
+            Number.isFinite(firstVersionNumber)
+              ? firstVersionNumber
+              : null;
+
+          this.selectedNewVersionNumber =
+            Number.isFinite(lastVersionNumber)
+              ? lastVersionNumber
+              : null;
+
+          this.successMessage =
+            'Blockchain response confirmed. ' +
+            `${returnedVersions.length} immutable ` +
+            `version${returnedVersions.length === 1 ? '' : 's'} ` +
+            'returned.';
+        },
+
+        error: (error: any) => {
+          this.errorMessage =
+            error?.name === 'TimeoutError'
+              ? 'The Fabric history request exceeded 30 seconds.'
+              : (
+                  error?.error?.message ||
+                  error?.message ||
+                  'Unable to retrieve immutable KYC history.'
+                );
+        }
+      });
+  }
+
+  compareSelectedVersions(): void {
+    if (
+      !this.normalizedCustomerId ||
+      this.selectedOldVersionNumber === null ||
+      this.selectedNewVersionNumber === null
+    ) {
+      return;
+    }
+
+    if (
+      this.selectedOldVersionNumber ===
+      this.selectedNewVersionNumber
+    ) {
+      this.comparison = null;
+      this.errorMessage =
+        'Select two different versions to compare.';
+      return;
+    }
+
+    this.comparisonLoading = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    this.versionApi
+      .compareVersions(
+        this.normalizedCustomerId,
+        this.selectedOldVersionNumber,
+        this.selectedNewVersionNumber
+      )
+      .subscribe({
+        next: (response) => {
+          this.comparison = response.data;
+          this.comparisonLoading = false;
+          this.successMessage =
+            `${response.data.changeCount} blockchain ` +
+            `${response.data.changeCount === 1 ? 'change' : 'changes'} detected.`;
+        },
+        error: (error) => {
+          this.comparisonLoading = false;
+          this.errorMessage =
+            this.extractErrorMessage(
+              error,
+              'Unable to compare the selected versions.'
+            );
+        }
+      });
+  }
+
+  selectTimelineVersion(
+    version: KycVersionRecord
+  ): void {
+    const selectedNumber =
+      Number(version.versionNumber);
+
+    const selectedIndex =
+      this.versions.findIndex(
+        (item) =>
+          item.versionNumber === selectedNumber
+      );
+
+    this.selectedNewVersionNumber =
+      selectedNumber;
+
+    if (selectedIndex > 0) {
+      this.selectedOldVersionNumber =
+        this.versions[
+          selectedIndex - 1
+        ].versionNumber;
+    } else if (this.versions.length > 1) {
+      this.selectedOldVersionNumber =
+        this.versions[1].versionNumber;
+    }
+
+    if (
+      this.selectedOldVersionNumber !==
+      this.selectedNewVersionNumber
+    ) {
+      this.compareSelectedVersions();
+    }
+  }
+
+  useDemoCustomer(): void {
+    this.customerId = this.demoCustomerId;
+    this.loadCustomerVersions();
+  }
+
+  clearScreen(): void {
+    this.customerId = '';
+    this.normalizedCustomerId = '';
+    this.versions = [];
+    this.latestVersion = null;
+    this.comparison = null;
+    this.customer = null;
+    this.blockchain = null;
+    this.selectedOldVersionNumber = null;
+    this.selectedNewVersionNumber = null;
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.copyMessage = '';
+  }
+
+  setEvidenceTab(
+    tab: 'changes' | 'payload' | 'metadata' | 'json'
+  ): void {
+    this.activeEvidenceTab = tab;
+  }
+
+  operationClass(operation: string | null | undefined): string {
+    switch (
+      String(operation || '').toUpperCase()
+    ) {
+      case 'CREATE':
+        return 'operation-create';
+      case 'UPDATE':
+        return 'operation-update';
+      case 'DELETE':
+        return 'operation-delete';
+      default:
+        return 'operation-neutral';
+    }
+  }
+
+  shortHash(
+    value?: string | null,
+    visibleCharacters = 12
+  ): string {
+    const normalized = String(value || '');
+
+    if (!normalized) {
+      return '-';
+    }
+
+    if (
+      normalized.length <=
+      visibleCharacters * 2 + 3
+    ) {
+      return normalized;
+    }
+
+    return (
+      normalized.slice(0, visibleCharacters) +
+      '...' +
+      normalized.slice(-visibleCharacters)
+    );
+  }
+
+  formatValue(value: unknown): string {
+    if (
+      value === undefined ||
+      value === null ||
+      value === ''
+    ) {
+      return '—';
+    }
+
+    if (typeof value === 'object') {
+      return JSON.stringify(value);
+    }
+
+    return String(value);
+  }
+
+  json(value: unknown): string {
+    return JSON.stringify(
+      value ?? {},
+      null,
+      2
+    );
+  }
+
+  async copyValue(
+    value: unknown,
+    label = 'Value'
+  ): Promise<void> {
+    const text =
+      typeof value === 'string'
+        ? value
+        : this.json(value);
+
+    try {
+      await navigator.clipboard.writeText(text);
+
+      this.copyMessage =
+        `${label} copied to clipboard.`;
+
+      window.setTimeout(() => {
+        this.copyMessage = '';
+      }, 2500);
+    } catch {
+      this.copyMessage =
+        'Clipboard access is unavailable.';
+    }
+  }
+
+  trackVersion(
+    _index: number,
+    version: KycVersionRecord
+  ): number {
+    return version.versionNumber ?? 0;
+  }
+
+  trackPayloadField(
+    _index: number,
+    row: PayloadComparisonRow
+  ): string {
+    return row.field;
+  }
+
+  private configureDefaultComparison(): void {
+    const newest =
+      this.latestVersion ||
+      this.versions[
+        this.versions.length - 1
+      ];
+
+    this.selectedNewVersionNumber =
+      newest.versionNumber;
+
+    if (this.versions.length > 1) {
+      const newestIndex =
+        this.versions.findIndex(
+          (version) =>
+            version.versionNumber ===
+            newest.versionNumber
+        );
+
+      this.selectedOldVersionNumber =
+        newestIndex > 0
+          ? this.versions[
+              newestIndex - 1
+            ].versionNumber
+          : this.versions[0].versionNumber;
+    } else {
+      this.selectedOldVersionNumber =
+        newest.versionNumber;
+    }
+  }
+
+  private normalizeCustomerId(
+    value: string
+  ): string {
+    return String(value || '')
+      .trim()
+      .replace(/^KYC_VALOORES-/i, '')
+      .replace(/^VALOORES-/i, '');
+  }
+
+  private normalizeComparableValue(
+    value: unknown
+  ): string {
+    if (value === undefined) {
+      return '__UNDEFINED__';
+    }
+
+    return JSON.stringify(value);
+  }
+
+  private extractErrorMessage(
+    error: any,
+    fallback: string
+  ): string {
+    return (
+      error?.error?.message ||
+      error?.error?.error ||
+      error?.message ||
+      fallback
+    );
+  }
+}

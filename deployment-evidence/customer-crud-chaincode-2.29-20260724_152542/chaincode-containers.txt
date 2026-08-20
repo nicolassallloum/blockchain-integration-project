@@ -1,0 +1,3 @@
+NAMES                                                                                                                           STATUS
+dev-peer0.org1.blockchain.local-kyc-wallet-chaincode-js_2.29-efcd65e5bdeea19e94c0d7e2b6003e6a9ebd90cc61306dcec8accd1cd0ce7fd6   Up 14 seconds
+dev-peer0.org2.blockchain.local-kyc-wallet-chaincode-js_2.29-efcd65e5bdeea19e94c0d7e2b6003e6a9ebd90cc61306dcec8accd1cd0ce7fd6   Up 14 seconds

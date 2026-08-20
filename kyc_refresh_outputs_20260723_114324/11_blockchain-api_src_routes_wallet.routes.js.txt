@@ -1,0 +1,53 @@
+===== FILE: /home/nix/u01/blockchain-integration/blockchain-api/src/routes/wallet.routes.js =====
+     1	'use strict';
+     2	
+     3	const express = require('express');
+     4	const router = express.Router();
+     5	
+     6	const walletController = require('../controllers/wallet.controller');
+     7	router.get('/next-customer-id', walletController.getNextCustomerId);
+     8	/**
+     9	 * STEP 30 / 31 — Wallet Routes
+    10	 *
+    11	 * IMPORTANT:
+    12	 * The list route "/" must come before dynamic routes like "/:walletAddress".
+    13	 */
+    14	
+    15	/**
+    16	 * List wallets for Angular dashboard.
+    17	 *
+    18	 * GET /api/v1/wallets?page=1&limit=13&search=
+    19	 */
+    20	router.get('/', walletController.listWallets);
+    21	
+    22	/**
+    23	 * Create wallet.
+    24	 *
+    25	 * POST /api/v1/wallets
+    26	 */
+    27	router.post('/', walletController.createWallet);
+    28	
+    29	router.post('/organization-wallets', walletController.createOrganizationWallet);
+    30	
+    31	/**
+    32	 * Wallet login.
+    33	 *
+    34	 * POST /api/v1/wallets/login
+    35	 */
+    36	router.post('/login', walletController.loginWallet);
+    37	
+    38	/**
+    39	 * Get wallet by customer ID.
+    40	 *
+    41	 * GET /api/v1/wallets/customer/:customerId
+    42	 */
+    43	router.get('/customer/:customerId', walletController.getWalletByCustomerId);
+    44	
+    45	/**
+    46	 * Get wallet by wallet address.
+    47	 *
+    48	 * GET /api/v1/wallets/:walletAddress
+    49	 */
+    50	router.get('/:walletAddress', walletController.getWalletByAddress);
+    51	
+    52	module.exports = router;

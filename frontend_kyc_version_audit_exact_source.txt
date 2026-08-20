@@ -1,0 +1,1179 @@
+============================================================
+1. ACTIVE ROUTE IMPORTS AND FIRST ROUTES
+============================================================
+import { ValooresAmlRulesDashboard } from './government-blockchain/valoores-aml-rules-dashboard/valoores-aml-rules-dashboard';
+import { Routes } from '@angular/router';
+import { BlockchainKycComponent } from './pages/blockchain-kyc/blockchain-kyc.component';
+import { DashboardComponent } from './features/dashboard/dashboard.component';
+import { GovernmentBlockchainDashboardComponent } from './pages/government-blockchain/government-blockchain-dashboard/government-blockchain-dashboard.component';
+import { GovernmentServicesComponent } from './pages/government-blockchain/government-services/government-services.component';
+import { WalletCreate } from './pages/wallet-create/wallet-create';
+import { OrganizationWalletCreate } from './pages/organization-wallet-create/organization-wallet-create';
+import { WalletLogin } from './pages/wallet-login/wallet-login';
+import { WalletQuery } from './pages/wallet-query/wallet-query';
+import { WalletInformationComponent } from './pages/wallet-information/wallet-information.component';
+import { DataGenerationEngine } from './pages/data-generation-engine/data-generation-engine';
+import { WalletTransferComponent } from './features/transactions/wallet-transfer/wallet-transfer.component';
+import { OrganizationTransferComponent } from './features/transactions/organization-transfer/organization-transfer.component';
+import { TransactionHistoryComponent } from './features/transactions/transaction-history/transaction-history.component';
+import { BalanceQueryComponent } from './features/transactions/balance-query/balance-query.component';
+import { CreatePublicAdministrationAccountComponent } from './pages/government-blockchain/create-public-administration-account/create-public-administration-account.component';
+import { FabricTestComponent } from './features/fabric-test/fabric-test.component';
+import { CreateResidentAccountComponent } from './pages/government-blockchain/create-resident-account/create-resident-account.component';
+import { NewTransactionComponent } from './pages/government-blockchain/new-transaction/new-transaction.component';
+import { TransactionList } from './government-blockchain/transaction-list/transaction-list';
+import { ApprovalQueue } from './government-blockchain/approval-queue/approval-queue';
+import { PaymentsDigitalStampsComponent } from './government-blockchain/payments-digital-stamps/payments-digital-stamps';
+import { DocumentsKycComponent } from './government-blockchain/documents-kyc/documents-kyc';
+import { BlockchainProof } from './government-blockchain/blockchain-proof/blockchain-proof';
+import { HashVerification } from './government-blockchain/hash-verification/hash-verification';
+import { RiskFraudScreening } from './government-blockchain/risk-fraud-screening/risk-fraud-screening';
+import { AmlDashboard } from './government-blockchain/aml-dashboard/aml-dashboard';
+import { AmlAlertsQueue } from './government-blockchain/aml-alerts-queue/aml-alerts-queue';
+import { AmlCaseManagement } from './government-blockchain/aml-case-management/aml-case-management';
+import { Reports } from './government-blockchain/reports/reports';
+import { AuditLogs } from './government-blockchain/audit-logs/audit-logs';
+import { Settings } from './government-blockchain/settings/settings';
+import { FabricHistory } from './government-blockchain/fabric-history/fabric-history';
+export const routes: Routes = [
+  {
+    path: 'government-blockchain/valoores-aml-rules-dashboard',
+    component: ValooresAmlRulesDashboard,
+  },
+
+  {
+    path: 'government-blockchain/transactions-daily-created',
+    loadComponent: () => import('./government-blockchain/transactions-daily-created/transactions-daily-created').then(m => m.TransactionsDailyCreatedComponent)
+  },
+  {
+    path: 'government-blockchain/kyc-daily-created',
+    loadComponent: () => import('./government-blockchain/kyc-daily-created/kyc-daily-created').then(m => m.KycDailyCreatedComponent)
+  },
+  {
+    path: '',
+    redirectTo: 'government-blockchain/dashboard',
+    pathMatch: 'full'
+  },
+  {
+    path: 'government-blockchain/payments-digital-stamps',
+    component: PaymentsDigitalStampsComponent
+  },
+  /*
+   * Existing Digital KYC Routes
+   */
+  {
+    path: 'digital-kyc/blockchain-kyc',
+    component: BlockchainKycComponent
+  },
+  {
+    path: 'government-blockchain/create-public-administration-account',
+    component: CreatePublicAdministrationAccountComponent
+  },
+  {
+    path: 'government-blockchain/account-login',
+    loadComponent: () =>
+      import('./features/government-blockchain/account-login/account-login.component')
+        .then(m => m.AccountLoginComponent)
+  },
+  {
+    path: 'government-blockchain/couchdb-explorer',
+    redirectTo: 'blockchain/couchdb-explorer',
+    pathMatch: 'full'
+  },
+  {
+    path: 'government-blockchain/new-transaction',
+    component: NewTransactionComponent
+  },
+  {
+    path: 'government-blockchain/resident-wallets',
+    loadComponent: () =>
+      import('./government-blockchain/resident-wallets/resident-wallets.component')
+        .then(m => m.ResidentWalletsComponent)
+  },
+  {
+    path: 'government-blockchain/government-services',
+    component: GovernmentServicesComponent,
+  },
+  {
+    path: 'government-blockchain/create-ministry-account',
+    loadComponent: () =>
+      import('./pages/government-blockchain/create-ministry-account/create-ministry-account.component')
+        .then((m) => m.CreateMinistryAccountComponent),
+  },
+  {
+    path: 'digital-kyc/dashboard',
+    component: DashboardComponent
+  },
+  {
+    path: 'government-blockchain/create-resident-account',
+    component: CreateResidentAccountComponent,
+    title: 'Create Resident Account'
+  },
+  {
+    path: 'government-blockchain/resident-wallet-login',
+    loadComponent: () =>
+      import('./pages/government-blockchain/resident-wallet-login/resident-wallet-login.component')
+        .then(m => m.ResidentWalletLoginComponent),
+    title: 'Resident Wallet Login'
+  },
+  {
+    path: 'blockchain/valoores-audit-logs',
+    loadComponent: () =>
+      import('./pages/blockchain/couchdb-explorer/couchdb-explorer.component').then(
+        (m) => m.CouchdbExplorerComponent
+      ),
+    title: 'Valoores Audit Logs'
+  },
+
+  {
+    path: 'blockchain/audit-validation',
+    loadComponent: () =>
+      import('./pages/blockchain/audit-validation/audit-validation.component')
+        .then(m => m.AuditValidationComponent),
+    title: 'Audit Validation'
+  },
+
+  {
+    path: 'blockchain/couchdb-explorer',
+    redirectTo: 'blockchain/valoores-audit-logs',
+    pathMatch: 'full'
+  },
+  {
+    path: 'government-blockchain/transaction-list',
+    component: TransactionList
+  },
+  {
+    path: 'government-blockchain/approval-queue',
+    component: ApprovalQueue
+  },
+  // {
+  //   path: 'government-blockchain/payments-digital-stamps',
+  //   component: PaymentsDigitalStamps
+  // },
+  {
+
+============================================================
+2. BLOCKCHAIN FULL KYC ROUTE SECTION
+============================================================
+    path: 'digital-kyc/organization-transfer',
+    component: OrganizationTransferComponent
+  },
+  {
+    path: 'digital-kyc/transaction-history',
+    component: TransactionHistoryComponent
+  },
+  {
+    path: 'digital-kyc/fabric-test',
+    component: FabricTestComponent
+  },
+ 
+  /*
+   * Blockchain Full KYC Routes
+   *
+   * Parent route:
+   * /blockchain-full-kyc
+   *
+   * Child dashboard route:
+   * /blockchain-full-kyc/dashboard
+   */
+  // {
+  //   path: 'blockchain-full-kyc',
+  //   children: [
+  //     {
+  //       path: '',
+  //       redirectTo: 'dashboard',
+  //       pathMatch: 'full'
+  //     },
+  //     {
+  //       path: 'dashboard',
+  //       loadComponent: () =>
+  //         import('./pages/blockchain-full-kyc/full-kyc-dashboard/full-kyc-dashboard.component')
+  //           .then(m => m.FullKycDashboardComponent)
+  //     },
+  //     {
+  //       path: 'create-citizen-kyc',
+  //       loadComponent: () =>
+  //         import('./pages/blockchain-full-kyc/create-citizen-kyc/create-citizen-kyc.component')
+  //           .then(m => m.CreateCitizenKycComponent)
+  //     },
+  //     {
+  //       path: 'citizen-kyc-list',
+  //       loadComponent: () =>
+  //         import('./pages/blockchain-full-kyc/citizen-kyc-list/citizen-kyc-list.component')
+  //           .then(m => m.CitizenKycListComponent)
+  //     },
+  //     {
+  //       path: 'citizen-kyc-details',
+  //       loadComponent: () =>
+  //         import('./pages/blockchain-full-kyc/citizen-kyc-details/citizen-kyc-details.component')
+  //           .then(m => m.CitizenKycDetailsComponent)
+  //     },
+  //     {
+  //       path: 'document-management',
+  //       loadComponent: () =>
+  //         import('./pages/blockchain-full-kyc/document-management/document-management.component')
+  //           .then(m => m.DocumentManagementComponent)
+  //     },
+  //     {
+  //       path: 'review-queue',
+  //       loadComponent: () =>
+  //         import('./pages/blockchain-full-kyc/kyc-review-queue/kyc-review-queue.component')
+  //           .then(m => m.KycReviewQueueComponent)
+  //     },
+  //     {
+  //       path: 'approval',
+  //       loadComponent: () =>
+  //         import('./pages/blockchain-full-kyc/kyc-approval/kyc-approval.component')
+  //           .then(m => m.KycApprovalComponent)
+  //     },
+  //     {
+  //       path: 'duplicate-check',
+  //       loadComponent: () =>
+  //         import('./pages/blockchain-full-kyc/duplicate-identity-check/duplicate-identity-check.component')
+  //           .then(m => m.DuplicateIdentityCheckComponent)
+  //     },
+  //     {
+  //       path: 'risk-fraud-screening',
+  //       loadComponent: () =>
+  //         import('./pages/blockchain-full-kyc/risk-fraud-screening/risk-fraud-screening.component')
+  //           .then(m => m.RiskFraudScreeningComponent)
+  //     },
+  //     {
+  //       path: 'blockchain-proof',
+  //       loadComponent: () =>
+  //         import('./pages/blockchain-full-kyc/blockchain-proof/blockchain-proof.component')
+  //           .then(m => m.BlockchainProofComponent)
+  //     },
+  //     {
+  //       path: 'hash-verification',
+  //       loadComponent: () =>
+  //         import('./pages/blockchain-full-kyc/hash-verification/hash-verification.component')
+  //           .then(m => m.HashVerificationComponent)
+  //     },
+  //     {
+  //       path: 'state-institutions',
+  //       loadComponent: () =>
+  //         import('./pages/blockchain-full-kyc/state-institutions/state-institutions.component')
+  //           .then(m => m.StateInstitutionsComponent)
+  //     },
+  //     {
+  //       path: 'reports',
+  //       loadComponent: () =>
+  //         import('./pages/blockchain-full-kyc/kyc-reports/kyc-reports.component')
+  //           .then(m => m.KycReportsComponent)
+  //     },
+  //     {
+  //       path: 'audit-logs',
+  //       loadComponent: () =>
+  //         import('./pages/blockchain-full-kyc/kyc-audit-logs/kyc-audit-logs.component')
+  //           .then(m => m.KycAuditLogsComponent)
+  //     },
+  //     {
+  //       path: 'users-roles',
+  //       loadComponent: () =>
+  //         import('./pages/blockchain-full-kyc/users-roles/users-roles.component')
+  //           .then(m => m.UsersRolesComponent)
+  //     },
+  //     {
+  //       path: 'settings',
+  //       loadComponent: () =>
+  //         import('./pages/blockchain-full-kyc/kyc-settings/kyc-settings.component')
+  //           .then(m => m.KycSettingsComponent)
+  //     }
+  //   ]
+  // },
+
+  /*
+   * Old Shortcut Redirects
+   */
+
+============================================================
+3. ROUTES BEFORE WILDCARD
+============================================================
+  },
+  {
+    path: 'fabric-test',
+    redirectTo: 'digital-kyc/fabric-test',
+    pathMatch: 'full'
+  },
+
+  /*
+   * Wildcard Route Must Always Stay Last
+   */
+  
+  {
+    path: 'government-blockchain/ownership-model',
+    loadComponent: () =>
+      import('./government-blockchain/ownership-model/ownership-model').then(
+        (m) => m.OwnershipModel
+      )
+  },
+
+  {
+    path: 'government-blockchain/data-change-audit-dashboard',
+    loadComponent: () =>
+      import('./government-blockchain/data-change-audit-dashboard/data-change-audit-dashboard').then(
+        (m) => m.DataChangeAuditDashboard
+      )
+  },
+
+  {
+    path: 'government-blockchain/blockchain-proof-monitoring-dashboard',
+    loadComponent: () =>
+      import('./government-blockchain/blockchain-proof-monitoring-dashboard/blockchain-proof-monitoring-dashboard').then(
+        (m) => m.BlockchainProofMonitoringDashboard
+      )
+  },
+
+  {
+    path: 'government-blockchain/blockchain-proof-history-screens',
+    loadComponent: () =>
+      import('./government-blockchain/blockchain-proof-history-screens/blockchain-proof-history-screens').then(
+        (m) => m.BlockchainProofHistoryScreens
+      )
+  },
+{
+    path: '**',
+    redirectTo: 'government-blockchain/dashboard'
+  }
+];
+============================================================
+4. EXISTING SIDEBAR KYC AUDIT LINK
+============================================================
+    >
+      <span class="dot"></span>
+      <span>Fabric History</span>
+    </a>
+
+
+    <a
+      routerLink="/blockchain-full-kyc/state-institutions"
+      routerLinkActive="active"
+      class="sidebar-link"
+    >
+      <span class="dot"></span>
+      <span>State Institutions</span>
+    </a>
+
+    <a
+      routerLink="/blockchain-full-kyc/reports"
+      routerLinkActive="active"
+      class="sidebar-link"
+    >
+      <span class="dot"></span>
+      <span>Reports</span>
+    </a>
+
+    <a
+      routerLink="/blockchain-full-kyc/audit-logs"
+      routerLinkActive="active"
+      class="sidebar-link"
+    >
+      <span class="dot"></span>
+      <span>Audit Logs</span>
+    </a>
+
+    <a
+      routerLink="/blockchain-full-kyc/users-roles"
+      routerLinkActive="active"
+      class="sidebar-link"
+    >
+      <span class="dot"></span>
+      <span>Users & Roles</span>
+    </a>
+
+============================================================
+5. EXISTING FULL KYC API SERVICE
+============================================================
+ 
+import { Injectable } from '@angular/core';
+import {
+  HttpClient,
+  HttpHeaders,
+  HttpParams,
+  HttpResponse
+} from '@angular/common/http';
+import { Observable } from 'rxjs';
+
+import { environment } from '../../environments/environment';
+
+import {
+  CitizenKycProfile,
+  CitizenKycDocument,
+  CitizenDuplicateCheck,
+  CitizenRiskScreening,
+  CitizenKycBlockchainRecord,
+  DashboardSummary,
+  DashboardStatusDistribution,
+  GeneratedReport,
+  ReferenceDataItem
+} from '../models/blockchain-full-kyc.models';
+
+type QueryParams = Record<
+  string,
+  string | number | boolean | null | undefined
+>;
+
+@Injectable({
+  providedIn: 'root'
+})
+export class BlockchainFullKycApiService {
+  private readonly apiBaseUrl = this.resolveApiBaseUrl();
+
+  private readonly stateKycBaseUrl = `${this.apiBaseUrl}/state-kyc`;
+  private readonly dashboardBaseUrl = `${this.apiBaseUrl}/state-kyc-dashboard`;
+  private readonly reportsBaseUrl = `${this.apiBaseUrl}/state-kyc-reports`;
+
+  constructor(private readonly http: HttpClient) {}
+
+  // =====================================================
+  // Dashboard APIs
+  // =====================================================
+
+  getDashboardSummary(): Observable<DashboardSummary> {
+    return this.http.get<DashboardSummary>(
+      `${this.dashboardBaseUrl}/summary`,
+      this.httpOptions()
+    );
+  }
+
+  getStatusDistribution(): Observable<DashboardStatusDistribution[]> {
+    return this.http.get<DashboardStatusDistribution[]>(
+      `${this.dashboardBaseUrl}/status-distribution`,
+      this.httpOptions()
+    );
+  }
+
+  getInstitutionSummary(): Observable<any[]> {
+    return this.http.get<any[]>(
+      `${this.dashboardBaseUrl}/institution-summary`,
+      this.httpOptions()
+    );
+  }
+
+  getRiskDistribution(): Observable<any[]> {
+    return this.http.get<any[]>(
+      `${this.dashboardBaseUrl}/risk-distribution`,
+      this.httpOptions()
+    );
+  }
+
+  // =====================================================
+  // Citizen KYC APIs
+  // =====================================================
+
+  createCitizenKyc(
+    payload: Partial<CitizenKycProfile>
+  ): Observable<CitizenKycProfile> {
+    return this.http.post<CitizenKycProfile>(
+      `${this.stateKycBaseUrl}/citizens`,
+      payload,
+      this.httpOptions()
+    );
+  }
+
+  updateCitizenKyc(
+    kycId: string,
+    payload: Partial<CitizenKycProfile>
+  ): Observable<CitizenKycProfile> {
+    return this.http.put<CitizenKycProfile>(
+      `${this.stateKycBaseUrl}/citizens/${encodeURIComponent(kycId)}`,
+      payload,
+      this.httpOptions()
+    );
+  }
+
+  submitCitizenKyc(
+    kycId: string,
+    payload: Record<string, any> = {}
+  ): Observable<CitizenKycProfile> {
+    return this.http.post<CitizenKycProfile>(
+      `${this.stateKycBaseUrl}/citizens/${encodeURIComponent(kycId)}/submit`,
+      payload,
+      this.httpOptions()
+    );
+  }
+
+  getCitizenKycDetails(kycId: string): Observable<CitizenKycProfile> {
+    return this.http.get<CitizenKycProfile>(
+      `${this.stateKycBaseUrl}/citizens/${encodeURIComponent(kycId)}`,
+      this.httpOptions()
+    );
+  }
+
+  searchCitizenKyc(
+    params: QueryParams = {}
+  ): Observable<CitizenKycProfile[]> {
+    return this.http.get<CitizenKycProfile[]>(
+      `${this.stateKycBaseUrl}/citizens`,
+      {
+        headers: this.buildHeaders(),
+        params: this.buildHttpParams(params)
+      }
+    );
+  }
+
+  approveCitizenKyc(
+    kycId: string,
+    payload: Record<string, any>
+  ): Observable<CitizenKycProfile> {
+    return this.http.post<CitizenKycProfile>(
+      `${this.stateKycBaseUrl}/citizens/${encodeURIComponent(kycId)}/approve`,
+      payload,
+      this.httpOptions()
+    );
+  }
+
+  rejectCitizenKyc(
+    kycId: string,
+    payload: Record<string, any>
+  ): Observable<CitizenKycProfile> {
+    return this.http.post<CitizenKycProfile>(
+      `${this.stateKycBaseUrl}/citizens/${encodeURIComponent(kycId)}/reject`,
+      payload,
+      this.httpOptions()
+    );
+  }
+
+  requestCitizenKycUpdate(
+    kycId: string,
+    payload: Record<string, any>
+  ): Observable<CitizenKycProfile> {
+    return this.http.post<CitizenKycProfile>(
+      `${this.stateKycBaseUrl}/citizens/${encodeURIComponent(kycId)}/request-update`,
+      payload,
+      this.httpOptions()
+    );
+  }
+
+  // =====================================================
+  // Document APIs
+  // =====================================================
+
+  uploadDocument(
+    kycId: string,
+    formData: FormData
+  ): Observable<CitizenKycDocument> {
+    return this.http.post<CitizenKycDocument>(
+      `${this.stateKycBaseUrl}/citizens/${encodeURIComponent(kycId)}/documents`,
+      formData,
+      {
+        headers: this.buildHeaders(false)
+      }
+    );
+  }
+
+  listDocuments(kycId: string): Observable<CitizenKycDocument[]> {
+    return this.http.get<CitizenKycDocument[]>(
+      `${this.stateKycBaseUrl}/citizens/${encodeURIComponent(kycId)}/documents`,
+      this.httpOptions()
+    );
+  }
+
+  verifyDocument(
+    documentId: string,
+    payload: Record<string, any>
+  ): Observable<CitizenKycDocument> {
+    return this.http.post<CitizenKycDocument>(
+      `${this.stateKycBaseUrl}/documents/${encodeURIComponent(documentId)}/verify`,
+      payload,
+      this.httpOptions()
+    );
+  }
+
+  rejectDocument(
+    documentId: string,
+    payload: Record<string, any>
+  ): Observable<CitizenKycDocument> {
+    return this.http.post<CitizenKycDocument>(
+      `${this.stateKycBaseUrl}/documents/${encodeURIComponent(documentId)}/reject`,
+      payload,
+      this.httpOptions()
+    );
+  }
+
+  // =====================================================
+  // Duplicate / Risk APIs
+  // =====================================================
+
+  runDuplicateCheck(kycId: string): Observable<CitizenDuplicateCheck> {
+    return this.http.post<CitizenDuplicateCheck>(
+      `${this.stateKycBaseUrl}/citizens/${encodeURIComponent(kycId)}/duplicate-check/run`,
+      {},
+      this.httpOptions()
+    );
+  }
+
+  getDuplicateResult(kycId: string): Observable<CitizenDuplicateCheck> {
+    return this.http.get<CitizenDuplicateCheck>(
+      `${this.stateKycBaseUrl}/citizens/${encodeURIComponent(kycId)}/duplicate-check`,
+      this.httpOptions()
+    );
+  }
+
+  runRiskScreening(kycId: string): Observable<CitizenRiskScreening> {
+    return this.http.post<CitizenRiskScreening>(
+      `${this.stateKycBaseUrl}/citizens/${encodeURIComponent(kycId)}/risk-screening/run`,
+      {},
+      this.httpOptions()
+    );
+  }
+
+  getRiskResult(kycId: string): Observable<CitizenRiskScreening> {
+    return this.http.get<CitizenRiskScreening>(
+      `${this.stateKycBaseUrl}/citizens/${encodeURIComponent(kycId)}/risk-screening`,
+      this.httpOptions()
+    );
+  }
+
+  // =====================================================
+  // Blockchain APIs
+  // =====================================================
+
+  getBlockchainProof(kycId: string): Observable<CitizenKycBlockchainRecord> {
+    return this.http.get<CitizenKycBlockchainRecord>(
+      `${this.stateKycBaseUrl}/citizens/${encodeURIComponent(kycId)}/blockchain-proof`,
+      this.httpOptions()
+    );
+  }
+
+  verifyHash(kycId: string): Observable<any> {
+    return this.http.post<any>(
+      `${this.stateKycBaseUrl}/citizens/${encodeURIComponent(kycId)}/verify-hash`,
+      {},
+      this.httpOptions()
+    );
+  }
+
+  reconcileKyc(kycId: string): Observable<any> {
+    return this.http.post<any>(
+      `${this.stateKycBaseUrl}/citizens/${encodeURIComponent(kycId)}/reconcile`,
+      {},
+      this.httpOptions()
+    );
+  }
+
+  // =====================================================
+  // Report APIs
+  // =====================================================
+
+  generateReport(params: QueryParams): Observable<GeneratedReport> {
+    return this.http.post<GeneratedReport>(
+      `${this.reportsBaseUrl}/generate`,
+      params,
+      this.httpOptions()
+    );
+  }
+
+  exportReport(
+    reportId: string,
+    format: 'PDF' | 'EXCEL' | 'CSV' | string
+  ): Observable<HttpResponse<Blob>> {
+    return this.http.get(
+      `${this.reportsBaseUrl}/${encodeURIComponent(reportId)}/export/${encodeURIComponent(format)}`,
+      {
+        headers: this.buildHeaders(),
+        observe: 'response',
+        responseType: 'blob'
+      }
+    );
+  }
+
+  // =====================================================
+  // Settings / Reference Data APIs
+  // =====================================================
+
+  getReferenceData(type: string): Observable<ReferenceDataItem[]> {
+    return this.http.get<ReferenceDataItem[]>(
+      `${this.stateKycBaseUrl}/reference-data/${encodeURIComponent(type)}`,
+      this.httpOptions()
+    );
+  }
+
+  createReferenceData(
+    type: string,
+    payload: Partial<ReferenceDataItem>
+  ): Observable<ReferenceDataItem> {
+    return this.http.post<ReferenceDataItem>(
+      `${this.stateKycBaseUrl}/reference-data/${encodeURIComponent(type)}`,
+      payload,
+      this.httpOptions()
+    );
+  }
+
+  updateReferenceData(
+    type: string,
+    id: string,
+    payload: Partial<ReferenceDataItem>
+
+============================================================
+6. KYC AUDIT COMPONENT PLACEHOLDER
+============================================================
+
+---------------- blockchain-test-ui/src/app/pages/blockchain-full-kyc/kyc-audit-logs/kyc-audit-logs.component.ts ----------------
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-kyc-audit-logs',
+  standalone: true,
+  template: `
+    <section class="page">
+      <h1>KYC Audit Logs</h1>
+      <p>Track every citizen KYC action, approval, rejection, blockchain submit, and verification.</p>
+    </section>
+  `,
+  styles: [`
+    .page { padding: 24px; background: #fff; border-radius: 14px; box-shadow: 0 8px 24px rgba(15,23,42,.06); }
+    h1 { margin: 0; color: #004b9b; font-size: 28px; font-weight: 900; }
+    p { margin-top: 8px; color: #536174; font-size: 15px; }
+  `]
+})
+export class KycAuditLogsComponent {}
+
+---------------- blockchain-test-ui/src/app/pages/blockchain-full-kyc/kyc-audit-logs/kyc-audit-logs.ts ----------------
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-kyc-audit-logs',
+  imports: [],
+  templateUrl: './kyc-audit-logs.html',
+  styleUrl: './kyc-audit-logs.scss',
+})
+export class KycAuditLogs {}
+
+---------------- blockchain-test-ui/src/app/pages/blockchain-full-kyc/kyc-audit-logs/kyc-audit-logs.html ----------------
+<p>kyc-audit-logs works!</p>
+
+---------------- blockchain-test-ui/src/app/pages/blockchain-full-kyc/kyc-audit-logs/kyc-audit-logs.scss ----------------
+
+============================================================
+7. EXISTING FULL KYC MODELS
+============================================================
+
+  kycId: string;
+
+  citizenId: string;
+
+  serviceId: string;
+
+  institutionId: string;
+
+  departmentId?: string;
+
+  status: ServiceEligibilityStatus;
+
+  /**
+   * Explains why the citizen is eligible, blocked, or requires review.
+   */
+  eligibilityReason?: string;
+
+  requiredKycStatus?: KycStatus;
+
+  actualKycStatus: KycStatus;
+
+  requiredBlockchainStatus?: BlockchainStatus;
+
+  actualBlockchainStatus?: BlockchainStatus;
+
+  riskCategory: RiskCategory;
+
+  checkedAt: string;
+
+  checkedBy?: string;
+}
+
+/* ======================================================
+ * Audit Models
+ * ====================================================== */
+
+export interface CitizenKycAuditLog {
+  auditLogId: string;
+
+  kycId?: string;
+
+  citizenId?: string;
+
+  institutionId?: string;
+
+  departmentId?: string;
+
+  userId?: string;
+
+  username?: string;
+
+  userRole?: UserRole;
+
+  /**
+   * Audit action.
+   * Example: CREATE_KYC, UPDATE_KYC, VIEW_DOCUMENT, APPROVE_KYC.
+   */
+  action: string;
+
+  entityType?: string;
+
+  entityId?: string;
+
+  oldValue?: unknown;
+
+  newValue?: unknown;
+
+  ipAddress?: string;
+
+  userAgent?: string;
+
+  requestId?: string;
+
+  correlationId?: string;
+
+  sourceSystem?: string;
+
+  createdAt: string;
+}
+
+/* ======================================================
+ * Dashboard Models
+ * ====================================================== */
+
+export interface DashboardSummary {
+  totalKycProfiles: number;
+
+  totalSubmitted: number;
+
+  totalPendingReview: number;
+
+  totalApproved: number;
+
+  totalRejected: number;
+
+  totalRequiresUpdate: number;
+
+  totalExpired: number;
+
+  totalSuspended: number;
+
+============================================================
+8. HTTP AND API CONFIGURATION
+============================================================
+export const environment = {
+  production: false,
+  apiBaseUrl: 'http://172.31.13.90:3001/api/v1',
+
+  /**
+   * Backend protected service key.
+   * Used by Fabric Test and protected transaction routes.
+   */
+  fabricApiKey: '774101c2e4e6e8d46a8bb6c02571f0239ac7c8bd548c22db1162671e502278f7'
+};
+
+export const environment = {
+  production: true,
+  apiBaseUrl: 'http://172.31.13.90:3001/api/v1'
+};
+
+{
+  "/api": {
+    "target": "http://127.0.0.1:3001",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  }
+}
+
+import { ApplicationConfig } from '@angular/core';
+import { provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
+
+import { routes } from './app.routes';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideRouter(routes),
+    provideHttpClient(),
+  ],
+};
+============================================================
+9. PROFESSIONAL AUDIT SCREEN REFERENCE
+============================================================
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Component, OnInit } from '@angular/core';
+
+type ExportFormat = 'JSON' | 'CSV';
+
+@Component({
+  selector: 'app-data-change-audit-dashboard',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  templateUrl: './data-change-audit-dashboard.html',
+  styleUrls: ['./data-change-audit-dashboard.scss']
+})
+export class DataChangeAuditDashboard implements OnInit {
+  loading = false;
+  detailLoading = false;
+  error = '';
+  successMessage = '';
+  dashboard: any = null;
+  selectedEvent: any = null;
+  activeDetailTab: 'summary' | 'oldNew' | 'fields' = 'summary';
+  lastLoadedAt: string | null = null;
+
+  filters: any = {
+    limit: 10,
+    tableName: '',
+    moduleName: '',
+    operationType: 'ALL',
+    user: '',
+    role: '',
+    clientIp: '',
+    clientHostname: '',
+    dateFrom: '',
+    dateTo: '',
+    blockchainStatus: 'ALL',
+    verificationStatus: 'ALL',
+    approvalStatus: 'ALL',
+    batchId: '',
+    riskLevel: 'ALL'
+  };
+
+  metricCards = [
+    { label: 'Total Audit Events', key: 'totalAuditEvents', tone: 'neutral' },
+    { label: 'Insert Events', key: 'insertEvents', tone: 'success' },
+    { label: 'Update Events', key: 'updateEvents', tone: 'warning' },
+    { label: 'Delete Events', key: 'deleteEvents', tone: 'danger' },
+    { label: 'Submitted to Blockchain', key: 'submittedToBlockchain', tone: 'success' },
+    { label: 'Pending Blockchain Submission', key: 'pendingBlockchainSubmission', tone: 'warning' },
+    { label: 'Failed Blockchain Submission', key: 'failedBlockchainSubmission', tone: 'danger' },
+    { label: 'Verified Events', key: 'verifiedEvents', tone: 'success' },
+    { label: 'Mismatched Events', key: 'mismatchedEvents', tone: 'danger' },
+    { label: 'Invalid Records', key: 'invalidRecords', tone: 'danger' },
+    { label: 'Records Under Compliance Review', key: 'recordsUnderComplianceReview', tone: 'warning' },
+    { label: 'Bulk Approval Queue', key: 'bulkApprovalQueue', tone: 'warning' },
+    { label: 'Auto-Approved Changes', key: 'autoApprovedChanges', tone: 'success' },
+    { label: 'Manual Approval Required', key: 'manualApprovalRequired', tone: 'danger' }
+  ];
+
+  tableSections = [
+    { title: 'Latest Data Changes', key: 'latestDataChanges' },
+    { title: 'High-Risk Changes', key: 'highRiskChanges' },
+    { title: 'Deleted Records Evidence', key: 'deletedRecordsEvidence' },
+    { title: 'Failed Blockchain Submissions', key: 'failedBlockchainSubmissions' },
+    { title: 'Invalid or Mismatched Records', key: 'invalidOrMismatchedRecords' },
+    { title: 'Compliance Review Queue', key: 'complianceReviewQueue' },
+    { title: 'Bulk Approval Queue', key: 'bulkApprovalQueue' },
+    { title: 'Auto-Approved Changes', key: 'autoApprovedChanges' },
+    { title: 'Manual Approval Required', key: 'manualApprovalRequired' }
+  ];
+
+  ngOnInit(): void {
+    this.loadDashboard();
+  }
+
+  get apiBaseUrl(): string {
+    if (typeof window === 'undefined') {
+      return 'http://localhost:3001/api/v1/government-blockchain/data-change-audit-dashboard';
+    }
+
+    const protocol = window.location.protocol || 'http:';
+    const hostname = window.location.hostname || 'localhost';
+
+    return `${protocol}//${hostname}:3001/api/v1/government-blockchain/data-change-audit-dashboard`;
+  }
+
+  get metrics(): any {
+    return this.dashboard?.metrics || {};
+  }
+
+  get tables(): any {
+    return this.dashboard?.tables || {};
+  }
+
+  number(value: any): number {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  getTableRows(key: string): any[] {
+    return this.tables?.[key] || [];
+  }
+
+  json(value: any): string {
+    return JSON.stringify(value ?? {}, null, 2);
+  }
+
+  private buildQueryString(): string {
+    const params = new URLSearchParams();
+
+    Object.entries(this.filters).forEach(([key, value]) => {
+      if (value === undefined || value === null || value === '') {
+        return;
+      }
+
+      if (String(value).toUpperCase() === 'ALL') {
+        return;
+      }
+
+      params.set(key, String(value));
+    });
+
+    return params.toString();
+  }
+
+  clearFilters(): void {
+    this.filters = {
+      limit: 10,
+      tableName: '',
+      moduleName: '',
+      operationType: 'ALL',
+      user: '',
+      role: '',
+      clientIp: '',
+      clientHostname: '',
+      dateFrom: '',
+      dateTo: '',
+      blockchainStatus: 'ALL',
+      verificationStatus: 'ALL',
+      approvalStatus: 'ALL',
+      batchId: '',
+      riskLevel: 'ALL'
+    };
+
+    this.loadDashboard();
+  }
+
+
+  private getFileNameFromContentDisposition(contentDisposition: string | null, fallbackFileName: string): string {
+    if (!contentDisposition) {
+      return fallbackFileName;
+    }
+
+    const match = contentDisposition.match(/filename="?([^";]+)"?/i);
+    return match?.[1] || fallbackFileName;
+  }
+
+  private downloadBlob(blob: Blob, fileName: string): void {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    URL.revokeObjectURL(url);
+  }
+
+  async loadDashboard(): Promise<void> {
+    this.loading = true;
+    this.error = '';
+    this.successMessage = '';
+
+    try {
+      const queryString = this.buildQueryString();
+      const response = await fetch(`${this.apiBaseUrl}/dashboard?${queryString}`, {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json',
+          'x-user-role': 'AUDITOR'
+        }
+      });
+
+      const payload = await response.json();
+
+      if (!response.ok || !payload.success) {
+        throw new Error(payload.message || `Dashboard API failed with HTTP ${response.status}`);
+      }
+
+      this.dashboard = payload.data;
+      this.lastLoadedAt = new Date().toISOString();
+      this.successMessage = 'Data change audit dashboard loaded successfully.';
+    } catch (error: any) {
+      this.error = error?.message || 'Unable to load data change audit dashboard.';
+    } finally {
+      this.loading = false;
+    }
+  }
+
+  async viewAuditEvent(row: any, tab: 'summary' | 'oldNew' | 'fields' = 'summary'): Promise<void> {
+    if (!row?.auditId) {
+      return;
+    }
+
+    this.detailLoading = true;
+    this.error = '';
+    this.activeDetailTab = tab;
+
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/events/${row.auditId}`, {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json',
+          'x-user-role': 'AUDITOR'
+        }
+      });
+
+      const payload = await response.json();
+
+      if (!response.ok || !payload.success) {
+        throw new Error(payload.message || `Detail API failed with HTTP ${response.status}`);
+      }
+
+      this.selectedEvent = payload.data;
+    } catch (error: any) {
+      this.error = error?.message || 'Unable to load audit event detail.';
+    } finally {
+      this.detailLoading = false;
+    }
+  }
+
+  closeDetail(): void {
+    this.selectedEvent = null;
+  }
+
+  async exportEvidence(format: ExportFormat): Promise<void> {
+    this.error = '';
+    this.successMessage = '';
+
+    try {
+      const params = new URLSearchParams(this.buildQueryString());
+      params.set('format', format);
+      params.set('limit', '1000');
+
+      const response = await fetch(`${this.apiBaseUrl}/export?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+          Accept: format === 'CSV' ? 'text/csv' : 'application/json',
+          'x-user-role': 'AUDITOR'
+        }
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || `Export failed with HTTP ${response.status}`);
+      }
+
+      const fallbackFileName = `data-change-audit-evidence.${format.toLowerCase()}`;
+      const fileName = this.getFileNameFromContentDisposition(
+        response.headers.get('Content-Disposition'),
+        fallbackFileName
+      );
+
+      const blob = await response.blob();
+      this.downloadBlob(blob, fileName);
+
+      this.successMessage = `Data change audit ${format} evidence report exported successfully.`;
+    } catch (error: any) {
+      this.error = error?.message || `Unable to export data change audit ${format} report.`;
+    }
+  }
+}
+
+============================================================
+10. ACTIVE COMPONENT EXPORTS
+============================================================
+blockchain-test-ui/src/app/pages/blockchain-full-kyc/kyc-audit-logs/kyc-audit-logs.component.ts:4:  selector: 'app-kyc-audit-logs',
+blockchain-test-ui/src/app/pages/blockchain-full-kyc/kyc-audit-logs/kyc-audit-logs.component.ts:18:export class KycAuditLogsComponent {}
+blockchain-test-ui/src/app/pages/blockchain-full-kyc/kyc-audit-logs/kyc-audit-logs.ts:4:  selector: 'app-kyc-audit-logs',
+blockchain-test-ui/src/app/pages/blockchain-full-kyc/kyc-audit-logs/kyc-audit-logs.ts:6:  templateUrl: './kyc-audit-logs.html',
+blockchain-test-ui/src/app/pages/blockchain-full-kyc/kyc-audit-logs/kyc-audit-logs.ts:7:  styleUrl: './kyc-audit-logs.scss',
+blockchain-test-ui/src/app/pages/blockchain-full-kyc/kyc-audit-logs/kyc-audit-logs.ts:9:export class KycAuditLogs {}

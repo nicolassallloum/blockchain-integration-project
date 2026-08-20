@@ -1,0 +1,1631 @@
+nohup: ignoring input
+◇ injected env (96) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+[VALOORES_AML_RULES_AUTO_SYNC] Started { intervalMs: 60000, limit: 1000 }
+[BLOCKCHAIN_AUTO_RETRY] Disabled by env.
+[ROUTE MOUNTED] /api/v1/audit-validation
+[ROUTE MOUNTED] /api/v1/government-blockchain/documents
+[ROUTE MOUNTED] /api/v1/government-blockchain/hash-verification
+[ROUTE MOUNTED] /api/v1/government-blockchain/risk-fraud-screening
+[ROUTE MOUNTED] /api/v1/government-blockchain/valoores-aml-rules
+[ROUTE MOUNTED] /api/v1/government-blockchain/valoores-customer-kyc
+[ROUTE MOUNTED] /api/v1/government-blockchain/audit-logs
+[ROUTE MOUNTED] /api/v1/government-blockchain/audit-proofs
+[ROUTE MOUNTED] /api/v1/government-blockchain/audit-batch-proofs
+[ROUTE MOUNTED] /api/v1/government-blockchain/high-risk-data-change-alerts
+[ROUTE MOUNTED] /api/v1/government-blockchain/invalid-record-reviews
+[ROUTE MOUNTED] /api/v1/government-blockchain/compliance-proof-rules
+[ROUTE MOUNTED] /api/v1/government-blockchain/bulk-compliance-approvals
+[ROUTE MOUNTED] /api/v1/government-blockchain/settings
+[ROUTE MOUNTED] /api/v1/government-blockchain/dashboard
+[ROUTE MOUNTED] /api/v1/government-blockchain/aml-dashboard
+[ROUTE MOUNTED] /api/v1/government-blockchain/aml-alerts-queue
+[ROUTE MOUNTED] /api/v1/government-blockchain/aml-cases
+[ROUTE MOUNTED] /api/v1/government-blockchain/aml-case-management
+[ROUTE MOUNTED] /api/v1/government-blockchain/reports
+[ROUTE MOUNTED] /api/v1/government-blockchain/blockchain-proofs
+[ROUTE LOADED] /api/v1/government-blockchain/payments-digital-stamps
+[ROUTES] wallet.routes loaded
+[ROUTES] data-generator.routes loaded
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+[ROUTES] transaction.routes loaded
+[ROUTES] fabric.routes loaded
+[ROUTES] reference.routes loaded
+[ROUTES] organization.routes loaded
+[ROUTES] project-view.routes loaded
+[ROUTES] dashboard.routes loaded
+[ROUTES] blockchain-kyc.routes loaded
+[ROUTES] governmentBlockchainAuth.routes loaded
+[ROUTES] government-blockchain/reference.routes loaded
+[ROUTES] government-blockchain/ministry.routes loaded
+[ROUTES] residentWallet.routes loaded
+[ROUTES] resident.routes loaded
+[ROUTES] government-services.routes loaded
+[ROUTES] publicAdministration.routes loaded
+[ROUTES] government-transactions.routes loaded
+[ROUTES] government-approval-queue.routes loaded
+[ROUTES] government-account-login.routes loaded
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+[COUCHDB CONFIG] {
+  url: 'http://127.0.0.1:5984',
+  username: 'admin',
+  passwordLoaded: true
+}
+[ROUTES] dashboard route loaded
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+[ROUTES] health route loaded
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+[ROUTES] blockchain route loaded
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+[ROUTES] routes/index loaded
+[ROUTE MOUNTED] /api/v1/government-blockchain/auth
+[ROUTE MOUNTED] /api/v1/government-blockchain/account-login
+[ROUTE MOUNTED] /api/v1/government-blockchain/services
+[ROUTE MOUNTED] /api/v1/government-blockchain/public-administrations
+[ROUTE MOUNTED] /api/v1/government-blockchain/transactions
+[ROUTE MOUNTED] /api/v1/government-blockchain/approval-queue
+[ROUTE MOUNTED] /api/v1/government-blockchain/resident-wallets
+[ROUTE MOUNTED] /api/v1/government-blockchain/digital-kyc/resident-wallets
+[ROUTE MOUNTED] /api/v1/government-blockchain/ministries
+[ROUTE MOUNTED] /api/v1/government-blockchain/reference
+[ROUTE MOUNTED] /api/v1/government-blockchain/digital-kyc/resident-wallets
+[ROUTE MOUNTED] /api/v1/government-blockchain/residents
+[ROUTE MOUNTED] /api/v1/kyc
+[ROUTE MOUNTED] /api/v1/wallets
+[ROUTE MOUNTED] /api/v1/data-generator
+[ROUTE MOUNTED] /api/v1/transactions
+[ROUTE MOUNTED] /api/v1/fabric
+[ROUTE MOUNTED] /api/v1/reference
+[ROUTE MOUNTED] /api/v1/organizations
+[ROUTE MOUNTED] /api/v1/project-views
+[ROUTE MOUNTED] /api/v1/dashboard
+[ROUTE MOUNTED] /api/v1 generic routes
+[ROUTE MOUNTED] /api/license-wallets
+[ROUTE MOUNTED] /api/license-recovery
+======================================================
+Blockchain API Middleware started successfully
+Environment: production
+Listening: http://0.0.0.0:3001
+Health: http://0.0.0.0:3001/api/v1/health
+Government Transactions: http://0.0.0.0:3001/api/v1/government-blockchain/transactions
+Government Transaction Services: http://0.0.0.0:3001/api/v1/government-blockchain/transactions/services
+Resident Search: http://0.0.0.0:3001/api/v1/government-blockchain/transactions/residents/search
+Allowed CORS Origins: http://localhost:4200, http://127.0.0.1:4200, http://localhost:8080, http://127.0.0.1:8080, http://localhost:5173, http://127.0.0.1:5173, http://172.31.13.90:4200, http://172.31.13.90:8080, http://172.31.3.90:4200, http://172.31.3.90:8080
+======================================================
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 304,
+  durationMs: 21,
+  requestId: 'REQ_329D03F1DA064E39328C9448',
+  correlationId: 'REQ_329D03F1DA064E39328C9448',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 37,
+  requestId: 'REQ_FC47A8079022B274FF112BE3',
+  correlationId: 'REQ_FC47A8079022B274FF112BE3',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 15,
+  requestId: 'REQ_1527ED07483E930CEC810B12',
+  correlationId: 'REQ_1527ED07483E930CEC810B12',
+  origin: null
+}
+[LICENSE_WALLET_PROVISION_SUCCESS] {
+  licenseId: 'ea6c9485-6c79-4e75-a574-81f105c8dec4',
+  contractRef: 'Val-GSS-01',
+  walletAddress: '0xccE3D0E1D43c01f949Ad360CAcdF11AE96d901f3'
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-wallets/provision',
+  statusCode: 201,
+  durationMs: 48,
+  requestId: 'REQ_E21299869E6576C75440E1A0',
+  correlationId: 'REQ_E21299869E6576C75440E1A0',
+  origin: 'http://172.31.13.90:4200'
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 200,
+  durationMs: 3,
+  requestId: 'REQ_42CD7667D79296F769E24984',
+  correlationId: 'REQ_42CD7667D79296F769E24984',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 24,
+  requestId: 'REQ_F139778FBE6A6F0E30068E22',
+  correlationId: 'REQ_F139778FBE6A6F0E30068E22',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 12,
+  requestId: 'REQ_21284AC06ED063D9EAF5E2DC',
+  correlationId: 'REQ_21284AC06ED063D9EAF5E2DC',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 20,
+  requestId: 'REQ_FF09B8BA07ADA235605B058A',
+  correlationId: 'REQ_FF09B8BA07ADA235605B058A',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 13,
+  requestId: 'REQ_A27ECA97EDF4F9CD92BD6994',
+  correlationId: 'REQ_A27ECA97EDF4F9CD92BD6994',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 20,
+  requestId: 'REQ_ACBC48650ACD0C5F3DB69761',
+  correlationId: 'REQ_ACBC48650ACD0C5F3DB69761',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 14,
+  requestId: 'REQ_AFFBA9AA8E03A922FA259F8D',
+  correlationId: 'REQ_AFFBA9AA8E03A922FA259F8D',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 20,
+  requestId: 'REQ_55BEE541C569D1020128B281',
+  correlationId: 'REQ_55BEE541C569D1020128B281',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 12,
+  requestId: 'REQ_2F575EC6CFC3D284857721F4',
+  correlationId: 'REQ_2F575EC6CFC3D284857721F4',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 17,
+  requestId: 'REQ_CAADB5864A86D9DDE8DB6A5B',
+  correlationId: 'REQ_CAADB5864A86D9DDE8DB6A5B',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 11,
+  requestId: 'REQ_4AC9229389BF47E082E02EF9',
+  correlationId: 'REQ_4AC9229389BF47E082E02EF9',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 19,
+  requestId: 'REQ_A175775ACCE791B53A30A4F6',
+  correlationId: 'REQ_A175775ACCE791B53A30A4F6',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 16,
+  requestId: 'REQ_C143FDECA7283D7862BE8BCD',
+  correlationId: 'REQ_C143FDECA7283D7862BE8BCD',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 28,
+  requestId: 'REQ_6A1011AD2902037B1540648C',
+  correlationId: 'REQ_6A1011AD2902037B1540648C',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 16,
+  requestId: 'REQ_EA576BBEE6CE0BD0AAEFA47E',
+  correlationId: 'REQ_EA576BBEE6CE0BD0AAEFA47E',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 21,
+  requestId: 'REQ_64D92D1D5B71DAA2CEC28CC5',
+  correlationId: 'REQ_64D92D1D5B71DAA2CEC28CC5',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 16,
+  requestId: 'REQ_98753426E58755537EBAA576',
+  correlationId: 'REQ_98753426E58755537EBAA576',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 19,
+  requestId: 'REQ_BD37463E06559868E7A93EDC',
+  correlationId: 'REQ_BD37463E06559868E7A93EDC',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 13,
+  requestId: 'REQ_72A0AEE466D22ACBE56FC0A1',
+  correlationId: 'REQ_72A0AEE466D22ACBE56FC0A1',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 18,
+  requestId: 'REQ_5B191AEFE9899065FFD12932',
+  correlationId: 'REQ_5B191AEFE9899065FFD12932',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 13,
+  requestId: 'REQ_A184B44D7E569CD230F21B8E',
+  correlationId: 'REQ_A184B44D7E569CD230F21B8E',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 18,
+  requestId: 'REQ_9C8F5937D5128632CB2897D8',
+  correlationId: 'REQ_9C8F5937D5128632CB2897D8',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 13,
+  requestId: 'REQ_000D7B04F8EE7A98F7211C86',
+  correlationId: 'REQ_000D7B04F8EE7A98F7211C86',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 18,
+  requestId: 'REQ_2B7A125B8451CD347EA59E01',
+  correlationId: 'REQ_2B7A125B8451CD347EA59E01',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 12,
+  requestId: 'REQ_86DE2EC5B80B64635BC510C0',
+  correlationId: 'REQ_86DE2EC5B80B64635BC510C0',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 19,
+  requestId: 'REQ_8C4868954ACD94C7230A5887',
+  correlationId: 'REQ_8C4868954ACD94C7230A5887',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 15,
+  requestId: 'REQ_4A6F0BD160B11C4E4FDA728C',
+  correlationId: 'REQ_4A6F0BD160B11C4E4FDA728C',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 22,
+  requestId: 'REQ_8E280D1A50B635422A511370',
+  correlationId: 'REQ_8E280D1A50B635422A511370',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 14,
+  requestId: 'REQ_01A14A4C7BD03BE38FA6B332',
+  correlationId: 'REQ_01A14A4C7BD03BE38FA6B332',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 21,
+  requestId: 'REQ_02090574F51CBD632A17AB95',
+  correlationId: 'REQ_02090574F51CBD632A17AB95',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 13,
+  requestId: 'REQ_5DA2BE583E4E5C2604DE5EBF',
+  correlationId: 'REQ_5DA2BE583E4E5C2604DE5EBF',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 16,
+  requestId: 'REQ_A0B292C4AF91486022372069',
+  correlationId: 'REQ_A0B292C4AF91486022372069',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 15,
+  requestId: 'REQ_2897CBADCB51A74BA1D67EA4',
+  correlationId: 'REQ_2897CBADCB51A74BA1D67EA4',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 16,
+  requestId: 'REQ_0517CBC5D31E1BE614137D3C',
+  correlationId: 'REQ_0517CBC5D31E1BE614137D3C',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 15,
+  requestId: 'REQ_37B9C79C82D0409FC766F265',
+  correlationId: 'REQ_37B9C79C82D0409FC766F265',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 17,
+  requestId: 'REQ_6CD8A21E55F6C7B8AFC2DB09',
+  correlationId: 'REQ_6CD8A21E55F6C7B8AFC2DB09',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 13,
+  requestId: 'REQ_258504FFDAD710E8C0BDE147',
+  correlationId: 'REQ_258504FFDAD710E8C0BDE147',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 304,
+  durationMs: 20,
+  requestId: 'REQ_A20C720FC5A0634E961C191C',
+  correlationId: 'REQ_A20C720FC5A0634E961C191C',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 20,
+  requestId: 'REQ_909B864E57813536B89A6B14',
+  correlationId: 'REQ_909B864E57813536B89A6B14',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 16,
+  requestId: 'REQ_7275B0CCB7FAA8645963D52F',
+  correlationId: 'REQ_7275B0CCB7FAA8645963D52F',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 304,
+  durationMs: 16,
+  requestId: 'REQ_1328169BE744F2845A65AD9A',
+  correlationId: 'REQ_1328169BE744F2845A65AD9A',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 304,
+  durationMs: 3,
+  requestId: 'REQ_BACF294EE3441181429553FF',
+  correlationId: 'REQ_BACF294EE3441181429553FF',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 19,
+  requestId: 'REQ_05CF16DF2A2715C21F3BB2DB',
+  correlationId: 'REQ_05CF16DF2A2715C21F3BB2DB',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 14,
+  requestId: 'REQ_3832FC7693C02A6DCD12A3E5',
+  correlationId: 'REQ_3832FC7693C02A6DCD12A3E5',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 20,
+  requestId: 'REQ_7CB5AE81F76C04CDCAD44A1A',
+  correlationId: 'REQ_7CB5AE81F76C04CDCAD44A1A',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 14,
+  requestId: 'REQ_F985FE490033D010B46AF18C',
+  correlationId: 'REQ_F985FE490033D010B46AF18C',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 19,
+  requestId: 'REQ_1B7CF42008C61EC27E04C496',
+  correlationId: 'REQ_1B7CF42008C61EC27E04C496',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 18,
+  requestId: 'REQ_FD85D53445F698F65D20804C',
+  correlationId: 'REQ_FD85D53445F698F65D20804C',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 18,
+  requestId: 'REQ_BAE159747C19237E8D06B9D3',
+  correlationId: 'REQ_BAE159747C19237E8D06B9D3',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 16,
+  requestId: 'REQ_0D8E803C9361E01A215877BF',
+  correlationId: 'REQ_0D8E803C9361E01A215877BF',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 18,
+  requestId: 'REQ_5072FFCB32CB7753B0816293',
+  correlationId: 'REQ_5072FFCB32CB7753B0816293',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 13,
+  requestId: 'REQ_D305CBB9D9BA72031844B8BA',
+  correlationId: 'REQ_D305CBB9D9BA72031844B8BA',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 17,
+  requestId: 'REQ_ADC146F8A1433BA195956426',
+  correlationId: 'REQ_ADC146F8A1433BA195956426',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 15,
+  requestId: 'REQ_716288C5803B5810B35A2BB2',
+  correlationId: 'REQ_716288C5803B5810B35A2BB2',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 17,
+  requestId: 'REQ_6226473FAD7A7058DF0F3B4B',
+  correlationId: 'REQ_6226473FAD7A7058DF0F3B4B',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 13,
+  requestId: 'REQ_5604793AAC6B1BA3325DBBE3',
+  correlationId: 'REQ_5604793AAC6B1BA3325DBBE3',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 21,
+  requestId: 'REQ_6BFB63F89E7FD46B8728FA0F',
+  correlationId: 'REQ_6BFB63F89E7FD46B8728FA0F',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 12,
+  requestId: 'REQ_55A663485534F86878A59DA6',
+  correlationId: 'REQ_55A663485534F86878A59DA6',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 304,
+  durationMs: 20,
+  requestId: 'REQ_8DD8ACB2EBE8C28F638C3877',
+  correlationId: 'REQ_8DD8ACB2EBE8C28F638C3877',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 22,
+  requestId: 'REQ_D1D7C19F1D4F12878BA9AAD5',
+  correlationId: 'REQ_D1D7C19F1D4F12878BA9AAD5',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 12,
+  requestId: 'REQ_30912326B32B7D64E3206ED2',
+  correlationId: 'REQ_30912326B32B7D64E3206ED2',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 304,
+  durationMs: 16,
+  requestId: 'REQ_248401113FBBEB38D96CB77F',
+  correlationId: 'REQ_248401113FBBEB38D96CB77F',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 20,
+  requestId: 'REQ_437DCBA16E82B334D1B4020B',
+  correlationId: 'REQ_437DCBA16E82B334D1B4020B',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 12,
+  requestId: 'REQ_611A1D753AAC8876ED140722',
+  correlationId: 'REQ_611A1D753AAC8876ED140722',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 304,
+  durationMs: 18,
+  requestId: 'REQ_7B7A2C5B966A6773ABF67FE0',
+  correlationId: 'REQ_7B7A2C5B966A6773ABF67FE0',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 18,
+  requestId: 'REQ_984744FB49402B6EAC1739EF',
+  correlationId: 'REQ_984744FB49402B6EAC1739EF',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 14,
+  requestId: 'REQ_0057AE7F7F4AFBA6378304E2',
+  correlationId: 'REQ_0057AE7F7F4AFBA6378304E2',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 304,
+  durationMs: 17,
+  requestId: 'REQ_18C0281135EBE3318583335D',
+  correlationId: 'REQ_18C0281135EBE3318583335D',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 17,
+  requestId: 'REQ_97ACE9B9E9A73615BF75A202',
+  correlationId: 'REQ_97ACE9B9E9A73615BF75A202',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 13,
+  requestId: 'REQ_FCE420EE9AC045734DF9A5E4',
+  correlationId: 'REQ_FCE420EE9AC045734DF9A5E4',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 304,
+  durationMs: 16,
+  requestId: 'REQ_8367B552BC198939EAA70435',
+  correlationId: 'REQ_8367B552BC198939EAA70435',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 20,
+  requestId: 'REQ_6C251C5720FCC5B6C1DF2830',
+  correlationId: 'REQ_6C251C5720FCC5B6C1DF2830',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 15,
+  requestId: 'REQ_6C7953D3B6FB2B1D8F3C4CAE',
+  correlationId: 'REQ_6C7953D3B6FB2B1D8F3C4CAE',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 304,
+  durationMs: 19,
+  requestId: 'REQ_732F7EC4C1E3226816347440',
+  correlationId: 'REQ_732F7EC4C1E3226816347440',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 22,
+  requestId: 'REQ_97EFE9D58E4E02B6F5437FC2',
+  correlationId: 'REQ_97EFE9D58E4E02B6F5437FC2',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 12,
+  requestId: 'REQ_296A227C780C39B9B58620D0',
+  correlationId: 'REQ_296A227C780C39B9B58620D0',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 304,
+  durationMs: 19,
+  requestId: 'REQ_493E862F22AF85E61A94A110',
+  correlationId: 'REQ_493E862F22AF85E61A94A110',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 19,
+  requestId: 'REQ_013054FFA2F67AC20E603A43',
+  correlationId: 'REQ_013054FFA2F67AC20E603A43',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 14,
+  requestId: 'REQ_F6FB59EDDEBB491CE5555366',
+  correlationId: 'REQ_F6FB59EDDEBB491CE5555366',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 304,
+  durationMs: 17,
+  requestId: 'REQ_A53F7B881A08F12DDBAB0CA8',
+  correlationId: 'REQ_A53F7B881A08F12DDBAB0CA8',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 17,
+  requestId: 'REQ_7231CE8B89922BF6371822E0',
+  correlationId: 'REQ_7231CE8B89922BF6371822E0',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 12,
+  requestId: 'REQ_CA1924B1364363869208F9BE',
+  correlationId: 'REQ_CA1924B1364363869208F9BE',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 304,
+  durationMs: 17,
+  requestId: 'REQ_08C3E7B4CC80EE0C264FEB5F',
+  correlationId: 'REQ_08C3E7B4CC80EE0C264FEB5F',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 18,
+  requestId: 'REQ_38334FFF476D2BF9AC0217D6',
+  correlationId: 'REQ_38334FFF476D2BF9AC0217D6',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 12,
+  requestId: 'REQ_CD9C04681DD9727F1C5CC8A5',
+  correlationId: 'REQ_CD9C04681DD9727F1C5CC8A5',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 304,
+  durationMs: 15,
+  requestId: 'REQ_7D10AA2B53893D61BA970F55',
+  correlationId: 'REQ_7D10AA2B53893D61BA970F55',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 18,
+  requestId: 'REQ_9317A4A574A8BD967B37E122',
+  correlationId: 'REQ_9317A4A574A8BD967B37E122',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 14,
+  requestId: 'REQ_6736069E028C6E3556EF49AA',
+  correlationId: 'REQ_6736069E028C6E3556EF49AA',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 304,
+  durationMs: 18,
+  requestId: 'REQ_9FCFE58DD75B48EFEDE30A43',
+  correlationId: 'REQ_9FCFE58DD75B48EFEDE30A43',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 23,
+  requestId: 'REQ_4102BC180EF9888380A926F3',
+  correlationId: 'REQ_4102BC180EF9888380A926F3',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 14,
+  requestId: 'REQ_1EF2A7A257BD48C883FC1D47',
+  correlationId: 'REQ_1EF2A7A257BD48C883FC1D47',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 304,
+  durationMs: 19,
+  requestId: 'REQ_4DB5EA6B889FFF93EA015F34',
+  correlationId: 'REQ_4DB5EA6B889FFF93EA015F34',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 20,
+  requestId: 'REQ_EEA04D7734EF54096238A73C',
+  correlationId: 'REQ_EEA04D7734EF54096238A73C',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 15,
+  requestId: 'REQ_4E7B13CE261682572427834C',
+  correlationId: 'REQ_4E7B13CE261682572427834C',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 304,
+  durationMs: 17,
+  requestId: 'REQ_08E9395BEFA4FF053E054A6A',
+  correlationId: 'REQ_08E9395BEFA4FF053E054A6A',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 19,
+  requestId: 'REQ_32ABC8822F7CE8845230E507',
+  correlationId: 'REQ_32ABC8822F7CE8845230E507',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 16,
+  requestId: 'REQ_3257EED4F87A1570F45C4576',
+  correlationId: 'REQ_3257EED4F87A1570F45C4576',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 304,
+  durationMs: 16,
+  requestId: 'REQ_78BDCC11E446A5F23D813764',
+  correlationId: 'REQ_78BDCC11E446A5F23D813764',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 18,
+  requestId: 'REQ_A8BCCAFFA19C01C1CC54EC10',
+  correlationId: 'REQ_A8BCCAFFA19C01C1CC54EC10',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 14,
+  requestId: 'REQ_8825663A8F2A4BE1D03CF721',
+  correlationId: 'REQ_8825663A8F2A4BE1D03CF721',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 304,
+  durationMs: 16,
+  requestId: 'REQ_CAF53CBECDDA4F6079A11C2A',
+  correlationId: 'REQ_CAF53CBECDDA4F6079A11C2A',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 15,
+  requestId: 'REQ_647CB7D7E6CE5A2FAE6DCEFC',
+  correlationId: 'REQ_647CB7D7E6CE5A2FAE6DCEFC',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 14,
+  requestId: 'REQ_CC04AD126E0B9D7C0E7A4847',
+  correlationId: 'REQ_CC04AD126E0B9D7C0E7A4847',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 304,
+  durationMs: 17,
+  requestId: 'REQ_89F8939230DDC829B9EEC5A0',
+  correlationId: 'REQ_89F8939230DDC829B9EEC5A0',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 20,
+  requestId: 'REQ_35F594AAA76876CBF5A02F3C',
+  correlationId: 'REQ_35F594AAA76876CBF5A02F3C',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 15,
+  requestId: 'REQ_4BAC6F75407B51857212D42C',
+  correlationId: 'REQ_4BAC6F75407B51857212D42C',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 304,
+  durationMs: 19,
+  requestId: 'REQ_E3B3ED7F06498827383B1CEE',
+  correlationId: 'REQ_E3B3ED7F06498827383B1CEE',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 18,
+  requestId: 'REQ_181CCEAE79956C0A5844FE82',
+  correlationId: 'REQ_181CCEAE79956C0A5844FE82',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 14,
+  requestId: 'REQ_E52039A6AFEDDA91332D6AC1',
+  correlationId: 'REQ_E52039A6AFEDDA91332D6AC1',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 304,
+  durationMs: 18,
+  requestId: 'REQ_26CFC3F56A2A60875330F600',
+  correlationId: 'REQ_26CFC3F56A2A60875330F600',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 18,
+  requestId: 'REQ_6BBDF677B7940265E792EE27',
+  correlationId: 'REQ_6BBDF677B7940265E792EE27',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 12,
+  requestId: 'REQ_54785DC98686D5B21F51343F',
+  correlationId: 'REQ_54785DC98686D5B21F51343F',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 304,
+  durationMs: 19,
+  requestId: 'REQ_E206AAAFD7AEED21071601F7',
+  correlationId: 'REQ_E206AAAFD7AEED21071601F7',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 19,
+  requestId: 'REQ_F4114ADE440AF3838081BA35',
+  correlationId: 'REQ_F4114ADE440AF3838081BA35',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 15,
+  requestId: 'REQ_DC8E0ABED162998FD7C81862',
+  correlationId: 'REQ_DC8E0ABED162998FD7C81862',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 304,
+  durationMs: 15,
+  requestId: 'REQ_40931209C0B8FA194287DB2A',
+  correlationId: 'REQ_40931209C0B8FA194287DB2A',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 16,
+  requestId: 'REQ_264039CCA6D484A1D8C4229C',
+  correlationId: 'REQ_264039CCA6D484A1D8C4229C',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 14,
+  requestId: 'REQ_5B4B400426A9DBE8092072E2',
+  correlationId: 'REQ_5B4B400426A9DBE8092072E2',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 304,
+  durationMs: 18,
+  requestId: 'REQ_1E2B3ECC70E25D7DE0262471',
+  correlationId: 'REQ_1E2B3ECC70E25D7DE0262471',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 17,
+  requestId: 'REQ_F2AF83179BA2C6DC9777D9CD',
+  correlationId: 'REQ_F2AF83179BA2C6DC9777D9CD',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 13,
+  requestId: 'REQ_E53FC94329834F07270C017E',
+  correlationId: 'REQ_E53FC94329834F07270C017E',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 304,
+  durationMs: 18,
+  requestId: 'REQ_0433614EB954FD3582FD5456',
+  correlationId: 'REQ_0433614EB954FD3582FD5456',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 19,
+  requestId: 'REQ_F1D2F4B865B9B3BD8EA31106',
+  correlationId: 'REQ_F1D2F4B865B9B3BD8EA31106',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 13,
+  requestId: 'REQ_DDDAA03B30376D10958A248F',
+  correlationId: 'REQ_DDDAA03B30376D10958A248F',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 304,
+  durationMs: 20,
+  requestId: 'REQ_D1833047CFD23239C45C6EF7',
+  correlationId: 'REQ_D1833047CFD23239C45C6EF7',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 18,
+  requestId: 'REQ_365A86001829A21A3E2916FA',
+  correlationId: 'REQ_365A86001829A21A3E2916FA',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 14,
+  requestId: 'REQ_A34618C0DE0009F6371DF061',
+  correlationId: 'REQ_A34618C0DE0009F6371DF061',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 304,
+  durationMs: 17,
+  requestId: 'REQ_C78F7D30010FD454B7A17A41',
+  correlationId: 'REQ_C78F7D30010FD454B7A17A41',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 20,
+  requestId: 'REQ_B9C2AB1CD46D386766BA5415',
+  correlationId: 'REQ_B9C2AB1CD46D386766BA5415',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 13,
+  requestId: 'REQ_01D63FF0596EEAAAD1CF816F',
+  correlationId: 'REQ_01D63FF0596EEAAAD1CF816F',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 304,
+  durationMs: 17,
+  requestId: 'REQ_A1EF71CC80A34E4813139E01',
+  correlationId: 'REQ_A1EF71CC80A34E4813139E01',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 18,
+  requestId: 'REQ_58EF80116F89CB26CA725910',
+  correlationId: 'REQ_58EF80116F89CB26CA725910',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 15,
+  requestId: 'REQ_C111201AB1FD42413E98C751',
+  correlationId: 'REQ_C111201AB1FD42413E98C751',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 304,
+  durationMs: 20,
+  requestId: 'REQ_A15B3B16146D19848B05DF83',
+  correlationId: 'REQ_A15B3B16146D19848B05DF83',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 20,
+  requestId: 'REQ_D6C5D53A7D4CC7EA4AA68016',
+  correlationId: 'REQ_D6C5D53A7D4CC7EA4AA68016',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 15,
+  requestId: 'REQ_04A86B2FE6FE3FA734DE54BF',
+  correlationId: 'REQ_04A86B2FE6FE3FA734DE54BF',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 304,
+  durationMs: 17,
+  requestId: 'REQ_C28C118E7607C3EAFC14A149',
+  correlationId: 'REQ_C28C118E7607C3EAFC14A149',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 16,
+  requestId: 'REQ_D88BB483E310CB5D1010BA30',
+  correlationId: 'REQ_D88BB483E310CB5D1010BA30',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 14,
+  requestId: 'REQ_A5DA48FE002E5B27CF17847A',
+  correlationId: 'REQ_A5DA48FE002E5B27CF17847A',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 304,
+  durationMs: 20,
+  requestId: 'REQ_6316B20919B9AB7D4ABFB109',
+  correlationId: 'REQ_6316B20919B9AB7D4ABFB109',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 17,
+  requestId: 'REQ_93E78D354BD9A47D984E0C11',
+  correlationId: 'REQ_93E78D354BD9A47D984E0C11',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 13,
+  requestId: 'REQ_323BB14B9B5B3DBFED4C856E',
+  correlationId: 'REQ_323BB14B9B5B3DBFED4C856E',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 304,
+  durationMs: 16,
+  requestId: 'REQ_41CAC02311EDDB70E4FB5864',
+  correlationId: 'REQ_41CAC02311EDDB70E4FB5864',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 17,
+  requestId: 'REQ_25A93FE8DC7B2865C78D1AFD',
+  correlationId: 'REQ_25A93FE8DC7B2865C78D1AFD',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 12,
+  requestId: 'REQ_863FBC7A82570F529D7304B3',
+  correlationId: 'REQ_863FBC7A82570F529D7304B3',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 304,
+  durationMs: 16,
+  requestId: 'REQ_D60679C35D46ED693FF10FEB',
+  correlationId: 'REQ_D60679C35D46ED693FF10FEB',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 17,
+  requestId: 'REQ_B6F28F4FA9BAB7AAED52DA14',
+  correlationId: 'REQ_B6F28F4FA9BAB7AAED52DA14',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 13,
+  requestId: 'REQ_5A3CFA40BFA1F73E201BD4AE',
+  correlationId: 'REQ_5A3CFA40BFA1F73E201BD4AE',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 304,
+  durationMs: 17,
+  requestId: 'REQ_4C7EA8E336AF66CB1F16A04D',
+  correlationId: 'REQ_4C7EA8E336AF66CB1F16A04D',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 19,
+  requestId: 'REQ_8E57483EDE0FE6744F693AB5',
+  correlationId: 'REQ_8E57483EDE0FE6744F693AB5',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 15,
+  requestId: 'REQ_18C61410FFFE0C0261893B86',
+  correlationId: 'REQ_18C61410FFFE0C0261893B86',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 304,
+  durationMs: 18,
+  requestId: 'REQ_02D2893F8B8CC83593EDAE82',
+  correlationId: 'REQ_02D2893F8B8CC83593EDAE82',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 19,
+  requestId: 'REQ_741C78CD94EFA97C45313DA9',
+  correlationId: 'REQ_741C78CD94EFA97C45313DA9',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 12,
+  requestId: 'REQ_62B70FED7AF7F0AF037FD721',
+  correlationId: 'REQ_62B70FED7AF7F0AF037FD721',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 304,
+  durationMs: 18,
+  requestId: 'REQ_8AC6732928C6B34A83BA0812',
+  correlationId: 'REQ_8AC6732928C6B34A83BA0812',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 22,
+  requestId: 'REQ_9280667E6EE38E6E8EA7E585',
+  correlationId: 'REQ_9280667E6EE38E6E8EA7E585',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 12,
+  requestId: 'REQ_67AF001D16209619FB6BC6BC',
+  correlationId: 'REQ_67AF001D16209619FB6BC6BC',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 304,
+  durationMs: 17,
+  requestId: 'REQ_4220101020ED3693A6C61CCE',
+  correlationId: 'REQ_4220101020ED3693A6C61CCE',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 19,
+  requestId: 'REQ_33F2E0A997DF249CB5C86930',
+  correlationId: 'REQ_33F2E0A997DF249CB5C86930',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 15,
+  requestId: 'REQ_9AF64DC308CAE8DEC9267945',
+  correlationId: 'REQ_9AF64DC308CAE8DEC9267945',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 304,
+  durationMs: 18,
+  requestId: 'REQ_3E8F2120E9059A2C2AD12CEC',
+  correlationId: 'REQ_3E8F2120E9059A2C2AD12CEC',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 18,
+  requestId: 'REQ_232333ED4EEF4B6DCEC65E31',
+  correlationId: 'REQ_232333ED4EEF4B6DCEC65E31',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 15,
+  requestId: 'REQ_C825AA6EC996D6366EE65FF9',
+  correlationId: 'REQ_C825AA6EC996D6366EE65FF9',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 304,
+  durationMs: 16,
+  requestId: 'REQ_21EFFEAAE3BE63CDA0DE5F31',
+  correlationId: 'REQ_21EFFEAAE3BE63CDA0DE5F31',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases',
+  statusCode: 304,
+  durationMs: 16,
+  requestId: 'REQ_1C6A30DCD44B14D41AF50938',
+  correlationId: 'REQ_1C6A30DCD44B14D41AF50938',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/v1/couchdb-explorer/databases/kycchannelnix1_kyc-wallet-chaincode-js/documents?limit=100&skip=0',
+  statusCode: 304,
+  durationMs: 13,
+  requestId: 'REQ_5DB3561EE8DDF7C4FBEB60D6',
+  correlationId: 'REQ_5DB3561EE8DDF7C4FBEB60D6',
+  origin: null
+}

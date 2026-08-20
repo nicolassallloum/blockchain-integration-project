@@ -1,0 +1,2 @@
+Committed chaincode definition for chaincode 'kyc-wallet-chaincode-js' on channel 'kycchannelnix1':
+Version: 2.23, Sequence: 27, Endorsement Plugin: escc, Validation Plugin: vscc, Approvals: [Org1MSP: true, Org2MSP: true]

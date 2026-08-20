@@ -1,0 +1,350 @@
+===== FILE: /home/nix/u01/blockchain-integration/blockchain-api/src/controllers/wallet.controller.js =====
+     1	'use strict';
+     2	
+     3	const walletService = require('../services/wallet.service');
+     4	
+     5	function getRequestId(req) {
+     6	  return req.requestId || req.headers['x-request-id'] || null;
+     7	}
+     8	
+     9	function getCorrelationId(req) {
+    10	  return req.headers['x-correlation-id'] || getRequestId(req);
+    11	}
+    12	
+    13	function buildRequestContext(req) {
+    14	  return {
+    15	    requestId: getRequestId(req),
+    16	    request_id: getRequestId(req),
+    17	    correlationId: getCorrelationId(req),
+    18	    correlation_id: getCorrelationId(req),
+    19	    sourceSystem:
+    20	      req.headers['x-source-system'] ||
+    21	      req.body?.sourceSystem ||
+    22	      req.body?.source_system ||
+    23	      'BLOCKCHAIN_API',
+    24	    source_system:
+    25	      req.headers['x-source-system'] ||
+    26	      req.body?.sourceSystem ||
+    27	      req.body?.source_system ||
+    28	      'BLOCKCHAIN_API',
+    29	    requestSource:
+    30	      req.headers['x-request-source'] ||
+    31	      req.body?.requestSource ||
+    32	      req.body?.request_source ||
+    33	      'API',
+    34	    request_source:
+    35	      req.headers['x-request-source'] ||
+    36	      req.body?.requestSource ||
+    37	      req.body?.request_source ||
+    38	      'API',
+    39	    createdBy:
+    40	      req.body?.createdBy ||
+    41	      req.body?.created_by ||
+    42	      req.headers['x-created-by'] ||
+    43	      'api-user',
+    44	    created_by:
+    45	      req.body?.createdBy ||
+    46	      req.body?.created_by ||
+    47	      req.headers['x-created-by'] ||
+    48	      'api-user'
+    49	  };
+    50	}
+    51	
+    52	function getErrorStatusCode(error, defaultStatus = 400) {
+    53	  const message = String(error.message || '').toLowerCase();
+    54	
+    55	  if (
+    56	    message.includes('blockchain wallet creation failed') ||
+    57	    message.includes('fabric') ||
+    58	    message.includes('endorsement') ||
+    59	    message.includes('deadline') ||
+    60	    message.includes('gateway') ||
+    61	    message.includes('grpc')
+    62	  ) {
+    63	    return 502;
+    64	  }
+    65	
+    66	  if (message.includes('already exists')) {
+    67	    return 409;
+    68	  }
+    69	
+    70	  if (message.includes('not found')) {
+    71	    return 404;
+    72	  }
+    73	
+    74	  return defaultStatus;
+    75	}
+    76	
+    77	exports.getNextCustomerId = async (req, res, next) => {
+    78	  try {
+    79	    const result = await walletService.getNextCustomerId();
+    80	
+    81	    return res.status(200).json({
+    82	      success: true,
+    83	      message: 'Next customer ID generated successfully',
+    84	      data: {
+    85	        customerId: result.customerId,
+    86	        customer_id: result.customerId
+    87	      },
+    88	      requestId: getRequestId(req)
+    89	    });
+    90	  } catch (error) {
+    91	    return next(error);
+    92	  }
+    93	};
+    94	
+    95	/**
+    96	 * GET /api/v1/wallets?page=1&limit=13&search=
+    97	 */
+    98	exports.listWallets = async (req, res) => {
+    99	  try {
+   100	    const page = Math.max(parseInt(req.query.page || '1', 10), 1);
+   101	    const limit = Math.min(Math.max(parseInt(req.query.limit || '13', 10), 1), 100);
+   102	    const offset = (page - 1) * limit;
+   103	    const search = (req.query.search || '').trim();
+   104	
+   105	    const result = await walletService.listWallets({
+   106	      page,
+   107	      limit,
+   108	      offset,
+   109	      search
+   110	    });
+   111	
+   112	    return res.status(200).json({
+   113	      success: true,
+   114	      message: 'Wallet list retrieved successfully',
+   115	      data: result.data,
+   116	      pagination: {
+   117	        page,
+   118	        limit,
+   119	        totalRecords: result.totalRecords,
+   120	        totalPages: Math.ceil(result.totalRecords / limit),
+   121	        hasNextPage: page < Math.ceil(result.totalRecords / limit),
+   122	        hasPreviousPage: page > 1
+   123	      },
+   124	      filters: {
+   125	        search: search || null
+   126	      },
+   127	      source: 'postgres',
+   128	      requestId: getRequestId(req)
+   129	    });
+   130	  } catch (error) {
+   131	    return res.status(500).json({
+   132	      success: false,
+   133	      message: 'Failed to retrieve wallet list',
+   134	      error: {
+   135	        message: error.message,
+   136	        stack: process.env.NODE_ENV === 'production' ? undefined : error.stack
+   137	      },
+   138	      requestId: getRequestId(req)
+   139	    });
+   140	  }
+   141	};
+   142	
+   143	/**
+   144	 * POST /api/v1/wallets
+   145	 */
+   146	exports.createWallet = async (req, res) => {
+   147	  try {
+   148	    const result = await walletService.createWallet({
+   149	      ...req.body,
+   150	      ...buildRequestContext(req)
+   151	    });
+   152	
+   153	    return res.status(201).json({
+   154	      success: true,
+   155	      message: 'Wallet created successfully in Blockchain and PostgreSQL',
+   156	      data: result,
+   157	      source: 'fabric_postgres',
+   158	      requestId: getRequestId(req)
+   159	    });
+   160	  } catch (error) {
+   161	    const statusCode = getErrorStatusCode(error, 400);
+   162	
+   163	    return res.status(statusCode).json({
+   164	      success: false,
+   165	      message: 'Failed to create wallet',
+   166	      error: {
+   167	        message: error.message,
+   168	        stack: process.env.NODE_ENV === 'production' ? undefined : error.stack
+   169	      },
+   170	      source: statusCode === 502 ? 'fabric' : 'api',
+   171	      requestId: getRequestId(req)
+   172	    });
+   173	  }
+   174	};
+   175	
+   176	/**
+   177	 * POST /api/v1/wallets/organization-wallets
+   178	 */
+   179	exports.createOrganizationWallet = async (req, res) => {
+   180	  try {
+   181	    const result = await walletService.createOrganizationWallet({
+   182	      ...req.body,
+   183	      ...buildRequestContext(req)
+   184	    });
+   185	
+   186	    return res.status(201).json({
+   187	      success: true,
+   188	      message: 'Organization wallet created successfully in Blockchain and PostgreSQL',
+   189	      data: result,
+   190	      source: 'fabric_postgres',
+   191	      requestId: getRequestId(req)
+   192	    });
+   193	  } catch (error) {
+   194	    const statusCode = getErrorStatusCode(error, 400);
+   195	
+   196	    return res.status(statusCode).json({
+   197	      success: false,
+   198	      message: 'Failed to create organization wallet',
+   199	      error: {
+   200	        message: error.message,
+   201	        stack: process.env.NODE_ENV === 'production' ? undefined : error.stack
+   202	      },
+   203	      source: statusCode === 502 ? 'fabric' : 'api',
+   204	      requestId: getRequestId(req)
+   205	    });
+   206	  }
+   207	};
+   208	
+   209	/**
+   210	 * POST /api/v1/wallets/login
+   211	 */
+   212	exports.loginWallet = async (req, res, next) => {
+   213	  try {
+   214	    const walletAddress =
+   215	      req.body.walletAddress ||
+   216	      req.body.wallet_address ||
+   217	      req.body.loginId ||
+   218	      req.body.customerId;
+   219	
+   220	    const password = req.body.password;
+   221	
+   222	    if (!walletAddress) {
+   223	      return res.status(400).json({
+   224	        success: false,
+   225	        message: 'walletAddress is required',
+   226	        error: {
+   227	          message: 'walletAddress is required'
+   228	        },
+   229	        requestId: getRequestId(req)
+   230	      });
+   231	    }
+   232	
+   233	    if (!password) {
+   234	      return res.status(400).json({
+   235	        success: false,
+   236	        message: 'password is required',
+   237	        error: {
+   238	          message: 'password is required'
+   239	        },
+   240	        requestId: getRequestId(req)
+   241	      });
+   242	    }
+   243	
+   244	    const result = await walletService.loginWallet({
+   245	      walletAddress,
+   246	      password
+   247	    });
+   248	
+   249	    if (!result) {
+   250	      return res.status(401).json({
+   251	        success: false,
+   252	        message: 'Wallet login failed',
+   253	        error: {
+   254	          message: 'Invalid wallet address or password'
+   255	        },
+   256	        requestId: getRequestId(req)
+   257	      });
+   258	    }
+   259	
+   260	    return res.status(200).json({
+   261	      success: true,
+   262	      message: 'Wallet login successful',
+   263	      data: result,
+   264	      requestId: getRequestId(req)
+   265	    });
+   266	  } catch (error) {
+   267	    return next(error);
+   268	  }
+   269	};
+   270	
+   271	/**
+   272	 * GET /api/v1/wallets/customer/:customerId
+   273	 */
+   274	exports.getWalletByCustomerId = async (req, res) => {
+   275	  try {
+   276	    const { customerId } = req.params;
+   277	
+   278	    const wallet = await walletService.getWalletByCustomerId(customerId);
+   279	
+   280	    if (!wallet) {
+   281	      return res.status(404).json({
+   282	        success: false,
+   283	        message: `Wallet not found for customerId: ${customerId}`,
+   284	        data: null,
+   285	        requestId: getRequestId(req)
+   286	      });
+   287	    }
+   288	
+   289	    return res.status(200).json({
+   290	      success: true,
+   291	      message: 'Wallet retrieved successfully',
+   292	      data: {
+   293	        wallet
+   294	      },
+   295	      source: 'postgres',
+   296	      requestId: getRequestId(req)
+   297	    });
+   298	  } catch (error) {
+   299	    return res.status(500).json({
+   300	      success: false,
+   301	      message: 'Failed to retrieve wallet by customer ID',
+   302	      error: {
+   303	        message: error.message,
+   304	        stack: process.env.NODE_ENV === 'production' ? undefined : error.stack
+   305	      },
+   306	      requestId: getRequestId(req)
+   307	    });
+   308	  }
+   309	};
+   310	
+   311	/**
+   312	 * GET /api/v1/wallets/:walletAddress
+   313	 */
+   314	exports.getWalletByAddress = async (req, res) => {
+   315	  try {
+   316	    const { walletAddress } = req.params;
+   317	
+   318	    const wallet = await walletService.getWalletByAddress(walletAddress);
+   319	
+   320	    if (!wallet) {
+   321	      return res.status(404).json({
+   322	        success: false,
+   323	        message: `Wallet not found for walletAddress: ${walletAddress}`,
+   324	        data: null,
+   325	        requestId: getRequestId(req)
+   326	      });
+   327	    }
+   328	
+   329	    return res.status(200).json({
+   330	      success: true,
+   331	      message: 'Wallet retrieved successfully',
+   332	      data: {
+   333	        wallet
+   334	      },
+   335	      source: 'postgres',
+   336	      requestId: getRequestId(req)
+   337	    });
+   338	  } catch (error) {
+   339	    return res.status(500).json({
+   340	      success: false,
+   341	      message: 'Failed to retrieve wallet by wallet address',
+   342	      error: {
+   343	        message: error.message,
+   344	        stack: process.env.NODE_ENV === 'production' ? undefined : error.stack
+   345	      },
+   346	      requestId: getRequestId(req)
+   347	    });
+   348	  }
+   349	};

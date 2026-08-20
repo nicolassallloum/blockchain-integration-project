@@ -1,0 +1,76 @@
+===== PACKAGE DATE =====
+Thu Jul 23 01:36:11 PM EEST 2026
+
+===== HOST =====
+pg-replica.hq.com
+
+===== PROJECT DIRECTORY =====
+/home/nix/u01/blockchain-integration
+
+===== COLLECTED FILES =====
+database/01_relevant_table_columns.tsv
+database/02_relevant_table_indexes.tsv
+database/03_relevant_table_constraints.tsv
+database/04_relevant_table_names.tsv
+diagnostics/copied_files.txt
+diagnostics/kyc_endpoint_references.txt
+diagnostics/missing_files.txt
+diagnostics/referenced_database_tables.txt
+files/blockchain-api/package.json
+files/blockchain-api/src/app.js
+files/blockchain-api/src/config/config.js
+files/blockchain-api/src/config/database.js
+files/blockchain-api/src/controllers/blockchain-kyc.controller.js
+files/blockchain-api/src/controllers/wallet-auth.controller.js
+files/blockchain-api/src/controllers/wallet.controller.js
+files/blockchain-api/src/db/applicationPostgres.js
+files/blockchain-api/src/db/blockchainPostgres.js
+files/blockchain-api/src/middlewares/wallet-login.validator.js
+files/blockchain-api/src/repositories/resident.repository.js
+files/blockchain-api/src/routes/blockchain-kyc.routes.js
+files/blockchain-api/src/routes/index.js
+files/blockchain-api/src/routes/valoores-blockchain.routes.js
+files/blockchain-api/src/routes/wallet.routes.js
+files/blockchain-api/src/server.js
+files/blockchain-api/src/services/blockchain-kyc.service.js
+files/blockchain-api/src/services/fabric.service.js
+files/blockchain-api/src/services/wallet-auth.service.js
+files/blockchain-api/src/services/wallet.service.js
+files/blockchain-test-ui/angular.json
+files/blockchain-test-ui/package.json
+files/blockchain-test-ui/proxy.conf.json
+files/blockchain-test-ui/src/app/app.routes.ts
+files/blockchain-test-ui/src/app/pages/blockchain-kyc/blockchain-kyc.component.html
+files/blockchain-test-ui/src/app/pages/blockchain-kyc/blockchain-kyc.component.scss
+files/blockchain-test-ui/src/app/pages/blockchain-kyc/blockchain-kyc.component.ts
+files/blockchain-test-ui/src/app/pages/government-blockchain/create-resident-account/create-resident-account.component.html
+files/blockchain-test-ui/src/app/pages/government-blockchain/create-resident-account/create-resident-account.component.scss
+files/blockchain-test-ui/src/app/pages/government-blockchain/create-resident-account/create-resident-account.component.ts
+files/blockchain-test-ui/src/app/services/blockchain-kyc.service.ts
+logs/last_500_lines_app.log
+logs/last_500_lines_error.log
+manifest.txt
+
+===== FILE SIZES =====
+4.0K	/home/nix/u01/blockchain-integration/kyc_exact_refresh_package_20260723_125416/manifest.txt
+8.0K	/home/nix/u01/blockchain-integration/kyc_exact_refresh_package_20260723_125416/files/blockchain-api/src/middlewares
+8.0K	/home/nix/u01/blockchain-integration/kyc_exact_refresh_package_20260723_125416/files/blockchain-test-ui/src/app/services
+12K	/home/nix/u01/blockchain-integration/kyc_exact_refresh_package_20260723_125416/files/blockchain-api/src/config
+12K	/home/nix/u01/blockchain-integration/kyc_exact_refresh_package_20260723_125416/files/blockchain-api/src/db
+16K	/home/nix/u01/blockchain-integration/kyc_exact_refresh_package_20260723_125416/files/blockchain-api/src/repositories
+20K	/home/nix/u01/blockchain-integration/kyc_exact_refresh_package_20260723_125416/diagnostics
+24K	/home/nix/u01/blockchain-integration/kyc_exact_refresh_package_20260723_125416/files/blockchain-api/src/controllers
+36K	/home/nix/u01/blockchain-integration/kyc_exact_refresh_package_20260723_125416/files/blockchain-api/src/routes
+52K	/home/nix/u01/blockchain-integration/kyc_exact_refresh_package_20260723_125416/files/blockchain-test-ui/src/app/pages/blockchain-kyc
+68K	/home/nix/u01/blockchain-integration/kyc_exact_refresh_package_20260723_125416/files/blockchain-api/src/services
+68K	/home/nix/u01/blockchain-integration/kyc_exact_refresh_package_20260723_125416/files/blockchain-test-ui/src/app/pages/government-blockchain/create-resident-account
+72K	/home/nix/u01/blockchain-integration/kyc_exact_refresh_package_20260723_125416/files/blockchain-test-ui/src/app/pages/government-blockchain
+76K	/home/nix/u01/blockchain-integration/kyc_exact_refresh_package_20260723_125416/database
+128K	/home/nix/u01/blockchain-integration/kyc_exact_refresh_package_20260723_125416/files/blockchain-test-ui/src/app/pages
+156K	/home/nix/u01/blockchain-integration/kyc_exact_refresh_package_20260723_125416/files/blockchain-test-ui/src/app
+160K	/home/nix/u01/blockchain-integration/kyc_exact_refresh_package_20260723_125416/files/blockchain-test-ui/src
+176K	/home/nix/u01/blockchain-integration/kyc_exact_refresh_package_20260723_125416/files/blockchain-test-ui
+216K	/home/nix/u01/blockchain-integration/kyc_exact_refresh_package_20260723_125416/files/blockchain-api/src
+224K	/home/nix/u01/blockchain-integration/kyc_exact_refresh_package_20260723_125416/files/blockchain-api
+240K	/home/nix/u01/blockchain-integration/kyc_exact_refresh_package_20260723_125416/logs
+404K	/home/nix/u01/blockchain-integration/kyc_exact_refresh_package_20260723_125416/files

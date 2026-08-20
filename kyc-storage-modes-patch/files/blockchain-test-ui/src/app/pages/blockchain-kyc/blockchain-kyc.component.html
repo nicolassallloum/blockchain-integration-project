@@ -1,0 +1,637 @@
+<div class="blockchain-kyc-page">
+  <div class="page-header">
+    <div>
+      <h1>Create KYC Customer</h1>
+      <p>Reuse the existing KYC workflow and choose PostgreSQL, Blockchain, or both.</p>
+    </div>
+
+    <div class="header-actions" *ngIf="!showRegistrationComplete">
+      <button type="button" class="btn btn-light" (click)="fillSample()">
+        Fill Sample
+      </button>
+
+      <button type="button" class="btn btn-light" (click)="generateCustomerId()">
+        Generate Customer ID
+      </button>
+
+      <button type="button" class="btn btn-danger-light" (click)="resetForm()">
+        Reset
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="referenceLoading && !showRegistrationComplete" class="message success">
+    Loading reference data from backend APIs...
+  </div>
+
+  <div *ngIf="successMessage && !showRegistrationComplete" class="message success">
+    {{ successMessage }}
+  </div>
+
+  <div *ngIf="errorMessage" class="message error">
+    {{ errorMessage }}
+  </div>
+
+  <section *ngIf="showRegistrationComplete" class="registration-complete-wrapper">
+    <div class="registration-complete-card">
+      <div class="success-icon">✓</div>
+
+      <h2>{{ getCompletionTitle() }}</h2>
+
+      <p class="success-subtitle">
+        {{ registrationResult.statusMessage }}
+      </p>
+
+      <div class="mode-status-grid">
+        <div class="mode-status-item">
+          <span>Storage Mode</span>
+          <strong>{{ getStorageModeLabel(registrationResult.storageMode) }}</strong>
+        </div>
+
+        <div class="mode-status-item">
+          <span>PostgreSQL</span>
+          <strong [class.status-ok]="registrationResult.postgresSaved">
+            {{ registrationResult.postgresSaved ? 'SAVED' : 'NOT SAVED' }}
+          </strong>
+        </div>
+
+        <div class="mode-status-item">
+          <span>Blockchain</span>
+          <strong [class.status-ok]="registrationResult.blockchainSaved">
+            {{ registrationResult.blockchainSaved ? 'SUBMITTED' : 'NOT SUBMITTED' }}
+          </strong>
+        </div>
+      </div>
+
+      <div class="result-group">
+        <label>Customer ID</label>
+        <div class="result-value highlight">
+          {{ registrationResult.customerId }}
+        </div>
+      </div>
+
+      <div class="result-group" *ngIf="registrationResult.requestId">
+        <label>KYC Request ID</label>
+        <div class="result-box">
+          {{ registrationResult.requestId }}
+        </div>
+      </div>
+
+      <div class="result-group" *ngIf="registrationResult.walletAddress">
+        <label>Wallet Address</label>
+        <div class="result-box">
+          {{ registrationResult.walletAddress }}
+        </div>
+      </div>
+
+      <div class="result-group">
+        <label>Organization</label>
+        <div class="result-box">
+          {{ registrationResult.organizationName }}
+        </div>
+      </div>
+
+      <div class="result-group" *ngIf="registrationResult.blockchainSaved">
+        <label>Initial Balance</label>
+        <div class="result-value highlight">
+          {{ registrationResult.initialBalance }} {{ registrationResult.currencyCode }}
+        </div>
+      </div>
+
+      <div class="result-group" *ngIf="registrationResult.oneTimePassword">
+        <label>One-Time Password</label>
+        <div class="result-box secret">
+          {{ registrationResult.oneTimePassword }}
+        </div>
+        <small>Save this password immediately. It cannot be recovered.</small>
+      </div>
+
+      <div class="mode-warning" *ngIf="registrationResult.storageMode === 'BLOCKCHAIN_ONLY'">
+        This wallet was not inserted into blockchain.wallets. The current PostgreSQL-backed
+        wallet login screen cannot authenticate it.
+      </div>
+
+      <div class="result-group" *ngIf="registrationResult.fabricTransactionId">
+        <label>Fabric Transaction ID</label>
+        <div class="result-box tx-id">
+          {{ registrationResult.fabricTransactionId }}
+        </div>
+      </div>
+
+      <div class="result-group" *ngIf="registrationResult.ledgerReference">
+        <label>Ledger Reference</label>
+        <div class="result-box tx-id">
+          {{ registrationResult.ledgerReference }}
+        </div>
+      </div>
+
+      <div class="result-grid">
+        <div class="result-group" *ngIf="registrationResult.channelName">
+          <label>Channel</label>
+          <div class="result-box mini">
+            {{ registrationResult.channelName }}
+          </div>
+        </div>
+
+        <div class="result-group" *ngIf="registrationResult.chaincodeName">
+          <label>Chaincode</label>
+          <div class="result-box mini">
+            {{ registrationResult.chaincodeName }}
+          </div>
+        </div>
+      </div>
+
+      <button type="button" class="btn-create-another" (click)="createAnotherWallet()">
+        Create Another KYC
+      </button>
+    </div>
+  </section>
+
+  <form
+    *ngIf="!showRegistrationComplete"
+    class="kyc-form"
+    #kycForm="ngForm"
+    (ngSubmit)="submitKycWallet()"
+  >
+    <section class="form-card storage-mode-card">
+      <div class="section-title">
+        <h2>Storage Destination</h2>
+        <span>Select where this KYC customer should be stored.</span>
+      </div>
+
+      <div class="storage-options">
+        <label
+          class="storage-option"
+          [class.selected]="form.storageMode === 'POSTGRES_ONLY'"
+        >
+          <input
+            type="radio"
+            name="storageMode"
+            value="POSTGRES_ONLY"
+            [(ngModel)]="form.storageMode"
+            (change)="onStorageModeChange()"
+          />
+          <span class="storage-option-content">
+            <strong>PostgreSQL Only</strong>
+            <small>Save KYC data and uploaded documents. Do not create a Fabric wallet.</small>
+          </span>
+        </label>
+
+        <label
+          class="storage-option"
+          [class.selected]="form.storageMode === 'BLOCKCHAIN_ONLY'"
+        >
+          <input
+            type="radio"
+            name="storageMode"
+            value="BLOCKCHAIN_ONLY"
+            [(ngModel)]="form.storageMode"
+            (change)="onStorageModeChange()"
+          />
+          <span class="storage-option-content">
+            <strong>Blockchain Only</strong>
+            <small>Create the wallet on Fabric. Do not save KYC or wallet-login data in PostgreSQL.</small>
+          </span>
+        </label>
+
+        <label
+          class="storage-option recommended"
+          [class.selected]="form.storageMode === 'POSTGRES_AND_BLOCKCHAIN'"
+        >
+          <input
+            type="radio"
+            name="storageMode"
+            value="POSTGRES_AND_BLOCKCHAIN"
+            [(ngModel)]="form.storageMode"
+            (change)="onStorageModeChange()"
+          />
+          <span class="storage-option-content">
+            <strong>PostgreSQL + Blockchain</strong>
+            <small>Preserve the current complete KYC, wallet, login, and Fabric workflow.</small>
+          </span>
+          <em>Recommended</em>
+        </label>
+      </div>
+
+      <div class="mode-warning" *ngIf="form.storageMode === 'BLOCKCHAIN_ONLY'">
+        Blockchain-only wallets are not available to the current PostgreSQL-backed wallet login.
+        Uploaded files are not sent or retained in this mode.
+      </div>
+    </section>
+    <section class="form-card">
+      <div class="section-title">
+        <h2>1. Customer Identity</h2>
+        <span>Customer ID is generated from database sequence and countries are loaded from reference APIs.</span>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Customer ID <span>*</span></label>
+          <div class="inline-control">
+            <input
+              type="text"
+              name="customerId"
+              [(ngModel)]="form.customerId"
+              readonly
+              required
+            />
+            <button type="button" class="btn btn-light" (click)="generateCustomerId()">
+              Generate
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Full Name <span>*</span></label>
+          <input
+            type="text"
+            name="fullName"
+            [(ngModel)]="form.fullName"
+            placeholder="Enter customer full name"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Nationality <span>*</span></label>
+          <select name="nationality" [(ngModel)]="form.nationality" required>
+            <option value="">Select nationality</option>
+            <option *ngFor="let country of countries" [value]="country.couName">
+              {{ country.couName }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Country Of Residence <span>*</span></label>
+          <select name="countryOfResidence" [(ngModel)]="form.countryOfResidence" required>
+            <option value="">Select country</option>
+            <option *ngFor="let country of countries" [value]="country.couName">
+              {{ country.couName }}
+            </option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <section class="form-card">
+      <div class="section-title">
+        <h2>2. Contact &amp; Identity</h2>
+        <span>Store sensitive identifiers as hashes only.</span>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Mobile <span>*</span></label>
+          <input
+            type="text"
+            name="mobileHash"
+            [(ngModel)]="form.mobileHash"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Email <span>*</span></label>
+          <input
+            type="text"
+            name="emailHash"
+            [(ngModel)]="form.emailHash"
+            required
+          />
+        </div>
+
+
+      </div>
+    </section>
+
+    <section class="form-card">
+      <div class="section-title">
+        <h2>3. Organization Details</h2>
+        <span>Organization ID and code are auto-filled from the selected organization.</span>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Organization Type <span>*</span></label>
+          <select
+            name="organizationType"
+            [(ngModel)]="form.organizationType"
+            (change)="onOrganizationTypeChange()"
+            required
+          >
+            <option value="">Select organization type</option>
+            <option *ngFor="let type of organizationTypes" [value]="type">
+              {{ type }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Organization <span>*</span></label>
+          <select
+            name="organization"
+            [(ngModel)]="form.organization"
+            (change)="onOrganizationChange()"
+            required
+          >
+            <option value="">Select organization</option>
+            <option
+              *ngFor="let organization of filteredOrganizations"
+              [value]="organization.organizationName"
+            >
+              {{ organization.organizationName }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Organization ID</label>
+          <input
+            type="text"
+            name="organizationId"
+            [(ngModel)]="form.organizationId"
+            readonly
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Organization Code</label>
+          <input
+            type="text"
+            name="organizationCode"
+            [(ngModel)]="form.organizationCode"
+            readonly
+          />
+        </div>
+      </div>
+    </section>
+
+    <section class="form-card">
+      <div class="section-title">
+        <h2>4. Residential Address</h2>
+        <span>Proof of address can be uploaded as a file.</span>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>City</label>
+          <input type="text" name="city" [(ngModel)]="form.city" />
+        </div>
+
+        <div class="form-group">
+          <label>Area</label>
+          <input type="text" name="area" [(ngModel)]="form.area" />
+        </div>
+
+        <div class="form-group">
+          <label>Address</label>
+          <input type="text" name="addressHash" [(ngModel)]="form.addressHash" />
+        </div>
+
+        <div class="form-group" *ngIf="storesInPostgres()">
+          <label>Proof Of Address</label>
+          <input
+            type="file"
+            name="proofOfAddressFile"
+            accept=".pdf,.jpg,.jpeg,.png"
+            (change)="onProofOfAddressFileChange($event)"
+          />
+        </div>
+      </div>
+    </section>
+
+    <section class="form-card">
+      <div class="section-title">
+        <h2>5. Profession &amp; Source Of Funds</h2>
+        <span>Values are loaded from enterprise reference tables.</span>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Source Of Funds <span>*</span></label>
+          <select name="sourceOfFunds" [(ngModel)]="form.sourceOfFunds" required>
+            <option value="">Select source of funds</option>
+            <option *ngFor="let item of sourceOfFundsList" [value]="item.name">
+              {{ item.name }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Occupation <span>*</span></label>
+          <select name="occupation" [(ngModel)]="form.occupation" required>
+            <option value="">Select occupation</option>
+            <option *ngIf="occupations.length === 0" value="" disabled>
+              No occupations available
+            </option>
+            <option *ngFor="let item of occupations" [value]="item.name">
+              {{ item.name }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Employment Sector <span>*</span></label>
+          <select name="employmentSector" [(ngModel)]="form.employmentSector" required>
+            <option value="">Select employment sector</option>
+            <option *ngFor="let item of employmentSectors" [value]="item.name">
+              {{ item.name }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Monthly Income</label>
+          <input
+            type="number"
+            name="monthlyIncome"
+            [(ngModel)]="form.monthlyIncome"
+            min="0"
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Expected Monthly Transaction Volume</label>
+          <input
+            type="number"
+            name="expectedMonthlyTransactionVolume"
+            [(ngModel)]="form.expectedMonthlyTransactionVolume"
+            min="0"
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Expected Cash Transactions</label>
+          <input
+            type="number"
+            name="expectedCashTransactions"
+            [(ngModel)]="form.expectedCashTransactions"
+            min="0"
+          />
+        </div>
+      </div>
+    </section>
+
+    <section class="form-card" *ngIf="storesInBlockchain()">
+      <div class="section-title">
+        <h2>6. Wallet Details</h2>
+        <span>This KYC screen creates a CUSTOMER wallet. Party Type Code is fixed to 7.</span>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Wallet Type <span>*</span></label>
+          <select
+            name="walletType"
+            [(ngModel)]="form.walletType"
+            (change)="onWalletTypeChange()"
+            required
+          >
+            <option *ngFor="let type of walletTypes" [value]="type">
+              {{ type }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Party Type Code</label>
+          <input
+            type="number"
+            name="partyTypeCode"
+            [(ngModel)]="form.partyTypeCode"
+            readonly
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Wallet Status <span>*</span></label>
+          <select name="walletStatus" [(ngModel)]="form.walletStatus" required>
+            <option *ngFor="let status of walletStatuses" [value]="status">
+              {{ status }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Initial Balance</label>
+          <input
+            type="number"
+            name="initialBalance"
+            [(ngModel)]="form.initialBalance"
+            min="0"
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Currency Code</label>
+          <select name="currencyCode" [(ngModel)]="form.currencyCode">
+            <option *ngFor="let currency of currencies" [value]="currency">
+              {{ currency }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Daily Transfer Limit</label>
+          <input
+            type="number"
+            name="dailyTransferLimit"
+            [(ngModel)]="form.dailyTransferLimit"
+            min="0"
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Monthly Transfer Limit</label>
+          <input
+            type="number"
+            name="monthlyTransferLimit"
+            [(ngModel)]="form.monthlyTransferLimit"
+            min="0"
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Generated Password</label>
+          <div class="inline-control">
+            <input
+              type="text"
+              name="generatedPassword"
+              [(ngModel)]="form.generatedPassword"
+              readonly
+            />
+            <button type="button" class="btn btn-light" (click)="regeneratePassword()">
+              Regenerate
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="form-card">
+      <div class="section-title">
+        <h2>7. Legal Document Proof</h2>
+        <span>Document verification status was removed as requested.</span>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Legal Document Type <span>*</span></label>
+          <select name="legalDocumentType" [(ngModel)]="form.legalDocumentType" required>
+            <option *ngFor="let type of documentTypes" [value]="type">
+              {{ type }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Legal ID Number</label>
+          <input
+            type="text"
+            name="legalIdNumberHash"
+            [(ngModel)]="form.legalIdNumberHash"
+          />
+        </div>
+
+        <div class="form-group" *ngIf="storesInPostgres()">
+          <label>Document File</label>
+          <input
+            type="file"
+            name="documentFile"
+            accept=".pdf,.jpg,.jpeg,.png"
+            (change)="onDocumentFileChange($event)"
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Document Expiry Date</label>
+          <input
+            type="date"
+            name="documentExpiryDate"
+            [(ngModel)]="form.documentExpiryDate"
+          />
+        </div>
+      </div>
+    </section>
+
+    <section class="payload-card">
+      <div class="section-title">
+        <h2>8. Generated API Payload Preview</h2>
+        <span>This payload will be sent to the existing KYC backend route using the selected storage mode.</span>
+      </div>
+
+      <pre>{{ buildPayload() | json }}</pre>
+    </section>
+
+    <div class="submit-row">
+      <button
+        type="submit"
+        class="btn btn-primary"
+        [disabled]="loading || kycForm.invalid"
+      >
+        {{ getSubmitButtonText() }}
+      </button>
+    </div>
+  </form>
+</div>

@@ -1,0 +1,395 @@
+table_schema	table_name	ordinal_position	column_name	data_type	udt_name	is_nullable	column_default	character_maximum_length
+blockchain	aml_wallet_risk_profiles	1	wallet_address	character varying	varchar	NO		255
+blockchain	aml_wallet_risk_profiles	2	customer_id	character varying	varchar	YES		100
+blockchain	aml_wallet_risk_profiles	3	risk_level	character varying	varchar	YES	'LOW'::character varying	20
+blockchain	aml_wallet_risk_profiles	4	risk_score	integer	int4	YES	0	
+blockchain	aml_wallet_risk_profiles	5	last_review_date	timestamp without time zone	timestamp	YES		
+blockchain	aml_wallet_risk_profiles	6	notes	text	text	YES		
+blockchain	aml_wallet_risk_profiles	7	created_at	timestamp without time zone	timestamp	YES	now()	
+blockchain	aml_wallet_risk_profiles	8	updated_at	timestamp without time zone	timestamp	YES	now()	
+blockchain	aml_wallet_risk_profiles	9	is_blacklisted	boolean	bool	NO	false	
+blockchain	aml_wallet_risk_profiles	10	country_code	character varying	varchar	YES		10
+blockchain	aml_wallet_risk_profiles	11	occupation_code	character varying	varchar	YES		100
+blockchain	aml_wallet_risk_profiles	12	source_of_funds_code	character varying	varchar	YES		100
+blockchain	aml_wallet_risk_profiles	13	is_pep	boolean	bool	NO	false	
+blockchain	aml_wallet_risk_profiles	14	is_sanctioned	boolean	bool	NO	false	
+blockchain	aml_wallet_risk_profiles	15	last_transaction_at	timestamp without time zone	timestamp	YES		
+blockchain	aml_wallet_risk_profiles	16	created_by	character varying	varchar	YES		100
+blockchain	aml_wallet_risk_profiles	17	updated_by	character varying	varchar	YES		100
+blockchain	blockchain_kyc_wallet_requests	1	request_id	uuid	uuid	NO	gen_random_uuid()	
+blockchain	blockchain_kyc_wallet_requests	2	customer_id	character varying	varchar	NO		50
+blockchain	blockchain_kyc_wallet_requests	3	nationality	character varying	varchar	YES		200
+blockchain	blockchain_kyc_wallet_requests	4	country_of_residence	character varying	varchar	YES		200
+blockchain	blockchain_kyc_wallet_requests	5	mobile_hash	text	text	YES		
+blockchain	blockchain_kyc_wallet_requests	6	email_hash	text	text	YES		
+blockchain	blockchain_kyc_wallet_requests	7	national_id_hash	text	text	YES		
+blockchain	blockchain_kyc_wallet_requests	8	organization_type	character varying	varchar	YES		100
+blockchain	blockchain_kyc_wallet_requests	9	organization_id	uuid	uuid	YES		
+blockchain	blockchain_kyc_wallet_requests	10	organization_code	character varying	varchar	YES		100
+blockchain	blockchain_kyc_wallet_requests	11	organization_name	character varying	varchar	YES		255
+blockchain	blockchain_kyc_wallet_requests	12	city	character varying	varchar	YES		200
+blockchain	blockchain_kyc_wallet_requests	13	area	character varying	varchar	YES		200
+blockchain	blockchain_kyc_wallet_requests	14	address_hash	text	text	YES		
+blockchain	blockchain_kyc_wallet_requests	15	proof_of_address_file_name	text	text	YES		
+blockchain	blockchain_kyc_wallet_requests	16	proof_of_address_file_path	text	text	YES		
+blockchain	blockchain_kyc_wallet_requests	17	source_of_funds	character varying	varchar	YES		255
+blockchain	blockchain_kyc_wallet_requests	18	occupation	character varying	varchar	YES		255
+blockchain	blockchain_kyc_wallet_requests	19	employment_sector	character varying	varchar	YES		255
+blockchain	blockchain_kyc_wallet_requests	20	monthly_income	numeric	numeric	YES		
+blockchain	blockchain_kyc_wallet_requests	21	expected_monthly_transaction_volume	numeric	numeric	YES		
+blockchain	blockchain_kyc_wallet_requests	22	expected_cash_transactions	numeric	numeric	YES		
+blockchain	blockchain_kyc_wallet_requests	23	wallet_type	character varying	varchar	YES		50
+blockchain	blockchain_kyc_wallet_requests	24	party_type_code	integer	int4	YES		
+blockchain	blockchain_kyc_wallet_requests	25	wallet_status	character varying	varchar	YES		50
+blockchain	blockchain_kyc_wallet_requests	26	initial_balance	numeric	numeric	YES		
+blockchain	blockchain_kyc_wallet_requests	27	currency_code	character varying	varchar	YES		10
+blockchain	blockchain_kyc_wallet_requests	28	daily_transfer_limit	numeric	numeric	YES		
+blockchain	blockchain_kyc_wallet_requests	29	monthly_transfer_limit	numeric	numeric	YES		
+blockchain	blockchain_kyc_wallet_requests	30	legal_document_type	character varying	varchar	YES		100
+blockchain	blockchain_kyc_wallet_requests	31	legal_id_number_hash	text	text	YES		
+blockchain	blockchain_kyc_wallet_requests	32	document_file_name	text	text	YES		
+blockchain	blockchain_kyc_wallet_requests	33	document_file_path	text	text	YES		
+blockchain	blockchain_kyc_wallet_requests	34	document_expiry_date	date	date	YES		
+blockchain	blockchain_kyc_wallet_requests	35	created_at	timestamp without time zone	timestamp	YES	now()	
+blockchain	blockchain_kyc_wallet_requests	36	wallet_address	character varying	varchar	YES		150
+blockchain	blockchain_kyc_wallet_requests	37	ledger_reference	character varying	varchar	YES		255
+blockchain	blockchain_kyc_wallet_requests	38	blockchain_tx_id	character varying	varchar	YES		255
+blockchain	blockchain_kyc_wallet_requests	39	request_status	character varying	varchar	YES	'CREATED'::character varying	50
+blockchain	blockchain_kyc_wallet_requests	40	error_message	text	text	YES		
+blockchain	blockchain_kyc_wallet_requests	41	updated_at	timestamp without time zone	timestamp	YES	now()	
+blockchain	blockchain_organization	1	organization_code	character varying	varchar	NO		100
+blockchain	blockchain_organization	2	organization_name	character varying	varchar	NO		255
+blockchain	blockchain_organization	3	organization_type	character varying	varchar	NO		50
+blockchain	blockchain_organization	4	registration_number	character varying	varchar	YES		100
+blockchain	blockchain_organization	5	country_code	character varying	varchar	YES		10
+blockchain	blockchain_organization	6	status	character varying	varchar	YES		50
+blockchain	blockchain_organization	7	ledger_tx_id	character varying	varchar	YES		150
+blockchain	blockchain_organization	8	created_at	timestamp without time zone	timestamp	NO	now()	
+blockchain	blockchain_organization	9	updated_at	timestamp without time zone	timestamp	NO	now()	
+blockchain	blockchain_organization	10	organization_id	uuid	uuid	NO	gen_random_uuid()	
+blockchain	blockchain_organization	11	organization_id_uuid	uuid	uuid	YES	gen_random_uuid()	
+blockchain	blockchain_organization	12	organization_type_id	numeric	numeric	YES		
+blockchain	blockchain_organization_mapping	1	mapping_id	uuid	uuid	NO	gen_random_uuid()	
+blockchain	blockchain_organization_mapping	2	blockchain_organization_id	character varying	varchar	NO		100
+blockchain	blockchain_organization_mapping	3	source_organization_id	character varying	varchar	NO		100
+blockchain	blockchain_organization_mapping	4	organization_code	character varying	varchar	YES		100
+blockchain	blockchain_organization_mapping	5	organization_name	character varying	varchar	YES		255
+blockchain	blockchain_organization_mapping	6	organization_type	character varying	varchar	YES	'BANK'::character varying	50
+blockchain	blockchain_organization_mapping	7	mapping_status	character varying	varchar	NO	'ACTIVE'::character varying	30
+blockchain	blockchain_organization_mapping	8	created_at	timestamp without time zone	timestamp	NO	CURRENT_TIMESTAMP	
+blockchain	blockchain_organization_mapping	9	updated_at	timestamp without time zone	timestamp	NO	CURRENT_TIMESTAMP	
+blockchain	blockchain_organization_mapping	10	created_by	character varying	varchar	YES	CURRENT_USER	100
+blockchain	blockchain_organization_mapping	11	updated_by	character varying	varchar	YES		100
+blockchain	blockchain_wallet_balance	1	wallet_address	character varying	varchar	NO		100
+blockchain	blockchain_wallet_balance	2	organization_id	character varying	varchar	NO		100
+blockchain	blockchain_wallet_balance	3	currency	character varying	varchar	NO		10
+blockchain	blockchain_wallet_balance	4	available_balance	numeric	numeric	NO	0	
+blockchain	blockchain_wallet_balance	5	blocked_balance	numeric	numeric	NO	0	
+blockchain	blockchain_wallet_balance	6	total_balance	numeric	numeric	NO	0	
+blockchain	blockchain_wallet_balance	7	last_transaction_id	character varying	varchar	YES		150
+blockchain	blockchain_wallet_balance	8	last_ledger_tx_id	character varying	varchar	YES		150
+blockchain	blockchain_wallet_balance	9	last_updated_at	timestamp without time zone	timestamp	NO	now()	
+blockchain	blockchain_wallet_integration	1	wallet_id	uuid	uuid	NO	gen_random_uuid()	
+blockchain	blockchain_wallet_integration	2	wallet_address	character varying	varchar	NO		150
+blockchain	blockchain_wallet_integration	3	blockchain_customer_id	character varying	varchar	NO		100
+blockchain	blockchain_wallet_integration	4	blockchain_organization_id	character varying	varchar	YES		100
+blockchain	blockchain_wallet_integration	5	customer_name	character varying	varchar	YES		255
+blockchain	blockchain_wallet_integration	6	wallet_status	character varying	varchar	NO	'ACTIVE'::character varying	30
+blockchain	blockchain_wallet_integration	7	current_balance	numeric	numeric	NO	0	
+blockchain	blockchain_wallet_integration	8	currency_code	character varying	varchar	NO	'TOKEN'::character varying	10
+blockchain	blockchain_wallet_integration	9	fabric_channel_name	character varying	varchar	YES		100
+blockchain	blockchain_wallet_integration	10	chaincode_name	character varying	varchar	YES		100
+blockchain	blockchain_wallet_integration	11	fabric_tx_id	character varying	varchar	YES		150
+blockchain	blockchain_wallet_integration	12	created_on_blockchain_at	timestamp without time zone	timestamp	YES		
+blockchain	blockchain_wallet_integration	13	synced_to_postgres_at	timestamp without time zone	timestamp	NO	CURRENT_TIMESTAMP	
+blockchain	blockchain_wallet_integration	14	created_at	timestamp without time zone	timestamp	NO	CURRENT_TIMESTAMP	
+blockchain	blockchain_wallet_integration	15	updated_at	timestamp without time zone	timestamp	NO	CURRENT_TIMESTAMP	
+blockchain	blockchain_wallet_integration	16	customer_id	text	text	YES		
+blockchain	government_ministry_wallets	1	wallet_id	uuid	uuid	NO	gen_random_uuid()	
+blockchain	government_ministry_wallets	2	ministry_id	uuid	uuid	NO		
+blockchain	government_ministry_wallets	3	wallet_address	character varying	varchar	NO		150
+blockchain	government_ministry_wallets	4	wallet_currency	character varying	varchar	NO	'GOV'::character varying	10
+blockchain	government_ministry_wallets	5	wallet_initial_balance	numeric	numeric	NO	0	
+blockchain	government_ministry_wallets	6	wallet_current_balance	numeric	numeric	NO	0	
+blockchain	government_ministry_wallets	7	wallet_type	character varying	varchar	NO		80
+blockchain	government_ministry_wallets	8	wallet_status	character varying	varchar	NO	'PENDING'::character varying	80
+blockchain	government_ministry_wallets	9	blockchain_status	character varying	varchar	NO	'NOT_SUBMITTED'::character varying	80
+blockchain	government_ministry_wallets	10	ledger_reference	character varying	varchar	YES		150
+blockchain	government_ministry_wallets	11	tx_id	character varying	varchar	YES		150
+blockchain	government_ministry_wallets	12	created_at	timestamp without time zone	timestamp	NO	CURRENT_TIMESTAMP	
+blockchain	government_ministry_wallets	13	updated_at	timestamp without time zone	timestamp	NO	CURRENT_TIMESTAMP	
+blockchain	kyc_documents	1	id	bigint	int8	NO	nextval('blockchain.kyc_documents_id_seq'::regclass)	
+blockchain	kyc_documents	2	resident_id	character varying	varchar	NO		100
+blockchain	kyc_documents	3	resident_name	character varying	varchar	NO		255
+blockchain	kyc_documents	4	document_type	character varying	varchar	NO		100
+blockchain	kyc_documents	5	document_number	character varying	varchar	YES		150
+blockchain	kyc_documents	6	expiry_date	date	date	YES		
+blockchain	kyc_documents	7	file_name	character varying	varchar	NO		255
+blockchain	kyc_documents	8	original_file_name	character varying	varchar	NO		255
+blockchain	kyc_documents	9	file_path	text	text	NO		
+blockchain	kyc_documents	10	mime_type	character varying	varchar	YES		100
+blockchain	kyc_documents	11	file_size	bigint	int8	YES		
+blockchain	kyc_documents	12	kyc_status	character varying	varchar	NO	'Pending'::character varying	30
+blockchain	kyc_documents	13	rejection_reason	text	text	YES		
+blockchain	kyc_documents	14	uploaded_by	character varying	varchar	YES		150
+blockchain	kyc_documents	15	reviewed_by	character varying	varchar	YES		150
+blockchain	kyc_documents	16	reviewed_at	timestamp without time zone	timestamp	YES		
+blockchain	kyc_documents	17	created_at	timestamp without time zone	timestamp	YES	now()	
+blockchain	kyc_documents	18	updated_at	timestamp without time zone	timestamp	YES	now()	
+blockchain	kyc_hashes	1	customer_id	character varying	varchar	NO		50
+blockchain	kyc_hashes	2	hash	character varying	varchar	NO		64
+blockchain	kyc_records	1	kyc_id	bigint	int8	NO	nextval('blockchain.kyc_records_kyc_id_seq'::regclass)	
+blockchain	kyc_records	2	customer_id	bigint	int8	NO		
+blockchain	kyc_records	3	customer_def_id	bigint	int8	YES		
+blockchain	kyc_records	4	wallet_address	character varying	varchar	YES		255
+blockchain	kyc_records	5	first_name	character varying	varchar	NO		150
+blockchain	kyc_records	6	middle_name	character varying	varchar	YES		150
+blockchain	kyc_records	7	last_name	character varying	varchar	NO		150
+blockchain	kyc_records	8	date_of_birth	date	date	YES		
+blockchain	kyc_records	9	gender	character varying	varchar	YES		30
+blockchain	kyc_records	10	nationality	character varying	varchar	YES		10
+blockchain	kyc_records	11	country_of_birth	character varying	varchar	YES		10
+blockchain	kyc_records	12	country_of_residence	character varying	varchar	YES		10
+blockchain	kyc_records	13	email	character varying	varchar	YES		320
+blockchain	kyc_records	14	phone_number	character varying	varchar	YES		50
+blockchain	kyc_records	15	alternative_phone_number	character varying	varchar	YES		50
+blockchain	kyc_records	16	region	character varying	varchar	YES		150
+blockchain	kyc_records	17	caza	character varying	varchar	YES		150
+blockchain	kyc_records	18	city	character varying	varchar	YES		150
+blockchain	kyc_records	19	street_address	text	text	YES		
+blockchain	kyc_records	20	postal_code	character varying	varchar	YES		30
+blockchain	kyc_records	21	identification_type	character varying	varchar	YES		50
+blockchain	kyc_records	22	identification_number	character varying	varchar	YES		150
+blockchain	kyc_records	23	identification_expiry_date	date	date	YES		
+blockchain	kyc_records	24	bank_name	character varying	varchar	YES		255
+blockchain	kyc_records	25	kyc_status	character varying	varchar	NO	'PENDING'::character varying	30
+blockchain	kyc_records	26	risk_level	character varying	varchar	NO	'UNKNOWN'::character varying	30
+blockchain	kyc_records	27	notes	text	text	YES		
+blockchain	kyc_records	28	storage_mode	character varying	varchar	NO		40
+blockchain	kyc_records	29	hash_algorithm	character varying	varchar	YES		20
+blockchain	kyc_records	30	kyc_hash	character varying	varchar	YES		64
+blockchain	kyc_records	31	blockchain_status	character varying	varchar	NO	'NOT_REQUESTED'::character varying	30
+blockchain	kyc_records	32	blockchain_transaction_id	character varying	varchar	YES		255
+blockchain	kyc_records	33	blockchain_ledger_key	character varying	varchar	YES		500
+blockchain	kyc_records	34	blockchain_submitted_at	timestamp with time zone	timestamptz	YES		
+blockchain	kyc_records	35	blockchain_error	text	text	YES		
+blockchain	kyc_records	36	blockchain_retry_count	integer	int4	NO	0	
+blockchain	kyc_records	37	created_by	character varying	varchar	YES		255
+blockchain	kyc_records	38	created_at	timestamp with time zone	timestamptz	NO	now()	
+blockchain	kyc_records	39	updated_at	timestamp with time zone	timestamptz	NO	now()	
+blockchain	kyc_requests	1	id	integer	int4	NO	nextval('blockchain.kyc_requests_id_seq'::regclass)	
+blockchain	kyc_requests	2	request_id	text	text	NO		
+blockchain	kyc_requests	3	first_name	text	text	YES		
+blockchain	kyc_requests	4	last_name	text	text	YES		
+blockchain	kyc_requests	5	national_id	text	text	YES		
+blockchain	kyc_requests	6	date_of_birth	date	date	YES		
+blockchain	kyc_requests	7	nationality	text	text	YES		
+blockchain	kyc_requests	8	email	text	text	YES		
+blockchain	kyc_requests	9	phone	text	text	YES		
+blockchain	kyc_requests	10	address	text	text	YES		
+blockchain	kyc_requests	11	wallet_address	text	text	YES		
+blockchain	kyc_requests	12	otp	text	text	YES		
+blockchain	kyc_requests	13	mnemonic	text	text	YES		
+blockchain	kyc_requests	14	fabric_customer_id	bigint	int8	YES		
+blockchain	kyc_requests	15	created_at	timestamp without time zone	timestamp	YES	now()	
+blockchain	kyc_statuses	1	kyc_status_id	bigint	int8	NO	nextval('blockchain.kyc_statuses_kyc_status_id_seq'::regclass)	
+blockchain	kyc_statuses	2	status_code	character varying	varchar	NO		50
+blockchain	kyc_statuses	3	status_name	character varying	varchar	NO		100
+blockchain	kyc_statuses	4	arabic_name	character varying	varchar	YES		100
+blockchain	kyc_statuses	5	is_active	boolean	bool	YES	true	
+blockchain	kyc_statuses	6	sort_order	integer	int4	YES	1	
+blockchain	kyc_statuses	7	created_at	timestamp without time zone	timestamp	YES	CURRENT_TIMESTAMP	
+blockchain	kyc_statuses	8	updated_at	timestamp without time zone	timestamp	YES	CURRENT_TIMESTAMP	
+blockchain	organizations	1	organization_id	uuid	uuid	NO	gen_random_uuid()	
+blockchain	organizations	2	organization_code	character varying	varchar	NO		100
+blockchain	organizations	3	organization_name	character varying	varchar	NO		255
+blockchain	organizations	4	organization_type	character varying	varchar	NO		50
+blockchain	organizations	5	fabric_org_msp_id	character varying	varchar	YES		100
+blockchain	organizations	6	fabric_org_name	character varying	varchar	YES		150
+blockchain	organizations	7	external_system_code	character varying	varchar	YES		100
+blockchain	organizations	8	external_organization_id	character varying	varchar	YES		150
+blockchain	organizations	9	country_code	character varying	varchar	YES		10
+blockchain	organizations	10	registration_number	character varying	varchar	YES		150
+blockchain	organizations	11	tax_number	character varying	varchar	YES		150
+blockchain	organizations	12	status	character varying	varchar	NO	'ACTIVE'::character varying	30
+blockchain	organizations	13	metadata	jsonb	jsonb	NO	'{}'::jsonb	
+blockchain	organizations	14	api_payload	jsonb	jsonb	NO	'{}'::jsonb	
+blockchain	organizations	15	blockchain_payload	jsonb	jsonb	NO	'{}'::jsonb	
+blockchain	organizations	16	created_by	character varying	varchar	YES	CURRENT_USER	150
+blockchain	organizations	17	updated_by	character varying	varchar	YES		150
+blockchain	organizations	18	created_at	timestamp with time zone	timestamptz	NO	CURRENT_TIMESTAMP	
+blockchain	organizations	19	updated_at	timestamp with time zone	timestamptz	NO	CURRENT_TIMESTAMP	
+blockchain	ref_wallet_statuses	1	wallet_status_id	bigint	int8	NO	nextval('blockchain.ref_wallet_statuses_wallet_status_id_seq'::regclass)	
+blockchain	ref_wallet_statuses	2	wallet_status_code	character varying	varchar	NO		100
+blockchain	ref_wallet_statuses	3	wallet_status_name	character varying	varchar	NO		150
+blockchain	ref_wallet_statuses	4	description	text	text	YES		
+blockchain	ref_wallet_statuses	5	is_active	boolean	bool	NO	true	
+blockchain	ref_wallet_statuses	6	display_order	integer	int4	NO	1	
+blockchain	ref_wallet_statuses	7	created_at	timestamp without time zone	timestamp	NO	CURRENT_TIMESTAMP	
+blockchain	resident_kyc	1	id	bigint	int8	NO	nextval('blockchain.resident_kyc_id_seq'::regclass)	
+blockchain	resident_kyc	2	resident_id	character varying	varchar	NO		80
+blockchain	resident_kyc	3	kyc_status	character varying	varchar	NO	'Draft'::character varying	50
+blockchain	resident_kyc	4	risk_category	character varying	varchar	NO	'Low'::character varying	50
+blockchain	resident_kyc	5	submitted_at	timestamp without time zone	timestamp	YES		
+blockchain	resident_kyc	6	reviewed_at	timestamp without time zone	timestamp	YES		
+blockchain	resident_kyc	7	reviewed_by	character varying	varchar	YES		150
+blockchain	resident_kyc	8	rejection_reason	text	text	YES		
+blockchain	resident_kyc	9	created_at	timestamp without time zone	timestamp	YES	CURRENT_TIMESTAMP	
+blockchain	resident_kyc	10	updated_at	timestamp without time zone	timestamp	YES	CURRENT_TIMESTAMP	
+blockchain	resident_wallets	1	id	bigint	int8	NO	nextval('blockchain.resident_wallets_id_seq'::regclass)	
+blockchain	resident_wallets	2	resident_id	character varying	varchar	NO		80
+blockchain	resident_wallets	3	wallet_address	character varying	varchar	NO		200
+blockchain	resident_wallets	4	wallet_currency	character varying	varchar	YES	'GOV'::character varying	20
+blockchain	resident_wallets	5	wallet_status	character varying	varchar	YES	'Active'::character varying	50
+blockchain	resident_wallets	6	blockchain_status	character varying	varchar	YES	'PENDING'::character varying	50
+blockchain	resident_wallets	7	fabric_tx_id	character varying	varchar	YES		200
+blockchain	resident_wallets	8	created_at	timestamp without time zone	timestamp	YES	CURRENT_TIMESTAMP	
+blockchain	resident_wallets	9	updated_at	timestamp without time zone	timestamp	YES	CURRENT_TIMESTAMP	
+blockchain	resident_wallets	10	wallet_password_hash	character varying	varchar	YES		255
+blockchain	resident_wallets	11	wallet_password_salt	character varying	varchar	YES		255
+blockchain	resident_wallets	12	wallet_password_updated_at	timestamp without time zone	timestamp	YES		
+blockchain	resident_wallets	13	last_login_at	timestamp without time zone	timestamp	YES		
+blockchain	resident_wallets	14	wallet_balance	numeric	numeric	NO	0	
+blockchain	valoores_customer_kyc	1	source_system	text	text	YES		
+blockchain	valoores_customer_kyc	2	source_entity	text	text	YES		
+blockchain	valoores_customer_kyc	3	source_record_id	text	text	YES		
+blockchain	valoores_customer_kyc	4	business_reference	text	text	YES		
+blockchain	valoores_customer_kyc	5	record_type	text	text	YES		
+blockchain	valoores_customer_kyc	6	record_status	text	text	YES		
+blockchain	valoores_customer_kyc	7	standardized_event_timestamp	text	text	YES		
+blockchain	valoores_customer_kyc	8	proof_version	text	text	YES		
+blockchain	valoores_customer_kyc	9	hash_input	text	text	YES		
+blockchain	valoores_customer_kyc	10	source_module	text	text	YES		
+blockchain	valoores_customer_kyc	11	customer_id	text	text	YES		
+blockchain	valoores_customer_kyc	12	customer_def_id	text	text	YES		
+blockchain	valoores_customer_kyc	13	object_id	text	text	YES		
+blockchain	valoores_customer_kyc	14	object_pk_value	text	text	YES		
+blockchain	valoores_customer_kyc	15	customer_status_code	text	text	YES		
+blockchain	valoores_customer_kyc	16	customer_status_date	text	text	YES		
+blockchain	valoores_customer_kyc	17	party_id	text	text	YES		
+blockchain	valoores_customer_kyc	18	party_type_code	text	text	YES		
+blockchain	valoores_customer_kyc	19	party_sub_type_code	text	text	YES		
+blockchain	valoores_customer_kyc	20	customer_nature_code	text	text	YES		
+blockchain	valoores_customer_kyc	21	is_valid_flag	text	text	YES		
+blockchain	valoores_customer_kyc	22	is_displayed_flag	text	text	YES		
+blockchain	valoores_customer_kyc	23	data_source_code	text	text	YES		
+blockchain	valoores_customer_kyc	24	business_group_id	text	text	YES		
+blockchain	valoores_customer_kyc	25	currency_id	text	text	YES		
+blockchain	valoores_customer_kyc	26	language_id	text	text	YES		
+blockchain	valoores_customer_kyc	27	society_id	text	text	YES		
+blockchain	valoores_customer_kyc	28	customer_profile_fingerprint	text	text	YES		
+blockchain	valoores_customer_kyc	29	kyc_object_fingerprint	text	text	YES		
+blockchain	valoores_customer_kyc	30	customer_creation_date	text	text	YES		
+blockchain	valoores_customer_kyc	31	customer_update_date	text	text	YES		
+blockchain	valoores_customer_kyc	32	last_update_date	text	text	YES		
+blockchain	valoores_customer_kyc	33	last_extraction_date	text	text	YES		
+blockchain	valoores_customer_kyc	34	kyc_creation_date	text	text	YES		
+blockchain	valoores_customer_kyc	35	kyc_update_date	text	text	YES		
+blockchain	valoores_customer_kyc	36	hash_md5	text	text	YES		
+blockchain	valoores_customer_kyc_legacy_20260703	1	source_module	text	text	YES		
+blockchain	valoores_customer_kyc_legacy_20260703	2	source_record_id	text	text	YES		
+blockchain	valoores_customer_kyc_legacy_20260703	3	customer_id	text	text	YES		
+blockchain	valoores_customer_kyc_legacy_20260703	4	customer_def_id	text	text	YES		
+blockchain	valoores_customer_kyc_legacy_20260703	5	object_id	text	text	YES		
+blockchain	valoores_customer_kyc_legacy_20260703	6	object_pk_value	text	text	YES		
+blockchain	valoores_customer_kyc_legacy_20260703	7	customer_status_code	text	text	YES		
+blockchain	valoores_customer_kyc_legacy_20260703	8	customer_status_date	text	text	YES		
+blockchain	valoores_customer_kyc_legacy_20260703	9	party_id	text	text	YES		
+blockchain	valoores_customer_kyc_legacy_20260703	10	party_type_code	text	text	YES		
+blockchain	valoores_customer_kyc_legacy_20260703	11	party_sub_type_code	text	text	YES		
+blockchain	valoores_customer_kyc_legacy_20260703	12	customer_nature_code	text	text	YES		
+blockchain	valoores_customer_kyc_legacy_20260703	13	is_valid_flag	text	text	YES		
+blockchain	valoores_customer_kyc_legacy_20260703	14	is_displayed_flag	text	text	YES		
+blockchain	valoores_customer_kyc_legacy_20260703	15	data_source_code	text	text	YES		
+blockchain	valoores_customer_kyc_legacy_20260703	16	business_group_id	text	text	YES		
+blockchain	valoores_customer_kyc_legacy_20260703	17	currency_id	text	text	YES		
+blockchain	valoores_customer_kyc_legacy_20260703	18	language_id	text	text	YES		
+blockchain	valoores_customer_kyc_legacy_20260703	19	society_id	text	text	YES		
+blockchain	valoores_customer_kyc_legacy_20260703	20	customer_profile_fingerprint	text	text	YES		
+blockchain	valoores_customer_kyc_legacy_20260703	21	kyc_object_fingerprint	text	text	YES		
+blockchain	valoores_customer_kyc_legacy_20260703	22	customer_creation_date	text	text	YES		
+blockchain	valoores_customer_kyc_legacy_20260703	23	customer_update_date	text	text	YES		
+blockchain	valoores_customer_kyc_legacy_20260703	24	last_update_date	text	text	YES		
+blockchain	valoores_customer_kyc_legacy_20260703	25	last_extraction_date	text	text	YES		
+blockchain	valoores_customer_kyc_legacy_20260703	26	kyc_creation_date	text	text	YES		
+blockchain	valoores_customer_kyc_legacy_20260703	27	kyc_update_date	text	text	YES		
+blockchain	valoores_customer_kyc_legacy_20260703	28	hash_input	text	text	YES		
+blockchain	valoores_customer_kyc_legacy_20260703	29	hash_md5	text	text	YES		
+blockchain	vw_blockchain_customer_wallet	1	mapping_id	uuid	uuid	YES		
+blockchain	vw_blockchain_customer_wallet	2	blockchain_customer_id	character varying	varchar	YES		100
+blockchain	vw_blockchain_customer_wallet	3	source_customer_id	character varying	varchar	YES		100
+blockchain	vw_blockchain_customer_wallet	4	wallet_address	character varying	varchar	YES		150
+blockchain	vw_blockchain_customer_wallet	5	mapping_status	character varying	varchar	YES		30
+blockchain	vw_blockchain_customer_wallet	6	customer_name	character varying	varchar	YES		255
+blockchain	vw_blockchain_customer_wallet	7	blockchain_organization_id	character varying	varchar	YES		100
+blockchain	vw_blockchain_customer_wallet	8	wallet_status	character varying	varchar	YES		30
+blockchain	vw_blockchain_customer_wallet	9	current_balance	numeric	numeric	YES		
+blockchain	vw_blockchain_customer_wallet	10	currency_code	character varying	varchar	YES		10
+blockchain	vw_blockchain_customer_wallet	11	fabric_channel_name	character varying	varchar	YES		100
+blockchain	vw_blockchain_customer_wallet	12	chaincode_name	character varying	varchar	YES		100
+blockchain	vw_blockchain_customer_wallet	13	fabric_tx_id	character varying	varchar	YES		150
+blockchain	vw_blockchain_customer_wallet	14	created_on_blockchain_at	timestamp without time zone	timestamp	YES		
+blockchain	vw_blockchain_customer_wallet	15	synced_to_postgres_at	timestamp without time zone	timestamp	YES		
+blockchain	wallet_statuses	1	wallet_status_id	uuid	uuid	NO	gen_random_uuid()	
+blockchain	wallet_statuses	2	wallet_status_code	character varying	varchar	NO		80
+blockchain	wallet_statuses	3	wallet_status_name	character varying	varchar	NO		150
+blockchain	wallet_statuses	4	wallet_status_description	text	text	YES		
+blockchain	wallet_statuses	5	is_active	boolean	bool	NO	true	
+blockchain	wallet_statuses	6	created_at	timestamp without time zone	timestamp	NO	CURRENT_TIMESTAMP	
+blockchain	wallet_statuses	7	updated_at	timestamp without time zone	timestamp	NO	CURRENT_TIMESTAMP	
+blockchain	wallet_types	1	wallet_type_id	uuid	uuid	NO	gen_random_uuid()	
+blockchain	wallet_types	2	wallet_type_code	character varying	varchar	NO		80
+blockchain	wallet_types	3	wallet_type_name	character varying	varchar	NO		150
+blockchain	wallet_types	4	wallet_type_description	text	text	YES		
+blockchain	wallet_types	5	is_active	boolean	bool	NO	true	
+blockchain	wallet_types	6	created_at	timestamp without time zone	timestamp	NO	CURRENT_TIMESTAMP	
+blockchain	wallet_types	7	updated_at	timestamp without time zone	timestamp	NO	CURRENT_TIMESTAMP	
+blockchain	wallets	1	wallet_id	uuid	uuid	NO	gen_random_uuid()	
+blockchain	wallets	2	wallet_address	character varying	varchar	NO		100
+blockchain	wallets	3	customer_id	character varying	varchar	NO		150
+blockchain	wallets	4	organization_id	uuid	uuid	YES		
+blockchain	wallets	5	organization_code	character varying	varchar	YES		100
+blockchain	wallets	6	wallet_type	character varying	varchar	NO	'CUSTOMER'::character varying	50
+blockchain	wallets	7	full_name	character varying	varchar	YES		255
+blockchain	wallets	8	national_id_hash	character varying	varchar	YES		255
+blockchain	wallets	9	mobile_hash	character varying	varchar	YES		255
+blockchain	wallets	10	email_hash	character varying	varchar	YES		255
+blockchain	wallets	11	password_hash_reference	character varying	varchar	YES		255
+blockchain	wallets	12	ledger_doc_type	character varying	varchar	YES	'wallet'::character varying	100
+blockchain	wallets	13	ledger_key	character varying	varchar	YES		255
+blockchain	wallets	14	fabric_tx_id	character varying	varchar	YES		255
+blockchain	wallets	15	fabric_channel_name	character varying	varchar	YES		150
+blockchain	wallets	16	chaincode_name	character varying	varchar	YES		150
+blockchain	wallets	17	current_balance	numeric	numeric	NO	0	
+blockchain	wallets	18	currency_code	character varying	varchar	NO	'USD'::character varying	10
+blockchain	wallets	19	status	character varying	varchar	NO	'ACTIVE'::character varying	30
+blockchain	wallets	20	kyc_status	character varying	varchar	NO	'PENDING'::character varying	30
+blockchain	wallets	21	risk_level	character varying	varchar	NO	'LOW'::character varying	30
+blockchain	wallets	22	wallet_metadata	jsonb	jsonb	NO	'{}'::jsonb	
+blockchain	wallets	23	kyc_payload	jsonb	jsonb	NO	'{}'::jsonb	
+blockchain	wallets	24	blockchain_payload	jsonb	jsonb	NO	'{}'::jsonb	
+blockchain	wallets	25	created_by	character varying	varchar	YES	CURRENT_USER	150
+blockchain	wallets	26	updated_by	character varying	varchar	YES		150
+blockchain	wallets	27	created_at	timestamp with time zone	timestamptz	NO	CURRENT_TIMESTAMP	
+blockchain	wallets	28	updated_at	timestamp with time zone	timestamptz	NO	CURRENT_TIMESTAMP	
+blockchain	wallets	29	password_hash	text	text	YES		
+blockchain	wallets	30	pin_hash	text	text	YES		
+blockchain	wallets	31	login_failed_count	integer	int4	NO	0	
+blockchain	wallets	32	login_locked_until	timestamp with time zone	timestamptz	YES		
+blockchain	wallets	33	last_login_at	timestamp with time zone	timestamptz	YES		
+blockchain	wallets	34	last_failed_login_at	timestamp with time zone	timestamptz	YES		
+blockchain	wallets	35	last_login_ip	inet	inet	YES		
+blockchain	wallets	36	login_status	character varying	varchar	NO	'ACTIVE'::character varying	30
+blockchain	wallets	37	wallet_status	character varying	varchar	YES	'ACTIVE'::character varying	30
+blockchain	wallets	38	is_active	boolean	bool	YES	true	
+blockchain	wallets	39	currency	text	text	YES		
+blockchain	wallets	40	fabric_response	jsonb	jsonb	YES		
+blockchain	wallets	41	fabric_transaction_id	text	text	YES		
+blockchain	wallets	42	request_id	text	text	YES		
+blockchain	wallets	43	request_source	text	text	YES		
+blockchain	wallets	44	source_system	text	text	YES		
+blockchain	wallets	45	aml_risk_level	character varying	varchar	YES	'LOW'::character varying	20
+blockchain	wallets	46	aml_risk_score	integer	int4	YES	0	
+blockchain	wallets	47	aml_status	character varying	varchar	YES	'CLEAR'::character varying	30
+blockchain	wallets	48	aml_last_reviewed_at	timestamp without time zone	timestamp	YES		
+(393 rows)

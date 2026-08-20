@@ -1,0 +1,595 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const { performance } = require('node:perf_hooks');
+
+const EXTREME_CONFIRMATION = 'I_UNDERSTAND_BLOCKCHAIN_HISTORY_IS_PERMANENT';
+
+function parseArgs(argv) {
+  const out = {};
+  for (let i = 2; i < argv.length; i += 1) {
+    const token = argv[i];
+    if (!token.startsWith('--')) continue;
+    const key = token.slice(2);
+    const next = argv[i + 1];
+    if (!next || next.startsWith('--')) {
+      out[key] = true;
+    } else {
+      out[key] = next;
+      i += 1;
+    }
+  }
+  return out;
+}
+
+function positiveInt(value, fallback, max = Number.MAX_SAFE_INTEGER) {
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
+  return Math.min(parsed, max);
+}
+
+function percentile(values, p) {
+  if (values.length === 0) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  const index = Math.min(
+    sorted.length - 1,
+    Math.max(0, Math.ceil((p / 100) * sorted.length) - 1)
+  );
+  return sorted[index];
+}
+
+function latencySummary(values) {
+  if (values.length === 0) {
+    return {
+      minLatencyMs: 0,
+      averageLatencyMs: 0,
+      p50LatencyMs: 0,
+      p95LatencyMs: 0,
+      p99LatencyMs: 0,
+      maxLatencyMs: 0
+    };
+  }
+
+  let min = Number.POSITIVE_INFINITY;
+  let max = 0;
+  let sum = 0;
+
+  for (const value of values) {
+    if (value < min) min = value;
+    if (value > max) max = value;
+    sum += value;
+  }
+
+  return {
+    minLatencyMs: min,
+    averageLatencyMs: Number((sum / values.length).toFixed(2)),
+    p50LatencyMs: percentile(values, 50),
+    p95LatencyMs: percentile(values, 95),
+    p99LatencyMs: percentile(values, 99),
+    maxLatencyMs: max
+  };
+}
+
+async function fetchJson(url, options = {}, timeoutMs = 60000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+    const text = await response.text();
+    let body;
+    try {
+      body = text ? JSON.parse(text) : null;
+    } catch {
+      body = { raw: text };
+    }
+    return { status: response.status, body };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function loadFabricService(projectRoot) {
+  const apiRoot = path.join(projectRoot, 'blockchain-api');
+  try {
+    require(path.join(apiRoot, 'node_modules', 'dotenv')).config({
+      path: path.join(apiRoot, '.env')
+    });
+  } catch (error) {
+    console.warn(`[WARN] dotenv was not loaded: ${error.message}`);
+  }
+
+  return require(path.join(apiRoot, 'src', 'services', 'fabric.service.js'));
+}
+
+async function runWorkers(total, concurrency, worker) {
+  let next = 0;
+  const runners = Array.from({ length: Math.min(concurrency, total) }, async () => {
+    while (true) {
+      const current = next;
+      next += 1;
+      if (current >= total) return;
+      await worker(current);
+    }
+  });
+  await Promise.all(runners);
+}
+
+function jsonReplacer(_key, value) {
+  return typeof value === 'bigint' ? value.toString() : value;
+}
+
+function safeStringify(value, space) {
+  return JSON.stringify(value, jsonReplacer, space);
+}
+
+function writeJsonLine(stream, value) {
+  stream.write(`${safeStringify(value)}\n`);
+}
+
+function closeStream(stream) {
+  return new Promise((resolve, reject) => {
+    stream.once('error', reject);
+    stream.end(resolve);
+  });
+}
+
+function toJsonCustomerId(customerId) {
+  const asNumber = Number(customerId);
+  return Number.isSafeInteger(asNumber) ? asNumber : customerId;
+}
+
+function buildPayload({ customerId, sessionId, runId, sequence }) {
+  const sequenceText = String(sequence).padStart(6, '0');
+  const customerName = `KYC Customer Test ${sequenceText}`;
+
+  return {
+    storageMode: 'BLOCKCHAIN_ONLY',
+    customer_id: toJsonCustomerId(customerId),
+    session_id: sessionId,
+    formData: {
+      SESSION_DESC: '',
+      STATUS_NAME: '',
+      PARTY_TYPE_CODE: '7',
+      CUSTOMER_ID: customerId,
+      CUSTOMER_NAME: customerName,
+      STATUS_CODE: '1193',
+      SESSION_ID: String(sessionId),
+      IS_MAIN: '1',
+      SESSION_DTL_ID: '',
+      BRANCH: '1038885',
+      INFO_COMPLETION_LEVEL: '1477',
+      UPLOAD_SELFIE: '',
+      FIRST_NAME: 'KYC',
+      FATHER_NAME: '',
+      LAST_NAME: `Customer Test ${sequenceText}`,
+      MAIN_NATIONALITY_ID: '1808',
+      DATE_OF_BIRTH: '01/01/2000',
+      GENDER: '1',
+      PLACE_0F_BIRTH: 'Beirut',
+      COUNTRY_OF_BIRTH: 'Lebanon',
+      MOTHER_NAME: '',
+      MOTHER_MAIDEN_NAME: '',
+      COUNTRY_OF_REGISTRATION: 'Lebanon',
+      DATE_OF_REGISTRATION: '07/23/2026',
+      CIVIL_REGISTER_PLACE: '',
+      CIVIL_REGISTRE_NUMBER: '',
+      LEGAL_FORM: '5602',
+      STATUS_ID: '',
+      CUSTOMER_TYPE: '7',
+      VAT_NUMBER: '',
+      TAX_COUNTRY: 'Lebanon',
+      STREET: '',
+      BUILDING: '',
+      FLOOR: '',
+      COMMENTS:
+        'Created through VALOORES Blockchain KYC API' +
+        ` | BENCHMARK_RUN_ID=${runId}` +
+        ` | SEQUENCE=${sequence}` +
+        ' | DELETE_AFTER_TEST=true'
+    }
+  };
+}
+
+async function main() {
+  const args = parseArgs(process.argv);
+  const projectRoot = __dirname;
+  const apiBaseUrl = String(
+    args['api-base-url'] || process.env.API_BASE_URL || 'http://127.0.0.1:3001'
+  ).replace(/\/$/, '');
+
+  const count = positiveInt(args.count, 1, 100000);
+  const concurrency = positiveInt(args.concurrency, 1, 1000);
+  const cleanupConcurrency = positiveInt(
+    args['cleanup-concurrency'],
+    Math.min(concurrency, 20),
+    100
+  );
+  const timeoutMs = positiveInt(args['timeout-ms'], 60000, 600000);
+  const runId = String(
+    args['run-id'] ||
+      process.env.BENCHMARK_RUN_ID ||
+      `BKYC_${new Date().toISOString().replace(/[-:TZ.]/g, '').slice(0, 14)}`
+  );
+  const keepRecords = args.keep === true;
+  const confirmLarge = args['confirm-large'] === true;
+  const extremeConfirmation = String(args['confirm-extreme'] || '');
+
+  if (count > 1000 && !confirmLarge) {
+    throw new Error(
+      'Count above 1000 requires --confirm-large. Run smaller stages first.'
+    );
+  }
+
+  if (count > 10000 && extremeConfirmation !== EXTREME_CONFIRMATION) {
+    throw new Error(
+      `Count above 10000 requires --confirm-extreme ${EXTREME_CONFIRMATION}`
+    );
+  }
+
+  const defaultPrefix = `99${Date.now()}`;
+  const idPrefix = String(args['id-prefix'] || defaultPrefix);
+
+  if (!/^99\d+$/.test(idPrefix)) {
+    throw new Error('The benchmark ID prefix must contain digits and start with 99.');
+  }
+
+  const baseSessionId = positiveInt(
+    args['session-id'],
+    100000 + (Math.floor(Date.now() / 1000) % 800000),
+    2000000000
+  );
+
+  const outputDir = path.join(projectRoot, 'benchmark-results');
+  fs.mkdirSync(outputDir, { recursive: true });
+  const safeRunId = runId.replace(/[^A-Za-z0-9_-]/g, '_');
+  const createdFile = path.join(outputDir, `${safeRunId}_created.jsonl`);
+  const cleanupFile = path.join(outputDir, `${safeRunId}_cleanup.jsonl`);
+  const reportFile = path.join(outputDir, `${safeRunId}_report.json`);
+  const payloadSampleFile = path.join(outputDir, `${safeRunId}_payload_sample.json`);
+
+  const createdStream = fs.createWriteStream(createdFile, { flags: 'w' });
+  const cleanupStream = fs.createWriteStream(cleanupFile, { flags: 'w' });
+
+  const firstCustomerId = `${idPrefix}${String(1).padStart(6, '0')}`;
+  fs.writeFileSync(
+    payloadSampleFile,
+    JSON.stringify(
+      buildPayload({
+        customerId: firstCustomerId,
+        sessionId: baseSessionId,
+        runId,
+        sequence: 1
+      }),
+      null,
+      2
+    ),
+    'utf8'
+  );
+
+  console.log('============================================================');
+  console.log('BKYC FABRIC BENCHMARK — FULL VALOORES PAYLOAD');
+  console.log('============================================================');
+  console.log(`Run ID              : ${runId}`);
+  console.log(`API                  : ${apiBaseUrl}`);
+  console.log(`Count                : ${count}`);
+  console.log(`Concurrency          : ${concurrency}`);
+  console.log(`Cleanup concurrency  : ${cleanupConcurrency}`);
+  console.log(`Cleanup              : ${keepRecords ? 'DISABLED' : 'ENABLED'}`);
+  console.log(`Benchmark ID prefix  : ${idPrefix}`);
+  console.log(`Base session ID      : ${baseSessionId}`);
+  console.log(`Payload sample       : ${payloadSampleFile}`);
+  console.log(`Created manifest     : ${createdFile}`);
+  console.log('============================================================');
+
+  const health = await fetchJson(
+    `${apiBaseUrl}/api/v1/health`,
+    { method: 'GET' },
+    timeoutMs
+  );
+
+  if (health.status !== 200 || health.body?.success !== true) {
+    throw new Error(`API health check failed: ${safeStringify(health.body)}`);
+  }
+
+  console.log('[PASS] API health check succeeded.');
+
+  const created = [];
+  const failures = [];
+  const latencies = [];
+  let stopRequested = false;
+
+  process.on('SIGINT', () => {
+    if (!stopRequested) {
+      stopRequested = true;
+      console.log('\n[STOP] Ctrl+C received. No new creates will start; cleanup will follow.');
+    }
+  });
+
+  const creationStarted = performance.now();
+  let nextSequence = 0;
+
+  async function createOne() {
+    if (stopRequested) return;
+
+    nextSequence += 1;
+    const sequence = nextSequence;
+    const customerId = `${idPrefix}${String(sequence).padStart(6, '0')}`;
+    const sessionId = baseSessionId + sequence - 1;
+    const residentId = `VALOORES-${customerId}`;
+    const payload = buildPayload({ customerId, sessionId, runId, sequence });
+
+    const started = performance.now();
+    try {
+      const response = await fetchJson(
+        `${apiBaseUrl}/api/v1/valoores-blockchain/customers`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: safeStringify(payload)
+        },
+        timeoutMs
+      );
+
+      const latencyMs = Math.round(performance.now() - started);
+      const data = response.body?.data || {};
+      const commit = data.fabricResult?.commitStatus;
+      const commitSuccessful =
+        !commit || commit.successful === true || Number(commit.code) === 0;
+      const success =
+        response.status === 201 &&
+        response.body?.success === true &&
+        data.blockchainSaved === true &&
+        data.postgresSaved === false &&
+        commitSuccessful;
+
+      if (!success) {
+        const failure = {
+          sequence,
+          customerId,
+          sessionId,
+          residentId,
+          latencyMs,
+          httpStatus: response.status,
+          response: response.body
+        };
+        failures.push(failure);
+        console.error(`[CREATE FAILED] ${customerId} HTTP ${response.status}`);
+        return;
+      }
+
+      latencies.push(latencyMs);
+      const record = {
+        sequence,
+        customerId,
+        sessionId,
+        residentId: data.fabricResidentId || residentId,
+        ledgerKey: data.ledgerKey || `KYC_${residentId}`,
+        transactionId: data.blockchainTransactionId || null,
+        blockNumber: commit?.blockNumber || null,
+        commitCode: commit?.code ?? null,
+        latencyMs
+      };
+      created.push(record);
+      writeJsonLine(createdStream, record);
+
+      const progressEvery = count <= 20 ? 1 : Math.max(10, Math.floor(count / 100));
+      if (
+        created.length === 1 ||
+        created.length % progressEvery === 0 ||
+        created.length === count
+      ) {
+        console.log(
+          `[CREATED] ${created.length}/${count} ${customerId} ${latencyMs} ms`
+        );
+      }
+    } catch (error) {
+      const latencyMs = Math.round(performance.now() - started);
+      failures.push({
+        sequence,
+        customerId,
+        sessionId,
+        residentId,
+        latencyMs,
+        error: error.message
+      });
+      console.error(`[CREATE ERROR] ${customerId}: ${error.message}`);
+    }
+  }
+
+  await runWorkers(count, concurrency, createOne);
+  const creationDurationMs = Math.round(performance.now() - creationStarted);
+  await closeStream(createdStream);
+
+  const creationSummary = {
+    attempted: nextSequence,
+    created: created.length,
+    failed: failures.length,
+    durationMs: creationDurationMs,
+    throughputTps:
+      creationDurationMs > 0
+        ? Number((created.length / (creationDurationMs / 1000)).toFixed(3))
+        : 0,
+    successRatePercent:
+      nextSequence > 0
+        ? Number(((created.length / nextSequence) * 100).toFixed(4))
+        : 0,
+    ...latencySummary(latencies)
+  };
+
+  console.log('\n[CREATION SUMMARY]');
+  console.table(creationSummary);
+
+  const cleanup = {
+    attempted: 0,
+    deleted: 0,
+    failed: 0,
+    verifiedAbsent: 0,
+    remaining: 0,
+    durationMs: 0,
+    deleteThroughputTps: 0,
+    failures: []
+  };
+
+  let fabricService = null;
+
+  if (!keepRecords && created.length > 0) {
+    fabricService = loadFabricService(projectRoot);
+    console.log('\n[CLEANUP] Deleting only records created in this run...');
+    const cleanupStarted = performance.now();
+
+    await runWorkers(created.length, cleanupConcurrency, async (index) => {
+      const record = created[index];
+      cleanup.attempted += 1;
+
+      if (!record.customerId.startsWith(idPrefix)) {
+        const message = 'Safety check rejected a customer ID outside this run prefix.';
+        cleanup.failed += 1;
+        cleanup.failures.push({ ...record, error: message });
+        writeJsonLine(cleanupStream, { ...record, deleted: false, error: message });
+        return;
+      }
+
+      try {
+        const result = await fabricService.submitTransaction(
+          'DeleteResident',
+          [record.residentId, `Benchmark cleanup for ${runId}`],
+          {
+            requestId: `BENCHMARK-DELETE-${runId}-${record.customerId}`,
+            correlationId: runId,
+            sourceSystem: 'BENCHMARK',
+            requestSource: 'LOCAL_SCRIPT',
+            createdBy: 'BENCHMARK_SERVICE'
+          }
+        );
+
+        const commit = result?.commitStatus;
+        const committed =
+          !commit || commit.successful === true || Number(commit.code) === 0;
+
+        if (!committed) {
+          throw new Error(`Delete commit was not successful: ${safeStringify(commit)}`);
+        }
+
+        cleanup.deleted += 1;
+        writeJsonLine(cleanupStream, {
+          ...record,
+          deleted: true,
+          deleteTransactionId:
+            result?.transactionId ||
+            result?.txId ||
+            result?.commitStatus?.transactionId ||
+            null,
+          deleteBlockNumber:
+            result?.commitStatus?.blockNumber == null
+              ? null
+              : String(result.commitStatus.blockNumber)
+        });
+      } catch (error) {
+        cleanup.failed += 1;
+        cleanup.failures.push({ ...record, error: error.message });
+        writeJsonLine(cleanupStream, {
+          ...record,
+          deleted: false,
+          error: error.message
+        });
+        console.error(`[DELETE ERROR] ${record.customerId}: ${error.message}`);
+      }
+    });
+
+    cleanup.durationMs = Math.round(performance.now() - cleanupStarted);
+    cleanup.deleteThroughputTps =
+      cleanup.durationMs > 0
+        ? Number((cleanup.deleted / (cleanup.durationMs / 1000)).toFixed(3))
+        : 0;
+
+    console.log('[CLEANUP] Verifying current Fabric world state...');
+
+    await runWorkers(created.length, cleanupConcurrency, async (index) => {
+      const record = created[index];
+      try {
+        await fabricService.evaluateTransaction(
+          'GetResident',
+          [record.residentId],
+          {
+            requestId: `BENCHMARK-VERIFY-DELETE-${runId}-${record.customerId}`,
+            correlationId: runId,
+            sourceSystem: 'BENCHMARK',
+            requestSource: 'LOCAL_SCRIPT'
+          }
+        );
+        cleanup.remaining += 1;
+      } catch (error) {
+        if (/not found|does not exist/i.test(error.message)) {
+          cleanup.verifiedAbsent += 1;
+        } else {
+          cleanup.remaining += 1;
+          cleanup.failures.push({
+            ...record,
+            error: `Delete verification failed: ${error.message}`
+          });
+        }
+      }
+    });
+  }
+
+  await closeStream(cleanupStream);
+
+  const report = {
+    runId,
+    generatedAt: new Date().toISOString(),
+    apiBaseUrl,
+    configuration: {
+      count,
+      concurrency,
+      cleanupConcurrency,
+      timeoutMs,
+      idPrefix,
+      baseSessionId,
+      payloadProfile: 'VALOORES_FULL_KYC_SAMPLE_V1',
+      cleanupEnabled: !keepRecords
+    },
+    creation: creationSummary,
+    creationFailures: failures,
+    cleanup,
+    files: {
+      payloadSample: payloadSampleFile,
+      createdManifest: createdFile,
+      cleanupManifest: cleanupFile,
+      report: reportFile
+    }
+  };
+
+  fs.writeFileSync(reportFile, safeStringify(report, 2), 'utf8');
+
+  console.log('\n[FINAL RESULT]');
+  console.log(`Created             : ${created.length}`);
+  console.log(`Creation failures   : ${failures.length}`);
+  console.log(`Created TPS         : ${creationSummary.throughputTps}`);
+  console.log(`P95 latency         : ${creationSummary.p95LatencyMs} ms`);
+  console.log(`Deleted             : ${cleanup.deleted}`);
+  console.log(`Delete failures     : ${cleanup.failed}`);
+  console.log(`Verified absent     : ${cleanup.verifiedAbsent}`);
+  console.log(`Remaining           : ${cleanup.remaining}`);
+  console.log(`Report              : ${reportFile}`);
+
+  if (fabricService && typeof fabricService.disconnect === 'function') {
+    try {
+      await fabricService.disconnect();
+    } catch (error) {
+      console.warn(`[WARN] Fabric disconnect failed: ${error.message}`);
+    }
+  }
+
+  if (failures.length > 0 || cleanup.failed > 0 || cleanup.remaining > 0) {
+    process.exitCode = 1;
+  }
+}
+
+main().catch((error) => {
+  console.error(`[FATAL] ${error.stack || error.message}`);
+  process.exitCode = 1;
+});

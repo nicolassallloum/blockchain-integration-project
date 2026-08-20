@@ -1,0 +1,68 @@
+
+======================================================================
+CUSTOMER CRUD CHAINCODE LIFECYCLE — READ-ONLY INSPECTION
+======================================================================
+Generated At:   2026-07-24T14:47:14+03:00
+Project Root:   /home/nix/u01/blockchain-integration
+Channel:        kycchannelnix1
+Chaincode:      kyc-wallet-chaincode-js
+Chaincode Path: /home/nix/u01/blockchain-integration/chaincode/kyc-wallet-chaincode-js
+Report:         /home/nix/u01/blockchain-integration/customer_crud_chaincode_lifecycle_20260724_144714.txt
+
+======================================================================
+1. ACTIVE SOURCE STATE
+======================================================================
+122:    async CreateResident(ctx, residentJson) {
+181:    async GetResident(ctx, residentId) {
+315:    /* VALOORES_CUSTOMER_CRUD_CHAINCODE_V1 */
+334:    async UpdateResident(ctx, residentJson) {
+488:    async DeleteResident(
+562:    /* END VALOORES_CUSTOMER_CRUD_CHAINCODE_V1 */
+564:    async CreateResidentWallet(ctx, residentId, walletCurrency, walletAddress) {
+603:    async GetResidentWallet(ctx, residentId) {
+
+UpdateResident count: 1
+DeleteResident count: 1
+
+======================================================================
+2. CHAINCODE PACKAGE METADATA
+======================================================================
+{
+  "name": "kyc-wallet-chaincode-js",
+  "version": "2.7.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "fabric-chaincode-node start",
+    "test": "node tests/phase10-proof.test.js",
+    "check:syntax": "node --check index.js && node --check lib/kycWalletContract.js && node --check tests/phase10-proof.test.js && node --check tests/phase28-audit-proof.test.js"
+  }
+}
+
+======================================================================
+3. FABRIC CLI AVAILABILITY
+======================================================================
+Peer CLI: /home/nix/u01/blockchain-integration/fabric/fabric-samples/bin/peer
+peer:
+ Version: v2.5.15
+ Commit SHA: 83c7930
+ Go version: go1.26.0
+ OS/Arch: linux/amd64
+ Chaincode:
+  Base Docker Label: org.hyperledger.fabric
+  Docker Namespace: hyperledger
+
+
+======================================================================
+4. ACTIVE PEER CONTEXT
+======================================================================
+CORE_PEER_LOCALMSPID=<not set>
+CORE_PEER_ADDRESS=<not set>
+CORE_PEER_TLS_ENABLED=<not set>
+CORE_PEER_TLS_ROOTCERT_FILE=<not set>
+CORE_PEER_MSPCONFIGPATH=<not set>
+FABRIC_CFG_PATH=<not set>
+
+======================================================================
+5. CURRENT COMMITTED DEFINITION — JSON
+======================================================================
+[31m2026-07-24 14:47:15.038 EEST 0001 ERRO[0m [main] [31;1mInitCmd[0m -> Fatal error when initializing core config : error when reading core config file: Config File "core" Not Found in "[/home/nix/u01/blockchain-integration]"

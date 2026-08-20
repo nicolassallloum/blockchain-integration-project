@@ -1,4 +1,8 @@
 .
+├── audit-validation-events.log
+├── audit-validation-events-pretty.log
+├── backend_after_step19.log
+├── backend_after_step24.log
 ├── backend_last_block_fix.log
 ├── backend_last_block_fix_v2.log
 ├── backups
@@ -16,6 +20,17 @@
 │   │   ├── wallet.service.js.bak.20260504_123155
 │   │   ├── wallet.service.js.bak_BEFORE_DASHBOARD_MAPPING
 │   │   └── wallet.service.js.bak_STEP30
+│   ├── phase-27-audit-session-context
+│   │   ├── auditSessionContext.middleware.js.bak_als_20260708_095438
+│   │   ├── auditSessionContext.middleware.js.bak_dynamic_context_20260708_095333
+│   │   ├── auditSessionContext.middleware.js.bak_refresh_current_20260708_095925
+│   │   ├── audit-session-context.service.js.bak_als_20260708_095438
+│   │   ├── audit-session-context.service.js.bak_refresh_current_20260708_095925
+│   │   ├── database.js.bak_20260708_095237
+│   │   ├── database.js.bak_als_20260708_095438
+│   │   ├── database.js.bak_fix_defaults_20260708_095333
+│   │   ├── database.js.bak_refresh_current_20260708_095925
+│   │   └── server.js.bak_20260708_095005
 │   ├── step-21-wallet-alignment-fix
 │   │   ├── transaction.service.js.bak
 │   │   ├── wallet-query.service.js.bak
@@ -31,6 +46,8 @@
 │       ├── wallet.controller.js
 │       ├── wallet.routes.js
 │       └── wallet.service.js
+├── blockchain-api.log
+├── blockchain-api.log.before_single_process_20260804_173620
 ├── blockchain_update_needed_files.txt
 ├── Chaincode
 ├── config
@@ -38,15 +55,108 @@
 │   └── connection-org1.json
 ├── database
 │   ├── migrations
+│   │   └── phase12_duplicate_protection.sql
 │   ├── scripts
+│   │   ├── phase-05-source-views
+│   │   │   ├── phase05_01_valoores_aml_rules_source_view.sql
+│   │   │   ├── phase05_02_valoores_customer_kyc_source_view.sql
+│   │   │   ├── phase05_03_valoores_transactions_source_view.sql
+│   │   │   ├── phase05_04_valoores_aml_alerts_source_view.sql
+│   │   │   ├── phase05_05_valoores_audit_logs_source_view.sql
+│   │   │   ├── phase05_06_valoores_screening_activities_source_view.sql
+│   │   │   └── phase05_07_valoores_sanction_list_source_view.sql
+│   │   ├── phase-06-history-tables
+│   │   │   ├── phase06_01_create_blockchain_history_table.sql
+│   │   │   ├── phase06_02_create_blockchain_history_attempts_table.sql
+│   │   │   ├── phase06_03_create_blockchain_history_reporting_views.sql
+│   │   │   └── phase06_99_final_validation.sql
+│   │   ├── phase-07-indexes
+│   │   │   ├── phase07_01_dba_create_blockchain_history_performance_indexes.sql
+│   │   │   ├── phase07_02_dba_validate_blockchain_history_performance_indexes.sql
+│   │   │   └── phase07_03_dba_rollback_blockchain_history_performance_indexes.sql
+│   │   ├── phase-14-customer-kyc-proof
+│   │   │   ├── phase14_00_customer_kyc_view_before_patch.sql
+│   │   │   ├── phase14_01_patch_customer_kyc_source_view_contract.sql
+│   │   │   ├── phase14_02_customer_kyc_view_before_safe_id_patch.sql
+│   │   │   └── phase14_03_patch_customer_kyc_safe_source_record_id.sql
+│   │   ├── phase-17-verification-logic
+│   │   │   └── phase17_01_update_verification_status_constraints.sql
+│   │   ├── phase-23-audit-tables
+│   │   │   ├── phase23_01_create_data_change_audit_tables.sql
+│   │   │   └── phase23_99_validate_data_change_audit_tables.sql
+│   │   ├── phase-24-audit-functions
+│   │   │   ├── phase24_01_create_audit_hash_helper_functions.sql
+│   │   │   └── phase24_99_validate_audit_hash_helper_functions.sql
+│   │   ├── phase-25-audit-trigger
+│   │   │   ├── phase25_01_create_generic_data_change_audit_trigger.sql
+│   │   │   └── phase25_99_validate_generic_data_change_audit_trigger.sql
+│   │   ├── phase-26-attach-audit-triggers
+│   │   │   ├── phase26_01_configure_and_attach_audit_triggers.sql
+│   │   │   └── phase26_99_validate_attached_audit_triggers.sql
+│   │   ├── phase-33-batch-proof
+│   │   │   ├── phase33_01_extend_audit_batch_merkle_support.sql
+│   │   │   └── phase33_02_add_batch_transaction_tracking.sql
+│   │   ├── phase-34-high-risk-alerts
+│   │   │   └── phase34_01_create_high_risk_data_change_alerts.sql
+│   │   ├── phase-35-invalid-record-review
+│   │   │   └── phase35_01_create_invalid_record_review_workflow.sql
+│   │   ├── phase-36-compliance-rules-engine
+│   │   │   └── phase36_01_create_compliance_proof_rules_engine.sql
+│   │   ├── phase-37-bulk-compliance-approval
+│   │   │   └── phase37_01_create_bulk_compliance_approval_workflow.sql
+│   │   ├── step03c_create_normalized_aml_source_view.sql
+│   │   ├── step03_confirm_source_views.sql
+│   │   ├── step04_create_blockchain_history_tables.sql
+│   │   ├── step05_create_blockchain_history_indexes.sql
+│   │   ├── step07_validate_create_detection.sql
+│   │   ├── step08_validate_update_detection.sql
+│   │   ├── step09_validate_skip_unchanged_records.sql
+│   │   ├── step10_validate_stable_hash_source_data.sql
+│   │   ├── step11d_create_aml_case_closure_source_view.sql
+│   │   ├── step12_validate_blockchain_key_format.sql
+│   │   ├── step13_validate_proof_only_submission.sql
+│   │   └── step14_validate_blockchain_tx_link.sql
 │   └── seeds
 │       └── insert-bank001-organization.sql
 ├── export_government_account_tables.sh
 ├── export_real_backend_files.sh
+├── fix_insert_after_remove_tin_backend.log
+├── kyc_daily_created_backend.log
+├── kyc_daily_date_format_fix.log
 ├── kyc-wallet-chaincode-js.tar.gz
+├── license-recovery-api.log
+├── license-wallet-output
+│   └── 2026-07-30T14-20-14-076Z
+│       ├── keystores
+│       │   ├── 15ad8f6c-0687-4e64-aaef-3a840f483bfe-0xb896b28bc16c2382bf3438ff81e0ec6a43e73cb6.json
+│       │   ├── 1aef03fc-d262-4047-a9ee-5176f9b35656-0x68fb3235d55dc06fa5ba5f8dc81a2e2b135e300e.json
+│       │   ├── 215c9837-0836-43ab-bfd0-0dea3b5d8559-0xb3f8238451c2b01e6998f4b1b7f9c41c53c4bab8.json
+│       │   ├── 28c16e53-40dd-4fc6-b20e-77cdb4e2fa15-0xa05833d8bf64377233bb29b630dc8f765de0d1e9.json
+│       │   ├── 2be9b1f6-ff5b-45f7-9d96-e3ba30aa7cfd-0x321cf1322db354626ca23995c78a3b91865b9f14.json
+│       │   ├── 2f114401-9967-4391-bb9c-a6c0628c1352-0x99f9d4b790e80720cbcfd4f66f0be5e973fc9224.json
+│       │   ├── 501276b1-aefb-4f94-82ee-a4b76972d755-0xbfb311f71effc031307c4548ee112ffcb8cdb4ad.json
+│       │   ├── 8ea4e012-2829-44f1-8201-afb021bb9b77-0x5c163d725412e45985c17f18a58aea0b52626c3e.json
+│       │   ├── b8129b23-4913-4424-a2fc-db82bc3ac7be-0xc52f013f6929a47f14b4a25af15f4e9c08d87d3a.json
+│       │   └── c6c4d661-7ca5-44de-b824-f0fdd61bac23-0x29bc528079aa813b7ee516f80d8e08dbd8057d32.json
+│       └── public-wallet-bindings.csv
 ├── logs
 │   ├── app.log
-│   └── error.log
+│   ├── blockchain-api-audit-history.log
+│   ├── blockchain-api-build-events-filter-record-pk.log
+│   ├── blockchain-api-couchdb-explorer.log
+│   ├── blockchain-api-exact-record-pk.log
+│   ├── blockchain-api-final-strict-record-pk.log
+│   ├── blockchain-api-force-record-pk.log
+│   ├── blockchain-api-main.log
+│   ├── blockchain-api-record-pk-restored.log
+│   ├── blockchain-api-safe-record-pk-final.log
+│   ├── blockchain-api-strict-record-pk.log
+│   ├── blockchain-customers.log
+│   ├── error.log
+│   ├── kyc_storage_modes_backend.log
+│   ├── postgres-browser-ui.log
+│   ├── valoores_blockchain_only_backend.log
+│   └── valoores_fabric_customer_api.log
 ├── META-INF
 │   └── statedb
 │       └── couchdb
@@ -95,6 +205,141 @@
 │   │   ├── package.json
 │   │   ├── README.md
 │   │   └── xhtml.js
+│   ├── @adraffy
+│   │   └── ens-normalize
+│   │       ├── dist
+│   │       │   ├── all.js
+│   │       │   ├── all.min.js
+│   │       │   ├── index.cjs
+│   │       │   ├── index.d.cts
+│   │       │   ├── index.d.mts
+│   │       │   ├── index.min.js
+│   │       │   ├── index.mjs
+│   │       │   ├── index-xnf.cjs
+│   │       │   ├── index-xnf.d.cts
+│   │       │   ├── index-xnf.d.mts
+│   │       │   ├── index-xnf.min.js
+│   │       │   ├── index-xnf.mjs
+│   │       │   └── nf.min.js
+│   │       ├── LICENSE
+│   │       ├── package.json
+│   │       └── README.md
+│   ├── aes-js
+│   │   ├── aes-js-4.0.0-beta.4.tgz
+│   │   ├── bower.json
+│   │   ├── index.js
+│   │   ├── lib.commonjs
+│   │   │   ├── aes.d.ts
+│   │   │   ├── aes.d.ts.map
+│   │   │   ├── aes.js
+│   │   │   ├── aes.js.map
+│   │   │   ├── index.d.ts
+│   │   │   ├── index.d.ts.map
+│   │   │   ├── index.js
+│   │   │   ├── index.js.map
+│   │   │   ├── mode-cbc.d.ts
+│   │   │   ├── mode-cbc.d.ts.map
+│   │   │   ├── mode-cbc.js
+│   │   │   ├── mode-cbc.js.map
+│   │   │   ├── mode-cfb.d.ts
+│   │   │   ├── mode-cfb.d.ts.map
+│   │   │   ├── mode-cfb.js
+│   │   │   ├── mode-cfb.js.map
+│   │   │   ├── mode-ctr.d.ts
+│   │   │   ├── mode-ctr.d.ts.map
+│   │   │   ├── mode-ctr.js
+│   │   │   ├── mode-ctr.js.map
+│   │   │   ├── mode.d.ts
+│   │   │   ├── mode.d.ts.map
+│   │   │   ├── mode-ecb.d.ts
+│   │   │   ├── mode-ecb.d.ts.map
+│   │   │   ├── mode-ecb.js
+│   │   │   ├── mode-ecb.js.map
+│   │   │   ├── mode.js
+│   │   │   ├── mode.js.map
+│   │   │   ├── mode-ofb.d.ts
+│   │   │   ├── mode-ofb.d.ts.map
+│   │   │   ├── mode-ofb.js
+│   │   │   ├── mode-ofb.js.map
+│   │   │   ├── package.json
+│   │   │   ├── padding.d.ts
+│   │   │   ├── padding.d.ts.map
+│   │   │   ├── padding.js
+│   │   │   ├── padding.js.map
+│   │   │   ├── README.md
+│   │   │   ├── tests.d.ts
+│   │   │   ├── tests.d.ts.map
+│   │   │   ├── tests.js
+│   │   │   └── tests.js.map
+│   │   ├── lib.esm
+│   │   │   ├── aes.d.ts
+│   │   │   ├── aes.d.ts.map
+│   │   │   ├── aes.js
+│   │   │   ├── aes.js.map
+│   │   │   ├── index.d.ts
+│   │   │   ├── index.d.ts.map
+│   │   │   ├── index.js
+│   │   │   ├── index.js.map
+│   │   │   ├── mode-cbc.d.ts
+│   │   │   ├── mode-cbc.d.ts.map
+│   │   │   ├── mode-cbc.js
+│   │   │   ├── mode-cbc.js.map
+│   │   │   ├── mode-cfb.d.ts
+│   │   │   ├── mode-cfb.d.ts.map
+│   │   │   ├── mode-cfb.js
+│   │   │   ├── mode-cfb.js.map
+│   │   │   ├── mode-ctr.d.ts
+│   │   │   ├── mode-ctr.d.ts.map
+│   │   │   ├── mode-ctr.js
+│   │   │   ├── mode-ctr.js.map
+│   │   │   ├── mode.d.ts
+│   │   │   ├── mode.d.ts.map
+│   │   │   ├── mode-ecb.d.ts
+│   │   │   ├── mode-ecb.d.ts.map
+│   │   │   ├── mode-ecb.js
+│   │   │   ├── mode-ecb.js.map
+│   │   │   ├── mode.js
+│   │   │   ├── mode.js.map
+│   │   │   ├── mode-ofb.d.ts
+│   │   │   ├── mode-ofb.d.ts.map
+│   │   │   ├── mode-ofb.js
+│   │   │   ├── mode-ofb.js.map
+│   │   │   ├── package.json
+│   │   │   ├── padding.d.ts
+│   │   │   ├── padding.d.ts.map
+│   │   │   ├── padding.js
+│   │   │   ├── padding.js.map
+│   │   │   ├── README.md
+│   │   │   ├── tests.d.ts
+│   │   │   ├── tests.d.ts.map
+│   │   │   ├── tests.js
+│   │   │   └── tests.js.map
+│   │   ├── LICENSE.txt
+│   │   ├── misc
+│   │   │   └── basedirs
+│   │   │       ├── lib.commonjs
+│   │   │       │   ├── package.json
+│   │   │       │   └── README.md
+│   │   │       └── lib.esm
+│   │   │           ├── package.json
+│   │   │           └── README.md
+│   │   ├── package-commonjs.json
+│   │   ├── package.json
+│   │   ├── README.md
+│   │   ├── src.ts
+│   │   │   ├── aes.ts
+│   │   │   ├── index.ts
+│   │   │   ├── mode-cbc.ts
+│   │   │   ├── mode-cfb.ts
+│   │   │   ├── mode-ctr.ts
+│   │   │   ├── mode-ecb.ts
+│   │   │   ├── mode-ofb.ts
+│   │   │   ├── mode.ts
+│   │   │   ├── padding.ts
+│   │   │   └── tests.ts
+│   │   ├── tsconfig.base.json
+│   │   ├── tsconfig.commonjs.json
+│   │   └── tsconfig.esm.json
 │   ├── agent-base
 │   │   ├── dist
 │   │   │   └── src
@@ -2394,6 +2639,1770 @@
 │   │   ├── LICENSE
 │   │   ├── package.json
 │   │   └── README.md
+│   ├── ethers
+│   │   ├── CHANGELOG.md
+│   │   ├── dist
+│   │   │   ├── ethers.js
+│   │   │   ├── ethers.js.map
+│   │   │   ├── ethers.min.js
+│   │   │   ├── ethers.umd.js
+│   │   │   ├── ethers.umd.js.map
+│   │   │   ├── ethers.umd.min.js
+│   │   │   ├── README.md
+│   │   │   ├── wordlists-extra.js
+│   │   │   ├── wordlists-extra.js.map
+│   │   │   └── wordlists-extra.min.js
+│   │   ├── FUNDING.json
+│   │   ├── lib.commonjs
+│   │   │   ├── abi
+│   │   │   │   ├── abi-coder.d.ts
+│   │   │   │   ├── abi-coder.d.ts.map
+│   │   │   │   ├── abi-coder.js
+│   │   │   │   ├── abi-coder.js.map
+│   │   │   │   ├── bytes32.d.ts
+│   │   │   │   ├── bytes32.d.ts.map
+│   │   │   │   ├── bytes32.js
+│   │   │   │   ├── bytes32.js.map
+│   │   │   │   ├── coders
+│   │   │   │   │   ├── abstract-coder.d.ts
+│   │   │   │   │   ├── abstract-coder.d.ts.map
+│   │   │   │   │   ├── abstract-coder.js
+│   │   │   │   │   ├── abstract-coder.js.map
+│   │   │   │   │   ├── address.d.ts
+│   │   │   │   │   ├── address.d.ts.map
+│   │   │   │   │   ├── address.js
+│   │   │   │   │   ├── address.js.map
+│   │   │   │   │   ├── anonymous.d.ts
+│   │   │   │   │   ├── anonymous.d.ts.map
+│   │   │   │   │   ├── anonymous.js
+│   │   │   │   │   ├── anonymous.js.map
+│   │   │   │   │   ├── array.d.ts
+│   │   │   │   │   ├── array.d.ts.map
+│   │   │   │   │   ├── array.js
+│   │   │   │   │   ├── array.js.map
+│   │   │   │   │   ├── boolean.d.ts
+│   │   │   │   │   ├── boolean.d.ts.map
+│   │   │   │   │   ├── boolean.js
+│   │   │   │   │   ├── boolean.js.map
+│   │   │   │   │   ├── bytes.d.ts
+│   │   │   │   │   ├── bytes.d.ts.map
+│   │   │   │   │   ├── bytes.js
+│   │   │   │   │   ├── bytes.js.map
+│   │   │   │   │   ├── fixed-bytes.d.ts
+│   │   │   │   │   ├── fixed-bytes.d.ts.map
+│   │   │   │   │   ├── fixed-bytes.js
+│   │   │   │   │   ├── fixed-bytes.js.map
+│   │   │   │   │   ├── null.d.ts
+│   │   │   │   │   ├── null.d.ts.map
+│   │   │   │   │   ├── null.js
+│   │   │   │   │   ├── null.js.map
+│   │   │   │   │   ├── number.d.ts
+│   │   │   │   │   ├── number.d.ts.map
+│   │   │   │   │   ├── number.js
+│   │   │   │   │   ├── number.js.map
+│   │   │   │   │   ├── string.d.ts
+│   │   │   │   │   ├── string.d.ts.map
+│   │   │   │   │   ├── string.js
+│   │   │   │   │   ├── string.js.map
+│   │   │   │   │   ├── tuple.d.ts
+│   │   │   │   │   ├── tuple.d.ts.map
+│   │   │   │   │   ├── tuple.js
+│   │   │   │   │   └── tuple.js.map
+│   │   │   │   ├── fragments.d.ts
+│   │   │   │   ├── fragments.d.ts.map
+│   │   │   │   ├── fragments.js
+│   │   │   │   ├── fragments.js.map
+│   │   │   │   ├── index.d.ts
+│   │   │   │   ├── index.d.ts.map
+│   │   │   │   ├── index.js
+│   │   │   │   ├── index.js.map
+│   │   │   │   ├── interface.d.ts
+│   │   │   │   ├── interface.d.ts.map
+│   │   │   │   ├── interface.js
+│   │   │   │   ├── interface.js.map
+│   │   │   │   ├── typed.d.ts
+│   │   │   │   ├── typed.d.ts.map
+│   │   │   │   ├── typed.js
+│   │   │   │   └── typed.js.map
+│   │   │   ├── address
+│   │   │   │   ├── address.d.ts
+│   │   │   │   ├── address.d.ts.map
+│   │   │   │   ├── address.js
+│   │   │   │   ├── address.js.map
+│   │   │   │   ├── checks.d.ts
+│   │   │   │   ├── checks.d.ts.map
+│   │   │   │   ├── checks.js
+│   │   │   │   ├── checks.js.map
+│   │   │   │   ├── contract-address.d.ts
+│   │   │   │   ├── contract-address.d.ts.map
+│   │   │   │   ├── contract-address.js
+│   │   │   │   ├── contract-address.js.map
+│   │   │   │   ├── index.d.ts
+│   │   │   │   ├── index.d.ts.map
+│   │   │   │   ├── index.js
+│   │   │   │   └── index.js.map
+│   │   │   ├── constants
+│   │   │   │   ├── addresses.d.ts
+│   │   │   │   ├── addresses.d.ts.map
+│   │   │   │   ├── addresses.js
+│   │   │   │   ├── addresses.js.map
+│   │   │   │   ├── hashes.d.ts
+│   │   │   │   ├── hashes.d.ts.map
+│   │   │   │   ├── hashes.js
+│   │   │   │   ├── hashes.js.map
+│   │   │   │   ├── index.d.ts
+│   │   │   │   ├── index.d.ts.map
+│   │   │   │   ├── index.js
+│   │   │   │   ├── index.js.map
+│   │   │   │   ├── numbers.d.ts
+│   │   │   │   ├── numbers.d.ts.map
+│   │   │   │   ├── numbers.js
+│   │   │   │   ├── numbers.js.map
+│   │   │   │   ├── strings.d.ts
+│   │   │   │   ├── strings.d.ts.map
+│   │   │   │   ├── strings.js
+│   │   │   │   └── strings.js.map
+│   │   │   ├── contract
+│   │   │   │   ├── contract.d.ts
+│   │   │   │   ├── contract.d.ts.map
+│   │   │   │   ├── contract.js
+│   │   │   │   ├── contract.js.map
+│   │   │   │   ├── factory.d.ts
+│   │   │   │   ├── factory.d.ts.map
+│   │   │   │   ├── factory.js
+│   │   │   │   ├── factory.js.map
+│   │   │   │   ├── index.d.ts
+│   │   │   │   ├── index.d.ts.map
+│   │   │   │   ├── index.js
+│   │   │   │   ├── index.js.map
+│   │   │   │   ├── types.d.ts
+│   │   │   │   ├── types.d.ts.map
+│   │   │   │   ├── types.js
+│   │   │   │   ├── types.js.map
+│   │   │   │   ├── wrappers.d.ts
+│   │   │   │   ├── wrappers.d.ts.map
+│   │   │   │   ├── wrappers.js
+│   │   │   │   └── wrappers.js.map
+│   │   │   ├── crypto
+│   │   │   │   ├── crypto-browser.d.ts
+│   │   │   │   ├── crypto-browser.d.ts.map
+│   │   │   │   ├── crypto-browser.js
+│   │   │   │   ├── crypto-browser.js.map
+│   │   │   │   ├── crypto.d.ts
+│   │   │   │   ├── crypto.d.ts.map
+│   │   │   │   ├── crypto.js
+│   │   │   │   ├── crypto.js.map
+│   │   │   │   ├── hmac.d.ts
+│   │   │   │   ├── hmac.d.ts.map
+│   │   │   │   ├── hmac.js
+│   │   │   │   ├── hmac.js.map
+│   │   │   │   ├── index.d.ts
+│   │   │   │   ├── index.d.ts.map
+│   │   │   │   ├── index.js
+│   │   │   │   ├── index.js.map
+│   │   │   │   ├── keccak.d.ts
+│   │   │   │   ├── keccak.d.ts.map
+│   │   │   │   ├── keccak.js
+│   │   │   │   ├── keccak.js.map
+│   │   │   │   ├── pbkdf2.d.ts
+│   │   │   │   ├── pbkdf2.d.ts.map
+│   │   │   │   ├── pbkdf2.js
+│   │   │   │   ├── pbkdf2.js.map
+│   │   │   │   ├── random.d.ts
+│   │   │   │   ├── random.d.ts.map
+│   │   │   │   ├── random.js
+│   │   │   │   ├── random.js.map
+│   │   │   │   ├── ripemd160.d.ts
+│   │   │   │   ├── ripemd160.d.ts.map
+│   │   │   │   ├── ripemd160.js
+│   │   │   │   ├── ripemd160.js.map
+│   │   │   │   ├── scrypt.d.ts
+│   │   │   │   ├── scrypt.d.ts.map
+│   │   │   │   ├── scrypt.js
+│   │   │   │   ├── scrypt.js.map
+│   │   │   │   ├── sha2.d.ts
+│   │   │   │   ├── sha2.d.ts.map
+│   │   │   │   ├── sha2.js
+│   │   │   │   ├── sha2.js.map
+│   │   │   │   ├── signature.d.ts
+│   │   │   │   ├── signature.d.ts.map
+│   │   │   │   ├── signature.js
+│   │   │   │   ├── signature.js.map
+│   │   │   │   ├── signing-key.d.ts
+│   │   │   │   ├── signing-key.d.ts.map
+│   │   │   │   ├── signing-key.js
+│   │   │   │   └── signing-key.js.map
+│   │   │   ├── ethers.d.ts
+│   │   │   ├── ethers.d.ts.map
+│   │   │   ├── ethers.js
+│   │   │   ├── ethers.js.map
+│   │   │   ├── hash
+│   │   │   │   ├── authorization.d.ts
+│   │   │   │   ├── authorization.d.ts.map
+│   │   │   │   ├── authorization.js
+│   │   │   │   ├── authorization.js.map
+│   │   │   │   ├── id.d.ts
+│   │   │   │   ├── id.d.ts.map
+│   │   │   │   ├── id.js
+│   │   │   │   ├── id.js.map
+│   │   │   │   ├── index.d.ts
+│   │   │   │   ├── index.d.ts.map
+│   │   │   │   ├── index.js
+│   │   │   │   ├── index.js.map
+│   │   │   │   ├── message.d.ts
+│   │   │   │   ├── message.d.ts.map
+│   │   │   │   ├── message.js
+│   │   │   │   ├── message.js.map
+│   │   │   │   ├── namehash.d.ts
+│   │   │   │   ├── namehash.d.ts.map
+│   │   │   │   ├── namehash.js
+│   │   │   │   ├── namehash.js.map
+│   │   │   │   ├── solidity.d.ts
+│   │   │   │   ├── solidity.d.ts.map
+│   │   │   │   ├── solidity.js
+│   │   │   │   ├── solidity.js.map
+│   │   │   │   ├── typed-data.d.ts
+│   │   │   │   ├── typed-data.d.ts.map
+│   │   │   │   ├── typed-data.js
+│   │   │   │   └── typed-data.js.map
+│   │   │   ├── index.d.ts
+│   │   │   ├── index.d.ts.map
+│   │   │   ├── index.js
+│   │   │   ├── index.js.map
+│   │   │   ├── package.json
+│   │   │   ├── providers
+│   │   │   │   ├── abstract-provider.d.ts
+│   │   │   │   ├── abstract-provider.d.ts.map
+│   │   │   │   ├── abstract-provider.js
+│   │   │   │   ├── abstract-provider.js.map
+│   │   │   │   ├── abstract-signer.d.ts
+│   │   │   │   ├── abstract-signer.d.ts.map
+│   │   │   │   ├── abstract-signer.js
+│   │   │   │   ├── abstract-signer.js.map
+│   │   │   │   ├── community.d.ts
+│   │   │   │   ├── community.d.ts.map
+│   │   │   │   ├── community.js
+│   │   │   │   ├── community.js.map
+│   │   │   │   ├── contracts.d.ts
+│   │   │   │   ├── contracts.d.ts.map
+│   │   │   │   ├── contracts.js
+│   │   │   │   ├── contracts.js.map
+│   │   │   │   ├── default-provider.d.ts
+│   │   │   │   ├── default-provider.d.ts.map
+│   │   │   │   ├── default-provider.js
+│   │   │   │   ├── default-provider.js.map
+│   │   │   │   ├── ens-resolver.d.ts
+│   │   │   │   ├── ens-resolver.d.ts.map
+│   │   │   │   ├── ens-resolver.js
+│   │   │   │   ├── ens-resolver.js.map
+│   │   │   │   ├── format.d.ts
+│   │   │   │   ├── format.d.ts.map
+│   │   │   │   ├── format.js
+│   │   │   │   ├── format.js.map
+│   │   │   │   ├── formatting.d.ts
+│   │   │   │   ├── formatting.d.ts.map
+│   │   │   │   ├── formatting.js
+│   │   │   │   ├── formatting.js.map
+│   │   │   │   ├── index.d.ts
+│   │   │   │   ├── index.d.ts.map
+│   │   │   │   ├── index.js
+│   │   │   │   ├── index.js.map
+│   │   │   │   ├── network.d.ts
+│   │   │   │   ├── network.d.ts.map
+│   │   │   │   ├── network.js
+│   │   │   │   ├── network.js.map
+│   │   │   │   ├── pagination.d.ts
+│   │   │   │   ├── pagination.d.ts.map
+│   │   │   │   ├── pagination.js
+│   │   │   │   ├── pagination.js.map
+│   │   │   │   ├── plugin-fallback.d.ts
+│   │   │   │   ├── plugin-fallback.d.ts.map
+│   │   │   │   ├── plugin-fallback.js
+│   │   │   │   ├── plugin-fallback.js.map
+│   │   │   │   ├── plugins-network.d.ts
+│   │   │   │   ├── plugins-network.d.ts.map
+│   │   │   │   ├── plugins-network.js
+│   │   │   │   ├── plugins-network.js.map
+│   │   │   │   ├── provider-alchemy.d.ts
+│   │   │   │   ├── provider-alchemy.d.ts.map
+│   │   │   │   ├── provider-alchemy.js
+│   │   │   │   ├── provider-alchemy.js.map
+│   │   │   │   ├── provider-ankr.d.ts
+│   │   │   │   ├── provider-ankr.d.ts.map
+│   │   │   │   ├── provider-ankr.js
+│   │   │   │   ├── provider-ankr.js.map
+│   │   │   │   ├── provider-blockscout.d.ts
+│   │   │   │   ├── provider-blockscout.d.ts.map
+│   │   │   │   ├── provider-blockscout.js
+│   │   │   │   ├── provider-blockscout.js.map
+│   │   │   │   ├── provider-browser.d.ts
+│   │   │   │   ├── provider-browser.d.ts.map
+│   │   │   │   ├── provider-browser.js
+│   │   │   │   ├── provider-browser.js.map
+│   │   │   │   ├── provider-chainstack.d.ts
+│   │   │   │   ├── provider-chainstack.d.ts.map
+│   │   │   │   ├── provider-chainstack.js
+│   │   │   │   ├── provider-chainstack.js.map
+│   │   │   │   ├── provider-cloudflare.d.ts
+│   │   │   │   ├── provider-cloudflare.d.ts.map
+│   │   │   │   ├── provider-cloudflare.js
+│   │   │   │   ├── provider-cloudflare.js.map
+│   │   │   │   ├── provider.d.ts
+│   │   │   │   ├── provider.d.ts.map
+│   │   │   │   ├── provider-etherscan.d.ts
+│   │   │   │   ├── provider-etherscan.d.ts.map
+│   │   │   │   ├── provider-etherscan.js
+│   │   │   │   ├── provider-etherscan.js.map
+│   │   │   │   ├── provider-fallback.d.ts
+│   │   │   │   ├── provider-fallback.d.ts.map
+│   │   │   │   ├── provider-fallback.js
+│   │   │   │   ├── provider-fallback.js.map
+│   │   │   │   ├── provider-infura.d.ts
+│   │   │   │   ├── provider-infura.d.ts.map
+│   │   │   │   ├── provider-infura.js
+│   │   │   │   ├── provider-infura.js.map
+│   │   │   │   ├── provider-ipcsocket-browser.d.ts
+│   │   │   │   ├── provider-ipcsocket-browser.d.ts.map
+│   │   │   │   ├── provider-ipcsocket-browser.js
+│   │   │   │   ├── provider-ipcsocket-browser.js.map
+│   │   │   │   ├── provider-ipcsocket.d.ts
+│   │   │   │   ├── provider-ipcsocket.d.ts.map
+│   │   │   │   ├── provider-ipcsocket.js
+│   │   │   │   ├── provider-ipcsocket.js.map
+│   │   │   │   ├── provider.js
+│   │   │   │   ├── provider.js.map
+│   │   │   │   ├── provider-jsonrpc.d.ts
+│   │   │   │   ├── provider-jsonrpc.d.ts.map
+│   │   │   │   ├── provider-jsonrpc.js
+│   │   │   │   ├── provider-jsonrpc.js.map
+│   │   │   │   ├── provider-pocket.d.ts
+│   │   │   │   ├── provider-pocket.d.ts.map
+│   │   │   │   ├── provider-pocket.js
+│   │   │   │   ├── provider-pocket.js.map
+│   │   │   │   ├── provider-quicknode.d.ts
+│   │   │   │   ├── provider-quicknode.d.ts.map
+│   │   │   │   ├── provider-quicknode.js
+│   │   │   │   ├── provider-quicknode.js.map
+│   │   │   │   ├── provider-socket.d.ts
+│   │   │   │   ├── provider-socket.d.ts.map
+│   │   │   │   ├── provider-socket.js
+│   │   │   │   ├── provider-socket.js.map
+│   │   │   │   ├── provider-websocket.d.ts
+│   │   │   │   ├── provider-websocket.d.ts.map
+│   │   │   │   ├── provider-websocket.js
+│   │   │   │   ├── provider-websocket.js.map
+│   │   │   │   ├── signer.d.ts
+│   │   │   │   ├── signer.d.ts.map
+│   │   │   │   ├── signer.js
+│   │   │   │   ├── signer.js.map
+│   │   │   │   ├── signer-noncemanager.d.ts
+│   │   │   │   ├── signer-noncemanager.d.ts.map
+│   │   │   │   ├── signer-noncemanager.js
+│   │   │   │   ├── signer-noncemanager.js.map
+│   │   │   │   ├── subscriber-connection.d.ts
+│   │   │   │   ├── subscriber-connection.d.ts.map
+│   │   │   │   ├── subscriber-connection.js
+│   │   │   │   ├── subscriber-connection.js.map
+│   │   │   │   ├── subscriber-filterid.d.ts
+│   │   │   │   ├── subscriber-filterid.d.ts.map
+│   │   │   │   ├── subscriber-filterid.js
+│   │   │   │   ├── subscriber-filterid.js.map
+│   │   │   │   ├── subscriber-polling.d.ts
+│   │   │   │   ├── subscriber-polling.d.ts.map
+│   │   │   │   ├── subscriber-polling.js
+│   │   │   │   ├── subscriber-polling.js.map
+│   │   │   │   ├── ws-browser.d.ts
+│   │   │   │   ├── ws-browser.d.ts.map
+│   │   │   │   ├── ws-browser.js
+│   │   │   │   ├── ws-browser.js.map
+│   │   │   │   ├── ws.d.ts
+│   │   │   │   ├── ws.d.ts.map
+│   │   │   │   ├── ws.js
+│   │   │   │   └── ws.js.map
+│   │   │   ├── README.md
+│   │   │   ├── transaction
+│   │   │   │   ├── accesslist.d.ts
+│   │   │   │   ├── accesslist.d.ts.map
+│   │   │   │   ├── accesslist.js
+│   │   │   │   ├── accesslist.js.map
+│   │   │   │   ├── address.d.ts
+│   │   │   │   ├── address.d.ts.map
+│   │   │   │   ├── address.js
+│   │   │   │   ├── address.js.map
+│   │   │   │   ├── authorization.d.ts
+│   │   │   │   ├── authorization.d.ts.map
+│   │   │   │   ├── authorization.js
+│   │   │   │   ├── authorization.js.map
+│   │   │   │   ├── index.d.ts
+│   │   │   │   ├── index.d.ts.map
+│   │   │   │   ├── index.js
+│   │   │   │   ├── index.js.map
+│   │   │   │   ├── transaction.d.ts
+│   │   │   │   ├── transaction.d.ts.map
+│   │   │   │   ├── transaction.js
+│   │   │   │   └── transaction.js.map
+│   │   │   ├── utils
+│   │   │   │   ├── base58.d.ts
+│   │   │   │   ├── base58.d.ts.map
+│   │   │   │   ├── base58.js
+│   │   │   │   ├── base58.js.map
+│   │   │   │   ├── base64-browser.d.ts
+│   │   │   │   ├── base64-browser.d.ts.map
+│   │   │   │   ├── base64-browser.js
+│   │   │   │   ├── base64-browser.js.map
+│   │   │   │   ├── base64.d.ts
+│   │   │   │   ├── base64.d.ts.map
+│   │   │   │   ├── base64.js
+│   │   │   │   ├── base64.js.map
+│   │   │   │   ├── data.d.ts
+│   │   │   │   ├── data.d.ts.map
+│   │   │   │   ├── data.js
+│   │   │   │   ├── data.js.map
+│   │   │   │   ├── errors.d.ts
+│   │   │   │   ├── errors.d.ts.map
+│   │   │   │   ├── errors.js
+│   │   │   │   ├── errors.js.map
+│   │   │   │   ├── events.d.ts
+│   │   │   │   ├── events.d.ts.map
+│   │   │   │   ├── events.js
+│   │   │   │   ├── events.js.map
+│   │   │   │   ├── fetch.d.ts
+│   │   │   │   ├── fetch.d.ts.map
+│   │   │   │   ├── fetch.js
+│   │   │   │   ├── fetch.js.map
+│   │   │   │   ├── fixednumber.d.ts
+│   │   │   │   ├── fixednumber.d.ts.map
+│   │   │   │   ├── fixednumber.js
+│   │   │   │   ├── fixednumber.js.map
+│   │   │   │   ├── geturl-browser.d.ts
+│   │   │   │   ├── geturl-browser.d.ts.map
+│   │   │   │   ├── geturl-browser.js
+│   │   │   │   ├── geturl-browser.js.map
+│   │   │   │   ├── geturl.d.ts
+│   │   │   │   ├── geturl.d.ts.map
+│   │   │   │   ├── geturl.js
+│   │   │   │   ├── geturl.js.map
+│   │   │   │   ├── index.d.ts
+│   │   │   │   ├── index.d.ts.map
+│   │   │   │   ├── index.js
+│   │   │   │   ├── index.js.map
+│   │   │   │   ├── maths.d.ts
+│   │   │   │   ├── maths.d.ts.map
+│   │   │   │   ├── maths.js
+│   │   │   │   ├── maths.js.map
+│   │   │   │   ├── properties.d.ts
+│   │   │   │   ├── properties.d.ts.map
+│   │   │   │   ├── properties.js
+│   │   │   │   ├── properties.js.map
+│   │   │   │   ├── rlp-decode.d.ts
+│   │   │   │   ├── rlp-decode.d.ts.map
+│   │   │   │   ├── rlp-decode.js
+│   │   │   │   ├── rlp-decode.js.map
+│   │   │   │   ├── rlp.d.ts
+│   │   │   │   ├── rlp.d.ts.map
+│   │   │   │   ├── rlp-encode.d.ts
+│   │   │   │   ├── rlp-encode.d.ts.map
+│   │   │   │   ├── rlp-encode.js
+│   │   │   │   ├── rlp-encode.js.map
+│   │   │   │   ├── rlp.js
+│   │   │   │   ├── rlp.js.map
+│   │   │   │   ├── units.d.ts
+│   │   │   │   ├── units.d.ts.map
+│   │   │   │   ├── units.js
+│   │   │   │   ├── units.js.map
+│   │   │   │   ├── utf8.d.ts
+│   │   │   │   ├── utf8.d.ts.map
+│   │   │   │   ├── utf8.js
+│   │   │   │   ├── utf8.js.map
+│   │   │   │   ├── uuid.d.ts
+│   │   │   │   ├── uuid.d.ts.map
+│   │   │   │   ├── uuid.js
+│   │   │   │   └── uuid.js.map
+│   │   │   ├── _version.d.ts
+│   │   │   ├── _version.d.ts.map
+│   │   │   ├── _version.js
+│   │   │   ├── _version.js.map
+│   │   │   ├── wallet
+│   │   │   │   ├── base-wallet.d.ts
+│   │   │   │   ├── base-wallet.d.ts.map
+│   │   │   │   ├── base-wallet.js
+│   │   │   │   ├── base-wallet.js.map
+│   │   │   │   ├── hdwallet.d.ts
+│   │   │   │   ├── hdwallet.d.ts.map
+│   │   │   │   ├── hdwallet.js
+│   │   │   │   ├── hdwallet.js.map
+│   │   │   │   ├── index.d.ts
+│   │   │   │   ├── index.d.ts.map
+│   │   │   │   ├── index.js
+│   │   │   │   ├── index.js.map
+│   │   │   │   ├── json-crowdsale.d.ts
+│   │   │   │   ├── json-crowdsale.d.ts.map
+│   │   │   │   ├── json-crowdsale.js
+│   │   │   │   ├── json-crowdsale.js.map
+│   │   │   │   ├── json-keystore.d.ts
+│   │   │   │   ├── json-keystore.d.ts.map
+│   │   │   │   ├── json-keystore.js
+│   │   │   │   ├── json-keystore.js.map
+│   │   │   │   ├── mnemonic.d.ts
+│   │   │   │   ├── mnemonic.d.ts.map
+│   │   │   │   ├── mnemonic.js
+│   │   │   │   ├── mnemonic.js.map
+│   │   │   │   ├── utils.d.ts
+│   │   │   │   ├── utils.d.ts.map
+│   │   │   │   ├── utils.js
+│   │   │   │   ├── utils.js.map
+│   │   │   │   ├── wallet.d.ts
+│   │   │   │   ├── wallet.d.ts.map
+│   │   │   │   ├── wallet.js
+│   │   │   │   └── wallet.js.map
+│   │   │   └── wordlists
+│   │   │       ├── bit-reader.d.ts
+│   │   │       ├── bit-reader.d.ts.map
+│   │   │       ├── bit-reader.js
+│   │   │       ├── bit-reader.js.map
+│   │   │       ├── decode-owla.d.ts
+│   │   │       ├── decode-owla.d.ts.map
+│   │   │       ├── decode-owla.js
+│   │   │       ├── decode-owla.js.map
+│   │   │       ├── decode-owl.d.ts
+│   │   │       ├── decode-owl.d.ts.map
+│   │   │       ├── decode-owl.js
+│   │   │       ├── decode-owl.js.map
+│   │   │       ├── generation
+│   │   │       │   ├── encode-latin.d.ts
+│   │   │       │   ├── encode-latin.d.ts.map
+│   │   │       │   ├── encode-latin.js
+│   │   │       │   └── encode-latin.js.map
+│   │   │       ├── index.d.ts
+│   │   │       ├── index.d.ts.map
+│   │   │       ├── index.js
+│   │   │       ├── index.js.map
+│   │   │       ├── lang-cz.d.ts
+│   │   │       ├── lang-cz.d.ts.map
+│   │   │       ├── lang-cz.js
+│   │   │       ├── lang-cz.js.map
+│   │   │       ├── lang-en.d.ts
+│   │   │       ├── lang-en.d.ts.map
+│   │   │       ├── lang-en.js
+│   │   │       ├── lang-en.js.map
+│   │   │       ├── lang-es.d.ts
+│   │   │       ├── lang-es.d.ts.map
+│   │   │       ├── lang-es.js
+│   │   │       ├── lang-es.js.map
+│   │   │       ├── lang-fr.d.ts
+│   │   │       ├── lang-fr.d.ts.map
+│   │   │       ├── lang-fr.js
+│   │   │       ├── lang-fr.js.map
+│   │   │       ├── lang-it.d.ts
+│   │   │       ├── lang-it.d.ts.map
+│   │   │       ├── lang-it.js
+│   │   │       ├── lang-it.js.map
+│   │   │       ├── lang-ja.d.ts
+│   │   │       ├── lang-ja.d.ts.map
+│   │   │       ├── lang-ja.js
+│   │   │       ├── lang-ja.js.map
+│   │   │       ├── lang-ko.d.ts
+│   │   │       ├── lang-ko.d.ts.map
+│   │   │       ├── lang-ko.js
+│   │   │       ├── lang-ko.js.map
+│   │   │       ├── lang-pt.d.ts
+│   │   │       ├── lang-pt.d.ts.map
+│   │   │       ├── lang-pt.js
+│   │   │       ├── lang-pt.js.map
+│   │   │       ├── lang-zh.d.ts
+│   │   │       ├── lang-zh.d.ts.map
+│   │   │       ├── lang-zh.js
+│   │   │       ├── lang-zh.js.map
+│   │   │       ├── wordlist.d.ts
+│   │   │       ├── wordlist.d.ts.map
+│   │   │       ├── wordlist.js
+│   │   │       ├── wordlist.js.map
+│   │   │       ├── wordlist-owla.d.ts
+│   │   │       ├── wordlist-owla.d.ts.map
+│   │   │       ├── wordlist-owla.js
+│   │   │       ├── wordlist-owla.js.map
+│   │   │       ├── wordlist-owl.d.ts
+│   │   │       ├── wordlist-owl.d.ts.map
+│   │   │       ├── wordlist-owl.js
+│   │   │       ├── wordlist-owl.js.map
+│   │   │       ├── wordlists-browser.d.ts
+│   │   │       ├── wordlists-browser.d.ts.map
+│   │   │       ├── wordlists-browser.js
+│   │   │       ├── wordlists-browser.js.map
+│   │   │       ├── wordlists.d.ts
+│   │   │       ├── wordlists.d.ts.map
+│   │   │       ├── wordlists-extra.d.ts
+│   │   │       ├── wordlists-extra.d.ts.map
+│   │   │       ├── wordlists-extra.js
+│   │   │       ├── wordlists-extra.js.map
+│   │   │       ├── wordlists.js
+│   │   │       └── wordlists.js.map
+│   │   ├── lib.esm
+│   │   │   ├── abi
+│   │   │   │   ├── abi-coder.d.ts
+│   │   │   │   ├── abi-coder.d.ts.map
+│   │   │   │   ├── abi-coder.js
+│   │   │   │   ├── abi-coder.js.map
+│   │   │   │   ├── bytes32.d.ts
+│   │   │   │   ├── bytes32.d.ts.map
+│   │   │   │   ├── bytes32.js
+│   │   │   │   ├── bytes32.js.map
+│   │   │   │   ├── coders
+│   │   │   │   │   ├── abstract-coder.d.ts
+│   │   │   │   │   ├── abstract-coder.d.ts.map
+│   │   │   │   │   ├── abstract-coder.js
+│   │   │   │   │   ├── abstract-coder.js.map
+│   │   │   │   │   ├── address.d.ts
+│   │   │   │   │   ├── address.d.ts.map
+│   │   │   │   │   ├── address.js
+│   │   │   │   │   ├── address.js.map
+│   │   │   │   │   ├── anonymous.d.ts
+│   │   │   │   │   ├── anonymous.d.ts.map
+│   │   │   │   │   ├── anonymous.js
+│   │   │   │   │   ├── anonymous.js.map
+│   │   │   │   │   ├── array.d.ts
+│   │   │   │   │   ├── array.d.ts.map
+│   │   │   │   │   ├── array.js
+│   │   │   │   │   ├── array.js.map
+│   │   │   │   │   ├── boolean.d.ts
+│   │   │   │   │   ├── boolean.d.ts.map
+│   │   │   │   │   ├── boolean.js
+│   │   │   │   │   ├── boolean.js.map
+│   │   │   │   │   ├── bytes.d.ts
+│   │   │   │   │   ├── bytes.d.ts.map
+│   │   │   │   │   ├── bytes.js
+│   │   │   │   │   ├── bytes.js.map
+│   │   │   │   │   ├── fixed-bytes.d.ts
+│   │   │   │   │   ├── fixed-bytes.d.ts.map
+│   │   │   │   │   ├── fixed-bytes.js
+│   │   │   │   │   ├── fixed-bytes.js.map
+│   │   │   │   │   ├── null.d.ts
+│   │   │   │   │   ├── null.d.ts.map
+│   │   │   │   │   ├── null.js
+│   │   │   │   │   ├── null.js.map
+│   │   │   │   │   ├── number.d.ts
+│   │   │   │   │   ├── number.d.ts.map
+│   │   │   │   │   ├── number.js
+│   │   │   │   │   ├── number.js.map
+│   │   │   │   │   ├── string.d.ts
+│   │   │   │   │   ├── string.d.ts.map
+│   │   │   │   │   ├── string.js
+│   │   │   │   │   ├── string.js.map
+│   │   │   │   │   ├── tuple.d.ts
+│   │   │   │   │   ├── tuple.d.ts.map
+│   │   │   │   │   ├── tuple.js
+│   │   │   │   │   └── tuple.js.map
+│   │   │   │   ├── fragments.d.ts
+│   │   │   │   ├── fragments.d.ts.map
+│   │   │   │   ├── fragments.js
+│   │   │   │   ├── fragments.js.map
+│   │   │   │   ├── index.d.ts
+│   │   │   │   ├── index.d.ts.map
+│   │   │   │   ├── index.js
+│   │   │   │   ├── index.js.map
+│   │   │   │   ├── interface.d.ts
+│   │   │   │   ├── interface.d.ts.map
+│   │   │   │   ├── interface.js
+│   │   │   │   ├── interface.js.map
+│   │   │   │   ├── typed.d.ts
+│   │   │   │   ├── typed.d.ts.map
+│   │   │   │   ├── typed.js
+│   │   │   │   └── typed.js.map
+│   │   │   ├── address
+│   │   │   │   ├── address.d.ts
+│   │   │   │   ├── address.d.ts.map
+│   │   │   │   ├── address.js
+│   │   │   │   ├── address.js.map
+│   │   │   │   ├── checks.d.ts
+│   │   │   │   ├── checks.d.ts.map
+│   │   │   │   ├── checks.js
+│   │   │   │   ├── checks.js.map
+│   │   │   │   ├── contract-address.d.ts
+│   │   │   │   ├── contract-address.d.ts.map
+│   │   │   │   ├── contract-address.js
+│   │   │   │   ├── contract-address.js.map
+│   │   │   │   ├── index.d.ts
+│   │   │   │   ├── index.d.ts.map
+│   │   │   │   ├── index.js
+│   │   │   │   └── index.js.map
+│   │   │   ├── constants
+│   │   │   │   ├── addresses.d.ts
+│   │   │   │   ├── addresses.d.ts.map
+│   │   │   │   ├── addresses.js
+│   │   │   │   ├── addresses.js.map
+│   │   │   │   ├── hashes.d.ts
+│   │   │   │   ├── hashes.d.ts.map
+│   │   │   │   ├── hashes.js
+│   │   │   │   ├── hashes.js.map
+│   │   │   │   ├── index.d.ts
+│   │   │   │   ├── index.d.ts.map
+│   │   │   │   ├── index.js
+│   │   │   │   ├── index.js.map
+│   │   │   │   ├── numbers.d.ts
+│   │   │   │   ├── numbers.d.ts.map
+│   │   │   │   ├── numbers.js
+│   │   │   │   ├── numbers.js.map
+│   │   │   │   ├── strings.d.ts
+│   │   │   │   ├── strings.d.ts.map
+│   │   │   │   ├── strings.js
+│   │   │   │   └── strings.js.map
+│   │   │   ├── contract
+│   │   │   │   ├── contract.d.ts
+│   │   │   │   ├── contract.d.ts.map
+│   │   │   │   ├── contract.js
+│   │   │   │   ├── contract.js.map
+│   │   │   │   ├── factory.d.ts
+│   │   │   │   ├── factory.d.ts.map
+│   │   │   │   ├── factory.js
+│   │   │   │   ├── factory.js.map
+│   │   │   │   ├── index.d.ts
+│   │   │   │   ├── index.d.ts.map
+│   │   │   │   ├── index.js
+│   │   │   │   ├── index.js.map
+│   │   │   │   ├── types.d.ts
+│   │   │   │   ├── types.d.ts.map
+│   │   │   │   ├── types.js
+│   │   │   │   ├── types.js.map
+│   │   │   │   ├── wrappers.d.ts
+│   │   │   │   ├── wrappers.d.ts.map
+│   │   │   │   ├── wrappers.js
+│   │   │   │   └── wrappers.js.map
+│   │   │   ├── crypto
+│   │   │   │   ├── crypto-browser.d.ts
+│   │   │   │   ├── crypto-browser.d.ts.map
+│   │   │   │   ├── crypto-browser.js
+│   │   │   │   ├── crypto-browser.js.map
+│   │   │   │   ├── crypto.d.ts
+│   │   │   │   ├── crypto.d.ts.map
+│   │   │   │   ├── crypto.js
+│   │   │   │   ├── crypto.js.map
+│   │   │   │   ├── hmac.d.ts
+│   │   │   │   ├── hmac.d.ts.map
+│   │   │   │   ├── hmac.js
+│   │   │   │   ├── hmac.js.map
+│   │   │   │   ├── index.d.ts
+│   │   │   │   ├── index.d.ts.map
+│   │   │   │   ├── index.js
+│   │   │   │   ├── index.js.map
+│   │   │   │   ├── keccak.d.ts
+│   │   │   │   ├── keccak.d.ts.map
+│   │   │   │   ├── keccak.js
+│   │   │   │   ├── keccak.js.map
+│   │   │   │   ├── pbkdf2.d.ts
+│   │   │   │   ├── pbkdf2.d.ts.map
+│   │   │   │   ├── pbkdf2.js
+│   │   │   │   ├── pbkdf2.js.map
+│   │   │   │   ├── random.d.ts
+│   │   │   │   ├── random.d.ts.map
+│   │   │   │   ├── random.js
+│   │   │   │   ├── random.js.map
+│   │   │   │   ├── ripemd160.d.ts
+│   │   │   │   ├── ripemd160.d.ts.map
+│   │   │   │   ├── ripemd160.js
+│   │   │   │   ├── ripemd160.js.map
+│   │   │   │   ├── scrypt.d.ts
+│   │   │   │   ├── scrypt.d.ts.map
+│   │   │   │   ├── scrypt.js
+│   │   │   │   ├── scrypt.js.map
+│   │   │   │   ├── sha2.d.ts
+│   │   │   │   ├── sha2.d.ts.map
+│   │   │   │   ├── sha2.js
+│   │   │   │   ├── sha2.js.map
+│   │   │   │   ├── signature.d.ts
+│   │   │   │   ├── signature.d.ts.map
+│   │   │   │   ├── signature.js
+│   │   │   │   ├── signature.js.map
+│   │   │   │   ├── signing-key.d.ts
+│   │   │   │   ├── signing-key.d.ts.map
+│   │   │   │   ├── signing-key.js
+│   │   │   │   └── signing-key.js.map
+│   │   │   ├── ethers.d.ts
+│   │   │   ├── ethers.d.ts.map
+│   │   │   ├── ethers.js
+│   │   │   ├── ethers.js.map
+│   │   │   ├── hash
+│   │   │   │   ├── authorization.d.ts
+│   │   │   │   ├── authorization.d.ts.map
+│   │   │   │   ├── authorization.js
+│   │   │   │   ├── authorization.js.map
+│   │   │   │   ├── id.d.ts
+│   │   │   │   ├── id.d.ts.map
+│   │   │   │   ├── id.js
+│   │   │   │   ├── id.js.map
+│   │   │   │   ├── index.d.ts
+│   │   │   │   ├── index.d.ts.map
+│   │   │   │   ├── index.js
+│   │   │   │   ├── index.js.map
+│   │   │   │   ├── message.d.ts
+│   │   │   │   ├── message.d.ts.map
+│   │   │   │   ├── message.js
+│   │   │   │   ├── message.js.map
+│   │   │   │   ├── namehash.d.ts
+│   │   │   │   ├── namehash.d.ts.map
+│   │   │   │   ├── namehash.js
+│   │   │   │   ├── namehash.js.map
+│   │   │   │   ├── solidity.d.ts
+│   │   │   │   ├── solidity.d.ts.map
+│   │   │   │   ├── solidity.js
+│   │   │   │   ├── solidity.js.map
+│   │   │   │   ├── typed-data.d.ts
+│   │   │   │   ├── typed-data.d.ts.map
+│   │   │   │   ├── typed-data.js
+│   │   │   │   └── typed-data.js.map
+│   │   │   ├── index.d.ts
+│   │   │   ├── index.d.ts.map
+│   │   │   ├── index.js
+│   │   │   ├── index.js.map
+│   │   │   ├── package.json
+│   │   │   ├── providers
+│   │   │   │   ├── abstract-provider.d.ts
+│   │   │   │   ├── abstract-provider.d.ts.map
+│   │   │   │   ├── abstract-provider.js
+│   │   │   │   ├── abstract-provider.js.map
+│   │   │   │   ├── abstract-signer.d.ts
+│   │   │   │   ├── abstract-signer.d.ts.map
+│   │   │   │   ├── abstract-signer.js
+│   │   │   │   ├── abstract-signer.js.map
+│   │   │   │   ├── community.d.ts
+│   │   │   │   ├── community.d.ts.map
+│   │   │   │   ├── community.js
+│   │   │   │   ├── community.js.map
+│   │   │   │   ├── contracts.d.ts
+│   │   │   │   ├── contracts.d.ts.map
+│   │   │   │   ├── contracts.js
+│   │   │   │   ├── contracts.js.map
+│   │   │   │   ├── default-provider.d.ts
+│   │   │   │   ├── default-provider.d.ts.map
+│   │   │   │   ├── default-provider.js
+│   │   │   │   ├── default-provider.js.map
+│   │   │   │   ├── ens-resolver.d.ts
+│   │   │   │   ├── ens-resolver.d.ts.map
+│   │   │   │   ├── ens-resolver.js
+│   │   │   │   ├── ens-resolver.js.map
+│   │   │   │   ├── format.d.ts
+│   │   │   │   ├── format.d.ts.map
+│   │   │   │   ├── format.js
+│   │   │   │   ├── format.js.map
+│   │   │   │   ├── formatting.d.ts
+│   │   │   │   ├── formatting.d.ts.map
+│   │   │   │   ├── formatting.js
+│   │   │   │   ├── formatting.js.map
+│   │   │   │   ├── index.d.ts
+│   │   │   │   ├── index.d.ts.map
+│   │   │   │   ├── index.js
+│   │   │   │   ├── index.js.map
+│   │   │   │   ├── network.d.ts
+│   │   │   │   ├── network.d.ts.map
+│   │   │   │   ├── network.js
+│   │   │   │   ├── network.js.map
+│   │   │   │   ├── pagination.d.ts
+│   │   │   │   ├── pagination.d.ts.map
+│   │   │   │   ├── pagination.js
+│   │   │   │   ├── pagination.js.map
+│   │   │   │   ├── plugin-fallback.d.ts
+│   │   │   │   ├── plugin-fallback.d.ts.map
+│   │   │   │   ├── plugin-fallback.js
+│   │   │   │   ├── plugin-fallback.js.map
+│   │   │   │   ├── plugins-network.d.ts
+│   │   │   │   ├── plugins-network.d.ts.map
+│   │   │   │   ├── plugins-network.js
+│   │   │   │   ├── plugins-network.js.map
+│   │   │   │   ├── provider-alchemy.d.ts
+│   │   │   │   ├── provider-alchemy.d.ts.map
+│   │   │   │   ├── provider-alchemy.js
+│   │   │   │   ├── provider-alchemy.js.map
+│   │   │   │   ├── provider-ankr.d.ts
+│   │   │   │   ├── provider-ankr.d.ts.map
+│   │   │   │   ├── provider-ankr.js
+│   │   │   │   ├── provider-ankr.js.map
+│   │   │   │   ├── provider-blockscout.d.ts
+│   │   │   │   ├── provider-blockscout.d.ts.map
+│   │   │   │   ├── provider-blockscout.js
+│   │   │   │   ├── provider-blockscout.js.map
+│   │   │   │   ├── provider-browser.d.ts
+│   │   │   │   ├── provider-browser.d.ts.map
+│   │   │   │   ├── provider-browser.js
+│   │   │   │   ├── provider-browser.js.map
+│   │   │   │   ├── provider-chainstack.d.ts
+│   │   │   │   ├── provider-chainstack.d.ts.map
+│   │   │   │   ├── provider-chainstack.js
+│   │   │   │   ├── provider-chainstack.js.map
+│   │   │   │   ├── provider-cloudflare.d.ts
+│   │   │   │   ├── provider-cloudflare.d.ts.map
+│   │   │   │   ├── provider-cloudflare.js
+│   │   │   │   ├── provider-cloudflare.js.map
+│   │   │   │   ├── provider.d.ts
+│   │   │   │   ├── provider.d.ts.map
+│   │   │   │   ├── provider-etherscan.d.ts
+│   │   │   │   ├── provider-etherscan.d.ts.map
+│   │   │   │   ├── provider-etherscan.js
+│   │   │   │   ├── provider-etherscan.js.map
+│   │   │   │   ├── provider-fallback.d.ts
+│   │   │   │   ├── provider-fallback.d.ts.map
+│   │   │   │   ├── provider-fallback.js
+│   │   │   │   ├── provider-fallback.js.map
+│   │   │   │   ├── provider-infura.d.ts
+│   │   │   │   ├── provider-infura.d.ts.map
+│   │   │   │   ├── provider-infura.js
+│   │   │   │   ├── provider-infura.js.map
+│   │   │   │   ├── provider-ipcsocket-browser.d.ts
+│   │   │   │   ├── provider-ipcsocket-browser.d.ts.map
+│   │   │   │   ├── provider-ipcsocket-browser.js
+│   │   │   │   ├── provider-ipcsocket-browser.js.map
+│   │   │   │   ├── provider-ipcsocket.d.ts
+│   │   │   │   ├── provider-ipcsocket.d.ts.map
+│   │   │   │   ├── provider-ipcsocket.js
+│   │   │   │   ├── provider-ipcsocket.js.map
+│   │   │   │   ├── provider.js
+│   │   │   │   ├── provider.js.map
+│   │   │   │   ├── provider-jsonrpc.d.ts
+│   │   │   │   ├── provider-jsonrpc.d.ts.map
+│   │   │   │   ├── provider-jsonrpc.js
+│   │   │   │   ├── provider-jsonrpc.js.map
+│   │   │   │   ├── provider-pocket.d.ts
+│   │   │   │   ├── provider-pocket.d.ts.map
+│   │   │   │   ├── provider-pocket.js
+│   │   │   │   ├── provider-pocket.js.map
+│   │   │   │   ├── provider-quicknode.d.ts
+│   │   │   │   ├── provider-quicknode.d.ts.map
+│   │   │   │   ├── provider-quicknode.js
+│   │   │   │   ├── provider-quicknode.js.map
+│   │   │   │   ├── provider-socket.d.ts
+│   │   │   │   ├── provider-socket.d.ts.map
+│   │   │   │   ├── provider-socket.js
+│   │   │   │   ├── provider-socket.js.map
+│   │   │   │   ├── provider-websocket.d.ts
+│   │   │   │   ├── provider-websocket.d.ts.map
+│   │   │   │   ├── provider-websocket.js
+│   │   │   │   ├── provider-websocket.js.map
+│   │   │   │   ├── signer.d.ts
+│   │   │   │   ├── signer.d.ts.map
+│   │   │   │   ├── signer.js
+│   │   │   │   ├── signer.js.map
+│   │   │   │   ├── signer-noncemanager.d.ts
+│   │   │   │   ├── signer-noncemanager.d.ts.map
+│   │   │   │   ├── signer-noncemanager.js
+│   │   │   │   ├── signer-noncemanager.js.map
+│   │   │   │   ├── subscriber-connection.d.ts
+│   │   │   │   ├── subscriber-connection.d.ts.map
+│   │   │   │   ├── subscriber-connection.js
+│   │   │   │   ├── subscriber-connection.js.map
+│   │   │   │   ├── subscriber-filterid.d.ts
+│   │   │   │   ├── subscriber-filterid.d.ts.map
+│   │   │   │   ├── subscriber-filterid.js
+│   │   │   │   ├── subscriber-filterid.js.map
+│   │   │   │   ├── subscriber-polling.d.ts
+│   │   │   │   ├── subscriber-polling.d.ts.map
+│   │   │   │   ├── subscriber-polling.js
+│   │   │   │   ├── subscriber-polling.js.map
+│   │   │   │   ├── ws-browser.d.ts
+│   │   │   │   ├── ws-browser.d.ts.map
+│   │   │   │   ├── ws-browser.js
+│   │   │   │   ├── ws-browser.js.map
+│   │   │   │   ├── ws.d.ts
+│   │   │   │   ├── ws.d.ts.map
+│   │   │   │   ├── ws.js
+│   │   │   │   └── ws.js.map
+│   │   │   ├── README.md
+│   │   │   ├── transaction
+│   │   │   │   ├── accesslist.d.ts
+│   │   │   │   ├── accesslist.d.ts.map
+│   │   │   │   ├── accesslist.js
+│   │   │   │   ├── accesslist.js.map
+│   │   │   │   ├── address.d.ts
+│   │   │   │   ├── address.d.ts.map
+│   │   │   │   ├── address.js
+│   │   │   │   ├── address.js.map
+│   │   │   │   ├── authorization.d.ts
+│   │   │   │   ├── authorization.d.ts.map
+│   │   │   │   ├── authorization.js
+│   │   │   │   ├── authorization.js.map
+│   │   │   │   ├── index.d.ts
+│   │   │   │   ├── index.d.ts.map
+│   │   │   │   ├── index.js
+│   │   │   │   ├── index.js.map
+│   │   │   │   ├── transaction.d.ts
+│   │   │   │   ├── transaction.d.ts.map
+│   │   │   │   ├── transaction.js
+│   │   │   │   └── transaction.js.map
+│   │   │   ├── utils
+│   │   │   │   ├── base58.d.ts
+│   │   │   │   ├── base58.d.ts.map
+│   │   │   │   ├── base58.js
+│   │   │   │   ├── base58.js.map
+│   │   │   │   ├── base64-browser.d.ts
+│   │   │   │   ├── base64-browser.d.ts.map
+│   │   │   │   ├── base64-browser.js
+│   │   │   │   ├── base64-browser.js.map
+│   │   │   │   ├── base64.d.ts
+│   │   │   │   ├── base64.d.ts.map
+│   │   │   │   ├── base64.js
+│   │   │   │   ├── base64.js.map
+│   │   │   │   ├── data.d.ts
+│   │   │   │   ├── data.d.ts.map
+│   │   │   │   ├── data.js
+│   │   │   │   ├── data.js.map
+│   │   │   │   ├── errors.d.ts
+│   │   │   │   ├── errors.d.ts.map
+│   │   │   │   ├── errors.js
+│   │   │   │   ├── errors.js.map
+│   │   │   │   ├── events.d.ts
+│   │   │   │   ├── events.d.ts.map
+│   │   │   │   ├── events.js
+│   │   │   │   ├── events.js.map
+│   │   │   │   ├── fetch.d.ts
+│   │   │   │   ├── fetch.d.ts.map
+│   │   │   │   ├── fetch.js
+│   │   │   │   ├── fetch.js.map
+│   │   │   │   ├── fixednumber.d.ts
+│   │   │   │   ├── fixednumber.d.ts.map
+│   │   │   │   ├── fixednumber.js
+│   │   │   │   ├── fixednumber.js.map
+│   │   │   │   ├── geturl-browser.d.ts
+│   │   │   │   ├── geturl-browser.d.ts.map
+│   │   │   │   ├── geturl-browser.js
+│   │   │   │   ├── geturl-browser.js.map
+│   │   │   │   ├── geturl.d.ts
+│   │   │   │   ├── geturl.d.ts.map
+│   │   │   │   ├── geturl.js
+│   │   │   │   ├── geturl.js.map
+│   │   │   │   ├── index.d.ts
+│   │   │   │   ├── index.d.ts.map
+│   │   │   │   ├── index.js
+│   │   │   │   ├── index.js.map
+│   │   │   │   ├── maths.d.ts
+│   │   │   │   ├── maths.d.ts.map
+│   │   │   │   ├── maths.js
+│   │   │   │   ├── maths.js.map
+│   │   │   │   ├── properties.d.ts
+│   │   │   │   ├── properties.d.ts.map
+│   │   │   │   ├── properties.js
+│   │   │   │   ├── properties.js.map
+│   │   │   │   ├── rlp-decode.d.ts
+│   │   │   │   ├── rlp-decode.d.ts.map
+│   │   │   │   ├── rlp-decode.js
+│   │   │   │   ├── rlp-decode.js.map
+│   │   │   │   ├── rlp.d.ts
+│   │   │   │   ├── rlp.d.ts.map
+│   │   │   │   ├── rlp-encode.d.ts
+│   │   │   │   ├── rlp-encode.d.ts.map
+│   │   │   │   ├── rlp-encode.js
+│   │   │   │   ├── rlp-encode.js.map
+│   │   │   │   ├── rlp.js
+│   │   │   │   ├── rlp.js.map
+│   │   │   │   ├── units.d.ts
+│   │   │   │   ├── units.d.ts.map
+│   │   │   │   ├── units.js
+│   │   │   │   ├── units.js.map
+│   │   │   │   ├── utf8.d.ts
+│   │   │   │   ├── utf8.d.ts.map
+│   │   │   │   ├── utf8.js
+│   │   │   │   ├── utf8.js.map
+│   │   │   │   ├── uuid.d.ts
+│   │   │   │   ├── uuid.d.ts.map
+│   │   │   │   ├── uuid.js
+│   │   │   │   └── uuid.js.map
+│   │   │   ├── _version.d.ts
+│   │   │   ├── _version.d.ts.map
+│   │   │   ├── _version.js
+│   │   │   ├── _version.js.map
+│   │   │   ├── wallet
+│   │   │   │   ├── base-wallet.d.ts
+│   │   │   │   ├── base-wallet.d.ts.map
+│   │   │   │   ├── base-wallet.js
+│   │   │   │   ├── base-wallet.js.map
+│   │   │   │   ├── hdwallet.d.ts
+│   │   │   │   ├── hdwallet.d.ts.map
+│   │   │   │   ├── hdwallet.js
+│   │   │   │   ├── hdwallet.js.map
+│   │   │   │   ├── index.d.ts
+│   │   │   │   ├── index.d.ts.map
+│   │   │   │   ├── index.js
+│   │   │   │   ├── index.js.map
+│   │   │   │   ├── json-crowdsale.d.ts
+│   │   │   │   ├── json-crowdsale.d.ts.map
+│   │   │   │   ├── json-crowdsale.js
+│   │   │   │   ├── json-crowdsale.js.map
+│   │   │   │   ├── json-keystore.d.ts
+│   │   │   │   ├── json-keystore.d.ts.map
+│   │   │   │   ├── json-keystore.js
+│   │   │   │   ├── json-keystore.js.map
+│   │   │   │   ├── mnemonic.d.ts
+│   │   │   │   ├── mnemonic.d.ts.map
+│   │   │   │   ├── mnemonic.js
+│   │   │   │   ├── mnemonic.js.map
+│   │   │   │   ├── utils.d.ts
+│   │   │   │   ├── utils.d.ts.map
+│   │   │   │   ├── utils.js
+│   │   │   │   ├── utils.js.map
+│   │   │   │   ├── wallet.d.ts
+│   │   │   │   ├── wallet.d.ts.map
+│   │   │   │   ├── wallet.js
+│   │   │   │   └── wallet.js.map
+│   │   │   └── wordlists
+│   │   │       ├── bit-reader.d.ts
+│   │   │       ├── bit-reader.d.ts.map
+│   │   │       ├── bit-reader.js
+│   │   │       ├── bit-reader.js.map
+│   │   │       ├── decode-owla.d.ts
+│   │   │       ├── decode-owla.d.ts.map
+│   │   │       ├── decode-owla.js
+│   │   │       ├── decode-owla.js.map
+│   │   │       ├── decode-owl.d.ts
+│   │   │       ├── decode-owl.d.ts.map
+│   │   │       ├── decode-owl.js
+│   │   │       ├── decode-owl.js.map
+│   │   │       ├── generation
+│   │   │       │   ├── encode-latin.d.ts
+│   │   │       │   ├── encode-latin.d.ts.map
+│   │   │       │   ├── encode-latin.js
+│   │   │       │   └── encode-latin.js.map
+│   │   │       ├── index.d.ts
+│   │   │       ├── index.d.ts.map
+│   │   │       ├── index.js
+│   │   │       ├── index.js.map
+│   │   │       ├── lang-cz.d.ts
+│   │   │       ├── lang-cz.d.ts.map
+│   │   │       ├── lang-cz.js
+│   │   │       ├── lang-cz.js.map
+│   │   │       ├── lang-en.d.ts
+│   │   │       ├── lang-en.d.ts.map
+│   │   │       ├── lang-en.js
+│   │   │       ├── lang-en.js.map
+│   │   │       ├── lang-es.d.ts
+│   │   │       ├── lang-es.d.ts.map
+│   │   │       ├── lang-es.js
+│   │   │       ├── lang-es.js.map
+│   │   │       ├── lang-fr.d.ts
+│   │   │       ├── lang-fr.d.ts.map
+│   │   │       ├── lang-fr.js
+│   │   │       ├── lang-fr.js.map
+│   │   │       ├── lang-it.d.ts
+│   │   │       ├── lang-it.d.ts.map
+│   │   │       ├── lang-it.js
+│   │   │       ├── lang-it.js.map
+│   │   │       ├── lang-ja.d.ts
+│   │   │       ├── lang-ja.d.ts.map
+│   │   │       ├── lang-ja.js
+│   │   │       ├── lang-ja.js.map
+│   │   │       ├── lang-ko.d.ts
+│   │   │       ├── lang-ko.d.ts.map
+│   │   │       ├── lang-ko.js
+│   │   │       ├── lang-ko.js.map
+│   │   │       ├── lang-pt.d.ts
+│   │   │       ├── lang-pt.d.ts.map
+│   │   │       ├── lang-pt.js
+│   │   │       ├── lang-pt.js.map
+│   │   │       ├── lang-zh.d.ts
+│   │   │       ├── lang-zh.d.ts.map
+│   │   │       ├── lang-zh.js
+│   │   │       ├── lang-zh.js.map
+│   │   │       ├── wordlist.d.ts
+│   │   │       ├── wordlist.d.ts.map
+│   │   │       ├── wordlist.js
+│   │   │       ├── wordlist.js.map
+│   │   │       ├── wordlist-owla.d.ts
+│   │   │       ├── wordlist-owla.d.ts.map
+│   │   │       ├── wordlist-owla.js
+│   │   │       ├── wordlist-owla.js.map
+│   │   │       ├── wordlist-owl.d.ts
+│   │   │       ├── wordlist-owl.d.ts.map
+│   │   │       ├── wordlist-owl.js
+│   │   │       ├── wordlist-owl.js.map
+│   │   │       ├── wordlists-browser.d.ts
+│   │   │       ├── wordlists-browser.d.ts.map
+│   │   │       ├── wordlists-browser.js
+│   │   │       ├── wordlists-browser.js.map
+│   │   │       ├── wordlists.d.ts
+│   │   │       ├── wordlists.d.ts.map
+│   │   │       ├── wordlists-extra.d.ts
+│   │   │       ├── wordlists-extra.d.ts.map
+│   │   │       ├── wordlists-extra.js
+│   │   │       ├── wordlists-extra.js.map
+│   │   │       ├── wordlists.js
+│   │   │       └── wordlists.js.map
+│   │   ├── LICENSE.md
+│   │   ├── node_modules
+│   │   │   ├── @noble
+│   │   │   │   ├── curves
+│   │   │   │   │   ├── abstract
+│   │   │   │   │   │   ├── bls.d.ts
+│   │   │   │   │   │   ├── bls.d.ts.map
+│   │   │   │   │   │   ├── bls.js
+│   │   │   │   │   │   ├── bls.js.map
+│   │   │   │   │   │   ├── curve.d.ts
+│   │   │   │   │   │   ├── curve.d.ts.map
+│   │   │   │   │   │   ├── curve.js
+│   │   │   │   │   │   ├── curve.js.map
+│   │   │   │   │   │   ├── edwards.d.ts
+│   │   │   │   │   │   ├── edwards.d.ts.map
+│   │   │   │   │   │   ├── edwards.js
+│   │   │   │   │   │   ├── edwards.js.map
+│   │   │   │   │   │   ├── hash-to-curve.d.ts
+│   │   │   │   │   │   ├── hash-to-curve.d.ts.map
+│   │   │   │   │   │   ├── hash-to-curve.js
+│   │   │   │   │   │   ├── hash-to-curve.js.map
+│   │   │   │   │   │   ├── modular.d.ts
+│   │   │   │   │   │   ├── modular.d.ts.map
+│   │   │   │   │   │   ├── modular.js
+│   │   │   │   │   │   ├── modular.js.map
+│   │   │   │   │   │   ├── montgomery.d.ts
+│   │   │   │   │   │   ├── montgomery.d.ts.map
+│   │   │   │   │   │   ├── montgomery.js
+│   │   │   │   │   │   ├── montgomery.js.map
+│   │   │   │   │   │   ├── poseidon.d.ts
+│   │   │   │   │   │   ├── poseidon.d.ts.map
+│   │   │   │   │   │   ├── poseidon.js
+│   │   │   │   │   │   ├── poseidon.js.map
+│   │   │   │   │   │   ├── utils.d.ts
+│   │   │   │   │   │   ├── utils.d.ts.map
+│   │   │   │   │   │   ├── utils.js
+│   │   │   │   │   │   ├── utils.js.map
+│   │   │   │   │   │   ├── weierstrass.d.ts
+│   │   │   │   │   │   ├── weierstrass.d.ts.map
+│   │   │   │   │   │   ├── weierstrass.js
+│   │   │   │   │   │   └── weierstrass.js.map
+│   │   │   │   │   ├── bls12-381.d.ts
+│   │   │   │   │   ├── bls12-381.d.ts.map
+│   │   │   │   │   ├── bls12-381.js
+│   │   │   │   │   ├── bls12-381.js.map
+│   │   │   │   │   ├── bn254.d.ts
+│   │   │   │   │   ├── bn254.d.ts.map
+│   │   │   │   │   ├── bn254.js
+│   │   │   │   │   ├── bn254.js.map
+│   │   │   │   │   ├── ed25519.d.ts
+│   │   │   │   │   ├── ed25519.d.ts.map
+│   │   │   │   │   ├── ed25519.js
+│   │   │   │   │   ├── ed25519.js.map
+│   │   │   │   │   ├── ed448.d.ts
+│   │   │   │   │   ├── ed448.d.ts.map
+│   │   │   │   │   ├── ed448.js
+│   │   │   │   │   ├── ed448.js.map
+│   │   │   │   │   ├── esm
+│   │   │   │   │   │   ├── abstract
+│   │   │   │   │   │   │   ├── bls.js
+│   │   │   │   │   │   │   ├── bls.js.map
+│   │   │   │   │   │   │   ├── curve.js
+│   │   │   │   │   │   │   ├── curve.js.map
+│   │   │   │   │   │   │   ├── edwards.js
+│   │   │   │   │   │   │   ├── edwards.js.map
+│   │   │   │   │   │   │   ├── hash-to-curve.js
+│   │   │   │   │   │   │   ├── hash-to-curve.js.map
+│   │   │   │   │   │   │   ├── modular.js
+│   │   │   │   │   │   │   ├── modular.js.map
+│   │   │   │   │   │   │   ├── montgomery.js
+│   │   │   │   │   │   │   ├── montgomery.js.map
+│   │   │   │   │   │   │   ├── poseidon.js
+│   │   │   │   │   │   │   ├── poseidon.js.map
+│   │   │   │   │   │   │   ├── utils.js
+│   │   │   │   │   │   │   ├── utils.js.map
+│   │   │   │   │   │   │   ├── weierstrass.js
+│   │   │   │   │   │   │   └── weierstrass.js.map
+│   │   │   │   │   │   ├── bls12-381.js
+│   │   │   │   │   │   ├── bls12-381.js.map
+│   │   │   │   │   │   ├── bn254.js
+│   │   │   │   │   │   ├── bn254.js.map
+│   │   │   │   │   │   ├── ed25519.js
+│   │   │   │   │   │   ├── ed25519.js.map
+│   │   │   │   │   │   ├── ed448.js
+│   │   │   │   │   │   ├── ed448.js.map
+│   │   │   │   │   │   ├── index.js
+│   │   │   │   │   │   ├── index.js.map
+│   │   │   │   │   │   ├── jubjub.js
+│   │   │   │   │   │   ├── jubjub.js.map
+│   │   │   │   │   │   ├── p256.js
+│   │   │   │   │   │   ├── p256.js.map
+│   │   │   │   │   │   ├── p384.js
+│   │   │   │   │   │   ├── p384.js.map
+│   │   │   │   │   │   ├── p521.js
+│   │   │   │   │   │   ├── p521.js.map
+│   │   │   │   │   │   ├── package.json
+│   │   │   │   │   │   ├── pasta.js
+│   │   │   │   │   │   ├── pasta.js.map
+│   │   │   │   │   │   ├── secp256k1.js
+│   │   │   │   │   │   ├── secp256k1.js.map
+│   │   │   │   │   │   ├── _shortw_utils.js
+│   │   │   │   │   │   └── _shortw_utils.js.map
+│   │   │   │   │   ├── index.d.ts
+│   │   │   │   │   ├── index.d.ts.map
+│   │   │   │   │   ├── index.js
+│   │   │   │   │   ├── index.js.map
+│   │   │   │   │   ├── jubjub.d.ts
+│   │   │   │   │   ├── jubjub.d.ts.map
+│   │   │   │   │   ├── jubjub.js
+│   │   │   │   │   ├── jubjub.js.map
+│   │   │   │   │   ├── LICENSE
+│   │   │   │   │   ├── p256.d.ts
+│   │   │   │   │   ├── p256.d.ts.map
+│   │   │   │   │   ├── p256.js
+│   │   │   │   │   ├── p256.js.map
+│   │   │   │   │   ├── p384.d.ts
+│   │   │   │   │   ├── p384.d.ts.map
+│   │   │   │   │   ├── p384.js
+│   │   │   │   │   ├── p384.js.map
+│   │   │   │   │   ├── p521.d.ts
+│   │   │   │   │   ├── p521.d.ts.map
+│   │   │   │   │   ├── p521.js
+│   │   │   │   │   ├── p521.js.map
+│   │   │   │   │   ├── package.json
+│   │   │   │   │   ├── pasta.d.ts
+│   │   │   │   │   ├── pasta.d.ts.map
+│   │   │   │   │   ├── pasta.js
+│   │   │   │   │   ├── pasta.js.map
+│   │   │   │   │   ├── README.md
+│   │   │   │   │   ├── secp256k1.d.ts
+│   │   │   │   │   ├── secp256k1.d.ts.map
+│   │   │   │   │   ├── secp256k1.js
+│   │   │   │   │   ├── secp256k1.js.map
+│   │   │   │   │   ├── _shortw_utils.d.ts
+│   │   │   │   │   ├── _shortw_utils.d.ts.map
+│   │   │   │   │   ├── _shortw_utils.js
+│   │   │   │   │   ├── _shortw_utils.js.map
+│   │   │   │   │   └── src
+│   │   │   │   │       ├── abstract
+│   │   │   │   │       │   ├── bls.ts
+│   │   │   │   │       │   ├── curve.ts
+│   │   │   │   │       │   ├── edwards.ts
+│   │   │   │   │       │   ├── hash-to-curve.ts
+│   │   │   │   │       │   ├── modular.ts
+│   │   │   │   │       │   ├── montgomery.ts
+│   │   │   │   │       │   ├── poseidon.ts
+│   │   │   │   │       │   ├── utils.ts
+│   │   │   │   │       │   └── weierstrass.ts
+│   │   │   │   │       ├── bls12-381.ts
+│   │   │   │   │       ├── bn254.ts
+│   │   │   │   │       ├── ed25519.ts
+│   │   │   │   │       ├── ed448.ts
+│   │   │   │   │       ├── index.ts
+│   │   │   │   │       ├── jubjub.ts
+│   │   │   │   │       ├── p256.ts
+│   │   │   │   │       ├── p384.ts
+│   │   │   │   │       ├── p521.ts
+│   │   │   │   │       ├── pasta.ts
+│   │   │   │   │       ├── secp256k1.ts
+│   │   │   │   │       └── _shortw_utils.ts
+│   │   │   │   └── hashes
+│   │   │   │       ├── argon2.d.ts
+│   │   │   │       ├── argon2.js
+│   │   │   │       ├── argon2.js.map
+│   │   │   │       ├── _assert.d.ts
+│   │   │   │       ├── _assert.js
+│   │   │   │       ├── _assert.js.map
+│   │   │   │       ├── blake2b.d.ts
+│   │   │   │       ├── blake2b.js
+│   │   │   │       ├── blake2b.js.map
+│   │   │   │       ├── _blake2.d.ts
+│   │   │   │       ├── _blake2.js
+│   │   │   │       ├── _blake2.js.map
+│   │   │   │       ├── blake2s.d.ts
+│   │   │   │       ├── blake2s.js
+│   │   │   │       ├── blake2s.js.map
+│   │   │   │       ├── blake3.d.ts
+│   │   │   │       ├── blake3.js
+│   │   │   │       ├── blake3.js.map
+│   │   │   │       ├── crypto.d.ts
+│   │   │   │       ├── crypto.js
+│   │   │   │       ├── crypto.js.map
+│   │   │   │       ├── cryptoNode.d.ts
+│   │   │   │       ├── cryptoNode.js
+│   │   │   │       ├── cryptoNode.js.map
+│   │   │   │       ├── eskdf.d.ts
+│   │   │   │       ├── eskdf.js
+│   │   │   │       ├── eskdf.js.map
+│   │   │   │       ├── esm
+│   │   │   │       │   ├── argon2.js
+│   │   │   │       │   ├── argon2.js.map
+│   │   │   │       │   ├── _assert.js
+│   │   │   │       │   ├── _assert.js.map
+│   │   │   │       │   ├── blake2b.js
+│   │   │   │       │   ├── blake2b.js.map
+│   │   │   │       │   ├── _blake2.js
+│   │   │   │       │   ├── _blake2.js.map
+│   │   │   │       │   ├── blake2s.js
+│   │   │   │       │   ├── blake2s.js.map
+│   │   │   │       │   ├── blake3.js
+│   │   │   │       │   ├── blake3.js.map
+│   │   │   │       │   ├── crypto.js
+│   │   │   │       │   ├── crypto.js.map
+│   │   │   │       │   ├── cryptoNode.js
+│   │   │   │       │   ├── cryptoNode.js.map
+│   │   │   │       │   ├── eskdf.js
+│   │   │   │       │   ├── eskdf.js.map
+│   │   │   │       │   ├── hkdf.js
+│   │   │   │       │   ├── hkdf.js.map
+│   │   │   │       │   ├── hmac.js
+│   │   │   │       │   ├── hmac.js.map
+│   │   │   │       │   ├── index.js
+│   │   │   │       │   ├── index.js.map
+│   │   │   │       │   ├── package.json
+│   │   │   │       │   ├── pbkdf2.js
+│   │   │   │       │   ├── pbkdf2.js.map
+│   │   │   │       │   ├── ripemd160.js
+│   │   │   │       │   ├── ripemd160.js.map
+│   │   │   │       │   ├── scrypt.js
+│   │   │   │       │   ├── scrypt.js.map
+│   │   │   │       │   ├── sha1.js
+│   │   │   │       │   ├── sha1.js.map
+│   │   │   │       │   ├── sha256.js
+│   │   │   │       │   ├── sha256.js.map
+│   │   │   │       │   ├── _sha2.js
+│   │   │   │       │   ├── _sha2.js.map
+│   │   │   │       │   ├── sha3-addons.js
+│   │   │   │       │   ├── sha3-addons.js.map
+│   │   │   │       │   ├── sha3.js
+│   │   │   │       │   ├── sha3.js.map
+│   │   │   │       │   ├── sha512.js
+│   │   │   │       │   ├── sha512.js.map
+│   │   │   │       │   ├── _u64.js
+│   │   │   │       │   ├── _u64.js.map
+│   │   │   │       │   ├── utils.js
+│   │   │   │       │   └── utils.js.map
+│   │   │   │       ├── hkdf.d.ts
+│   │   │   │       ├── hkdf.js
+│   │   │   │       ├── hkdf.js.map
+│   │   │   │       ├── hmac.d.ts
+│   │   │   │       ├── hmac.js
+│   │   │   │       ├── hmac.js.map
+│   │   │   │       ├── index.d.ts
+│   │   │   │       ├── index.js
+│   │   │   │       ├── index.js.map
+│   │   │   │       ├── LICENSE
+│   │   │   │       ├── package.json
+│   │   │   │       ├── pbkdf2.d.ts
+│   │   │   │       ├── pbkdf2.js
+│   │   │   │       ├── pbkdf2.js.map
+│   │   │   │       ├── README.md
+│   │   │   │       ├── ripemd160.d.ts
+│   │   │   │       ├── ripemd160.js
+│   │   │   │       ├── ripemd160.js.map
+│   │   │   │       ├── scrypt.d.ts
+│   │   │   │       ├── scrypt.js
+│   │   │   │       ├── scrypt.js.map
+│   │   │   │       ├── sha1.d.ts
+│   │   │   │       ├── sha1.js
+│   │   │   │       ├── sha1.js.map
+│   │   │   │       ├── sha256.d.ts
+│   │   │   │       ├── sha256.js
+│   │   │   │       ├── sha256.js.map
+│   │   │   │       ├── _sha2.d.ts
+│   │   │   │       ├── _sha2.js
+│   │   │   │       ├── _sha2.js.map
+│   │   │   │       ├── sha3-addons.d.ts
+│   │   │   │       ├── sha3-addons.js
+│   │   │   │       ├── sha3-addons.js.map
+│   │   │   │       ├── sha3.d.ts
+│   │   │   │       ├── sha3.js
+│   │   │   │       ├── sha3.js.map
+│   │   │   │       ├── sha512.d.ts
+│   │   │   │       ├── sha512.js
+│   │   │   │       ├── sha512.js.map
+│   │   │   │       ├── src
+│   │   │   │       │   ├── argon2.ts
+│   │   │   │       │   ├── _assert.ts
+│   │   │   │       │   ├── blake2b.ts
+│   │   │   │       │   ├── blake2s.ts
+│   │   │   │       │   ├── _blake2.ts
+│   │   │   │       │   ├── blake3.ts
+│   │   │   │       │   ├── cryptoNode.ts
+│   │   │   │       │   ├── crypto.ts
+│   │   │   │       │   ├── eskdf.ts
+│   │   │   │       │   ├── hkdf.ts
+│   │   │   │       │   ├── hmac.ts
+│   │   │   │       │   ├── index.ts
+│   │   │   │       │   ├── pbkdf2.ts
+│   │   │   │       │   ├── ripemd160.ts
+│   │   │   │       │   ├── scrypt.ts
+│   │   │   │       │   ├── sha1.ts
+│   │   │   │       │   ├── sha256.ts
+│   │   │   │       │   ├── _sha2.ts
+│   │   │   │       │   ├── sha3-addons.ts
+│   │   │   │       │   ├── sha3.ts
+│   │   │   │       │   ├── sha512.ts
+│   │   │   │       │   ├── _u64.ts
+│   │   │   │       │   └── utils.ts
+│   │   │   │       ├── _u64.d.ts
+│   │   │   │       ├── _u64.js
+│   │   │   │       ├── _u64.js.map
+│   │   │   │       ├── utils.d.ts
+│   │   │   │       ├── utils.js
+│   │   │   │       └── utils.js.map
+│   │   │   ├── @types
+│   │   │   │   └── node
+│   │   │   │       ├── assert
+│   │   │   │       │   └── strict.d.ts
+│   │   │   │       ├── assert.d.ts
+│   │   │   │       ├── async_hooks.d.ts
+│   │   │   │       ├── buffer.buffer.d.ts
+│   │   │   │       ├── buffer.d.ts
+│   │   │   │       ├── child_process.d.ts
+│   │   │   │       ├── cluster.d.ts
+│   │   │   │       ├── console.d.ts
+│   │   │   │       ├── constants.d.ts
+│   │   │   │       ├── crypto.d.ts
+│   │   │   │       ├── dgram.d.ts
+│   │   │   │       ├── diagnostics_channel.d.ts
+│   │   │   │       ├── dns
+│   │   │   │       │   └── promises.d.ts
+│   │   │   │       ├── dns.d.ts
+│   │   │   │       ├── domain.d.ts
+│   │   │   │       ├── dom-events.d.ts
+│   │   │   │       ├── events.d.ts
+│   │   │   │       ├── fs
+│   │   │   │       │   └── promises.d.ts
+│   │   │   │       ├── fs.d.ts
+│   │   │   │       ├── globals.d.ts
+│   │   │   │       ├── globals.global.d.ts
+│   │   │   │       ├── globals.typedarray.d.ts
+│   │   │   │       ├── http2.d.ts
+│   │   │   │       ├── http.d.ts
+│   │   │   │       ├── https.d.ts
+│   │   │   │       ├── index.d.ts
+│   │   │   │       ├── inspector.d.ts
+│   │   │   │       ├── LICENSE
+│   │   │   │       ├── module.d.ts
+│   │   │   │       ├── net.d.ts
+│   │   │   │       ├── os.d.ts
+│   │   │   │       ├── package.json
+│   │   │   │       ├── path.d.ts
+│   │   │   │       ├── perf_hooks.d.ts
+│   │   │   │       ├── process.d.ts
+│   │   │   │       ├── punycode.d.ts
+│   │   │   │       ├── querystring.d.ts
+│   │   │   │       ├── readline
+│   │   │   │       │   └── promises.d.ts
+│   │   │   │       ├── readline.d.ts
+│   │   │   │       ├── README.md
+│   │   │   │       ├── repl.d.ts
+│   │   │   │       ├── sea.d.ts
+│   │   │   │       ├── sqlite.d.ts
+│   │   │   │       ├── stream
+│   │   │   │       │   ├── consumers.d.ts
+│   │   │   │       │   ├── promises.d.ts
+│   │   │   │       │   └── web.d.ts
+│   │   │   │       ├── stream.d.ts
+│   │   │   │       ├── string_decoder.d.ts
+│   │   │   │       ├── test.d.ts
+│   │   │   │       ├── timers
+│   │   │   │       │   └── promises.d.ts
+│   │   │   │       ├── timers.d.ts
+│   │   │   │       ├── tls.d.ts
+│   │   │   │       ├── trace_events.d.ts
+│   │   │   │       ├── ts5.6
+│   │   │   │       │   ├── buffer.buffer.d.ts
+│   │   │   │       │   ├── globals.typedarray.d.ts
+│   │   │   │       │   └── index.d.ts
+│   │   │   │       ├── tty.d.ts
+│   │   │   │       ├── url.d.ts
+│   │   │   │       ├── util.d.ts
+│   │   │   │       ├── v8.d.ts
+│   │   │   │       ├── vm.d.ts
+│   │   │   │       ├── wasi.d.ts
+│   │   │   │       ├── worker_threads.d.ts
+│   │   │   │       └── zlib.d.ts
+│   │   │   └── undici-types
+│   │   │       ├── agent.d.ts
+│   │   │       ├── api.d.ts
+│   │   │       ├── balanced-pool.d.ts
+│   │   │       ├── cache.d.ts
+│   │   │       ├── client.d.ts
+│   │   │       ├── connector.d.ts
+│   │   │       ├── content-type.d.ts
+│   │   │       ├── cookies.d.ts
+│   │   │       ├── diagnostics-channel.d.ts
+│   │   │       ├── dispatcher.d.ts
+│   │   │       ├── env-http-proxy-agent.d.ts
+│   │   │       ├── errors.d.ts
+│   │   │       ├── eventsource.d.ts
+│   │   │       ├── fetch.d.ts
+│   │   │       ├── file.d.ts
+│   │   │       ├── filereader.d.ts
+│   │   │       ├── formdata.d.ts
+│   │   │       ├── global-dispatcher.d.ts
+│   │   │       ├── global-origin.d.ts
+│   │   │       ├── handlers.d.ts
+│   │   │       ├── header.d.ts
+│   │   │       ├── index.d.ts
+│   │   │       ├── interceptors.d.ts
+│   │   │       ├── LICENSE
+│   │   │       ├── mock-agent.d.ts
+│   │   │       ├── mock-client.d.ts
+│   │   │       ├── mock-errors.d.ts
+│   │   │       ├── mock-interceptor.d.ts
+│   │   │       ├── mock-pool.d.ts
+│   │   │       ├── package.json
+│   │   │       ├── patch.d.ts
+│   │   │       ├── pool.d.ts
+│   │   │       ├── pool-stats.d.ts
+│   │   │       ├── proxy-agent.d.ts
+│   │   │       ├── readable.d.ts
+│   │   │       ├── README.md
+│   │   │       ├── retry-agent.d.ts
+│   │   │       ├── retry-handler.d.ts
+│   │   │       ├── util.d.ts
+│   │   │       ├── webidl.d.ts
+│   │   │       └── websocket.d.ts
+│   │   ├── package.json
+│   │   ├── README.md
+│   │   ├── rollup.config.mjs
+│   │   ├── SECURITY.md
+│   │   └── src.ts
+│   │       ├── abi
+│   │       │   ├── abi-coder.ts
+│   │       │   ├── bytes32.ts
+│   │       │   ├── coders
+│   │       │   │   ├── abstract-coder.ts
+│   │       │   │   ├── address.ts
+│   │       │   │   ├── anonymous.ts
+│   │       │   │   ├── array.ts
+│   │       │   │   ├── boolean.ts
+│   │       │   │   ├── bytes.ts
+│   │       │   │   ├── fixed-bytes.ts
+│   │       │   │   ├── null.ts
+│   │       │   │   ├── number.ts
+│   │       │   │   ├── string.ts
+│   │       │   │   └── tuple.ts
+│   │       │   ├── fragments.ts
+│   │       │   ├── index.ts
+│   │       │   ├── interface.ts
+│   │       │   └── typed.ts
+│   │       ├── address
+│   │       │   ├── address.ts
+│   │       │   ├── checks.ts
+│   │       │   ├── contract-address.ts
+│   │       │   └── index.ts
+│   │       ├── constants
+│   │       │   ├── addresses.ts
+│   │       │   ├── hashes.ts
+│   │       │   ├── index.ts
+│   │       │   ├── numbers.ts
+│   │       │   └── strings.ts
+│   │       ├── contract
+│   │       │   ├── contract.ts
+│   │       │   ├── factory.ts
+│   │       │   ├── index.ts
+│   │       │   ├── types.ts
+│   │       │   └── wrappers.ts
+│   │       ├── crypto
+│   │       │   ├── crypto-browser.ts
+│   │       │   ├── crypto.ts
+│   │       │   ├── hmac.ts
+│   │       │   ├── index.ts
+│   │       │   ├── keccak.ts
+│   │       │   ├── pbkdf2.ts
+│   │       │   ├── random.ts
+│   │       │   ├── ripemd160.ts
+│   │       │   ├── scrypt.ts
+│   │       │   ├── sha2.ts
+│   │       │   ├── signature.ts
+│   │       │   └── signing-key.ts
+│   │       ├── ethers.ts
+│   │       ├── hash
+│   │       │   ├── authorization.ts
+│   │       │   ├── id.ts
+│   │       │   ├── index.ts
+│   │       │   ├── message.ts
+│   │       │   ├── namehash.ts
+│   │       │   ├── solidity.ts
+│   │       │   └── typed-data.ts
+│   │       ├── index.ts
+│   │       ├── providers
+│   │       │   ├── abstract-provider.ts
+│   │       │   ├── abstract-signer.ts
+│   │       │   ├── community.ts
+│   │       │   ├── contracts.ts
+│   │       │   ├── default-provider.ts
+│   │       │   ├── ens-resolver.ts
+│   │       │   ├── formatting.ts
+│   │       │   ├── format.ts
+│   │       │   ├── index.ts
+│   │       │   ├── network.ts
+│   │       │   ├── pagination.ts
+│   │       │   ├── plugin-fallback.ts
+│   │       │   ├── plugins-network.ts
+│   │       │   ├── provider-alchemy.ts
+│   │       │   ├── provider-ankr.ts
+│   │       │   ├── provider-blockscout.ts
+│   │       │   ├── provider-browser.ts
+│   │       │   ├── provider-chainstack.ts
+│   │       │   ├── provider-cloudflare.ts
+│   │       │   ├── provider-etherscan.ts
+│   │       │   ├── provider-fallback.ts
+│   │       │   ├── provider-infura.ts
+│   │       │   ├── provider-ipcsocket-browser.ts
+│   │       │   ├── provider-ipcsocket.ts
+│   │       │   ├── provider-jsonrpc.ts
+│   │       │   ├── provider-pocket.ts
+│   │       │   ├── provider-quicknode.ts
+│   │       │   ├── provider-socket.ts
+│   │       │   ├── provider.ts
+│   │       │   ├── provider-websocket.ts
+│   │       │   ├── signer-noncemanager.ts
+│   │       │   ├── signer.ts
+│   │       │   ├── subscriber-connection.ts
+│   │       │   ├── subscriber-filterid.ts
+│   │       │   ├── subscriber-polling.ts
+│   │       │   ├── ws-browser.ts
+│   │       │   └── ws.ts
+│   │       ├── thirdparty.d.ts
+│   │       ├── transaction
+│   │       │   ├── accesslist.ts
+│   │       │   ├── address.ts
+│   │       │   ├── authorization.ts
+│   │       │   ├── index.ts
+│   │       │   └── transaction.ts
+│   │       ├── utils
+│   │       │   ├── base58.ts
+│   │       │   ├── base64-browser.ts
+│   │       │   ├── base64.ts
+│   │       │   ├── data.ts
+│   │       │   ├── errors.ts
+│   │       │   ├── events.ts
+│   │       │   ├── fetch.ts
+│   │       │   ├── fixednumber.ts
+│   │       │   ├── geturl-browser.ts
+│   │       │   ├── geturl.ts
+│   │       │   ├── index.ts
+│   │       │   ├── maths.ts
+│   │       │   ├── properties.ts
+│   │       │   ├── rlp-decode.ts
+│   │       │   ├── rlp-encode.ts
+│   │       │   ├── rlp.ts
+│   │       │   ├── test.txt
+│   │       │   ├── units.ts
+│   │       │   ├── utf8.ts
+│   │       │   └── uuid.ts
+│   │       ├── _version.ts
+│   │       ├── wallet
+│   │       │   ├── base-wallet.ts
+│   │       │   ├── hdwallet.ts
+│   │       │   ├── index.ts
+│   │       │   ├── json-crowdsale.ts
+│   │       │   ├── json-keystore.ts
+│   │       │   ├── mnemonic.ts
+│   │       │   ├── utils.ts
+│   │       │   └── wallet.ts
+│   │       └── wordlists
+│   │           ├── bit-reader.ts
+│   │           ├── decode-owla.ts
+│   │           ├── decode-owl.ts
+│   │           ├── generation
+│   │           │   └── encode-latin.ts
+│   │           ├── index.ts
+│   │           ├── lang-cz.ts
+│   │           ├── lang-en.ts
+│   │           ├── lang-es.ts
+│   │           ├── lang-fr.ts
+│   │           ├── lang-it.ts
+│   │           ├── lang-ja.ts
+│   │           ├── lang-ko.ts
+│   │           ├── lang-pt.ts
+│   │           ├── lang-zh.ts
+│   │           ├── wordlist-owla.ts
+│   │           ├── wordlist-owl.ts
+│   │           ├── wordlists-browser.ts
+│   │           ├── wordlists-extra.ts
+│   │           ├── wordlists.ts
+│   │           └── wordlist.ts
 │   ├── execa
 │   │   ├── index.d.ts
 │   │   ├── index.js
@@ -10250,9 +12259,7 @@
 │   │   │   ├── crypto
 │   │   │   │   ├── cert-signatures.js
 │   │   │   │   ├── sasl.js
-│   │   │   │   ├── utils.js
-│   │   │   │   ├── utils-legacy.js
-│   │   │   │   └── utils-webcrypto.js
+│   │   │   │   └── utils.js
 │   │   │   ├── defaults.js
 │   │   │   ├── index.js
 │   │   │   ├── native
@@ -11203,6 +13210,22 @@
 │   │   ├── LICENSE
 │   │   ├── package.json
 │   │   └── README.md
+│   ├── tslib
+│   │   ├── CopyrightNotice.txt
+│   │   ├── LICENSE.txt
+│   │   ├── modules
+│   │   │   ├── index.d.ts
+│   │   │   ├── index.js
+│   │   │   └── package.json
+│   │   ├── package.json
+│   │   ├── README.md
+│   │   ├── SECURITY.md
+│   │   ├── tslib.d.ts
+│   │   ├── tslib.es6.html
+│   │   ├── tslib.es6.js
+│   │   ├── tslib.es6.mjs
+│   │   ├── tslib.html
+│   │   └── tslib.js
 │   ├── type-check
 │   │   ├── lib
 │   │   │   ├── check.js
@@ -11914,6 +13937,27 @@
 │   │   ├── package.json
 │   │   ├── README.md
 │   │   └── wrappy.js
+│   ├── ws
+│   │   ├── browser.js
+│   │   ├── index.js
+│   │   ├── lib
+│   │   │   ├── buffer-util.js
+│   │   │   ├── constants.js
+│   │   │   ├── event-target.js
+│   │   │   ├── extension.js
+│   │   │   ├── limiter.js
+│   │   │   ├── permessage-deflate.js
+│   │   │   ├── receiver.js
+│   │   │   ├── sender.js
+│   │   │   ├── stream.js
+│   │   │   ├── subprotocol.js
+│   │   │   ├── validation.js
+│   │   │   ├── websocket.js
+│   │   │   └── websocket-server.js
+│   │   ├── LICENSE
+│   │   ├── package.json
+│   │   ├── README.md
+│   │   └── wrapper.mjs
 │   ├── xtend
 │   │   ├── immutable.js
 │   │   ├── LICENSE
@@ -12093,12 +14137,39 @@
 │   ├── step-23-operation-name-fix.sql
 │   ├── step-23-transaction-type-constraint-fix.sql
 │   └── step-23-wallet-transfer-compatibility-patch.sql
+├── public
+│   └── postgres-browser.html
 ├── README.md
 ├── real_backend_files.txt
+├── recovery-test
+├── remove_tin_get_response_backend.log
+├── routes
+│   ├── licenseAccessRoutes.js
+│   ├── licenseAccessRoutes.js.bak_login_api_20260812_114422
+│   ├── licenseAccessRoutes.js.bak_password_reset_20260811_093211
+│   ├── licenseAccessRoutes.js.bak_reset_signature_20260811_094638
+│   ├── licenseAccessRoutes.js.bak_reset_signature_20260811_114946
+│   ├── licenseAccessRoutes.js.bak_simple_password_reset_20260818_102515
+│   ├── licenseAccessRoutes.js.bak_verify_log_20260807_113835
+│   ├── licenseRecoveryRoutes.js
+│   ├── licenseRecoveryRoutes.js.bak_20260731_155042
+│   ├── licenseRecoveryRoutes.js.bak_license_hash_20260807_103143
+│   ├── licenseRecoveryRoutes.js.bak_real_tables_20260804_125018
+│   ├── licenseWalletRoutes.js
+│   ├── licenseWalletRoutes.js.bak_generate_api_20260812_112520
+│   ├── licenseWalletRoutes.js.bak_provision_fix_20260804_155620
+│   ├── licenseWalletRoutes.js.bak_recovery_verifiers_20260807_102546
+│   └── licenseWalletRoutes.js.bak_signed_jwt_20260804_154642
 ├── scripts
 │   ├── API_SCRIPTS.bash
+│   ├── audit-outbox-worker.js
+│   ├── blockchain-proof-final-e2e-validation.sh
+│   ├── blockchain-proof-full-flow-test.sh
+│   ├── blockchain-proof-security-validation.sh
 │   ├── create-organization-wallets.js
 │   ├── create-or-reset-organization-wallets.js
+│   ├── export-one-wallet-recovery-test.mjs
+│   ├── generate-license-wallets-test.mjs
 │   ├── Generate_Organization_Type_Id.sql
 │   ├── generate-wallet-transactions.js
 │   ├── generate-wallet-transactions.js.bak_fee_1_per_1000
@@ -12108,13 +14179,25 @@
 │   ├── generate-wallet-transactions.js.bak_status_fix
 │   ├── generate-wallet-transactions.js.bak_type_fix
 │   ├── import-admin-identity.js
+│   ├── phase-38
+│   │   └── run-phase-38-validation.sh
+│   ├── phase8-validate-stable-hash.js
+│   ├── provision-license-wallet.js
+│   ├── recover-and-display-license.mjs
+│   ├── recover-license-one-by-one.sh
 │   ├── Source_Queries.sql
 │   ├── test-fabric-connection.js
-│   └── UseFul_Queries.sql
+│   ├── test-generated-license-wallets.mjs
+│   ├── test-recovery-words-one-by-one.sh
+│   ├── test-wallet-keystores-and-database.mjs
+│   ├── UseFul_Queries.sql
+│   ├── verify-one-wallet-recovery-test.mjs
+│   └── verify-recovery-words-from-stdin.mjs
 ├── settings_backend.log
 ├── sql
 │   ├── create-government-dropdown-tables.sql
 │   ├── create-wallet-dropdown-tables.sql
+│   ├── fix-generic-audit-skip-noop-updates-20260722.sql
 │   ├── step-aml-01-create-tables.sql
 │   ├── step-aml-02a-fix-aml-rules-columns.sql
 │   ├── step-aml-02-insert-default-rules.sql
@@ -12137,10 +14220,14 @@
 │   ├── app.js
 │   ├── app.js.bak.before_cors_fix_20260506_132512
 │   ├── app.js.bak.fix_cors_options_20260506_133352
+│   ├── app.js.bak_remove_duplicate_valoores_20260616_115554
+│   ├── app.js.bak_valoores_blockchain
 │   ├── config
 │   │   ├── app.config.js
 │   │   ├── auth.config.js
 │   │   ├── blockchain.config.js
+│   │   ├── blockchain-proof-ownership.config.js
+│   │   ├── blockchain-proof-source-views.config.js
 │   │   ├── config.js
 │   │   ├── connection-org1.json
 │   │   ├── couchdb.config.js
@@ -12148,17 +14235,40 @@
 │   │   ├── db.js
 │   │   ├── env.validator.js
 │   │   ├── index.js
+│   │   ├── license-database.js
 │   │   ├── logger.config.js
 │   │   ├── postgres.js
 │   │   └── security.config.js
 │   ├── constants
 │   │   └── audit.constants.js
 │   ├── controllers
+│   │   ├── audit-batch-proof.controller.js
+│   │   ├── audit-blockchain-proof.controller.js
 │   │   ├── auth.controller.js
 │   │   ├── blockchain.controller.js
 │   │   ├── blockchain-kyc.controller.js
+│   │   ├── blockchain-proof-aml-case-closure-history.controller.js
+│   │   ├── blockchain-proof-aml-history.controller.js
+│   │   ├── blockchain-proof-api.controller.js
+│   │   ├── blockchain-proof-customer-history.controller.js
+│   │   ├── blockchain-proof-dashboard.controller.js
+│   │   ├── blockchain-proof-generic-verification.controller.js
+│   │   ├── blockchain-proof-history.controller.js
+│   │   ├── blockchain-proof-history-sync.controller.js
+│   │   ├── blockchain-proof-ownership.controller.js
+│   │   ├── blockchain-proof-retry.controller.js
+│   │   ├── blockchain-proof-screening-history.controller.js
+│   │   ├── blockchain-proof-source-views.controller.js
+│   │   ├── blockchain-proof-transaction-history.controller.js
+│   │   ├── blockchain-proof-verification.controller.js
+│   │   ├── blockchain-proof-verification-logic.controller.js
 │   │   ├── couchdb.controller.js
 │   │   ├── dashboard.controller.js
+│   │   ├── data-change-audit-dashboard.controller.js
+│   │   ├── data-change-bulk-compliance-approval.controller.js
+│   │   ├── data-change-compliance-proof-rule.controller.js
+│   │   ├── data-change-high-risk-alert.controller.js
+│   │   ├── data-change-invalid-record-review.controller.js
 │   │   ├── data-generator.controller.js
 │   │   ├── fabric.controller.js
 │   │   ├── government-blockchain
@@ -12200,6 +14310,8 @@
 │   ├── database
 │   │   └── postgres.js
 │   ├── db
+│   │   ├── applicationPostgres.js
+│   │   ├── blockchainPostgres.js
 │   │   ├── migrations
 │   │   │   └── phase11_transaction_documents.sql
 │   │   └── postgres.js
@@ -12210,6 +14322,7 @@
 │   ├── middleware
 │   │   ├── apiKey.middleware.js
 │   │   ├── auditRequest.middleware.js
+│   │   ├── auditSessionContext.middleware.js
 │   │   ├── authorization.middleware.js
 │   │   ├── errorHandler.js
 │   │   ├── errorHandler.middleware.js
@@ -12236,12 +14349,67 @@
 │   │   ├── resident.repository.js.bak_force_gov_resident_20260608_114935
 │   │   └── resident.repository.js.bak_force_gov_resident_20260608_115024
 │   ├── routes
+│   │   ├── audit-batch-proof.routes.js
+│   │   ├── audit-blockchain-proof.routes.js
+│   │   ├── audit-validation.routes.js
+│   │   ├── audit-validation.routes.js.bak_bigint_response_fix
+│   │   ├── audit-validation.routes.js.bak_business_object_history_filter
+│   │   ├── audit-validation.routes.js.bak_check_blockchain_exists
+│   │   ├── audit-validation.routes.js.bak_dashboard_11_charts
+│   │   ├── audit-validation.routes.js.bak_exact_record_pk_filter
+│   │   ├── audit-validation.routes.js.bak_final_strict_record_pk_filter
+│   │   ├── audit-validation.routes.js.bak_fix_hash_verify_columns
+│   │   ├── audit-validation.routes.js.bak_fix_hash_verify_db_client
+│   │   ├── audit-validation.routes.js.bak_force_record_pk_where_clause
+│   │   ├── audit-validation.routes.js.bak_gen_random_uuid_fix
+│   │   ├── audit-validation.routes.js.bak_hash_microseconds_fix
+│   │   ├── audit-validation.routes.js.bak_hash_validate_fix
+│   │   ├── audit-validation.routes.js.bak_hash_verify_endpoint
+│   │   ├── audit-validation.routes.js.bak_hash_verify_pg_function
+│   │   ├── audit-validation.routes.js.bak_patch_build_events_filter_record_pk
+│   │   ├── audit-validation.routes.js.bak_reconcile_blockchain_status
+│   │   ├── audit-validation.routes.js.bak_reconcile_blockchain_status_v2
+│   │   ├── audit-validation.routes.js.bak_safe_exact_record_pk_final
+│   │   ├── audit-validation.routes.js.bak_strict_record_pk_and_object_filter
+│   │   ├── audit-validation.routes.js.bak_verify_true_fix
 │   │   ├── auth.routes.js
 │   │   ├── blockchain-kyc.routes.js
+│   │   ├── blockchain-proof-api.routes.js
+│   │   ├── blockchain-proof-api.routes.js.bak_step16_20260625_100234
+│   │   ├── blockchain-proof-api.routes.js.bak_step17_20260625_102815
+│   │   ├── blockchain-proof-api.routes.js.bak_step18_20260625_104516
+│   │   ├── blockchain-proof-api.routes.js.bak_step19_20260625_113952
+│   │   ├── blockchain-proof-api.routes.js.bak_step20_20260625_114826
+│   │   ├── blockchain-proof-api.routes.js.bak_step21_20260625_135807
+│   │   ├── blockchain-proof-api.routes.js.bak_step21_20260625_135948
+│   │   ├── blockchain-proof-api.routes.js.bak_step22_20260625_140953
+│   │   ├── blockchain-proof-api.routes.js.bak_step23_20260625_142319
+│   │   ├── blockchain-proof-api.routes.js.bak_step24_20260625_145054
+│   │   ├── blockchain-proof-history-sync.routes.js
+│   │   ├── blockchain-proof-ownership.routes.js
+│   │   ├── blockchain-proof-source-views.routes.js
 │   │   ├── blockchain.routes.js
+│   │   ├── couchdb-explorer.routes.js
 │   │   ├── couchdb.routes.js
 │   │   ├── dashboard.routes.js
+│   │   ├── data-change-audit-dashboard.routes.js
+│   │   ├── data-change-bulk-compliance-approval.routes.js
+│   │   ├── data-change-compliance-proof-rule.routes.js
+│   │   ├── data-change-high-risk-alert.routes.js
+│   │   ├── data-change-invalid-record-review.routes.js
 │   │   ├── data-generator.routes.js
+│   │   ├── dev-transaction.routes.js
+│   │   ├── dev-transaction.routes.js.bak_add_get_apis_20260617_163722
+│   │   ├── dev-transaction.routes.js.bak_clean_blockchain_response_20260617_151228
+│   │   ├── dev-transaction.routes.js.bak_clean_blockchain_response_position_20260617_151401
+│   │   ├── dev-transaction.routes.js.bak_clean_blockchain_response_regex_20260617_151317
+│   │   ├── dev-transaction.routes.js.bak_commit_pg_before_fabric_20260617_145855
+│   │   ├── dev-transaction.routes.js.bak_daily_created_api_20260617_165046
+│   │   ├── dev-transaction.routes.js.bak_fabric_service_instance_20260617_143212
+│   │   ├── dev-transaction.routes.js.bak_fix_daily_created_date_param_20260617_165255
+│   │   ├── dev-transaction.routes.js.bak_fix_db_connection_20260617_143743
+│   │   ├── dev-transaction.routes.js.bak_keep_pg_record_on_fabric_fail_20260617_143351
+│   │   ├── dev-transaction.routes.js.bak_use_create_government_transaction_20260617_144615
 │   │   ├── documents-kyc.routes.js
 │   │   ├── documents-kyc.routes.js.bak_20260605_145252
 │   │   ├── documents-kyc.routes.js.bak_final_20260605_161436
@@ -12279,15 +14447,22 @@
 │   │   ├── government-transactions.routes.js.bak_add_residents_services_20260604_163834
 │   │   ├── government-transactions.routes.js.bak_cli_fabric_submit_20260602_140320
 │   │   ├── government-transactions.routes.js.bak_db_config_fix_20260604_162316
+│   │   ├── government-transactions.routes.js.bak_phase9_sequence_txn_ref_20260612_141831
 │   │   ├── government-transactions.routes.js.bak_pool_fix_20260602_111655
 │   │   ├── government-transactions.routes.js.bak_safe_dropdown_columns_20260604_164005
+│   │   ├── government-valoores-aml-rules.routes.js
+│   │   ├── government-valoores-customer-kyc.routes.js
 │   │   ├── hash-verification.routes.js
 │   │   ├── health.routes.js
 │   │   ├── index.js
+│   │   ├── index.js.bak_couchdb_explorer_mount_20260715_092952
+│   │   ├── index.js.bak_register_dev_transactions_20260617_143113
+│   │   ├── index.js.bak_valoores_blockchain
 │   │   ├── organization.routes.js
 │   │   ├── payments-digital-stamps.routes.js
 │   │   ├── payments-digital-stamps.routes.js.bak_fix_post_20260605_141910
 │   │   ├── payments-digital-stamps.routes.js.bak_fix_post_20260605_141914
+│   │   ├── postgres-browser.routes.js
 │   │   ├── project-view.routes.js
 │   │   ├── publicAdministration.routes.js
 │   │   ├── reference.routes.js
@@ -12301,6 +14476,35 @@
 │   │   ├── resident-wallets.routes.js.bak_20260604_094752
 │   │   ├── transaction.routes.js
 │   │   ├── transactions.routes.js
+│   │   ├── valoores-blockchain.routes.js
+│   │   ├── valoores-blockchain.routes.js.bak_add_customer_session_payload_20260616_150142
+│   │   ├── valoores-blockchain.routes.js.bak_add_fabric_submit_20260616_122400
+│   │   ├── valoores-blockchain.routes.js.bak_bigint_response_fix_20260616_122936
+│   │   ├── valoores-blockchain.routes.js.bak_customer_history_fallback_20260723_190615
+│   │   ├── valoores-blockchain.routes.js.bak_customer_id_primary_key_20260616_150459
+│   │   ├── valoores-blockchain.routes.js.bak_fabric_resident_submit_20260616_122824
+│   │   ├── valoores-blockchain.routes.js.bak_final_customer_id_session_fix_20260616_151003
+│   │   ├── valoores-blockchain.routes.js.bak_final_remove_tin_get_20260616_163135
+│   │   ├── valoores-blockchain.routes.js.bak_fix_customerId_not_defined_20260616_150740
+│   │   ├── valoores-blockchain.routes.js.bak_fix_insert_after_remove_tin_20260616_162833
+│   │   ├── valoores-blockchain.routes.js.bak_fix_kyc_daily_date_format_20260616_154530
+│   │   ├── valoores-blockchain.routes.js.bak_fix_kyc_ledger_response_20260616_143414
+│   │   ├── valoores-blockchain.routes.js.bak_fix_valoores_customer_name_20260616_155204
+│   │   ├── valoores-blockchain.routes.js.bak_kyc_daily_month_report_20260616_151913
+│   │   ├── valoores-blockchain.routes.js.bak_kyc_daily_month_report_20260616_151917
+│   │   ├── valoores-blockchain.routes.js.bak_kyc_valoores_key_20260616_140003
+│   │   ├── valoores-blockchain.routes.js.bak_pagination_20260723_204745
+│   │   ├── valoores-blockchain.routes.js.bak_remove_tin_from_get_response_20260616_162528
+│   │   ├── valoores-blockchain.routes.js.bak_remove_tin_number_20260616_161642
+│   │   ├── valoores-blockchain.routes.js.bak_revert_real_fabric_key_20260616_141115
+│   │   ├── valoores-blockchain.routes.js.before_bigint_response_fix_20260729_163304
+│   │   ├── valoores-blockchain.routes.js.before_customer_update_api_20260729_161731
+│   │   ├── valoores-blockchain.routes.js.before_customer_update_api_20260729_161803
+│   │   ├── valoores-blockchain.routes.js.before_kyc_version_api_20260729_134341
+│   │   ├── valoores-blockchain.routes.js.before_professional_log_rollback_20260724_140044
+│   │   ├── valoores-blockchain.routes.js.before_scope_fix_rollback_20260724_134922
+│   │   ├── valoores-blockchain.routes.js.before_versions_pagination_fix_20260729_142938
+│   │   ├── valoores-blockchain.routes.js.before_versions_parameter_fix_20260729_142700
 │   │   ├── wallet-query.routes.js
 │   │   ├── wallet.routes.js
 │   │   └── wallet.routes.js.bak_next_customer_id
@@ -12323,26 +14527,74 @@
 │   ├── server.js.bak_fix_cors_documents_kyc_20260605_163104
 │   ├── server.js.bak_fix_documents_kyc_order_20260605_150346
 │   ├── server.js.bak_fix_payments_route_order_20260605_141618
+│   ├── server.js.bak_license_access_20260807_102135
+│   ├── server.js.bak_license_pool_20260731_103314
+│   ├── server.js.bak_license_pool_20260804_122716
+│   ├── server.js.bak_license_recovery_20260730_204839
 │   ├── server.js.bak_move_payments_route_after_body_20260605_141816
 │   ├── server.js.bak_payments_stamps_20260605_141507
 │   ├── server.js.bak_phase5_account_login_inspect_20260608_120955
 │   ├── server.js.bak_project_viewers_20260514_112226
+│   ├── server.js.bak_recovery_mount_20260804_125018
 │   ├── server.js.bak_remove_generic_ministry_20260604_100319
 │   ├── server.js.bak_remove_generic_ministry_v2_20260604_100503
 │   ├── server.js.bak_reports_step5_20260610_114910
 │   ├── server.js.bak_resident_wallets_fix_20260604_094752
 │   ├── server.js.bak_settings_mount_fix_20260610_142512
 │   ├── server.js.bak_settings_route_20260610_142433
+│   ├── server.js.bak_static_public_20260623_143109
 │   ├── server.js.bak_transactions_fix_20260602_105238
+│   ├── server.js.bak_valoores_blockchain_20260616_115547
 │   ├── services
+│   │   ├── aml-rules-blockchain-proof.service.js
 │   │   ├── aml.service.js
 │   │   ├── aml.services.js
+│   │   ├── audit-batch-proof.service.js
+│   │   ├── audit-blockchain-proof.service.js
+│   │   ├── audit-blockchain-proof-worker.service.js
+│   │   ├── audit-proof
+│   │   │   └── audit-hash.service.js
+│   │   ├── auditProof.service.js
+│   │   ├── auditProof.service.js.bak_bigint_serialization_fix
+│   │   ├── auditProof.service.js.bak_final_save_audit_event_proof_payload
+│   │   ├── auditProof.service.js.bak_use_save_audit_event_proof
 │   │   ├── audit.service.js
+│   │   ├── audit-session-context.service.js
+│   │   ├── blockchain-api-proof.service.js
+│   │   ├── blockchain-key-generator.service.js
 │   │   ├── blockchain-kyc.service.js
+│   │   ├── blockchain-proof-aml-case-closure-history.service.js
+│   │   ├── blockchain-proof-aml-history.service.js
+│   │   ├── blockchain-proof-aml-history.service.js.bak_step18_hotfix_20260625_105020
+│   │   ├── blockchain-proof-aml-history.service.js.bak_step18_hotfix2_20260625_110807
+│   │   ├── blockchain-proof-aml-history.service.js.bak_step18_hotfix2_20260625_110810
+│   │   ├── blockchain-proof-aml-history.service.js.bak_step18_hotfix3_20260625_111347
+│   │   ├── blockchain-proof-aml-history.service.js.bak_step18_hotfix3_20260625_111350
+│   │   ├── blockchain-proof-customer-history.service.js
+│   │   ├── blockchain-proof-dashboard.service.js
+│   │   ├── blockchain-proof-fabric-submit.service.js
+│   │   ├── blockchain-proof-generic-verification.service.js
+│   │   ├── blockchain-proof-history.service.js
+│   │   ├── blockchain-proof-history.service.js.bak_step16_hotfix_20260625_100625
+│   │   ├── blockchain-proof-history-sync.service.js
+│   │   ├── blockchain-proof-ownership.service.js
+│   │   ├── blockchain-proof-postgres.service.js
+│   │   ├── blockchain-proof-retry.service.js
+│   │   ├── blockchain-proof-screening-history.service.js
+│   │   ├── blockchain-proof-source-views.service.js
+│   │   ├── blockchain-proof-transaction-history.service.js
+│   │   ├── blockchain-proof-verification-logic.service.js
+│   │   ├── blockchain-proof-verification.service.js
 │   │   ├── blockchain.service.js
 │   │   ├── couchdb.service.js
+│   │   ├── customer-kyc-blockchain-proof.service.js
 │   │   ├── dashboard.service.js
 │   │   ├── database.service.js
+│   │   ├── data-change-audit-dashboard.service.js
+│   │   ├── data-change-bulk-compliance-approval.service.js
+│   │   ├── data-change-compliance-proof-rule.service.js
+│   │   ├── data-change-high-risk-alert.service.js
+│   │   ├── data-change-invalid-record-review.service.js
 │   │   ├── fabricGateway.service.js
 │   │   ├── fabric.service.js
 │   │   ├── fabric.service.js.bak_endorsement_fix_20260602_135531
@@ -12356,6 +14608,7 @@
 │   │   ├── resident.service.js
 │   │   ├── resident.service.js.bak_force_gov_resident_20260608_114935
 │   │   ├── resident.service.js.bak_force_gov_resident_20260608_115024
+│   │   ├── stable-hash-generator.service.js
 │   │   ├── transaction.service.js
 │   │   ├── transaction.service.js.bak_balance_after_transfer
 │   │   ├── transaction.service.js.bak_customer_to_org_20260514_132823
@@ -12368,6 +14621,7 @@
 │   │   ├── transaction.service.js.bak.step32_constraint_fix
 │   │   ├── transaction.service.js.bak.step32_type_fix
 │   │   ├── transaction.service.js.bak_wallet_to_org_type_20260514_133559
+│   │   ├── valoores-aml-rules-sync.service.js
 │   │   ├── wallet-auth.service.js
 │   │   ├── wallet-query.service.js
 │   │   ├── wallet.service.js
@@ -12395,11 +14649,31 @@
 │       ├── asyncHandler.js
 │       ├── authErrors.js
 │       ├── jwt.util.js
+│       ├── licenseAuditLogger.js
 │       ├── logger.js
 │       ├── password.util.js
 │       ├── response.util.js
 │       ├── token.util.js
 │       └── walletAddressGenerator.js
+├── startup-debug.log
+├── step16_hotfix_backend.log
+├── step17_backend.log
+├── step18_backend.log
+├── step18_hotfix2_backend.log
+├── step18_hotfix3_backend.log
+├── step18_hotfix_backend.log
+├── step19_backend.log
+├── step20_backend.log
+├── step21_backend.log
+├── step22_backend.log
+├── step23_backend.log
+├── step23_hotfix2_backend.log
+├── step23_hotfix_backend.log
+├── step24_backend.log
+├── step24_hotfix_backend.log
+├── tests
+│   ├── blockchain-key-generator.service.test.js
+│   └── stable-hash-generator.service.test.js
 ├── tree.txt
 ├── uploads
 │   └── kyc-documents
@@ -12427,10 +14701,27 @@
 │       ├── 1780919039838_951919522_image_2.png
 │       ├── 1780919141840_786833754_image_2.png
 │       ├── 1780989990984_10bad5723c9211ff_valoores-postgresql-blockchain.png
-│       └── 1780990016129_5ea073819e9e9736_image_2_1.png
+│       ├── 1780990016129_5ea073819e9e9736_image_2_1.png
+│       ├── 1781179451840_d692172aa586e6a6_image_2_3.png
+│       └── 1781504119369_b7d508113742f72f_image_2_5.png
 ├── utils
 │   └── walletAddressGenerator.js
+├── valoores_aml_rules_backend.log
+├── valoores_bigint_fix_backend.log
+├── valoores_blockchain_api.log
+├── valoores_customer_id_fix_backend.log
+├── valoores_customer_id_primary_key_backend.log
+├── valoores_customer_id_session_final_fix.log
+├── valoores_customer_session_payload_backend.log
+├── valoores_fabric_submit_backend.log
+├── valoores_final_remove_tin_backend.log
+├── valoores_fix_customer_name_backend.log
+├── valoores_kyc_key_backend.log
+├── valoores_real_fabric_key_backend.log
+├── valoores-real-payload.json
+├── valoores_remove_tin_number_backend.log
+├── valoores_seq20_org1_policy_backend.log
 └── wallet
     └── admin.id
 
-1610 directories, 10824 files
+1714 directories, 13011 files

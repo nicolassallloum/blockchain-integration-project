@@ -1,0 +1,179 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+API_BASE="${API_BASE:-http://127.0.0.1:3001}"
+TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
+OUT_DIR="${OUT_DIR:-$PWD/kyc_storage_mode_test_$TIMESTAMP}"
+mkdir -p "$OUT_DIR"
+
+echo "Test output directory: $OUT_DIR"
+
+trap 'rc=$?; echo "TEST FAILED at line $LINENO with exit code $rc" >&2; echo "Partial output directory: $OUT_DIR" >&2; exit $rc' ERR
+
+CURL_HEADERS=(
+  -H "x-request-source: KYC_STORAGE_MODE_TEST"
+  -H "x-source-system: KYC_STORAGE_MODE_TEST"
+)
+
+if [[ -n "${KYC_API_KEY:-}" ]]; then
+  CURL_HEADERS+=( -H "x-api-key: $KYC_API_KEY" )
+fi
+
+api_get() {
+  local path="$1"
+  curl -sS "${CURL_HEADERS[@]}" "$API_BASE$path"
+}
+
+get_next_customer_id() {
+  api_get "/api/v1/reference/next-customer-id" \
+    | jq -er '
+      .data.customerId //
+      .data.customer_id //
+      .customerId //
+      .customer_id
+    '
+}
+
+ORG_RESPONSE="$OUT_DIR/00_organizations.json"
+api_get "/api/v1/reference/blockchain-organizations" > "$ORG_RESPONSE"
+
+ORG_ID="${TEST_ORGANIZATION_ID:-$(jq -r '
+  .data[0].organizationId //
+  .data[0].organization_id //
+  .data[0].id // empty
+' "$ORG_RESPONSE")}"
+
+ORG_CODE="${TEST_ORGANIZATION_CODE:-$(jq -r '
+  .data[0].organizationCode //
+  .data[0].organization_code //
+  .data[0].registrationNumber //
+  .data[0].registration_number // empty
+' "$ORG_RESPONSE")}"
+
+ORG_NAME="${TEST_ORGANIZATION_NAME:-$(jq -r '
+  .data[0].organizationName //
+  .data[0].organization_name //
+  .data[0].name // empty
+' "$ORG_RESPONSE")}"
+
+ORG_TYPE="${TEST_ORGANIZATION_TYPE:-$(jq -r '
+  .data[0].organizationType //
+  .data[0].organization_type // "BANK"
+' "$ORG_RESPONSE")}"
+
+if [[ -z "$ORG_ID" ]]; then
+  echo "Could not resolve an organization ID. Inspect $ORG_RESPONSE or set TEST_ORGANIZATION_ID." >&2
+  exit 1
+fi
+
+run_mode_test() {
+  local mode="$1"
+  local prefix="$2"
+  local customer_id="$3"
+  local password="$4"
+  local response_file="$OUT_DIR/${prefix}_response.json"
+  local headers_file="$OUT_DIR/${prefix}_headers.txt"
+  local status_file="$OUT_DIR/${prefix}_http_status.txt"
+
+  local curl_args=(
+    -sS
+    -X POST
+    "$API_BASE/api/v1/kyc/blockchain-wallet"
+    "${CURL_HEADERS[@]}"
+    -F "storageMode=$mode"
+    -F "customerId=$customer_id"
+    -F "fullName=KYC $mode Test $customer_id"
+    -F "nationality=Lebanon"
+    -F "countryOfResidence=Lebanon"
+    -F "mobileHash=TEST_MOBILE_HASH_$customer_id"
+    -F "emailHash=TEST_EMAIL_HASH_$customer_id"
+    -F "nationalIdHash=TEST_NATIONAL_ID_HASH_$customer_id"
+    -F "organizationType=$ORG_TYPE"
+    -F "organizationId=$ORG_ID"
+    -F "organizationCode=$ORG_CODE"
+    -F "organization=$ORG_NAME"
+    -F "city=Beirut"
+    -F "area=Test Area"
+    -F "addressHash=TEST_ADDRESS_HASH_$customer_id"
+    -F "sourceOfFunds=Salary"
+    -F "occupation=Data Architect"
+    -F "employmentSector=Technology"
+    -F "monthlyIncome=1500"
+    -F "expectedMonthlyTransactionVolume=5000"
+    -F "expectedCashTransactions=500"
+    -F "legalDocumentType=NATIONAL_ID"
+    -F "legalIdNumberHash=TEST_LEGAL_ID_HASH_$customer_id"
+    -F "documentExpiryDate=2030-12-31"
+  )
+
+  if [[ "$mode" != "POSTGRES_ONLY" ]]; then
+    curl_args+=(
+      -F "walletType=CUSTOMER"
+      -F "partyTypeCode=7"
+      -F "walletStatus=ACTIVE"
+      -F "initialBalance=1000"
+      -F "currencyCode=USD"
+      -F "dailyTransferLimit=5000"
+      -F "monthlyTransferLimit=50000"
+      -F "password=$password"
+      -F "generatedPassword=$password"
+    )
+  fi
+
+  local http_status
+  http_status="$(curl "${curl_args[@]}" -D "$headers_file" -o "$response_file" -w '%{http_code}')"
+  printf '%s\n' "$http_status" > "$status_file"
+
+  jq . "$response_file" > "$OUT_DIR/${prefix}_response_pretty.json" 2> "$OUT_DIR/${prefix}_jq_error.txt" || true
+
+  echo "$mode -> HTTP $http_status"
+}
+
+BASE_CUSTOMER_ID="$(get_next_customer_id)"
+
+if [[ ! "$BASE_CUSTOMER_ID" =~ ^[0-9]+$ ]]; then
+  echo "Invalid next customer ID: $BASE_CUSTOMER_ID" >&2
+  exit 1
+fi
+
+PG_CUSTOMER_ID="$BASE_CUSTOMER_ID"
+CHAIN_CUSTOMER_ID="$((BASE_CUSTOMER_ID + 1))"
+BOTH_CUSTOMER_ID="$((BASE_CUSTOMER_ID + 2))"
+
+CHAIN_PASSWORD="KycTest@$(openssl rand -hex 6)"
+BOTH_PASSWORD="KycTest@$(openssl rand -hex 6)"
+
+cat > "$OUT_DIR/test_ids.env" <<ENV
+PG_CUSTOMER_ID=$PG_CUSTOMER_ID
+CHAIN_CUSTOMER_ID=$CHAIN_CUSTOMER_ID
+BOTH_CUSTOMER_ID=$BOTH_CUSTOMER_ID
+TEST_ORGANIZATION_ID=$ORG_ID
+TEST_ORGANIZATION_CODE=$ORG_CODE
+TEST_ORGANIZATION_NAME=$ORG_NAME
+CHAIN_PASSWORD=$CHAIN_PASSWORD
+BOTH_PASSWORD=$BOTH_PASSWORD
+ENV
+chmod 600 "$OUT_DIR/test_ids.env"
+
+run_mode_test "POSTGRES_ONLY" "01_postgres_only" "$PG_CUSTOMER_ID" ""
+run_mode_test "BLOCKCHAIN_ONLY" "02_blockchain_only" "$CHAIN_CUSTOMER_ID" "$CHAIN_PASSWORD"
+run_mode_test "POSTGRES_AND_BLOCKCHAIN" "03_postgres_and_blockchain" "$BOTH_CUSTOMER_ID" "$BOTH_PASSWORD"
+
+{
+  echo "===== RESULT SUMMARY ====="
+  for prefix in 01_postgres_only 02_blockchain_only 03_postgres_and_blockchain; do
+    echo
+    echo "$prefix"
+    cat "$OUT_DIR/${prefix}_http_status.txt"
+    jq -c '{success, message, storageMode: .data.storageMode, requestId: .data.kycRequest.request_id, walletAddress: (.data.walletResult.wallet.walletAddress // .data.blockchain.walletAddress), txId: (.data.walletResult.blockchain.fabricTransactionId // .data.blockchain.fabricTransactionId), postgres: .data.postgres, blockchain: .data.blockchain}' "$OUT_DIR/${prefix}_response.json" 2>/dev/null || true
+  done
+} > "$OUT_DIR/summary.txt"
+
+ARCHIVE="$OUT_DIR.tar.gz"
+tar -czf "$ARCHIVE" -C "$(dirname "$OUT_DIR")" "$(basename "$OUT_DIR")"
+
+echo
+cat "$OUT_DIR/summary.txt"
+echo
+echo "Saved test output: $OUT_DIR"
+echo "Uploadable archive: $ARCHIVE"

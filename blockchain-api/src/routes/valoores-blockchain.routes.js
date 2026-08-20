@@ -3,6 +3,126 @@ const crypto = require('crypto');
 const pool = require('../config/database');
 const fabricService = require('../services/fabric.service');
 
+/* BLOCKCHAIN_CUSTOMER_CREATED_ONLY_LOGGER_V2 */
+const customerLogFs = require('fs');
+const customerLogPath = require('path');
+
+const BLOCKCHAIN_CUSTOMER_LOG_FILE = customerLogPath.resolve(
+  __dirname,
+  '../../logs/blockchain-customers.log'
+);
+
+const loggedBlockchainCustomerTransactions = new Set();
+
+function sanitizeCustomerLogValue(value) {
+  return String(value ?? '')
+    .replace(/[\r\n\t]+/g, ' ')
+    .trim();
+}
+
+function appendBlockchainCustomerLog(event) {
+  try {
+    customerLogFs.mkdirSync(
+      customerLogPath.dirname(BLOCKCHAIN_CUSTOMER_LOG_FILE),
+      { recursive: true }
+    );
+
+    customerLogFs.appendFileSync(
+      BLOCKCHAIN_CUSTOMER_LOG_FILE,
+      `${JSON.stringify(event)}\n`,
+      'utf8'
+    );
+
+    return true;
+  } catch (error) {
+    console.error(
+      '[BLOCKCHAIN CUSTOMER LOG] Failed to write log file:',
+      error.message
+    );
+
+    return false;
+  }
+}
+
+function logCreatedBlockchainCustomer(customer) {
+  const transactionId = sanitizeCustomerLogValue(
+    customer.blockchainTransactionId
+  );
+
+  if (!transactionId) {
+    console.error(
+      '[BLOCKCHAIN CUSTOMER LOG] Creation event skipped: ' +
+      'Fabric transaction ID is missing.'
+    );
+
+    return false;
+  }
+
+  if (
+    loggedBlockchainCustomerTransactions.has(transactionId)
+  ) {
+    return false;
+  }
+
+  loggedBlockchainCustomerTransactions.add(transactionId);
+
+  const event = {
+    timestamp: new Date().toISOString(),
+    eventType: 'BLOCKCHAIN_CUSTOMER_CREATED',
+    source: 'FABRIC_BLOCKCHAIN',
+    customerId: sanitizeCustomerLogValue(
+      customer.customerId
+    ),
+    residentId: sanitizeCustomerLogValue(
+      customer.residentId
+    ),
+    ledgerKey: sanitizeCustomerLogValue(
+      customer.ledgerKey
+    ),
+    fullName: sanitizeCustomerLogValue(
+      customer.fullName
+    ),
+    kycStatus: sanitizeCustomerLogValue(
+      customer.kycStatus || 'Submitted'
+    ),
+    riskCategory: sanitizeCustomerLogValue(
+      customer.riskCategory || 'LOW'
+    ),
+    blockchainTransactionId: transactionId,
+    channelName: sanitizeCustomerLogValue(
+      customer.channelName
+    ),
+    chaincodeName: sanitizeCustomerLogValue(
+      customer.chaincodeName
+    )
+  };
+
+  console.log('');
+  console.log(
+    '============================================================'
+  );
+  console.log('[BLOCKCHAIN CUSTOMER CREATED]');
+  console.log(`Customer ID:     ${event.customerId}`);
+  console.log(`Resident ID:     ${event.residentId}`);
+  console.log(`Ledger Key:      ${event.ledgerKey}`);
+  console.log(`Customer Name:   ${event.fullName}`);
+  console.log(`KYC Status:      ${event.kycStatus}`);
+  console.log(`Risk Category:   ${event.riskCategory}`);
+  console.log(`Fabric Tx ID:    ${event.blockchainTransactionId}`);
+  console.log(`Channel:         ${event.channelName}`);
+  console.log(`Chaincode:       ${event.chaincodeName}`);
+  console.log(`Created At:      ${event.timestamp}`);
+  console.log(
+    '============================================================'
+  );
+  console.log('');
+
+  appendBlockchainCustomerLog(event);
+
+  return true;
+}
+/* END BLOCKCHAIN_CUSTOMER_CREATED_ONLY_LOGGER_V2 */
+
 const router = express.Router();
 
 
@@ -21,6 +141,23 @@ function sha256(value) {
 router.post('/customers', async (req, res) => {
   try {
     const requestBody = req.body || {};
+
+    const storageMode = String(
+      requestBody.storageMode ||
+      requestBody.storage_mode ||
+      'BLOCKCHAIN_ONLY'
+    )
+      .trim()
+      .toUpperCase();
+
+    if (storageMode !== 'BLOCKCHAIN_ONLY') {
+      return res.status(400).json({
+        success: false,
+        message:
+          'This endpoint supports BLOCKCHAIN_ONLY mode only. ' +
+          'Use storageMode=BLOCKCHAIN_ONLY or omit storageMode.'
+      });
+    }
 
     const formData =
       requestBody.formData ||
@@ -46,7 +183,6 @@ router.post('/customers', async (req, res) => {
     const customerName = formData.CUSTOMER_NAME || null;
     const customerType = formData.CUSTOMER_TYPE || null;
     const branchCode = formData.BRANCH || null;
-    // const tinNumber = formData.TIN_NUMBER || null;
     const vatNumber = formData.VAT_NUMBER || null;
 
     if (!customerId) {
@@ -63,7 +199,6 @@ router.post('/customers', async (req, res) => {
       });
     }
 
-
     let selfieFileName = null;
     let selfieHash = null;
 
@@ -75,12 +210,13 @@ router.post('/customers', async (req, res) => {
     }
 
     const fabricResidentId = `VALOORES-${customerId}`;
+    const ledgerKey = `KYC_${fabricResidentId}`;
 
     const blockchainPayload = {
       sourceSystem: 'VALOORES',
       entityType: 'CUSTOMER',
       operationType: 'CREATE_CUSTOMER',
-      ledgerKey: `KYC_${fabricResidentId}`,
+      ledgerKey,
       customer: {
         customerName,
         customerId,
@@ -103,50 +239,9 @@ router.post('/customers', async (req, res) => {
     };
 
     const payloadHash = sha256(JSON.stringify(blockchainPayload));
-
-    const insertResult = await pool.query(
-      `
-      INSERT INTO blockchain.valoores_customer_blockchain_proofs (
-        customer_name,
-        valoores_customer_id,
-        valoores_session_id,
-        customer_type,
-        branch_code,
-        vat_number,
-        customer_payload,
-        selfie_file_name,
-        selfie_hash,
-        blockchain_status,
-        blockchain_hash,
-        created_by
-      )
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
-      RETURNING *
-      `,
-      [
-        customerName,
-        customerId,
-        sessionId,
-        customerType,
-        branchCode,
-        vatNumber,
-        blockchainPayload,
-        selfieFileName,
-        selfieHash,
-        'PENDING',
-        payloadHash,
-        'SPRINGBOOT'
-      ]
-    );
-
-    const proofId = insertResult.rows[0].id;
-
-    let fabricResult = null;
-    let fabricStatus = 'PENDING';
-    let fabricTransactionId = null;
-    let fabricError = null;
-
-    const nameParts = String(customerName || 'VALOORES CUSTOMER').trim().split(/\s+/);
+    const nameParts = String(
+      customerName || 'VALOORES CUSTOMER'
+    ).trim().split(/\s+/);
 
     const residentPayload = {
       residentId: fabricResidentId,
@@ -182,7 +277,6 @@ router.post('/customers', async (req, res) => {
       walletCurrency: 'GOV',
       walletStatus: 'Not Created',
 
-      // Extra Valoores fields kept inside Fabric record safely.
       sourceSystem: 'VALOORES',
       sourceEntityType: 'CUSTOMER',
       branchCode: String(branchCode || ''),
@@ -192,79 +286,1044 @@ router.post('/customers', async (req, res) => {
       selfieHash
     };
 
+    const requestId =
+      `VALOORES-CUSTOMER-${customerId}` +
+      (sessionId ? `-${sessionId}` : '');
+
     try {
-      fabricResult = await fabricService.submitTransaction(
+      const fabricResult = await fabricService.submitTransaction(
         'CreateResident',
         [JSON.stringify(residentPayload)],
         {
-          requestId: `VALOORES-CUSTOMER-${proofId}`,
-          correlationId: `VALOORES-${customerId || proofId}`,
+          requestId,
+          correlationId: `VALOORES-${customerId}`,
           sourceSystem: 'VALOORES',
           requestSource: 'SPRINGBOOT',
           createdBy: 'SPRINGBOOT'
         }
       );
 
-      fabricStatus = 'CONFIRMED';
-      fabricTransactionId =
+      const fabricTransactionId =
         fabricResult?.transactionId ||
         fabricResult?.txId ||
         fabricResult?.commitStatus?.transactionId ||
         null;
-    } catch (error) {
-      fabricStatus = 'FAILED';
-      fabricError = error.message;
-      console.error('Valoores customer Fabric submit error:', error);
-    }
 
-    await pool.query(
-      `
-      UPDATE blockchain.valoores_customer_blockchain_proofs
-      SET
-        blockchain_status = $1,
-        blockchain_transaction_id = $2,
-        blockchain_error = $3,
-        updated_at = CURRENT_TIMESTAMP
-      WHERE id = $4
-      `,
-      [
-        fabricStatus,
-        fabricTransactionId,
-        fabricError,
-        proofId
-      ]
-    );
-
-    return res.status(fabricStatus === 'CONFIRMED' ? 201 : 202).json({
-      success: fabricStatus === 'CONFIRMED',
-      message:
-        fabricStatus === 'CONFIRMED'
-          ? 'Customer saved on PostgreSQL and Fabric Blockchain successfully'
-          : 'Customer saved on PostgreSQL but Fabric Blockchain submit failed',
-      data: {
-        proofId,
-        customerName,
-        customerId,
-        sessionId,
-        customerType,
-        branchCode,
-        vatNumber,
-        fabricResidentId,
-        ledgerKey: `KYC_${fabricResidentId}`,
-        blockchainStatus: fabricStatus,
-        blockchainTransactionId: fabricTransactionId,
-        blockchainHash: payloadHash,
-        blockchainError: fabricError,
-        fabricResult: fabricResult ? toSafeJson(fabricResult) : null
+      /* BLOCKCHAIN_CUSTOMER_CREATED_LOG_CALL_V1 */
+      if (fabricTransactionId) {
+        logCreatedBlockchainCustomer({
+          customerId,
+          residentId: fabricResidentId,
+          ledgerKey,
+          fullName: customerName,
+          kycStatus: residentPayload.kycStatus,
+          riskCategory: residentPayload.riskCategory,
+          blockchainTransactionId: fabricTransactionId,
+          channelName: fabricResult?.channelName,
+          chaincodeName: fabricResult?.chaincodeName
+        });
       }
-    });
 
+      return res.status(201).json({
+        success: true,
+        message: 'Customer saved on Fabric Blockchain successfully',
+        data: {
+          storageMode: 'BLOCKCHAIN_ONLY',
+          postgresSaved: false,
+          blockchainSaved: true,
+          customerName,
+          customerId,
+          sessionId,
+          customerType,
+          branchCode,
+          vatNumber,
+          fabricResidentId,
+          ledgerKey,
+          blockchainStatus: 'CONFIRMED',
+          blockchainTransactionId: fabricTransactionId,
+          blockchainHash: payloadHash,
+          blockchainError: null,
+          fabricResult: toSafeJson(fabricResult)
+        }
+      });
+    } catch (fabricError) {
+      console.error(
+        'Valoores customer Fabric submit error:',
+        fabricError
+      );
+
+      return res.status(502).json({
+        success: false,
+        message:
+          'Fabric Blockchain submission failed. ' +
+          'No PostgreSQL proof record was created.',
+        data: {
+          storageMode: 'BLOCKCHAIN_ONLY',
+          postgresSaved: false,
+          blockchainSaved: false,
+          customerName,
+          customerId,
+          sessionId,
+          customerType,
+          branchCode,
+          vatNumber,
+          fabricResidentId,
+          ledgerKey,
+          blockchainStatus: 'FAILED',
+          blockchainTransactionId: null,
+          blockchainHash: payloadHash,
+          blockchainError: fabricError.message,
+          fabricResult: null
+        }
+      });
+    }
   } catch (error) {
-    console.error('Create Valoores customer blockchain error:', error);
+    console.error(
+      'Create Valoores blockchain-only customer error:',
+      error
+    );
 
     return res.status(500).json({
       success: false,
-      message: 'Failed to save customer on Blockchain',
+      message: 'Failed to save customer on Fabric Blockchain',
+      error: error.message
+    });
+  }
+});
+
+
+router.get('/customers/count', async (req, res) => {
+  try {
+    const fabricResult = await fabricService.evaluateTransaction(
+      'CountValooresCustomers',
+      [],
+      {
+        requestId: `VALOORES-CUSTOMER-COUNT-${Date.now()}`,
+        correlationId: `VALOORES-CUSTOMER-COUNT-${Date.now()}`,
+        sourceSystem: 'VALOORES',
+        requestSource: 'API'
+      }
+    );
+
+    const resultData =
+      fabricResult?.data ??
+      fabricResult?.result ??
+      fabricResult ??
+      {};
+
+    return res.status(200).json({
+      success: true,
+      message:
+        'VALOORES customer count returned from Fabric Blockchain',
+      source: 'FABRIC_BLOCKCHAIN',
+      data: {
+        totalCustomers: Number(
+          resultData.totalCustomers || 0
+        )
+      },
+      blockchain: {
+        channelName: fabricResult?.channelName || null,
+        chaincodeName: fabricResult?.chaincodeName || null,
+        functionName: 'CountValooresCustomers'
+      }
+    });
+  } catch (error) {
+    console.error(
+      'Count VALOORES customers from Fabric error:',
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message:
+        'Failed to count VALOORES customers from Fabric Blockchain',
+      source: 'FABRIC_BLOCKCHAIN',
+      error: error.message
+    });
+  }
+});
+
+/* ===== VALOORES KYC FULL VERSION API V1 START ===== */
+
+function normalizeKycVersionCustomerId(value) {
+  return String(value ?? '')
+    .trim()
+    .replace(/^KYC_VALOORES-/i, '')
+    .replace(/^VALOORES-/i, '');
+}
+
+function parseKycVersionFabricData(fabricResult) {
+  let value =
+    fabricResult?.data ??
+    fabricResult?.result ??
+    fabricResult ??
+    {};
+
+  if (Buffer.isBuffer(value)) {
+    value = value.toString('utf8');
+  }
+
+  if (typeof value !== 'string') {
+    return value || {};
+  }
+
+  try {
+    return JSON.parse(value);
+  } catch (_) {
+    return { value };
+  }
+}
+
+function buildKycVersionContext(action, customerId) {
+  const timestamp = Date.now();
+
+  return {
+    requestId:
+      `VALOORES-KYC-VERSION-${action}-${customerId}-${timestamp}`,
+    correlationId:
+      `VALOORES-KYC-VERSION-${action}-${customerId}`,
+    sourceSystem: 'VALOORES',
+    requestSource: 'API'
+  };
+}
+
+function isKycVersionNotFoundError(error) {
+  return /not found|does not exist/i.test(
+    String(error?.message || error || '')
+  );
+}
+
+function sendKycVersionError(
+  res,
+  error,
+  {
+    customerId,
+    residentId,
+    ledgerKey,
+    functionName,
+    operation
+  }
+) {
+  const notFound = isKycVersionNotFoundError(error);
+
+  console.error(
+    `${operation} from Fabric error:`,
+    error
+  );
+
+  return res.status(notFound ? 404 : 500).json({
+    success: false,
+    message: notFound
+      ? 'Requested KYC version data was not found on Fabric Blockchain'
+      : `Failed to ${operation.toLowerCase()} from Fabric Blockchain`,
+    source: 'FABRIC_BLOCKCHAIN',
+    customerId,
+    residentId,
+    ledgerKey,
+    blockchain: {
+      functionName
+    },
+    error: error?.message || String(error)
+  });
+}
+
+/**
+ * GET /customers/:customerId/versions/latest
+ */
+router.get(
+  '/customers/:customerId/versions/latest',
+  async (req, res) => {
+    const customerId = normalizeKycVersionCustomerId(
+      req.params.customerId
+    );
+
+    if (!customerId) {
+      return res.status(400).json({
+        success: false,
+        message: 'customerId is required'
+      });
+    }
+
+    const residentId = `VALOORES-${customerId}`;
+    const ledgerKey = `KYC_${residentId}`;
+    const functionName = 'GetLatestResidentVersion';
+
+    try {
+      const fabricResult =
+        await fabricService.evaluateTransaction(
+          functionName,
+          [residentId],
+          buildKycVersionContext(
+            'LATEST',
+            customerId
+          )
+        );
+
+      const version =
+        parseKycVersionFabricData(fabricResult);
+
+      return res.status(200).json({
+        success: true,
+        message:
+          'Latest KYC version returned from Fabric Blockchain',
+        source: 'FABRIC_BLOCKCHAIN',
+        data: version,
+        customer: {
+          customerId,
+          residentId,
+          ledgerKey
+        },
+        blockchain: {
+          channelName:
+            fabricResult?.channelName || null,
+          chaincodeName:
+            fabricResult?.chaincodeName || null,
+          functionName
+        }
+      });
+    } catch (error) {
+      return sendKycVersionError(res, error, {
+        customerId,
+        residentId,
+        ledgerKey,
+        functionName,
+        operation: 'Retrieve latest KYC version'
+      });
+    }
+  }
+);
+
+/**
+ * GET /customers/:customerId/versions/compare
+ *     ?oldVersion=1&newVersion=2
+ */
+router.get(
+  '/customers/:customerId/versions/compare',
+  async (req, res) => {
+    const customerId = normalizeKycVersionCustomerId(
+      req.params.customerId
+    );
+
+    if (!customerId) {
+      return res.status(400).json({
+        success: false,
+        message: 'customerId is required'
+      });
+    }
+
+    const oldVersion = String(
+      req.query.oldVersion ?? ''
+    ).trim();
+
+    const newVersion = String(
+      req.query.newVersion ?? ''
+    ).trim();
+
+    if (
+      !/^[1-9]\d*$/.test(oldVersion) ||
+      !/^[1-9]\d*$/.test(newVersion)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          'oldVersion and newVersion must be positive integers'
+      });
+    }
+
+    const residentId = `VALOORES-${customerId}`;
+    const ledgerKey = `KYC_${residentId}`;
+    const functionName = 'CompareResidentVersions';
+
+    try {
+      const fabricResult =
+        await fabricService.evaluateTransaction(
+          functionName,
+          [
+            residentId,
+            oldVersion,
+            newVersion
+          ],
+          buildKycVersionContext(
+            'COMPARE',
+            customerId
+          )
+        );
+
+      const comparison =
+        parseKycVersionFabricData(fabricResult);
+
+      return res.status(200).json({
+        success: true,
+        message:
+          'KYC versions compared successfully on Fabric Blockchain',
+        source: 'FABRIC_BLOCKCHAIN',
+        data: comparison,
+        customer: {
+          customerId,
+          residentId,
+          ledgerKey
+        },
+        blockchain: {
+          channelName:
+            fabricResult?.channelName || null,
+          chaincodeName:
+            fabricResult?.chaincodeName || null,
+          functionName
+        }
+      });
+    } catch (error) {
+      return sendKycVersionError(res, error, {
+        customerId,
+        residentId,
+        ledgerKey,
+        functionName,
+        operation: 'Compare KYC versions'
+      });
+    }
+  }
+);
+
+/**
+ * GET /customers/:customerId/versions/:versionNumber
+ */
+router.get(
+  '/customers/:customerId/versions/:versionNumber',
+  async (req, res) => {
+    const customerId = normalizeKycVersionCustomerId(
+      req.params.customerId
+    );
+
+    const versionNumber = String(
+      req.params.versionNumber ?? ''
+    ).trim();
+
+    if (!customerId) {
+      return res.status(400).json({
+        success: false,
+        message: 'customerId is required'
+      });
+    }
+
+    if (!/^[1-9]\d*$/.test(versionNumber)) {
+      return res.status(400).json({
+        success: false,
+        message:
+          'versionNumber must be a positive integer'
+      });
+    }
+
+    const residentId = `VALOORES-${customerId}`;
+    const ledgerKey = `KYC_${residentId}`;
+    const functionName = 'GetResidentVersion';
+
+    try {
+      const fabricResult =
+        await fabricService.evaluateTransaction(
+          functionName,
+          [
+            residentId,
+            versionNumber
+          ],
+          buildKycVersionContext(
+            `GET-${versionNumber}`,
+            customerId
+          )
+        );
+
+      const version =
+        parseKycVersionFabricData(fabricResult);
+
+      return res.status(200).json({
+        success: true,
+        message:
+          `KYC version ${versionNumber} returned from Fabric Blockchain`,
+        source: 'FABRIC_BLOCKCHAIN',
+        data: version,
+        customer: {
+          customerId,
+          residentId,
+          ledgerKey
+        },
+        blockchain: {
+          channelName:
+            fabricResult?.channelName || null,
+          chaincodeName:
+            fabricResult?.chaincodeName || null,
+          functionName
+        }
+      });
+    } catch (error) {
+      return sendKycVersionError(res, error, {
+        customerId,
+        residentId,
+        ledgerKey,
+        functionName,
+        operation:
+          `Retrieve KYC version ${versionNumber}`
+      });
+    }
+  }
+);
+
+/**
+ * GET /customers/:customerId/versions
+ *     ?limit=100&bookmark=
+ */
+router.get(
+  '/customers/:customerId/versions',
+  async (req, res) => {
+    const customerId = normalizeKycVersionCustomerId(
+      req.params.customerId
+    );
+
+    if (!customerId) {
+      return res.status(400).json({
+        success: false,
+        message: 'customerId is required'
+      });
+    }
+
+    const requestedPageSize = Number.parseInt(
+      String(
+        req.query.limit ??
+        req.query.pageSize ??
+        '100'
+      ),
+      10
+    );
+
+    const pageSize = Number.isFinite(
+      requestedPageSize
+    )
+      ? Math.min(
+          Math.max(requestedPageSize, 1),
+          1000
+        )
+      : 100;
+
+    const bookmark = String(
+      req.query.bookmark ?? ''
+    );
+
+    const residentId = `VALOORES-${customerId}`;
+    const ledgerKey = `KYC_${residentId}`;
+    const functionName = 'GetResidentVersions';
+
+    try {
+      const fabricResult =
+        await fabricService.evaluateTransaction(
+          functionName,
+          [residentId],
+          buildKycVersionContext(
+            'LIST',
+            customerId
+          )
+        );
+
+      const resultData =
+        parseKycVersionFabricData(fabricResult);
+
+      const versions = Array.isArray(
+        resultData?.versions
+      )
+        ? resultData.versions
+        : [];
+
+      const fabricPagination =
+        resultData?.pagination || {};
+
+      const nextBookmark = String(
+        fabricPagination.bookmark || ''
+      );
+
+      return res.status(200).json({
+        success: true,
+        message:
+          'KYC versions returned from Fabric Blockchain',
+        source: 'FABRIC_BLOCKCHAIN',
+        data: {
+          customerId,
+          residentId,
+          ledgerKey,
+          versions
+        },
+        pagination: {
+          totalVersions: versions.length,
+          returnedVersions: versions.length,
+          fetchedRecordsCount: versions.length,
+          bookmark: null,
+          hasMore: false
+        },
+        blockchain: {
+          channelName:
+            fabricResult?.channelName || null,
+          chaincodeName:
+            fabricResult?.chaincodeName || null,
+          functionName
+        }
+      });
+    } catch (error) {
+      return sendKycVersionError(res, error, {
+        customerId,
+        residentId,
+        ledgerKey,
+        functionName,
+        operation: 'Retrieve KYC versions'
+      });
+    }
+  }
+);
+
+/* ===== VALOORES KYC FULL VERSION API V1 END ===== */
+
+/* ===== VALOORES KYC CUSTOMER UPDATE API V1 START ===== */
+
+/**
+ * PUT /customers/:customerId
+ *
+ * Updates the Fabric current state and creates a new immutable
+ * KYC version through the UpdateResident chaincode function.
+ */
+router.put(
+  '/customers/:customerId',
+  async (req, res) => {
+    const customerId =
+      normalizeKycVersionCustomerId(
+        req.params.customerId
+      );
+
+    if (!customerId) {
+      return res.status(400).json({
+        success: false,
+        message: 'customerId is required'
+      });
+    }
+
+    const requestBody =
+      req.body &&
+      typeof req.body === 'object' &&
+      !Array.isArray(req.body)
+        ? req.body
+        : {};
+
+    const storageMode = String(
+      requestBody.storageMode ||
+      requestBody.storage_mode ||
+      'BLOCKCHAIN_ONLY'
+    )
+      .trim()
+      .toUpperCase();
+
+    if (storageMode !== 'BLOCKCHAIN_ONLY') {
+      return res.status(400).json({
+        success: false,
+        message:
+          'This endpoint currently supports BLOCKCHAIN_ONLY mode'
+      });
+    }
+
+    const residentId =
+      `VALOORES-${customerId}`;
+
+    const ledgerKey =
+      `KYC_${residentId}`;
+
+    const submittedFormData =
+      requestBody.formData &&
+      typeof requestBody.formData === 'object' &&
+      !Array.isArray(requestBody.formData)
+        ? requestBody.formData
+        : {};
+
+    const sessionId = String(
+      requestBody.sessionId ??
+      requestBody.session_id ??
+      submittedFormData.SESSION_ID ??
+      submittedFormData.sessionId ??
+      ''
+    ).trim();
+
+    const changeReason = String(
+      requestBody.changeReason ??
+      requestBody.change_reason ??
+      `Customer ${customerId} updated through VALOORES API`
+    ).trim();
+
+    /*
+     * Start with the complete submitted payload so the chaincode
+     * can deep-merge both normalized fields and the original
+     * VALOORES formData structure.
+     */
+    const updatePayload = {
+      ...requestBody
+    };
+
+    delete updatePayload.storageMode;
+    delete updatePayload.storage_mode;
+
+    updatePayload.customerId =
+      customerId;
+
+    updatePayload.customer_id =
+      customerId;
+
+    updatePayload.residentId =
+      residentId;
+
+    updatePayload.changeReason =
+      changeReason;
+
+    if (sessionId) {
+      updatePayload.sessionId =
+        sessionId;
+
+      updatePayload.session_id =
+        sessionId;
+    }
+
+    if (
+      Object.keys(submittedFormData).length > 0
+    ) {
+      updatePayload.formData = {
+        ...submittedFormData,
+        CUSTOMER_ID: String(
+          submittedFormData.CUSTOMER_ID ||
+          customerId
+        ),
+        SESSION_ID: String(
+          submittedFormData.SESSION_ID ||
+          sessionId ||
+          ''
+        )
+      };
+    }
+
+    const functionName =
+      'UpdateResident';
+
+    try {
+      const fabricResult =
+        await fabricService.submitTransaction(
+          functionName,
+          [
+            JSON.stringify(updatePayload)
+          ],
+          {
+            ...buildKycVersionContext(
+              'UPDATE',
+              customerId
+            ),
+            correlationId:
+              String(
+                req.headers[
+                  'x-correlation-id'
+                ] ||
+                `VALOORES-${customerId}`
+              ),
+            requestId:
+              String(
+                req.headers[
+                  'x-request-id'
+                ] ||
+                `VALOORES-KYC-UPDATE-${customerId}-${Date.now()}`
+              )
+          }
+        );
+
+      const chaincodeData =
+        parseKycVersionFabricData(
+          fabricResult
+        );
+
+      const transactionId =
+        chaincodeData?.fabricTransactionId ||
+        chaincodeData?.updatedTxId ||
+        fabricResult?.transactionId ||
+        fabricResult?.txId ||
+        fabricResult?.commitStatus
+          ?.transactionId ||
+        null;
+
+      return res.status(200).json({
+        success: true,
+        message:
+          'Customer updated on Fabric Blockchain successfully',
+        source: 'FABRIC_BLOCKCHAIN',
+        data: {
+          operation:
+            chaincodeData?.operation ||
+            'UPDATE',
+          storageMode:
+            'BLOCKCHAIN_ONLY',
+          postgresSaved: false,
+          blockchainSaved: true,
+          customerId,
+          residentId,
+          ledgerKey:
+            chaincodeData?.ledgerKey ||
+            ledgerKey,
+          versionNumber:
+            chaincodeData?.versionNumber ??
+            null,
+          previousVersionNumber:
+            chaincodeData
+              ?.previousVersionNumber ??
+            null,
+          changedFields:
+            chaincodeData
+              ?.changedFields ||
+            [],
+          changeCount:
+            chaincodeData
+              ?.changeCount ??
+            chaincodeData
+              ?.changedFields
+              ?.length ??
+            0,
+          versionPayloadHash:
+            chaincodeData
+              ?.versionPayloadHash ||
+            null,
+          blockchainTransactionId:
+            transactionId,
+          blockNumber:
+            fabricResult?.commitStatus?.blockNumber != null
+              ? String(
+                  fabricResult.commitStatus.blockNumber
+                )
+              : null,
+          commitStatus:
+            fabricResult?.commitStatus
+              ?.successful === true
+              ? 'VALID'
+              : null,
+          commitCode:
+            fabricResult?.commitStatus
+              ?.code ??
+            null,
+          chaincodeResult:
+            chaincodeData
+        },
+        blockchain: {
+          channelName:
+            fabricResult?.channelName ||
+            null,
+          chaincodeName:
+            fabricResult?.chaincodeName ||
+            null,
+          functionName
+        }
+      });
+    } catch (error) {
+      const message = String(
+        error?.message ||
+        error ||
+        'Unknown Fabric update error'
+      );
+
+      let statusCode = 500;
+
+      if (
+        /not found|does not exist/i.test(
+          message
+        )
+      ) {
+        statusCode = 404;
+      } else if (
+        /no resident fields changed|no .* fields changed/i.test(
+          message
+        )
+      ) {
+        statusCode = 409;
+      } else if (
+        /required|invalid|valid .* json/i.test(
+          message
+        )
+      ) {
+        statusCode = 400;
+      }
+
+      console.error(
+        'Update VALOORES blockchain customer error:',
+        error
+      );
+
+      return res.status(statusCode).json({
+        success: false,
+        message:
+          statusCode === 409
+            ? 'The submitted payload does not contain any changes'
+            : 'Failed to update customer on Fabric Blockchain',
+        source:
+          'FABRIC_BLOCKCHAIN',
+        customerId,
+        residentId,
+        ledgerKey,
+        blockchain: {
+          functionName
+        },
+        error: message
+      });
+    }
+  }
+);
+
+/* ===== VALOORES KYC CUSTOMER UPDATE API V1 END ===== */
+
+router.get('/customers/:customerId', async (req, res) => {
+  const customerId = String(
+    req.params.customerId || ''
+  )
+    .trim()
+    .replace(/^VALOORES-/, '');
+
+  if (!customerId) {
+    return res.status(400).json({
+      success: false,
+      message: 'customerId is required'
+    });
+  }
+
+  const residentId = `VALOORES-${customerId}`;
+  const ledgerKey = `KYC_${residentId}`;
+
+  const baseContext = {
+    requestId:
+      `VALOORES-CUSTOMER-GET-${customerId}-${Date.now()}`,
+    correlationId:
+      `VALOORES-CUSTOMER-GET-${customerId}`,
+    sourceSystem: 'VALOORES',
+    requestSource: 'API'
+  };
+
+  const parseMaybeJson = (value) => {
+    if (typeof value !== 'string') {
+      return value;
+    }
+
+    try {
+      return JSON.parse(value);
+    } catch (_) {
+      return {
+        value
+      };
+    }
+  };
+
+  let functionName = 'GetResident';
+  let fallbackUsed = false;
+
+  try {
+    let fabricResult;
+    let customer;
+
+    try {
+      fabricResult = await fabricService.evaluateTransaction(
+        'GetResident',
+        [residentId],
+        baseContext
+      );
+
+      const rawCustomer =
+        fabricResult?.data ??
+        fabricResult?.result ??
+        fabricResult;
+
+      customer = parseMaybeJson(rawCustomer);
+    } catch (getResidentError) {
+      const residentNotFound =
+        /not found|does not exist/i.test(
+          String(
+            getResidentError.message ||
+            getResidentError
+          )
+        );
+
+      if (!residentNotFound) {
+        throw getResidentError;
+      }
+
+      functionName = 'GetHistoryForKey';
+      fallbackUsed = true;
+
+      fabricResult = await fabricService.evaluateTransaction(
+        'GetHistoryForKey',
+        [ledgerKey],
+        {
+          ...baseContext,
+          requestId:
+            `VALOORES-CUSTOMER-HISTORY-${customerId}-${Date.now()}`
+        }
+      );
+
+      const historyResult =
+        fabricResult?.data ??
+        fabricResult?.result ??
+        fabricResult;
+
+      const history = Array.isArray(historyResult)
+        ? historyResult
+        : Array.isArray(historyResult?.history)
+          ? historyResult.history
+          : [];
+
+      const latestRecord = [...history]
+        .reverse()
+        .find(
+          (entry) =>
+            entry &&
+            !entry.isDelete &&
+            entry.value
+        );
+
+      if (!latestRecord) {
+        throw new Error(
+          `Resident not found on blockchain: ${residentId}`
+        );
+      }
+
+      customer = parseMaybeJson(
+        latestRecord.value
+      );
+    }
+
+    return res.status(200).json({
+      success: true,
+      message:
+        'VALOORES customer returned from Fabric Blockchain',
+      source: 'FABRIC_BLOCKCHAIN',
+      data: {
+        ...(customer || {}),
+        ledgerKey,
+        customerId
+      },
+      blockchain: {
+        channelName:
+          fabricResult?.channelName || null,
+        chaincodeName:
+          fabricResult?.chaincodeName || null,
+        functionName,
+        fallbackUsed
+      }
+    });
+  } catch (error) {
+    const notFound =
+      /not found|does not exist/i.test(
+        String(error.message || error)
+      );
+
+    console.error(
+      'Get VALOORES customer from Fabric error:',
+      error
+    );
+
+    return res.status(notFound ? 404 : 500).json({
+      success: false,
+      message: notFound
+        ? 'VALOORES customer was not found on Fabric Blockchain'
+        : 'Failed to retrieve VALOORES customer from Fabric Blockchain',
+      source: 'FABRIC_BLOCKCHAIN',
+      ledgerKey,
       error: error.message
     });
   }
@@ -272,46 +1331,93 @@ router.post('/customers', async (req, res) => {
 
 router.get('/customers', async (req, res) => {
   try {
-    const result = await pool.query(
-      `
-      SELECT
-        id,
-        source_system,
-        entity_type,
-        operation_type,
-        customer_name,
-        valoores_customer_id,
-        valoores_session_id,
-        customer_type,
-        branch_code,
-        vat_number,
-        selfie_file_name,
-        selfie_hash,
-        blockchain_status,
-        blockchain_transaction_id,
-        blockchain_hash,
-        blockchain_error,
-        created_by,
-        created_at,
-        updated_at
-      FROM blockchain.valoores_customer_blockchain_proofs
-      ORDER BY created_at DESC
-      LIMIT 100
-      `
+    const requestedLimit = Number.parseInt(
+      String(req.query.limit || '100'),
+      10
     );
 
-    return res.json({
-      success: true,
-      message: 'Valoores blockchain customers returned successfully',
-      data: result.rows
-    });
+    const limit = Number.isFinite(requestedLimit)
+      ? Math.min(Math.max(requestedLimit, 1), 1000)
+      : 100;
 
+    const bookmark = String(req.query.bookmark || '');
+
+    const listResult = await fabricService.evaluateTransaction(
+      'QueryValooresCustomers',
+      [String(limit), bookmark],
+      {
+        requestId: `VALOORES-CUSTOMER-LIST-${Date.now()}`,
+        correlationId: `VALOORES-CUSTOMER-LIST-${Date.now()}`,
+        sourceSystem: 'VALOORES',
+        requestSource: 'API'
+      }
+    );
+
+    const countResult = await fabricService.evaluateTransaction(
+      'CountValooresCustomers',
+      [],
+      {
+        requestId: `VALOORES-CUSTOMER-COUNT-${Date.now()}`,
+        correlationId: `VALOORES-CUSTOMER-COUNT-${Date.now()}`,
+        sourceSystem: 'VALOORES',
+        requestSource: 'API'
+      }
+    );
+
+    const listData =
+      listResult?.data ??
+      listResult?.result ??
+      listResult ??
+      {};
+
+    const countData =
+      countResult?.data ??
+      countResult?.result ??
+      countResult ??
+      {};
+
+    const customers = Array.isArray(listData.customers)
+      ? listData.customers
+      : [];
+
+    const nextBookmark = String(
+      listData?.pagination?.bookmark || ''
+    );
+
+    return res.status(200).json({
+      success: true,
+      message:
+        'VALOORES customers returned from Fabric Blockchain',
+      source: 'FABRIC_BLOCKCHAIN',
+      data: customers,
+      pagination: {
+        totalCustomers: Number(
+          countData.totalCustomers || 0
+        ),
+        limit,
+        returnedCustomers: customers.length,
+        bookmark: nextBookmark,
+        hasMore:
+          customers.length === limit &&
+          Boolean(nextBookmark)
+      },
+      blockchain: {
+        channelName: listResult?.channelName || null,
+        chaincodeName: listResult?.chaincodeName || null,
+        functionName: 'QueryValooresCustomers'
+      }
+    });
   } catch (error) {
-    console.error('Get Valoores customer blockchain proofs error:', error);
+    console.error(
+      'List VALOORES customers from Fabric error:',
+      error
+    );
 
     return res.status(500).json({
       success: false,
-      message: 'Failed to retrieve Valoores blockchain customers',
+      message:
+        'Failed to retrieve VALOORES customers from Fabric Blockchain',
+      source: 'FABRIC_BLOCKCHAIN',
       error: error.message
     });
   }
@@ -433,6 +1539,7 @@ router.get('/kyc-daily-created', async (req, res) => {
     });
   }
 });
+
 
 
 module.exports = router;

@@ -1,0 +1,24 @@
+KYC storage modes patch bundle
+Generated: 2026-07-23T10:54:44+00:00
+
+MANIFEST.txt
+README.md
+database/phase_kyc_storage_modes.sql
+database/rollback_kyc_storage_modes.sql
+diffs/blockchain-kyc.component.html.diff
+diffs/blockchain-kyc.component.scss.diff
+diffs/blockchain-kyc.component.ts.diff
+diffs/blockchain-kyc.service.diff
+diffs/controller.diff
+diffs/wallet.service.diff
+files/blockchain-api/src/controllers/blockchain-kyc.controller.js
+files/blockchain-api/src/services/blockchain-kyc.service.js
+files/blockchain-api/src/services/wallet.service.js
+files/blockchain-test-ui/src/app/pages/blockchain-kyc/blockchain-kyc.component.html
+files/blockchain-test-ui/src/app/pages/blockchain-kyc/blockchain-kyc.component.scss
+files/blockchain-test-ui/src/app/pages/blockchain-kyc/blockchain-kyc.component.ts
+scripts/apply_source_files.sh
+scripts/rollback_source_files.sh
+tests/curl_test_storage_modes.sh
+tests/validate_fabric_couchdb.sh
+tests/validate_postgres.sh

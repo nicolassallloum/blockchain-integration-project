@@ -77,6 +77,24 @@ export class App {
       group: 'Government Blockchain'
     },
     {
+      label: 'Create License Wallet',
+      route: '/government-blockchain/license-wallet-create',
+      icon: '🔐',
+      group: 'Government Blockchain'
+    },
+    {
+      label: 'Licenses',
+      route: '/government-blockchain/licenses',
+      icon: '📄',
+      group: 'Government Blockchain'
+    },
+    {
+      label: 'Recover License',
+      route: '/government-blockchain/license-recovery',
+      icon: '🔑',
+      group: 'Government Blockchain'
+    },
+    {
       label: 'Government Services',
       route: '/government-blockchain/government-services',
       icon: '●',

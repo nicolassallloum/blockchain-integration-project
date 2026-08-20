@@ -1,0 +1,808 @@
+<section class="version-audit-page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">
+        Compliance / Blockchain Evidence
+      </p>
+
+      <h1>KYC Version Audit</h1>
+
+      <p class="subtitle">
+        Review every immutable customer KYC version stored on
+        Hyperledger Fabric and compare old values with new values.
+      </p>
+    </div>
+
+    <div class="header-status">
+      <span class="status-indicator"></span>
+
+      <div>
+        <strong>Fabric Blockchain</strong>
+        <span>Immutable version history</span>
+      </div>
+    </div>
+  </header>
+
+  <form
+    class="search-panel"
+    (ngSubmit)="loadCustomerVersions()"
+  >
+    <div class="search-field">
+      <label for="customerId">
+        Customer ID
+      </label>
+
+      <input
+        id="customerId"
+        name="customerId"
+        type="text"
+        [(ngModel)]="customerId"
+        placeholder="Enter Customer ID, VALOORES ID, or ledger key"
+        autocomplete="off"
+      />
+    </div>
+
+    <div class="search-actions">
+      <button
+        type="submit"
+        class="primary-button"
+        [disabled]="loading"
+      >
+        {{ loading ? 'Loading...' : 'Search Blockchain' }}
+      </button>
+
+      <button
+        type="button"
+        class="secondary-button"
+        [disabled]="loading"
+        (click)="useDemoCustomer()"
+      >
+        Load Tested Customer
+      </button>
+
+      <button
+        type="button"
+        class="ghost-button"
+        [disabled]="loading"
+        (click)="clearScreen()"
+      >
+        Clear
+      </button>
+    </div>
+  </form>
+
+  <div
+    class="message error-message"
+    *ngIf="errorMessage"
+  >
+    <strong>Request failed</strong>
+    <span>{{ errorMessage }}</span>
+  </div>
+
+  <div
+    class="message success-message"
+    *ngIf="successMessage"
+  >
+    <strong>Blockchain response confirmed</strong>
+    <span>{{ successMessage }}</span>
+  </div>
+
+  <div
+    class="message copy-message"
+    *ngIf="copyMessage"
+  >
+    {{ copyMessage }}
+  </div>
+
+  <div
+    class="loading-panel"
+    *ngIf="loading"
+  >
+    <span class="spinner"></span>
+    <div>
+      <strong>Reading immutable KYC history</strong>
+      <p>
+        Querying Hyperledger Fabric for all customer versions.
+      </p>
+    </div>
+  </div>
+
+  <ng-container *ngIf="hasVersions && !loading">
+    <section class="summary-grid">
+      <article class="summary-card">
+        <span class="summary-label">Customer ID</span>
+        <strong>{{ customer?.customerId || normalizedCustomerId }}</strong>
+        <small>{{ customer?.residentId || '-' }}</small>
+      </article>
+
+      <article class="summary-card">
+        <span class="summary-label">Total Versions</span>
+        <strong>{{ versions.length }}</strong>
+        <small>Immutable Fabric snapshots</small>
+      </article>
+
+      <article class="summary-card">
+        <span class="summary-label">Latest Version</span>
+        <strong>V{{ latestVersion?.versionNumber }}</strong>
+        <small>{{ latestVersion?.versionOperation }}</small>
+      </article>
+
+      <article class="summary-card changed-card">
+        <span class="summary-label">Selected Changes</span>
+        <strong>
+          {{ comparison?.changeCount ?? changedFields.length }}
+        </strong>
+        <small>Detected field changes</small>
+      </article>
+
+      <article class="summary-card">
+        <span class="summary-label">Channel</span>
+        <strong>{{ blockchain?.channelName || '-' }}</strong>
+        <small>{{ blockchain?.chaincodeName || '-' }}</small>
+      </article>
+
+      <article class="summary-card verified-card">
+        <span class="summary-label">Evidence Status</span>
+        <strong>Verified</strong>
+        <small>Returned directly from Fabric</small>
+      </article>
+    </section>
+
+
+  
+
+
+    <section class="panel timeline-panel">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">Immutable History</p>
+          <h2>Version Timeline</h2>
+        </div>
+
+        <span class="panel-meta">
+          Last loaded:
+          {{ lastLoadedAt | date:'medium' }}
+        </span>
+      </div>
+
+      <div class="timeline">
+        <button
+          type="button"
+          class="timeline-item"
+          *ngFor="
+            let version of versions;
+            trackBy: trackVersion
+          "
+          [class.selected]="
+            version.versionNumber ===
+            selectedNewVersionNumber
+          "
+          (click)="selectTimelineVersion(version)"
+        >
+          <span class="timeline-marker"></span>
+
+          <span class="timeline-version">
+            Version {{ version.versionNumber }}
+          </span>
+
+          <span
+            class="operation-badge"
+            [ngClass]="operationClass(version.versionOperation)"
+          >
+            {{ version.versionOperation }}
+          </span>
+
+          <span class="timeline-date">
+            {{ version.createdAt | date:'medium' }}
+          </span>
+
+          <span class="timeline-changes">
+            {{ version.versionChangeCount || 0 }}
+            changed
+          </span>
+        </button>
+      </div>
+    </section>
+
+    <section class="panel comparison-control-panel">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">Version Comparison</p>
+          <h2>Old Version vs New Version</h2>
+        </div>
+
+        <button
+          type="button"
+          class="primary-button"
+          [disabled]="
+            comparisonLoading ||
+            selectedOldVersionNumber ===
+              selectedNewVersionNumber
+          "
+          (click)="compareSelectedVersions()"
+        >
+          {{
+            comparisonLoading
+              ? 'Comparing...'
+              : 'Compare Versions'
+          }}
+        </button>
+      </div>
+
+      <div class="version-selectors">
+        <label>
+          <span>Old Version</span>
+
+          <select
+            name="oldVersion"
+            [(ngModel)]="selectedOldVersionNumber"
+            (change)="compareSelectedVersions()"
+          >
+            <option
+              *ngFor="let version of versions"
+              [ngValue]="version.versionNumber"
+            >
+              Version {{ version.versionNumber }} —
+              {{ version.versionOperation }}
+            </option>
+          </select>
+        </label>
+
+        <div class="comparison-arrow">
+          →
+        </div>
+
+        <label>
+          <span>New Version</span>
+
+          <select
+            name="newVersion"
+            [(ngModel)]="selectedNewVersionNumber"
+            (change)="compareSelectedVersions()"
+          >
+            <option
+              *ngFor="let version of versions"
+              [ngValue]="version.versionNumber"
+            >
+              Version {{ version.versionNumber }} —
+              {{ version.versionOperation }}
+            </option>
+          </select>
+        </label>
+      </div>
+    </section>
+
+    <section
+      class="version-metadata-grid"
+      *ngIf="oldVersion as old"
+    >
+      <article class="version-card old-version-card">
+        <div class="version-card-header">
+          <div>
+            <span class="version-caption">Old Snapshot</span>
+            <h3>Version {{ old.versionNumber }}</h3>
+          </div>
+
+          <span
+            class="operation-badge"
+            [ngClass]="operationClass(old.versionOperation)"
+          >
+            {{ old.versionOperation }}
+          </span>
+        </div>
+
+        <dl>
+          <div>
+            <dt>Created At</dt>
+            <dd>{{ old.createdAt | date:'medium' }}</dd>
+          </div>
+
+          <div>
+            <dt>Created By MSP</dt>
+            <dd>{{ old.createdByMsp || '-' }}</dd>
+          </div>
+
+          <div>
+            <dt>Changed Fields</dt>
+            <dd>{{ old.versionChangeCount || 0 }}</dd>
+          </div>
+
+          <div>
+            <dt>Change Reason</dt>
+            <dd>{{ old.changeReason || 'Initial blockchain record' }}</dd>
+          </div>
+        </dl>
+
+        <div class="evidence-value">
+          <span>Fabric Transaction ID</span>
+          <code>{{ shortHash(old.fabricTransactionId) }}</code>
+
+          <button
+            type="button"
+            (click)="copyValue(
+              old.fabricTransactionId,
+              'Old transaction ID'
+            )"
+          >
+            Copy
+          </button>
+        </div>
+
+        <div class="evidence-value">
+          <span>Payload Hash</span>
+          <code>{{ shortHash(old.versionPayloadHash) }}</code>
+
+          <button
+            type="button"
+            (click)="copyValue(
+              old.versionPayloadHash,
+              'Old payload hash'
+            )"
+          >
+            Copy
+          </button>
+        </div>
+      </article>
+
+      <article
+        class="version-card new-version-card"
+        *ngIf="newVersion as newest"
+      >
+        <div class="version-card-header">
+          <div>
+            <span class="version-caption">New Snapshot</span>
+            <h3>Version {{ newest.versionNumber }}</h3>
+          </div>
+
+          <span
+            class="operation-badge"
+            [ngClass]="operationClass(newest.versionOperation)"
+          >
+            {{ newest.versionOperation }}
+          </span>
+        </div>
+
+        <dl>
+          <div>
+            <dt>Created At</dt>
+            <dd>{{ newest.createdAt | date:'medium' }}</dd>
+          </div>
+
+          <div>
+            <dt>Created By MSP</dt>
+            <dd>{{ newest.createdByMsp || '-' }}</dd>
+          </div>
+
+          <div>
+            <dt>Changed Fields</dt>
+            <dd>{{ newest.versionChangeCount || 0 }}</dd>
+          </div>
+
+          <div>
+            <dt>Change Reason</dt>
+            <dd>{{ newest.changeReason || '-' }}</dd>
+          </div>
+        </dl>
+
+        <div class="evidence-value">
+          <span>Fabric Transaction ID</span>
+          <code>{{ shortHash(newest.fabricTransactionId) }}</code>
+
+          <button
+            type="button"
+            (click)="copyValue(
+              newest.fabricTransactionId,
+              'New transaction ID'
+            )"
+          >
+            Copy
+          </button>
+        </div>
+
+        <div class="evidence-value">
+          <span>Payload Hash</span>
+          <code>{{ shortHash(newest.versionPayloadHash) }}</code>
+
+          <button
+            type="button"
+            (click)="copyValue(
+              newest.versionPayloadHash,
+              'New payload hash'
+            )"
+          >
+            Copy
+          </button>
+        </div>
+      </article>
+    </section>
+
+    <section class="panel evidence-panel">
+      <div class="evidence-tabs">
+        <button
+          type="button"
+          [class.active]="activeEvidenceTab === 'changes'"
+          (click)="setEvidenceTab('changes')"
+        >
+          Changed Fields
+          <span>{{ comparison?.changeCount || 0 }}</span>
+        </button>
+
+        <button
+          type="button"
+          [class.active]="activeEvidenceTab === 'payload'"
+          (click)="setEvidenceTab('payload')"
+        >
+          Complete KYC Payload
+          <span>{{ payloadComparisonRows.length }}</span>
+        </button>
+
+        <button
+          type="button"
+          [class.active]="activeEvidenceTab === 'metadata'"
+          (click)="setEvidenceTab('metadata')"
+        >
+          Blockchain Metadata
+        </button>
+
+        <button
+          type="button"
+          [class.active]="activeEvidenceTab === 'json'"
+          (click)="setEvidenceTab('json')"
+        >
+          Raw Evidence
+        </button>
+      </div>
+
+      <div
+        class="tab-content"
+        *ngIf="activeEvidenceTab === 'changes'"
+      >
+        <div class="table-header">
+          <div>
+            <h3>Detected Blockchain Changes</h3>
+            <p>
+              Fields recorded by the chaincode comparison function.
+            </p>
+          </div>
+
+          <span class="change-count">
+            {{ comparison?.changeCount || 0 }}
+            changes
+          </span>
+        </div>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Field</th>
+                <th>Old Value</th>
+                <th>New Value</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr
+                *ngFor="let change of comparison?.changes || []"
+              >
+                <td class="field-name">
+                  {{ change.field }}
+                </td>
+
+                <td class="old-value">
+                  {{ formatValue(change.oldValue) }}
+                </td>
+
+                <td class="new-value">
+                  {{ formatValue(change.newValue) }}
+                </td>
+
+                <td>
+                  <span class="changed-badge">
+                    Changed
+                  </span>
+                </td>
+              </tr>
+
+              <tr *ngIf="!comparison?.changes?.length">
+                <td colspan="4" class="empty-state">
+                  No comparison changes are available.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div
+        class="tab-content"
+        *ngIf="activeEvidenceTab === 'payload'"
+      >
+        <div class="table-header">
+          <div>
+            <h3>Complete KYC Payload Comparison</h3>
+            <p>
+              All KYC fields from both immutable snapshots.
+            </p>
+          </div>
+
+          <span class="change-count">
+            {{ changedPayloadFieldsCount }}
+            changed fields
+          </span>
+        </div>
+
+        <div class="table-wrapper payload-table">
+          <table>
+            <thead>
+              <tr>
+                <th>KYC Field</th>
+                <th>
+                  Version {{ selectedOldVersionNumber }}
+                </th>
+                <th>
+                  Version {{ selectedNewVersionNumber }}
+                </th>
+                <th>Result</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr
+                *ngFor="
+                  let row of payloadComparisonRows;
+                  trackBy: trackPayloadField
+                "
+                [class.changed-row]="row.changed"
+              >
+                <td class="field-name">
+                  {{ row.field }}
+                </td>
+
+                <td>
+                  {{ formatValue(row.oldValue) }}
+                </td>
+
+                <td>
+                  {{ formatValue(row.newValue) }}
+                </td>
+
+                <td>
+                  <span
+                    [class.changed-badge]="row.changed"
+                    [class.unchanged-badge]="!row.changed"
+                  >
+                    {{ row.changed ? 'Changed' : 'Unchanged' }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div
+        class="tab-content metadata-content"
+        *ngIf="activeEvidenceTab === 'metadata'"
+      >
+        <article class="metadata-card">
+          <h3>Customer Blockchain Identity</h3>
+
+          <dl>
+            <div>
+              <dt>Customer ID</dt>
+              <dd>{{ customer?.customerId || '-' }}</dd>
+            </div>
+
+            <div>
+              <dt>Resident ID</dt>
+              <dd>{{ customer?.residentId || '-' }}</dd>
+            </div>
+
+            <div>
+              <dt>Ledger Key</dt>
+              <dd>{{ customer?.ledgerKey || '-' }}</dd>
+            </div>
+          </dl>
+        </article>
+
+        <article class="metadata-card">
+          <h3>Fabric Network</h3>
+
+          <dl>
+            <div>
+              <dt>Channel</dt>
+              <dd>{{ blockchain?.channelName || '-' }}</dd>
+            </div>
+
+            <div>
+              <dt>Chaincode</dt>
+              <dd>{{ blockchain?.chaincodeName || '-' }}</dd>
+            </div>
+
+            <div>
+              <dt>Function</dt>
+              <dd>{{ blockchain?.functionName || '-' }}</dd>
+            </div>
+          </dl>
+        </article>
+
+        <article class="metadata-card">
+          <h3>Version Linkage</h3>
+
+          <dl>
+            <div>
+              <dt>Previous Version</dt>
+              <dd>
+                {{ newVersion?.previousVersionNumber ?? '-' }}
+              </dd>
+            </div>
+
+            <div>
+              <dt>Previous Transaction</dt>
+              <dd>
+                {{
+                  shortHash(
+                    newVersion?.previousTransactionId
+                  )
+                }}
+              </dd>
+            </div>
+
+            <div>
+              <dt>Deleted</dt>
+              <dd>
+                {{ newVersion?.isDeleted ? 'Yes' : 'No' }}
+              </dd>
+            </div>
+          </dl>
+        </article>
+      </div>
+
+      <div
+        class="tab-content raw-json-grid"
+        *ngIf="activeEvidenceTab === 'json'"
+      >
+        <article>
+          <div class="raw-json-header">
+            <h3>Old Version JSON</h3>
+
+            <button
+              type="button"
+              (click)="copyValue(oldVersion, 'Old version JSON')"
+            >
+              Copy JSON
+            </button>
+          </div>
+
+          <pre>{{ json(oldVersion) }}</pre>
+        </article>
+
+        <article>
+          <div class="raw-json-header">
+            <h3>New Version JSON</h3>
+
+            <button
+              type="button"
+              (click)="copyValue(newVersion, 'New version JSON')"
+            >
+              Copy JSON
+            </button>
+          </div>
+
+          <pre>{{ json(newVersion) }}</pre>
+        </article>
+
+        <article class="comparison-json">
+          <div class="raw-json-header">
+            <h3>Comparison JSON</h3>
+
+            <button
+              type="button"
+              (click)="copyValue(comparison, 'Comparison JSON')"
+            >
+              Copy JSON
+            </button>
+          </div>
+
+          <pre>{{ json(comparison) }}</pre>
+        </article>
+      </div>
+    </section>
+  </ng-container>
+
+  <section
+    class="empty-panel"
+    *ngIf="!hasVersions && !loading && !errorMessage"
+  >
+    <!-- KYC LEGACY CURRENT PANEL START -->
+  <section
+    *ngIf="isLegacyCustomer"
+    class="legacy-current-panel"
+  >
+    <div class="legacy-current-header">
+      <div>
+        <span class="legacy-current-badge">
+          Legacy Fabric Customer
+        </span>
+
+        <h2>Customer exists without immutable version history</h2>
+
+        <p>
+          This customer was created before full KYC versioning was
+          enabled. The current customer state is available on Fabric,
+          but no numbered immutable snapshots exist yet.
+        </p>
+      </div>
+
+      <div class="legacy-current-status">
+        <span class="status-indicator"></span>
+
+        <div>
+          <strong>Fabric record found</strong>
+          <span>Version history not initialized</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="legacy-current-grid">
+      <article>
+        <span>Customer ID</span>
+        <strong>
+          {{ normalizedCustomerId || '-' }}
+        </strong>
+      </article>
+
+      <article>
+        <span>Resident ID</span>
+        <strong>
+          {{ latestVersion?.residentId || '-' }}
+        </strong>
+      </article>
+
+      <article>
+        <span>Full Name</span>
+        <strong>
+          {{ latestVersion?.payload?.['fullName'] || '-' }}
+        </strong>
+      </article>
+
+      <article>
+        <span>KYC Status</span>
+        <strong>
+          {{ latestVersion?.payload?.['kycStatus'] || '-' }}
+        </strong>
+      </article>
+
+      <article>
+        <span>Created At</span>
+        <strong>
+          {{ latestVersion?.payload?.['createdAt'] || '-' }}
+        </strong>
+      </article>
+
+      <article>
+        <span>History Status</span>
+        <strong>No immutable versions</strong>
+      </article>
+    </div>
+
+    <div class="legacy-current-notice">
+      The next successful version-aware customer update should be
+      submitted through the Fabric REST API. CouchDB must not be
+      modified directly.
+    </div>
+  </section>
+  <!-- KYC LEGACY CURRENT PANEL END -->
+
+<div class="empty-icon"
+    *ngIf="!loading && !hasVersions && !isLegacyCustomer && !errorMessage && !successMessage"
+  >◇</div>
+    <h2>Search for a customer</h2>
+    <p>
+      Enter a Customer ID to retrieve its immutable KYC
+      blockchain history.
+    </p>
+  </section>
+</section>

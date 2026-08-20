@@ -1,0 +1,14 @@
+===== FILE: /home/nix/u01/blockchain-integration/blockchain-api/src/routes/blockchain-kyc.routes.js =====
+     1	const express = require('express');
+     2	const router = express.Router();
+     3	
+     4	const blockchainKycController = require('../controllers/blockchain-kyc.controller');
+     5	const { uploadKycFiles } = require('../middlewares/upload.middleware');
+     6	
+     7	router.post(
+     8	  '/blockchain-wallet',
+     9	  uploadKycFiles,
+    10	  blockchainKycController.createBlockchainKycWallet
+    11	);
+    12	
+    13	module.exports = router;

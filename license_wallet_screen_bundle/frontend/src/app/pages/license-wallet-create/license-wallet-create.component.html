@@ -1,0 +1,256 @@
+<div class="license-wallet-page">
+  <header class="page-header">
+    <div>
+      <span class="eyebrow">Blockchain License Management</span>
+      <h1>Create License Recovery Wallet</h1>
+      <p>
+        Generate a secure 12-word recovery wallet inside the browser
+        and link it to an application license.
+      </p>
+    </div>
+
+    <div class="security-indicator">
+      <span class="security-dot"></span>
+      Recovery words generated locally
+    </div>
+  </header>
+
+  <section class="card">
+    <div class="section-heading">
+      <div>
+        <h2>1. Select Application License</h2>
+        <p>Only licenses without an existing wallet are listed.</p>
+      </div>
+    </div>
+
+    <label class="field">
+      <span>Available License</span>
+      <select
+        [value]="selectedLicenseId"
+        [disabled]="loadingLicenses || generatingWallet || provisioningWallet"
+        (change)="onLicenseSelected($any($event.target).value)"
+      >
+        <option value="">Select a license</option>
+        <option
+          *ngFor="let license of availableLicenses"
+          [value]="license.licenseId"
+        >
+          {{ license.contractRef }} — {{ license.licenseId }}
+        </option>
+      </select>
+    </label>
+
+    <div class="license-summary" *ngIf="selectedLicense as license">
+      <div>
+        <span>Contract</span>
+        <strong>{{ license.contractRef }}</strong>
+      </div>
+      <div>
+        <span>Customer ID</span>
+        <strong>{{ license.customerId }}</strong>
+      </div>
+      <div>
+        <span>Installation ID</span>
+        <strong>{{ license.installId }}</strong>
+      </div>
+      <div>
+        <span>Maximum Users</span>
+        <strong>{{ license.maxUsers }}</strong>
+      </div>
+      <div>
+        <span>Product Modules</span>
+        <strong>{{ formatModules(license.productModules) }}</strong>
+      </div>
+      <div>
+        <span>Valid Until</span>
+        <strong>{{ license.validUntil | date:'medium' }}</strong>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="section-heading">
+      <div>
+        <h2>2. Encrypt the Wallet Backup</h2>
+        <p>
+          This password remains inside the browser and is never sent
+          to the backend.
+        </p>
+      </div>
+    </div>
+
+    <div class="two-column-grid">
+      <label class="field">
+        <span>Wallet Encryption Password</span>
+        <input
+          type="password"
+          autocomplete="new-password"
+          [value]="encryptionPassword"
+          [disabled]="generatingWallet || provisioningWallet || generatedWords.length === 12"
+          (input)="onPasswordChanged('password', $any($event.target).value)"
+        />
+      </label>
+
+      <label class="field">
+        <span>Confirm Password</span>
+        <input
+          type="password"
+          autocomplete="new-password"
+          [value]="confirmEncryptionPassword"
+          [disabled]="generatingWallet || provisioningWallet || generatedWords.length === 12"
+          (input)="onPasswordChanged('confirmation', $any($event.target).value)"
+        />
+      </label>
+    </div>
+
+    <div class="security-note">
+      Use at least 12 characters. The encrypted wallet JSON is stored;
+      the password and recovery words are not.
+    </div>
+
+    <div class="actions">
+      <button
+        type="button"
+        class="primary-button"
+        [disabled]="!canGenerateWallet"
+        (click)="generateWallet()"
+      >
+        {{ generatingWallet ? 'Generating and encrypting...' : 'Generate Recovery Wallet' }}
+      </button>
+    </div>
+  </section>
+
+  <section class="card sensitive-card" *ngIf="generatedWords.length === 12">
+    <div class="section-heading">
+      <div>
+        <h2>3. Save the 12 Recovery Words</h2>
+        <p>
+          Record them securely in the original order. They are cleared
+          after provisioning.
+        </p>
+      </div>
+
+      <button type="button" class="secondary-button" (click)="toggleWords()">
+        {{ showWords ? 'Hide Words' : 'Show Words' }}
+      </button>
+    </div>
+
+    <div class="word-grid">
+      <div
+        class="word-item"
+        *ngFor="let word of generatedWords; let index = index"
+      >
+        <span>{{ (index + 1).toString().padStart(2, '0') }}</span>
+        <strong>{{ showWords ? word : '••••••••' }}</strong>
+      </div>
+    </div>
+
+    <div class="wallet-preview">
+      <span>Derived Wallet Address</span>
+      <strong>{{ walletAddress }}</strong>
+    </div>
+
+    <div class="warning-note">
+      Never place these recovery words in chat, email, screenshots,
+      source code, logs, PostgreSQL, or Fabric.
+    </div>
+  </section>
+
+  <section class="card" *ngIf="generatedWords.length === 12">
+    <div class="section-heading">
+      <div>
+        <h2>4. Confirm Recovery Ownership</h2>
+        <p>Enter recovery words 3 and 9 before provisioning.</p>
+      </div>
+    </div>
+
+    <div class="two-column-grid">
+      <label class="field">
+        <span>Recovery Word 3</span>
+        <input
+          type="password"
+          autocomplete="off"
+          [value]="confirmationWord3"
+          [disabled]="recoveryConfirmed"
+          (input)="confirmationWord3 = $any($event.target).value"
+        />
+      </label>
+
+      <label class="field">
+        <span>Recovery Word 9</span>
+        <input
+          type="password"
+          autocomplete="off"
+          [value]="confirmationWord9"
+          [disabled]="recoveryConfirmed"
+          (input)="confirmationWord9 = $any($event.target).value"
+        />
+      </label>
+    </div>
+
+    <div class="actions">
+      <button
+        type="button"
+        class="secondary-button"
+        [disabled]="!canConfirmWords || recoveryConfirmed"
+        (click)="confirmRecoveryWords()"
+      >
+        {{ recoveryConfirmed ? 'Recovery Confirmed' : 'Confirm Recovery Words' }}
+      </button>
+
+      <button
+        type="button"
+        class="primary-button"
+        [disabled]="!canProvisionWallet"
+        (click)="provisionWallet()"
+      >
+        {{ provisioningWallet ? 'Provisioning...' : 'Complete Provisioning' }}
+      </button>
+    </div>
+  </section>
+
+  <div class="message error-message" *ngIf="errorMessage">
+    {{ errorMessage }}
+  </div>
+
+  <div class="message success-message" *ngIf="successMessage">
+    {{ successMessage }}
+  </div>
+
+  <section class="verification-card" *ngIf="result as provisionResult">
+    <div class="verification-icon">✓</div>
+    <div>
+      <h2>License Wallet Created</h2>
+      <p>PostgreSQL mapping completed successfully.</p>
+      <dl>
+        <div>
+          <dt>Contract</dt>
+          <dd>{{ provisionResult.license.contractRef }}</dd>
+        </div>
+        <div>
+          <dt>Wallet Address</dt>
+          <dd>{{ provisionResult.wallet.walletAddress }}</dd>
+        </div>
+        <div>
+          <dt>Wallet Status</dt>
+          <dd>{{ provisionResult.wallet.walletStatus }}</dd>
+        </div>
+        <div>
+          <dt>Blockchain Status</dt>
+          <dd>{{ provisionResult.blockchain.status }}</dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  <div class="actions bottom-actions">
+    <button
+      type="button"
+      class="secondary-button"
+      [disabled]="generatingWallet || provisioningWallet"
+      (click)="clearSensitiveData()"
+    >
+      Clear Sensitive Data
+    </button>
+  </div>
+</div>

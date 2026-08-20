@@ -1,0 +1,52 @@
+===== FILE: /home/nix/u01/blockchain-integration/blockchain-api/src/controllers/blockchain-kyc.controller.js =====
+     1	'use strict';
+     2	
+     3	const blockchainKycService = require('../services/blockchain-kyc.service');
+     4	
+     5	async function createBlockchainKycWallet(req, res) {
+     6	  try {
+     7	    const data = await blockchainKycService.createBlockchainKycWallet(
+     8	      req.body,
+     9	      req.files
+    10	    );
+    11	
+    12	    return res.status(201).json({
+    13	      success: true,
+    14	      message: data.message || 'Blockchain KYC wallet created successfully.',
+    15	      data
+    16	    });
+    17	  } catch (error) {
+    18	    console.error('[BLOCKCHAIN_KYC_CREATE_ERROR]', {
+    19	      message: error.message,
+    20	      originalMessage: error.originalError?.message,
+    21	      code: error.code || error.originalError?.code,
+    22	      detail: error.detail || error.originalError?.detail,
+    23	      table: error.table || error.originalError?.table,
+    24	      column: error.column || error.originalError?.column,
+    25	      constraint: error.constraint || error.originalError?.constraint,
+    26	      kycRequestId: error.kycRequest?.request_id
+    27	    });
+    28	
+    29	    return res.status(500).json({
+    30	      success: false,
+    31	      message: 'Failed to create Blockchain KYC wallet in enterprise tables and Fabric ledger.',
+    32	      error: {
+    33	        message: error.message,
+    34	        originalMessage: error.originalError?.message,
+    35	        code: error.code || error.originalError?.code,
+    36	        detail: error.detail || error.originalError?.detail,
+    37	        table: error.table || error.originalError?.table,
+    38	        column: error.column || error.originalError?.column,
+    39	        constraint: error.constraint || error.originalError?.constraint
+    40	      },
+    41	      data: {
+    42	        kycRequest: error.kycRequest || null,
+    43	        walletCreationStatus: 'FAILED'
+    44	      }
+    45	    });
+    46	  }
+    47	}
+    48	
+    49	module.exports = {
+    50	  createBlockchainKycWallet
+    51	};

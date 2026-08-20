@@ -1,0 +1,604 @@
+<div class="resident-page">
+  <div class="page-header">
+    <div>
+      <p class="eyebrow">Blockchain Services Platform</p>
+      <h1>{{ pageTitle }}</h1>
+      <p class="subtitle">
+        Register residents, complete KYC information, and prepare blockchain wallet creation.
+      </p>
+    </div>
+
+    <div class="header-actions">
+      <div class="completion-card">
+        <span>Form Completion</span>
+        <strong>{{ formCompletion() }}%</strong>
+      </div>
+      <button type="button" class="btn btn-secondary" (click)="fillSampleData()">
+        Fill Demo Data
+      </button>
+
+      <button type="button" class="btn btn-secondary" (click)="resetForm()">
+        Reset
+      </button>
+    </div>
+  </div>
+
+  <div class="status-row" *ngIf="successMessage() || errorMessage()">
+    <div class="alert success" *ngIf="successMessage()">
+      {{ successMessage() }}
+    </div>
+
+    <div class="alert error" *ngIf="errorMessage()">
+      {{ errorMessage() }}
+    </div>
+  </div>
+
+  <form [formGroup]="residentForm" class="resident-form">
+    <section class="form-section">
+      <div class="section-header">
+        <div>
+          <h2>1. Personal Information</h2>
+          <p>Basic resident profile and demographic information.</p>
+        </div>
+        <span class="section-badge">Resident Profile</span>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-field">
+          <label>Resident ID <span>*</span></label>
+          <input type="text" formControlName="residentId" placeholder="Generated from PostgreSQL sequence" readonly />
+          <span class="loading-hint" *ngIf="isResidentIdLoading()">Generating ID...</span>
+          <small *ngIf="hasFieldError('residentId')">{{ getFieldError('residentId') }}</small>
+        </div>
+
+        <div class="form-field">
+          <label>First Name <span>*</span></label>
+          <input type="text" formControlName="firstName" placeholder="First name" />
+          <small *ngIf="hasFieldError('firstName')">{{ getFieldError('firstName') }}</small>
+        </div>
+
+        <div class="form-field">
+          <label>Father Name <span>*</span></label>
+          <input type="text" formControlName="fatherName" placeholder="Father name" />
+          <small *ngIf="hasFieldError('fatherName')">{{ getFieldError('fatherName') }}</small>
+        </div>
+
+        <div class="form-field">
+          <label>Mother Name <span>*</span></label>
+          <input type="text" formControlName="motherName" placeholder="Mother name" />
+          <small *ngIf="hasFieldError('motherName')">{{ getFieldError('motherName') }}</small>
+        </div>
+
+        <div class="form-field">
+          <label>Last Name <span>*</span></label>
+          <input type="text" formControlName="lastName" placeholder="Last name" />
+          <small *ngIf="hasFieldError('lastName')">{{ getFieldError('lastName') }}</small>
+        </div>
+
+        <div class="form-field">
+          <label>Full Name <span>*</span></label>
+          <input type="text" formControlName="fullName" placeholder="Auto-generated full name" />
+          <small *ngIf="hasFieldError('fullName')">{{ getFieldError('fullName') }}</small>
+        </div>
+
+        <div class="form-field">
+          <label>Arabic Full Name <span>*</span></label>
+          <input type="text" formControlName="arabicFullName" placeholder="الاسم الكامل بالعربية" />
+          <small *ngIf="hasFieldError('arabicFullName')">{{ getFieldError('arabicFullName') }}</small>
+        </div>
+
+        <div class="form-field">
+          <label>Date of Birth <span>*</span></label>
+          <input type="date" formControlName="dateOfBirth" />
+          <small *ngIf="hasFieldError('dateOfBirth')">{{ getFieldError('dateOfBirth') }}</small>
+        </div>
+
+        <div class="form-field">
+          <label>Gender <span>*</span></label>
+          <select formControlName="gender">
+            <option value="">Select gender</option>
+            <option *ngFor="let item of genders" [value]="item.id">{{ item.name }}</option>
+          </select>
+          <small *ngIf="hasFieldError('gender')">{{ getFieldError('gender') }}</small>
+        </div>
+
+        <div class="form-field">
+          <label>Nationality <span>*</span></label>
+          <select formControlName="nationality">
+            <option value="">Select nationality</option>
+            <option *ngFor="let item of nationalities" [value]="item.id">{{ item.name }}</option>
+          </select>
+          <small *ngIf="hasFieldError('nationality')">{{ getFieldError('nationality') }}</small>
+        </div>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <div class="section-header">
+        <div>
+          <h2>2. Identity Information</h2>
+          <p>National ID, passport, residency, and tax identification details.</p>
+        </div>
+        <span class="section-badge">Identity</span>
+      </div>
+
+      <div class="identity-warning" *ngIf="hasIdentityDocumentError()">
+        At least one identity document is required: National ID, Passport Number, or Residency Permit Number.
+      </div>
+
+      <div class="form-grid">
+        <div class="form-field">
+          <label>National ID Number <span>*</span></label>
+          <input type="text" formControlName="nationalIdNumber" placeholder="National ID number" />
+          <small *ngIf="hasFieldError('nationalIdNumber')">
+            {{ getFieldError('nationalIdNumber') }}
+          </small>
+        </div>
+
+        <div class="form-field">
+          <label>Passport Number</label>
+          <input type="text" formControlName="passportNumber" placeholder="Passport number" />
+          <small *ngIf="hasFieldError('passportNumber')">{{ getFieldError('passportNumber') }}</small>
+        </div>
+
+        <div class="form-field">
+          <label>Residency Permit Number</label>
+          <input type="text" formControlName="residencyPermitNumber" placeholder="Residency permit number" />
+          <small *ngIf="hasFieldError('residencyPermitNumber')">
+            {{ getFieldError('residencyPermitNumber') }}
+          </small>
+        </div>
+
+        <div class="form-field">
+          <label>Tax Number</label>
+          <input type="text" formControlName="taxNumber" placeholder="Tax number" />
+          <small *ngIf="hasFieldError('taxNumber')">{{ getFieldError('taxNumber') }}</small>
+        </div>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <div class="section-header">
+        <div>
+          <h2>3. Contact Information</h2>
+          <p>Resident mobile, email, and address location details.</p>
+        </div>
+        <span class="section-badge">Contact</span>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-field">
+          <label>Mobile Number <span>*</span></label>
+          <input type="text" formControlName="mobileNumber" placeholder="+961 70 123 456" />
+          <small *ngIf="hasFieldError('mobileNumber')">{{ getFieldError('mobileNumber') }}</small>
+        </div>
+
+        <div class="form-field">
+          <label>Email <span>*</span></label>
+          <input type="email" formControlName="email" placeholder="resident@gov.lb" />
+          <small *ngIf="hasFieldError('email')">{{ getFieldError('email') }}</small>
+        </div>
+
+        <div class="form-field">
+          <label>Governorate <span>*</span></label>
+          <select formControlName="governorate" [disabled]="isReferenceLoading()">
+            <option value="">Select governorate</option>
+            <option *ngFor="let item of governorates" [value]="item.id">
+              {{ item.name }} <ng-container *ngIf="item.arabicName">- {{ item.arabicName }}</ng-container>
+            </option>
+          </select>
+          <span class="loading-hint" *ngIf="isReferenceLoading()">Loading governorates...</span>
+          <small *ngIf="hasFieldError('governorate')">{{ getFieldError('governorate') }}</small>
+        </div>
+
+        <div class="form-field">
+          <label>District <span>*</span></label>
+          <select formControlName="district" [disabled]="!residentForm.get('governorate')?.value">
+            <option value="">Select district</option>
+            <option *ngFor="let item of districts" [value]="item.id">
+              {{ item.name }} <ng-container *ngIf="item.arabicName">- {{ item.arabicName }}</ng-container>
+            </option>
+          </select>
+          <span class="loading-hint" *ngIf="residentForm.get('governorate')?.value && districts.length === 0">
+            Select a governorate to load districts
+          </span>
+          <small *ngIf="hasFieldError('district')">{{ getFieldError('district') }}</small>
+        </div>
+
+        <div class="form-field">
+          <label>Municipality <span>*</span></label>
+          <select formControlName="municipality" [disabled]="!residentForm.get('district')?.value">
+            <option value="">Select municipality</option>
+            <option *ngFor="let item of municipalities" [value]="item.id">
+              {{ item.name }} <ng-container *ngIf="item.arabicName">- {{ item.arabicName }}</ng-container>
+            </option>
+          </select>
+          <small *ngIf="hasFieldError('municipality')">{{ getFieldError('municipality') }}</small>
+        </div>
+
+        <div class="form-field full-width">
+          <label>Address <span>*</span></label>
+          <textarea rows="3" formControlName="address" placeholder="Resident address"></textarea>
+          <small *ngIf="hasFieldError('address')">{{ getFieldError('address') }}</small>
+        </div>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <div class="section-header">
+        <div>
+          <h2>4. Employment Information</h2>
+          <p>Employment, occupation, and income information for KYC risk assessment.</p>
+        </div>
+        <span class="section-badge">Employment</span>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-field">
+          <label>Employment Status <span>*</span></label>
+          <select formControlName="employmentStatus" [disabled]="isReferenceLoading()">
+            <option value="">Select employment status</option>
+            <option *ngFor="let item of employmentStatuses" [value]="item.id">
+              {{ item.name }} <ng-container *ngIf="item.arabicName">- {{ item.arabicName }}</ng-container>
+            </option>
+          </select>
+          <small *ngIf="hasFieldError('employmentStatus')">
+            {{ getFieldError('employmentStatus') }}
+          </small>
+        </div>
+
+        <div class="form-field">
+          <label>Occupation</label>
+          <input type="text" formControlName="occupation" placeholder="Occupation" />
+          <small *ngIf="hasFieldError('occupation')">{{ getFieldError('occupation') }}</small>
+        </div>
+
+        <div class="form-field">
+          <label>Monthly Income</label>
+          <input type="number" formControlName="monthlyIncome" placeholder="Monthly income" />
+          <small *ngIf="hasFieldError('monthlyIncome')">{{ getFieldError('monthlyIncome') }}</small>
+        </div>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <div class="section-header">
+        <div>
+          <h2>5. KYC Information</h2>
+          <p>KYC status and resident risk category for compliance review.</p>
+        </div>
+        <span class="section-badge">KYC</span>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-field">
+          <label>KYC Status <span>*</span></label>
+          <select formControlName="kycStatus" [disabled]="isReferenceLoading()">
+            <option *ngFor="let item of kycStatuses" [value]="item.id">
+              {{ item.name }} <ng-container *ngIf="item.arabicName">- {{ item.arabicName }}</ng-container>
+            </option>
+          </select>
+          <small *ngIf="hasFieldError('kycStatus')">{{ getFieldError('kycStatus') }}</small>
+        </div>
+
+        <div class="form-field">
+          <label>Risk Category <span>*</span></label>
+          <select formControlName="riskCategory" [disabled]="isReferenceLoading()">
+            <option *ngFor="let item of riskCategories" [value]="item.id">
+              {{ item.name }} <ng-container *ngIf="item.arabicName">- {{ item.arabicName }}</ng-container>
+            </option>
+          </select>
+          <small *ngIf="hasFieldError('riskCategory')">{{ getFieldError('riskCategory') }}</small>
+        </div>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <div class="section-header">
+        <div>
+          <h2>6. Wallet Information</h2>
+          <p>Create and manage the resident blockchain wallet.</p>
+        </div>
+        <span class="section-badge">Blockchain Wallet</span>
+      </div>
+
+      <div class="wallet-preview">
+        <div>
+          <span>Wallet Address</span>
+          <strong>
+            {{ residentForm.get('walletAddress')?.value || 'Wallet not created yet' }}
+          </strong>
+        </div>
+
+        <div>
+          <span>Wallet Status</span>
+          <strong>{{ residentForm.get('walletStatus')?.value }}</strong>
+        </div>
+
+        <div>
+          <span>Currency</span>
+          <strong>{{ residentForm.get('walletCurrency')?.value }}</strong>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-field full-width">
+          <label>Wallet Address</label>
+          <input type="text" formControlName="walletAddress" placeholder="Generated after wallet creation" />
+          <small *ngIf="hasFieldError('walletAddress')">{{ getFieldError('walletAddress') }}</small>
+        </div>
+
+        <div class="form-field">
+          <label>Wallet Currency <span>*</span></label>
+          <input type="text" value="GOV - Government Digital Token" readonly />
+          <input type="hidden" formControlName="walletCurrency" />
+          <small>
+            Resident wallet currency is fixed to GOV and cannot be changed.
+          </small>
+        </div>
+
+        <div class="form-field">
+          <label>Wallet Status <span>*</span></label>
+          <select formControlName="walletStatus">
+            <option *ngFor="let item of walletStatuses" [value]="item.id">{{ item.name }}</option>
+          </select>
+          <small *ngIf="hasFieldError('walletStatus')">{{ getFieldError('walletStatus') }}</small>
+        </div>
+
+        <div class="form-field">
+          <label>Generated Wallet Password</label>
+          <input
+            type="text"
+            formControlName="walletPassword"
+            placeholder="Generated after wallet creation"
+            readonly
+          />
+          <small *ngIf="hasFieldError('walletPassword')">{{ getFieldError('walletPassword') }}</small>
+        </div>
+
+        <div class="form-field">
+          <label>Confirm Generated Password</label>
+          <input
+            type="text"
+            formControlName="confirmWalletPassword"
+            placeholder="Generated after wallet creation"
+            readonly
+          />
+          <small *ngIf="hasFieldError('confirmWalletPassword')">{{ getFieldError('confirmWalletPassword') }}</small>
+        </div>
+      </div>
+    </section>
+
+    <div class="form-actions">
+      <button
+        type="button"
+        class="btn btn-secondary"
+        (click)="saveDraft()"
+        [disabled]="isDraftSaving()"
+      >
+        {{ isDraftSaving() ? 'Saving Draft...' : 'Save Draft' }}
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-wallet"
+        (click)="createWallet()"
+        [disabled]="isWalletCreating()"
+      >
+        {{ isWalletCreating() ? 'Creating Wallet...' : 'Create Wallet' }}
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-kyc"
+        (click)="submitKyc()"
+        [disabled]="isKycSubmitting()"
+      >
+        {{ isKycSubmitting() ? 'Submitting KYC...' : 'Submit KYC' }}
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-primary"
+        (click)="createResident()"
+        [disabled]="isSubmitting()"
+      >
+        {{ isSubmitting() ? 'Creating Resident...' : 'Create Resident' }}
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- Resident Created Success Popup -->
+<div class="resident-popup-backdrop" *ngIf="showResidentCreatedPopup()">
+  <div class="resident-popup-card">
+    <div class="resident-popup-header">
+      <div>
+        <span class="popup-kicker">Resident Created Successfully</span>
+        <h2>Resident Account Summary</h2>
+        <p>Review the resident information created in PostgreSQL and prepared for blockchain wallet creation.</p>
+      </div>
+
+      <button type="button" class="popup-close-btn" (click)="closeResidentCreatedPopup()">
+        ×
+      </button>
+    </div>
+
+    <div class="resident-popup-success">
+      Resident account has been created successfully.
+    </div>
+
+    <div class="resident-popup-content" *ngIf="residentCreatedPopupData() as resident">
+      <div class="popup-section">
+        <h3>1. Personal Information</h3>
+
+        <div class="popup-grid">
+          <div>
+            <label>Resident ID</label>
+            <strong>{{ resident.residentId }}</strong>
+          </div>
+
+          <div>
+            <label>Full Name</label>
+            <strong>{{ resident.fullName }}</strong>
+          </div>
+
+          <div>
+            <label>Arabic Full Name</label>
+            <strong>{{ resident.arabicFullName }}</strong>
+          </div>
+
+          <div>
+            <label>Date of Birth</label>
+            <strong>{{ resident.dateOfBirth }}</strong>
+          </div>
+
+          <div>
+            <label>Gender</label>
+            <strong>{{ resident.gender }}</strong>
+          </div>
+
+          <div>
+            <label>Nationality</label>
+            <strong>{{ resident.nationality }}</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="popup-section">
+        <h3>2. Identity Information</h3>
+
+        <div class="popup-grid">
+          <div>
+            <label>National ID Number</label>
+            <strong>{{ resident.nationalIdNumber }}</strong>
+          </div>
+
+          <div>
+            <label>Passport Number</label>
+            <strong>{{ resident.passportNumber }}</strong>
+          </div>
+
+          <div>
+            <label>Residency Permit Number</label>
+            <strong>{{ resident.residencyPermitNumber }}</strong>
+          </div>
+
+          <div>
+            <label>Tax Number</label>
+            <strong>{{ resident.taxNumber }}</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="popup-section">
+        <h3>3. Contact & Address</h3>
+
+        <div class="popup-grid">
+          <div>
+            <label>Mobile Number</label>
+            <strong>{{ resident.mobileNumber }}</strong>
+          </div>
+
+          <div>
+            <label>Email</label>
+            <strong>{{ resident.email }}</strong>
+          </div>
+
+          <div>
+            <label>Governorate</label>
+            <strong>{{ resident.governorate }}</strong>
+          </div>
+
+          <div>
+            <label>District</label>
+            <strong>{{ resident.district }}</strong>
+          </div>
+
+          <div>
+            <label>Municipality</label>
+            <strong>{{ resident.municipality }}</strong>
+          </div>
+
+          <div class="popup-grid-full">
+            <label>Address</label>
+            <strong>{{ resident.address }}</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="popup-section">
+        <h3>4. Employment & KYC</h3>
+
+        <div class="popup-grid">
+          <div>
+            <label>Employment Status</label>
+            <strong>{{ resident.employmentStatus }}</strong>
+          </div>
+
+          <div>
+            <label>Occupation</label>
+            <strong>{{ resident.occupation }}</strong>
+          </div>
+
+          <div>
+            <label>Monthly Income</label>
+            <strong>{{ resident.monthlyIncome || '-' }}</strong>
+          </div>
+
+          <div>
+            <label>KYC Status</label>
+            <strong>{{ resident.kycStatus }}</strong>
+          </div>
+
+          <div>
+            <label>Risk Category</label>
+            <strong>{{ resident.riskCategory }}</strong>
+          </div>
+
+          <div>
+            <label>Created At</label>
+            <strong>{{ resident.createdAt }}</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="popup-section">
+        <h3>5. Wallet Information</h3>
+
+        <div class="popup-grid">
+          <div>
+            <label>Wallet Address</label>
+            <strong>{{ resident.walletAddress }}</strong>
+          </div>
+
+          <div>
+            <label>Wallet Currency</label>
+            <strong>{{ resident.walletCurrency }}</strong>
+          </div>
+
+          <div>
+            <label>Wallet Status</label>
+            <strong>{{ resident.walletStatus }}</strong>
+          </div>
+
+          <div>
+            <label>Generated Wallet Password</label>
+            <strong>{{ resident.walletPassword }}</strong>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="resident-popup-actions">
+      <button type="button" class="btn btn-secondary" (click)="printResidentCreatedPopup()">
+        Print
+      </button>
+
+      <button type="button" class="btn btn-primary" (click)="closeResidentCreatedPopup()">
+        Close
+      </button>
+    </div>
+  </div>
+</div>

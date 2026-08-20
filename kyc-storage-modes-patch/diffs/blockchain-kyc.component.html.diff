@@ -1,0 +1,238 @@
+--- original/blockchain-test-ui/src/app/pages/blockchain-kyc/blockchain-kyc.component.html	2026-07-23 09:54:16.000000000 +0000
++++ modified/blockchain-test-ui/src/app/pages/blockchain-kyc/blockchain-kyc.component.html	2026-07-23 10:48:25.629624624 +0000
+@@ -1,8 +1,8 @@
+ <div class="blockchain-kyc-page">
+   <div class="page-header">
+     <div>
+-      <h1>Blockchain KYC</h1>
+-      <p>Create a customer wallet under a selected organization using KYC reference data.</p>
++      <h1>Create KYC Customer</h1>
++      <p>Reuse the existing KYC workflow and choose PostgreSQL, Blockchain, or both.</p>
+     </div>
+ 
+     <div class="header-actions" *ngIf="!showRegistrationComplete">
+@@ -36,12 +36,33 @@
+     <div class="registration-complete-card">
+       <div class="success-icon">✓</div>
+ 
+-      <h2>Registration Complete</h2>
++      <h2>{{ getCompletionTitle() }}</h2>
+ 
+       <p class="success-subtitle">
+-        The blockchain wallet identity has been successfully created.
++        {{ registrationResult.statusMessage }}
+       </p>
+ 
++      <div class="mode-status-grid">
++        <div class="mode-status-item">
++          <span>Storage Mode</span>
++          <strong>{{ getStorageModeLabel(registrationResult.storageMode) }}</strong>
++        </div>
++
++        <div class="mode-status-item">
++          <span>PostgreSQL</span>
++          <strong [class.status-ok]="registrationResult.postgresSaved">
++            {{ registrationResult.postgresSaved ? 'SAVED' : 'NOT SAVED' }}
++          </strong>
++        </div>
++
++        <div class="mode-status-item">
++          <span>Blockchain</span>
++          <strong [class.status-ok]="registrationResult.blockchainSaved">
++            {{ registrationResult.blockchainSaved ? 'SUBMITTED' : 'NOT SUBMITTED' }}
++          </strong>
++        </div>
++      </div>
++
+       <div class="result-group">
+         <label>Customer ID</label>
+         <div class="result-value highlight">
+@@ -49,7 +70,14 @@
+         </div>
+       </div>
+ 
+-      <div class="result-group">
++      <div class="result-group" *ngIf="registrationResult.requestId">
++        <label>KYC Request ID</label>
++        <div class="result-box">
++          {{ registrationResult.requestId }}
++        </div>
++      </div>
++
++      <div class="result-group" *ngIf="registrationResult.walletAddress">
+         <label>Wallet Address</label>
+         <div class="result-box">
+           {{ registrationResult.walletAddress }}
+@@ -63,14 +91,14 @@
+         </div>
+       </div>
+ 
+-      <div class="result-group">
++      <div class="result-group" *ngIf="registrationResult.blockchainSaved">
+         <label>Initial Balance</label>
+         <div class="result-value highlight">
+           {{ registrationResult.initialBalance }} {{ registrationResult.currencyCode }}
+         </div>
+       </div>
+ 
+-      <div class="result-group">
++      <div class="result-group" *ngIf="registrationResult.oneTimePassword">
+         <label>One-Time Password</label>
+         <div class="result-box secret">
+           {{ registrationResult.oneTimePassword }}
+@@ -78,12 +106,9 @@
+         <small>Save this password immediately. It cannot be recovered.</small>
+       </div>
+ 
+-      <div class="result-group">
+-        <label>Recovery Phrase</label>
+-        <div class="result-box recovery">
+-          {{ registrationResult.recoveryPhrase }}
+-        </div>
+-        <small>Store this phrase offline and never share it.</small>
++      <div class="mode-warning" *ngIf="registrationResult.storageMode === 'BLOCKCHAIN_ONLY'">
++        This wallet was not inserted into blockchain.wallets. The current PostgreSQL-backed
++        wallet login screen cannot authenticate it.
+       </div>
+ 
+       <div class="result-group" *ngIf="registrationResult.fabricTransactionId">
+@@ -93,6 +118,13 @@
+         </div>
+       </div>
+ 
++      <div class="result-group" *ngIf="registrationResult.ledgerReference">
++        <label>Ledger Reference</label>
++        <div class="result-box tx-id">
++          {{ registrationResult.ledgerReference }}
++        </div>
++      </div>
++
+       <div class="result-grid">
+         <div class="result-group" *ngIf="registrationResult.channelName">
+           <label>Channel</label>
+@@ -110,7 +142,7 @@
+       </div>
+ 
+       <button type="button" class="btn-create-another" (click)="createAnotherWallet()">
+-        Create Another Wallet
++        Create Another KYC
+       </button>
+     </div>
+   </section>
+@@ -121,6 +153,71 @@
+     #kycForm="ngForm"
+     (ngSubmit)="submitKycWallet()"
+   >
++    <section class="form-card storage-mode-card">
++      <div class="section-title">
++        <h2>Storage Destination</h2>
++        <span>Select where this KYC customer should be stored.</span>
++      </div>
++
++      <div class="storage-options">
++        <label
++          class="storage-option"
++          [class.selected]="form.storageMode === 'POSTGRES_ONLY'"
++        >
++          <input
++            type="radio"
++            name="storageMode"
++            value="POSTGRES_ONLY"
++            [(ngModel)]="form.storageMode"
++            (change)="onStorageModeChange()"
++          />
++          <span class="storage-option-content">
++            <strong>PostgreSQL Only</strong>
++            <small>Save KYC data and uploaded documents. Do not create a Fabric wallet.</small>
++          </span>
++        </label>
++
++        <label
++          class="storage-option"
++          [class.selected]="form.storageMode === 'BLOCKCHAIN_ONLY'"
++        >
++          <input
++            type="radio"
++            name="storageMode"
++            value="BLOCKCHAIN_ONLY"
++            [(ngModel)]="form.storageMode"
++            (change)="onStorageModeChange()"
++          />
++          <span class="storage-option-content">
++            <strong>Blockchain Only</strong>
++            <small>Create the wallet on Fabric. Do not save KYC or wallet-login data in PostgreSQL.</small>
++          </span>
++        </label>
++
++        <label
++          class="storage-option recommended"
++          [class.selected]="form.storageMode === 'POSTGRES_AND_BLOCKCHAIN'"
++        >
++          <input
++            type="radio"
++            name="storageMode"
++            value="POSTGRES_AND_BLOCKCHAIN"
++            [(ngModel)]="form.storageMode"
++            (change)="onStorageModeChange()"
++          />
++          <span class="storage-option-content">
++            <strong>PostgreSQL + Blockchain</strong>
++            <small>Preserve the current complete KYC, wallet, login, and Fabric workflow.</small>
++          </span>
++          <em>Recommended</em>
++        </label>
++      </div>
++
++      <div class="mode-warning" *ngIf="form.storageMode === 'BLOCKCHAIN_ONLY'">
++        Blockchain-only wallets are not available to the current PostgreSQL-backed wallet login.
++        Uploaded files are not sent or retained in this mode.
++      </div>
++    </section>
+     <section class="form-card">
+       <div class="section-title">
+         <h2>1. Customer Identity</h2>
+@@ -292,7 +389,7 @@
+           <input type="text" name="addressHash" [(ngModel)]="form.addressHash" />
+         </div>
+ 
+-        <div class="form-group">
++        <div class="form-group" *ngIf="storesInPostgres()">
+           <label>Proof Of Address</label>
+           <input
+             type="file"
+@@ -376,7 +473,7 @@
+       </div>
+     </section>
+ 
+-    <section class="form-card">
++    <section class="form-card" *ngIf="storesInBlockchain()">
+       <div class="section-title">
+         <h2>6. Wallet Details</h2>
+         <span>This KYC screen creates a CUSTOMER wallet. Party Type Code is fixed to 7.</span>
+@@ -497,7 +594,7 @@
+           />
+         </div>
+ 
+-        <div class="form-group">
++        <div class="form-group" *ngIf="storesInPostgres()">
+           <label>Document File</label>
+           <input
+             type="file"
+@@ -521,7 +618,7 @@
+     <section class="payload-card">
+       <div class="section-title">
+         <h2>8. Generated API Payload Preview</h2>
+-        <span>This payload will be sent to the Blockchain KYC backend API.</span>
++        <span>This payload will be sent to the existing KYC backend route using the selected storage mode.</span>
+       </div>
+ 
+       <pre>{{ buildPayload() | json }}</pre>
+@@ -533,7 +630,7 @@
+         class="btn btn-primary"
+         [disabled]="loading || kycForm.invalid"
+       >
+-        {{ loading ? 'Submitting...' : 'Submit Blockchain KYC Wallet Request' }}
++        {{ getSubmitButtonText() }}
+       </button>
+     </div>
+   </form>

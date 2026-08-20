@@ -1,0 +1,1 @@
+{"success":false,"message":"Failed to create Blockchain KYC wallet in enterprise tables and Fabric ledger.","error":{"message":"organizationId is required"},"data":{"kycRequest":null,"walletCreationStatus":"FAILED"}}

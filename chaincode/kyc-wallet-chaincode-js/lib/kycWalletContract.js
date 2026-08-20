@@ -119,114 +119,154 @@ class KycWalletContract extends Contract {
         });
     }
 
-    async CreateResident(ctx, residentJson) {
-        const resident = JSON.parse(residentJson);
 
-        if (!resident.residentId) {
-            throw new Error('residentId is required');
+
+
+    /**
+     * Query current VALOORES customers through Fabric.
+     *
+     * The query uses deterministic world-state key ranges:
+     * KYC_VALOORES-...
+     */
+    async QueryValooresCustomers(
+        ctx,
+        pageSize = '100',
+        bookmark = ''
+    ) {
+        const parsedPageSize = Number.parseInt(
+            String(pageSize || '100'),
+            10
+        );
+
+        const normalizedPageSize = Number.isFinite(parsedPageSize)
+            ? Math.min(Math.max(parsedPageSize, 1), 1000)
+            : 100;
+
+        const normalizedBookmark = String(bookmark || '');
+        const startKey = 'KYC_VALOORES-';
+        const endKey = 'KYC_VALOORES-\uffff';
+
+        const queryResult =
+            await ctx.stub.getStateByRangeWithPagination(
+                startKey,
+                endKey,
+                normalizedPageSize,
+                normalizedBookmark
+            );
+
+        const iterator = queryResult.iterator;
+        const metadata = queryResult.metadata || {};
+        const customers = [];
+
+        try {
+            while (true) {
+                const item = await iterator.next();
+
+                if (
+                    item.value &&
+                    item.value.value &&
+                    item.value.value.length > 0
+                ) {
+                    const ledgerKey = item.value.key;
+                    const value = JSON.parse(
+                        item.value.value.toString('utf8')
+                    );
+
+                    customers.push({
+                        ...value,
+                        ledgerKey,
+                        customerId: String(
+                            value.residentId || ''
+                        ).replace(/^VALOORES-/, '')
+                    });
+                }
+
+                if (item.done) {
+                    break;
+                }
+            }
+        } finally {
+            await iterator.close();
         }
 
-        const key = `KYC_${resident.residentId}`;
-        const exists = await ctx.stub.getState(key);
-
-        if (exists && exists.length > 0) {
-            throw new Error(`Resident already exists on blockchain: ${resident.residentId}`);
-        }
-
-        const blockchainResident = {
-            docType: 'resident',
-            residentId: resident.residentId,
-            firstName: resident.firstName,
-            fatherName: resident.fatherName,
-            motherName: resident.motherName,
-            lastName: resident.lastName,
-            fullName: resident.fullName,
-            arabicFullName: resident.arabicFullName,
-            dateOfBirth: resident.dateOfBirth,
-            gender: resident.gender,
-            nationality: resident.nationality,
-
-            nationalIdNumber: resident.nationalIdNumber,
-            passportNumber: resident.passportNumber || '',
-            residencyPermitNumber: resident.residencyPermitNumber || '',
-            taxNumber: resident.taxNumber || '',
-
-            mobileNumber: resident.mobileNumber || '',
-            email: resident.email || '',
-            governorate: resident.governorate || '',
-            district: resident.district || '',
-            municipality: resident.municipality || '',
-            address: resident.address || '',
-
-            employmentStatus: resident.employmentStatus || '',
-            occupation: resident.occupation || '',
-            monthlyIncome: resident.monthlyIncome || 0,
-
-            kycStatus: resident.kycStatus || 'Draft',
-            riskCategory: resident.riskCategory || 'Low Risk',
-
-            walletAddress: resident.walletAddress || '',
-            walletCurrency: resident.walletCurrency || 'LBP',
-            walletStatus: resident.walletStatus || 'Not Created',
-
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        };
-
-        await ctx.stub.putState(key, Buffer.from(JSON.stringify(blockchainResident)));
-
-        return JSON.stringify(blockchainResident);
+        return JSON.stringify({
+            source: 'FABRIC_BLOCKCHAIN',
+            customers,
+            pagination: {
+                pageSize: normalizedPageSize,
+                fetchedRecordsCount: Number(
+                    metadata.fetchedRecordsCount ||
+                    customers.length
+                ),
+                bookmark: String(metadata.bookmark || '')
+            }
+        });
     }
 
-    async GetResident(ctx, residentId) {
-        const key = `RESIDENT_${residentId}`;
-        const data = await ctx.stub.getState(key);
+    /**
+     * Count current VALOORES customer records through Fabric.
+     */
+    async CountValooresCustomers(ctx) {
+        const startKey = 'KYC_VALOORES-';
+        const endKey = 'KYC_VALOORES-\uffff';
 
-        if (!data || data.length === 0) {
-            throw new Error(`Resident not found on blockchain: ${residentId}`);
+        const iterator = await ctx.stub.getStateByRange(
+            startKey,
+            endKey
+        );
+
+        let totalCustomers = 0;
+
+        try {
+            while (true) {
+                const item = await iterator.next();
+
+                if (
+                    item.value &&
+                    item.value.value &&
+                    item.value.value.length > 0
+                ) {
+                    totalCustomers += 1;
+                }
+
+                if (item.done) {
+                    break;
+                }
+            }
+        } finally {
+            await iterator.close();
         }
 
-        return data.toString();
+        return JSON.stringify({
+            source: 'FABRIC_BLOCKCHAIN',
+            totalCustomers
+        });
     }
 
-    async CreateResidentWallet(ctx, residentId, walletCurrency, walletAddress) {
-        const residentKey = `RESIDENT_${residentId}`;
-        const residentBytes = await ctx.stub.getState(residentKey);
 
-        if (!residentBytes || residentBytes.length === 0) {
-            throw new Error(`Resident not found on blockchain: ${residentId}`);
-        }
+    /* VALOORES_CUSTOMER_CRUD_CHAINCODE_V1 */
 
-        const resident = JSON.parse(residentBytes.toString());
+    _customerCrudTimestamp(ctx) {
+        const timestamp = ctx.stub.getTxTimestamp();
+        const rawSeconds = timestamp.seconds;
 
-        const officialWalletAddress =
-            walletAddress && walletAddress.trim() !== ''
-                ? walletAddress.trim()
-                : `WALLET-${residentId}-${Date.now()}`;
+        const seconds =
+            rawSeconds &&
+            typeof rawSeconds.toNumber === 'function'
+                ? rawSeconds.toNumber()
+                : Number(rawSeconds || 0);
 
-        const walletKey = `RESIDENT_WALLET_${residentId}`;
+        const nanos = Number(timestamp.nanos || 0);
 
-        const wallet = {
-            docType: 'residentWallet',
-            residentId,
-            walletAddress: officialWalletAddress,
-            walletCurrency: walletCurrency || 'LBP',
-            walletStatus: 'Created',
-            blockchainStatus: 'Committed',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        };
-
-        resident.walletAddress = officialWalletAddress;
-        resident.walletCurrency = wallet.walletCurrency;
-        resident.walletStatus = 'Created';
-        resident.updatedAt = new Date().toISOString();
-
-        await ctx.stub.putState(walletKey, Buffer.from(JSON.stringify(wallet)));
-        await ctx.stub.putState(residentKey, Buffer.from(JSON.stringify(resident)));
-
-        return JSON.stringify(wallet);
+        return new Date(
+            (seconds * 1000) + Math.floor(nanos / 1000000)
+        ).toISOString();
     }
+
+
+
+    /* END VALOORES_CUSTOMER_CRUD_CHAINCODE_V1 */
+
 
     async GetResidentWallet(ctx, residentId) {
         const walletKey = `RESIDENT_WALLET_${residentId}`;
@@ -239,24 +279,6 @@ class KycWalletContract extends Contract {
         return data.toString();
     }
 
-    async SubmitResidentKYC(ctx, residentId, riskCategory) {
-        const key = `RESIDENT_${residentId}`;
-        const data = await ctx.stub.getState(key);
-
-        if (!data || data.length === 0) {
-            throw new Error(`Resident not found on blockchain: ${residentId}`);
-        }
-
-        const resident = JSON.parse(data.toString());
-
-        resident.kycStatus = 'Submitted';
-        resident.riskCategory = riskCategory || resident.riskCategory || 'Low Risk';
-        resident.updatedAt = new Date().toISOString();
-
-        await ctx.stub.putState(key, Buffer.from(JSON.stringify(resident)));
-
-        return JSON.stringify(resident);
-    }
 
     async CreateGovernmentTransaction(ctx, transactionJson) {
         this._required(transactionJson, 'transactionJson');
@@ -3166,6 +3188,1189 @@ class KycWalletContract extends Contract {
 
     /* ===== PHASE 10 BLOCKCHAIN PROOF FUNCTIONS END ===== */
 
+/* ===== VALOORES FULL KYC VERSIONING V1 START ===== */
+
+    _fullKycParseObject(value, fieldName) {
+        if (value === undefined || value === null || String(value).trim() === '') {
+            throw new Error(`${fieldName} is required`);
+        }
+
+        let parsedValue;
+
+        try {
+            parsedValue = typeof value === 'string'
+                ? JSON.parse(value)
+                : value;
+        } catch (error) {
+            throw new Error(`Invalid ${fieldName}: ${error.message}`);
+        }
+
+        if (
+            !parsedValue ||
+            Array.isArray(parsedValue) ||
+            typeof parsedValue !== 'object'
+        ) {
+            throw new Error(`${fieldName} must be a JSON object`);
+        }
+
+        return this._fullKycClone(parsedValue);
+    }
+
+    _fullKycClone(value) {
+        if (value === undefined) {
+            return undefined;
+        }
+
+        return JSON.parse(JSON.stringify(value));
+    }
+
+    _fullKycNormalizeResidentId(value) {
+        const normalizedValue = String(value || '').trim();
+
+        if (!normalizedValue) {
+            throw new Error('residentId is required');
+        }
+
+        return normalizedValue.startsWith('VALOORES-')
+            ? normalizedValue
+            : `VALOORES-${normalizedValue}`;
+    }
+
+    _fullKycResolveResidentId(payload) {
+        const explicitResidentId = String(
+            payload.residentId ||
+            payload.resident_id ||
+            ''
+        ).trim();
+
+        if (explicitResidentId) {
+            return this._fullKycNormalizeResidentId(explicitResidentId);
+        }
+
+        const customerId = String(
+            payload.customerId ||
+            payload.customer_id ||
+            payload.formData?.CUSTOMER_ID ||
+            ''
+        ).trim();
+
+        if (!customerId) {
+            throw new Error(
+                'residentId, customerId, or customer_id is required'
+            );
+        }
+
+        return this._fullKycNormalizeResidentId(customerId);
+    }
+
+    _fullKycCustomerId(payload, residentId) {
+        return String(
+            payload.customerId ||
+            payload.customer_id ||
+            payload.formData?.CUSTOMER_ID ||
+            String(residentId).replace(/^VALOORES-/, '')
+        ).trim();
+    }
+
+    _fullKycSessionId(payload) {
+        return String(
+            payload.sessionId ||
+            payload.session_id ||
+            payload.formData?.SESSION_ID ||
+            ''
+        ).trim();
+    }
+
+    _fullKycCurrentKey(residentId) {
+        return `KYC_${residentId}`;
+    }
+
+    _fullKycLegacyCurrentKey(residentId) {
+        return `RESIDENT_${residentId}`;
+    }
+
+    _fullKycLatestVersionKey(residentId) {
+        return `KYC_LATEST_${residentId}`;
+    }
+
+    _fullKycVersionKey(residentId, versionNumber) {
+        const versionText = String(versionNumber).padStart(12, '0');
+
+        return `KYC_VERSION_${residentId}_${versionText}`;
+    }
+
+    _fullKycVersionRange(residentId) {
+        const startKey = `KYC_VERSION_${residentId}_`;
+
+        return {
+            startKey,
+            endKey: `${startKey}\uffff`
+        };
+    }
+
+    _fullKycCanonicalize(value) {
+        if (Array.isArray(value)) {
+            return value.map((item) => this._fullKycCanonicalize(item));
+        }
+
+        if (
+            value !== null &&
+            typeof value === 'object'
+        ) {
+            return Object.keys(value)
+                .sort()
+                .reduce((result, key) => {
+                    result[key] = this._fullKycCanonicalize(value[key]);
+                    return result;
+                }, {});
+        }
+
+        return value;
+    }
+
+    _fullKycPayloadHash(payload) {
+        const canonicalPayload = this._fullKycCanonicalize(payload);
+
+        return crypto
+            .createHash('sha256')
+            .update(JSON.stringify(canonicalPayload), 'utf8')
+            .digest('hex');
+    }
+
+    _fullKycDeepMerge(baseValue, patchValue) {
+        if (
+            patchValue === null ||
+            Array.isArray(patchValue) ||
+            typeof patchValue !== 'object'
+        ) {
+            return this._fullKycClone(patchValue);
+        }
+
+        const result = (
+            baseValue !== null &&
+            !Array.isArray(baseValue) &&
+            typeof baseValue === 'object'
+        )
+            ? this._fullKycClone(baseValue)
+            : {};
+
+        for (const [key, value] of Object.entries(patchValue)) {
+            result[key] = this._fullKycDeepMerge(result[key], value);
+        }
+
+        return result;
+    }
+
+    _fullKycCollectChangedFields(oldValue, newValue, prefix = '') {
+        const oldIsObject = (
+            oldValue !== null &&
+            !Array.isArray(oldValue) &&
+            typeof oldValue === 'object'
+        );
+
+        const newIsObject = (
+            newValue !== null &&
+            !Array.isArray(newValue) &&
+            typeof newValue === 'object'
+        );
+
+        if (oldIsObject && newIsObject) {
+            const keys = Array.from(
+                new Set([
+                    ...Object.keys(oldValue),
+                    ...Object.keys(newValue)
+                ])
+            ).sort();
+
+            const changes = [];
+
+            for (const key of keys) {
+                const path = prefix ? `${prefix}.${key}` : key;
+
+                changes.push(
+                    ...this._fullKycCollectChangedFields(
+                        oldValue[key],
+                        newValue[key],
+                        path
+                    )
+                );
+            }
+
+            return changes;
+        }
+
+        const oldCanonical = JSON.stringify(
+            this._fullKycCanonicalize(oldValue)
+        );
+
+        const newCanonical = JSON.stringify(
+            this._fullKycCanonicalize(newValue)
+        );
+
+        return oldCanonical === newCanonical
+            ? []
+            : [prefix || '$'];
+    }
+
+    _fullKycValueAtPath(payload, path) {
+        if (path === '$') {
+            return payload;
+        }
+
+        return String(path)
+            .split('.')
+            .reduce((value, key) => {
+                if (value === undefined || value === null) {
+                    return undefined;
+                }
+
+                return value[key];
+            }, payload);
+    }
+
+    _fullKycReservedPatchFields() {
+        return new Set([
+            'docType',
+            'ledgerKey',
+            'latestVersionKey',
+            'versionKey',
+            'versionNumber',
+            'versionOperation',
+            'previousVersionNumber',
+            'previousVersionKey',
+            'previousTransactionId',
+            'versionPayloadHash',
+            'versionSchema',
+            'versionCreatedAt',
+            'versionCreatedTxId',
+            'versionCreatedByMsp',
+            'versionChangedFields',
+            'versionChangeCount',
+            'fabricTransactionId',
+            'isDeleted',
+            'deletionReason',
+            'deletedAt',
+            'deletedTxId'
+        ]);
+    }
+
+    _fullKycSanitizePatch(patch) {
+        const result = this._fullKycClone(patch);
+        const reservedFields = this._fullKycReservedPatchFields();
+
+        for (const field of reservedFields) {
+            delete result[field];
+        }
+
+        return result;
+    }
+
+    _fullKycLegacyPayload(currentRecord) {
+        const payload = this._fullKycClone(currentRecord);
+        const reservedFields = this._fullKycReservedPatchFields();
+
+        for (const field of reservedFields) {
+            delete payload[field];
+        }
+
+        return payload;
+    }
+
+    _fullKycApplyCompatibilityFields(payload, residentId) {
+        const result = this._fullKycClone(payload);
+        const formData = (
+            result.formData &&
+            !Array.isArray(result.formData) &&
+            typeof result.formData === 'object'
+        )
+            ? result.formData
+            : {};
+
+        const fieldMappings = {
+            firstName: 'FIRST_NAME',
+            fatherName: 'FATHER_NAME',
+            motherName: 'MOTHER_NAME',
+            lastName: 'LAST_NAME',
+            fullName: 'CUSTOMER_NAME',
+            dateOfBirth: 'DATE_OF_BIRTH',
+            gender: 'GENDER',
+            nationality: 'MAIN_NATIONALITY_ID',
+            branchCode: 'BRANCH',
+            customerType: 'PARTY_TYPE_CODE',
+            kycStatus: 'STATUS_NAME'
+        };
+
+        for (const [targetField, sourceField] of Object.entries(fieldMappings)) {
+            if (
+                result[targetField] === undefined ||
+                result[targetField] === null ||
+                result[targetField] === ''
+            ) {
+                if (formData[sourceField] !== undefined) {
+                    result[targetField] = formData[sourceField];
+                }
+            }
+        }
+
+        result.residentId = residentId;
+
+        if (!result.customerId) {
+            result.customerId = this._fullKycCustomerId(result, residentId);
+        }
+
+        if (!result.sessionId) {
+            result.sessionId = this._fullKycSessionId(result);
+        }
+
+        if (!result.kycStatus) {
+            result.kycStatus = formData.STATUS_CODE || 'Draft';
+        }
+
+        if (!result.riskCategory) {
+            result.riskCategory = 'Low Risk';
+        }
+
+        if (!result.walletCurrency) {
+            result.walletCurrency = 'LBP';
+        }
+
+        if (!result.walletStatus) {
+            result.walletStatus = 'Not Created';
+        }
+
+        return result;
+    }
+
+    async _fullKycReadCurrent(ctx, residentId) {
+        const currentKey = this._fullKycCurrentKey(residentId);
+        let bytes = await ctx.stub.getState(currentKey);
+
+        if (bytes && bytes.length > 0) {
+            return {
+                key: currentKey,
+                record: JSON.parse(bytes.toString('utf8'))
+            };
+        }
+
+        const legacyKey = this._fullKycLegacyCurrentKey(residentId);
+        bytes = await ctx.stub.getState(legacyKey);
+
+        if (bytes && bytes.length > 0) {
+            return {
+                key: legacyKey,
+                record: JSON.parse(bytes.toString('utf8'))
+            };
+        }
+
+        return null;
+    }
+
+    async _fullKycReadLatestVersion(ctx, residentId) {
+        const bytes = await ctx.stub.getState(
+            this._fullKycLatestVersionKey(residentId)
+        );
+
+        if (!bytes || bytes.length === 0) {
+            return null;
+        }
+
+        return JSON.parse(bytes.toString('utf8'));
+    }
+
+    async _fullKycReadVersion(ctx, residentId, versionNumber) {
+        const normalizedVersion = Number(versionNumber);
+
+        if (
+            !Number.isSafeInteger(normalizedVersion) ||
+            normalizedVersion < 1
+        ) {
+            throw new Error('versionNumber must be a positive integer');
+        }
+
+        const versionKey = this._fullKycVersionKey(
+            residentId,
+            normalizedVersion
+        );
+
+        const bytes = await ctx.stub.getState(versionKey);
+
+        if (!bytes || bytes.length === 0) {
+            throw new Error(
+                `KYC version ${normalizedVersion} not found for ${residentId}`
+            );
+        }
+
+        return JSON.parse(bytes.toString('utf8'));
+    }
+
+    async _fullKycWriteVersion(
+        ctx,
+        {
+            residentId,
+            payload,
+            operation,
+            previousVersion = null,
+            changedFields = [],
+            changeReason = null,
+            deletionReason = null,
+            writeCurrent = true,
+            existingCurrent = null
+        }
+    ) {
+        const versionNumber = previousVersion
+            ? Number(previousVersion.versionNumber) + 1
+            : 1;
+
+        const currentKey = this._fullKycCurrentKey(residentId);
+        const latestVersionKey = this._fullKycLatestVersionKey(residentId);
+        const versionKey = this._fullKycVersionKey(
+            residentId,
+            versionNumber
+        );
+
+        const existingVersionBytes = await ctx.stub.getState(versionKey);
+
+        if (existingVersionBytes && existingVersionBytes.length > 0) {
+            throw new Error(
+                `KYC version already exists: ${residentId}/${versionNumber}`
+            );
+        }
+
+        const txId = ctx.stub.getTxID();
+        const timestamp = this._customerCrudTimestamp(ctx);
+        const submittedByMsp = (
+            ctx.clientIdentity &&
+            typeof ctx.clientIdentity.getMSPID === 'function'
+        )
+            ? ctx.clientIdentity.getMSPID()
+            : null;
+
+        const completePayload = this._fullKycClone(payload);
+        const customerId = this._fullKycCustomerId(
+            completePayload,
+            residentId
+        );
+        const sessionId = this._fullKycSessionId(completePayload);
+        const versionPayloadHash = this._fullKycPayloadHash(
+            completePayload
+        );
+
+        const versionRecord = {
+            docType: 'KYC_FULL_VERSION',
+            versionSchema: 'VALOORES_KYC_FULL_VERSION_V1',
+            residentId,
+            customerId,
+            sessionId,
+            ledgerKey: currentKey,
+            latestVersionKey,
+            versionKey,
+            versionNumber,
+            versionOperation: operation,
+            previousVersionNumber: previousVersion
+                ? Number(previousVersion.versionNumber)
+                : null,
+            previousVersionKey: previousVersion
+                ? previousVersion.versionKey
+                : null,
+            previousTransactionId: previousVersion
+                ? previousVersion.fabricTransactionId
+                : null,
+            versionPayloadHash,
+            versionChangedFields: Array.from(
+                new Set(changedFields)
+            ).sort(),
+            versionChangeCount: Array.from(
+                new Set(changedFields)
+            ).length,
+            changeReason: changeReason || null,
+            deletionReason: deletionReason || null,
+            isDeleted: operation === 'DELETE',
+            createdByMsp: submittedByMsp,
+            fabricTransactionId: txId,
+            createdAt: timestamp,
+            payload: completePayload
+        };
+
+        const compatiblePayload = this._fullKycApplyCompatibilityFields(
+            completePayload,
+            residentId
+        );
+
+        const currentRecord = {
+            ...compatiblePayload,
+            docType: 'resident',
+            residentId,
+            customerId,
+            sessionId,
+            ledgerKey: currentKey,
+            latestVersionKey,
+            versionKey,
+            versionNumber,
+            versionOperation: operation,
+            previousVersionNumber:
+                versionRecord.previousVersionNumber,
+            previousVersionKey:
+                versionRecord.previousVersionKey,
+            previousTransactionId:
+                versionRecord.previousTransactionId,
+            versionPayloadHash,
+            versionSchema:
+                versionRecord.versionSchema,
+            versionCreatedAt: timestamp,
+            versionCreatedTxId: txId,
+            versionCreatedByMsp: submittedByMsp,
+            versionChangedFields:
+                versionRecord.versionChangedFields,
+            versionChangeCount:
+                versionRecord.versionChangeCount,
+            isDeleted: operation === 'DELETE',
+            deletionReason: deletionReason || null,
+            createdAt:
+                existingCurrent?.createdAt ||
+                compatiblePayload.createdAt ||
+                timestamp,
+            updatedAt: timestamp,
+            createdTxId:
+                existingCurrent?.createdTxId ||
+                existingCurrent?.creationTxId ||
+                txId,
+            updatedTxId: txId,
+            fabricTransactionId: txId
+        };
+
+        const versionBuffer = Buffer.from(
+            JSON.stringify(versionRecord)
+        );
+
+        await ctx.stub.putState(versionKey, versionBuffer);
+        await ctx.stub.putState(latestVersionKey, versionBuffer);
+
+        if (writeCurrent) {
+            await ctx.stub.putState(
+                currentKey,
+                Buffer.from(JSON.stringify(currentRecord))
+            );
+        }
+
+        return {
+            versionRecord,
+            currentRecord
+        };
+    }
+
+    async _fullKycEnsureBaseline(ctx, residentId, currentRecord) {
+        const latestVersion = await this._fullKycReadLatestVersion(
+            ctx,
+            residentId
+        );
+
+        if (latestVersion) {
+            return latestVersion;
+        }
+
+        const versionOneKey = this._fullKycVersionKey(residentId, 1);
+        const versionOneBytes = await ctx.stub.getState(versionOneKey);
+
+        if (versionOneBytes && versionOneBytes.length > 0) {
+            const versionOne = JSON.parse(
+                versionOneBytes.toString('utf8')
+            );
+
+            await ctx.stub.putState(
+                this._fullKycLatestVersionKey(residentId),
+                versionOneBytes
+            );
+
+            return versionOne;
+        }
+
+        const legacyPayload = this._fullKycLegacyPayload(currentRecord);
+
+        const baselineResult = await this._fullKycWriteVersion(
+            ctx,
+            {
+                residentId,
+                payload: legacyPayload,
+                operation: 'MIGRATE_BASELINE',
+                previousVersion: null,
+                changedFields: ['*'],
+                changeReason:
+                    'Automatic baseline created for a pre-versioning resident',
+                writeCurrent: true,
+                existingCurrent: currentRecord
+            }
+        );
+
+        return baselineResult.versionRecord;
+    }
+
+    /**
+     * Creates Version 1 and stores the complete submitted KYC payload.
+     */
+    async CreateResident(ctx, residentJson) {
+        const payload = this._fullKycParseObject(
+            residentJson,
+            'residentJson'
+        );
+
+        const residentId = this._fullKycResolveResidentId(payload);
+        const currentResult = await this._fullKycReadCurrent(
+            ctx,
+            residentId
+        );
+
+        if (currentResult) {
+            throw new Error(
+                `Resident already exists on blockchain: ${residentId}`
+            );
+        }
+
+        const historicalLatest = await this._fullKycReadLatestVersion(
+            ctx,
+            residentId
+        );
+
+        if (historicalLatest) {
+            throw new Error(
+                `Resident version history already exists: ${residentId}`
+            );
+        }
+
+        const result = await this._fullKycWriteVersion(
+            ctx,
+            {
+                residentId,
+                payload,
+                operation: 'CREATE',
+                previousVersion: null,
+                changedFields: ['*'],
+                changeReason:
+                    payload.changeReason ||
+                    payload.change_reason ||
+                    null,
+                writeCurrent: true,
+                existingCurrent: null
+            }
+        );
+
+        return JSON.stringify({
+            success: true,
+            operation: 'CREATE',
+            residentId,
+            ledgerKey: result.currentRecord.ledgerKey,
+            versionNumber:
+                result.versionRecord.versionNumber,
+            versionKey:
+                result.versionRecord.versionKey,
+            versionPayloadHash:
+                result.versionRecord.versionPayloadHash,
+            fabricTransactionId:
+                result.versionRecord.fabricTransactionId,
+            resident: result.currentRecord
+        });
+    }
+
+    /**
+     * Returns the current active customer record.
+     */
+    async GetResident(ctx, residentId) {
+        const normalizedResidentId = this._fullKycNormalizeResidentId(
+            residentId
+        );
+
+        const currentResult = await this._fullKycReadCurrent(
+            ctx,
+            normalizedResidentId
+        );
+
+        if (!currentResult) {
+            throw new Error(
+                `Resident not found on blockchain: ${normalizedResidentId}`
+            );
+        }
+
+        return JSON.stringify(currentResult.record);
+    }
+
+    /**
+     * Returns the latest version, including a DELETE tombstone version.
+     */
+    async GetLatestResidentVersion(ctx, residentId) {
+        const normalizedResidentId = this._fullKycNormalizeResidentId(
+            residentId
+        );
+
+        const latestVersion = await this._fullKycReadLatestVersion(
+            ctx,
+            normalizedResidentId
+        );
+
+        if (latestVersion) {
+            return JSON.stringify(latestVersion);
+        }
+
+        const currentResult = await this._fullKycReadCurrent(
+            ctx,
+            normalizedResidentId
+        );
+
+        if (!currentResult) {
+            throw new Error(
+                `Resident not found on blockchain: ${normalizedResidentId}`
+            );
+        }
+
+        return JSON.stringify({
+            docType: 'KYC_LEGACY_CURRENT',
+            residentId: normalizedResidentId,
+            versionNumber: null,
+            payload: currentResult.record
+        });
+    }
+
+    /**
+     * Returns one immutable full-payload KYC version.
+     */
+    async GetResidentVersion(
+        ctx,
+        residentId,
+        versionNumber
+    ) {
+        const normalizedResidentId = this._fullKycNormalizeResidentId(
+            residentId
+        );
+
+        const version = await this._fullKycReadVersion(
+            ctx,
+            normalizedResidentId,
+            versionNumber
+        );
+
+        return JSON.stringify(version);
+    }
+
+    /**
+     * Returns paginated immutable versions for one customer.
+     */
+    async GetResidentVersions(
+        ctx,
+        residentId,
+        pageSize = '100',
+        bookmark = ''
+    ) {
+        const normalizedResidentId = this._fullKycNormalizeResidentId(
+            residentId
+        );
+
+        const parsedPageSize = Number.parseInt(
+            String(pageSize || '100'),
+            10
+        );
+
+        const normalizedPageSize = Number.isFinite(parsedPageSize)
+            ? Math.min(Math.max(parsedPageSize, 1), 1000)
+            : 100;
+
+        const { startKey, endKey } = this._fullKycVersionRange(
+            normalizedResidentId
+        );
+
+        const queryResult = await ctx.stub.getStateByRangeWithPagination(
+            startKey,
+            endKey,
+            normalizedPageSize,
+            String(bookmark || '')
+        );
+
+        const versions = [];
+        const iterator = queryResult.iterator;
+
+        try {
+            while (true) {
+                const item = await iterator.next();
+
+                if (
+                    item.value &&
+                    item.value.value &&
+                    item.value.value.length > 0
+                ) {
+                    versions.push(
+                        JSON.parse(
+                            item.value.value.toString('utf8')
+                        )
+                    );
+                }
+
+                if (item.done) {
+                    break;
+                }
+            }
+        } finally {
+            await iterator.close();
+        }
+
+        versions.sort(
+            (first, second) =>
+                Number(first.versionNumber) -
+                Number(second.versionNumber)
+        );
+
+        const metadata = queryResult.metadata || {};
+
+        return JSON.stringify({
+            source: 'FABRIC_BLOCKCHAIN',
+            residentId: normalizedResidentId,
+            versions,
+            pagination: {
+                pageSize: normalizedPageSize,
+                fetchedRecordsCount: Number(
+                    metadata.fetchedRecordsCount ||
+                    versions.length
+                ),
+                bookmark: String(metadata.bookmark || '')
+            }
+        });
+    }
+
+    /**
+     * Compares any two immutable KYC versions field by field.
+     */
+    async CompareResidentVersions(
+        ctx,
+        residentId,
+        oldVersionNumber,
+        newVersionNumber
+    ) {
+        const normalizedResidentId = this._fullKycNormalizeResidentId(
+            residentId
+        );
+
+        const oldVersion = await this._fullKycReadVersion(
+            ctx,
+            normalizedResidentId,
+            oldVersionNumber
+        );
+
+        const newVersion = await this._fullKycReadVersion(
+            ctx,
+            normalizedResidentId,
+            newVersionNumber
+        );
+
+        const changedFields = this._fullKycCollectChangedFields(
+            oldVersion.payload,
+            newVersion.payload
+        );
+
+        const changes = changedFields.map((field) => ({
+            field,
+            oldValue: this._fullKycValueAtPath(
+                oldVersion.payload,
+                field
+            ),
+            newValue: this._fullKycValueAtPath(
+                newVersion.payload,
+                field
+            )
+        }));
+
+        return JSON.stringify({
+            source: 'FABRIC_BLOCKCHAIN',
+            residentId: normalizedResidentId,
+            oldVersionNumber: Number(oldVersion.versionNumber),
+            newVersionNumber: Number(newVersion.versionNumber),
+            oldVersionHash: oldVersion.versionPayloadHash,
+            newVersionHash: newVersion.versionPayloadHash,
+            changeCount: changes.length,
+            changes
+        });
+    }
+
+    /**
+     * Deep-merges the submitted patch with the previous complete payload,
+     * then creates a new immutable version.
+     */
+    async UpdateResident(ctx, residentJson) {
+        const patch = this._fullKycParseObject(
+            residentJson,
+            'residentJson'
+        );
+
+        const residentId = this._fullKycResolveResidentId(patch);
+        const currentResult = await this._fullKycReadCurrent(
+            ctx,
+            residentId
+        );
+
+        if (!currentResult) {
+            throw new Error(
+                `Resident not found on blockchain: ${residentId}`
+            );
+        }
+
+        const latestVersion = await this._fullKycEnsureBaseline(
+            ctx,
+            residentId,
+            currentResult.record
+        );
+
+        const previousPayload = latestVersion.payload
+            ? this._fullKycClone(latestVersion.payload)
+            : this._fullKycLegacyPayload(currentResult.record);
+
+        const sanitizedPatch = this._fullKycSanitizePatch(patch);
+        const updatedPayload = this._fullKycDeepMerge(
+            previousPayload,
+            sanitizedPatch
+        );
+
+        const changedFields = this._fullKycCollectChangedFields(
+            previousPayload,
+            updatedPayload
+        );
+
+        if (changedFields.length === 0) {
+            throw new Error(
+                `No resident fields changed: ${residentId}`
+            );
+        }
+
+        const result = await this._fullKycWriteVersion(
+            ctx,
+            {
+                residentId,
+                payload: updatedPayload,
+                operation: 'UPDATE',
+                previousVersion: latestVersion,
+                changedFields,
+                changeReason:
+                    patch.changeReason ||
+                    patch.change_reason ||
+                    null,
+                writeCurrent: true,
+                existingCurrent: currentResult.record
+            }
+        );
+
+        if (currentResult.key !== result.currentRecord.ledgerKey) {
+            await ctx.stub.deleteState(currentResult.key);
+        }
+
+        return JSON.stringify({
+            success: true,
+            operation: 'UPDATE',
+            residentId,
+            ledgerKey: result.currentRecord.ledgerKey,
+            versionNumber:
+                result.versionRecord.versionNumber,
+            versionKey:
+                result.versionRecord.versionKey,
+            previousVersionNumber:
+                result.versionRecord.previousVersionNumber,
+            changedFields:
+                result.versionRecord.versionChangedFields,
+            changeCount:
+                result.versionRecord.versionChangeCount,
+            versionPayloadHash:
+                result.versionRecord.versionPayloadHash,
+            fabricTransactionId:
+                result.versionRecord.fabricTransactionId,
+            updatedAt:
+                result.currentRecord.updatedAt,
+            resident: result.currentRecord
+        });
+    }
+
+    /**
+     * Creates an immutable DELETE version containing the complete final
+     * customer payload, then removes only the current-state key.
+     */
+    async DeleteResident(
+        ctx,
+        residentId,
+        deletionReason
+    ) {
+        const normalizedResidentId = this._fullKycNormalizeResidentId(
+            residentId
+        );
+
+        const normalizedReason = String(
+            deletionReason || ''
+        ).trim();
+
+        if (normalizedReason.length < 5) {
+            throw new Error(
+                'A deletion reason of at least 5 characters is required.'
+            );
+        }
+
+        const currentResult = await this._fullKycReadCurrent(
+            ctx,
+            normalizedResidentId
+        );
+
+        if (!currentResult) {
+            throw new Error(
+                `Resident not found on blockchain: ${normalizedResidentId}`
+            );
+        }
+
+        const latestVersion = await this._fullKycEnsureBaseline(
+            ctx,
+            normalizedResidentId,
+            currentResult.record
+        );
+
+        const completePayload = latestVersion.payload
+            ? this._fullKycClone(latestVersion.payload)
+            : this._fullKycLegacyPayload(currentResult.record);
+
+        const result = await this._fullKycWriteVersion(
+            ctx,
+            {
+                residentId: normalizedResidentId,
+                payload: completePayload,
+                operation: 'DELETE',
+                previousVersion: latestVersion,
+                changedFields: [],
+                changeReason: normalizedReason,
+                deletionReason: normalizedReason,
+                writeCurrent: false,
+                existingCurrent: currentResult.record
+            }
+        );
+
+        await ctx.stub.deleteState(currentResult.key);
+
+        const canonicalCurrentKey = this._fullKycCurrentKey(
+            normalizedResidentId
+        );
+
+        if (currentResult.key !== canonicalCurrentKey) {
+            await ctx.stub.deleteState(canonicalCurrentKey);
+        }
+
+        return JSON.stringify({
+            success: true,
+            operation: 'DELETE',
+            residentId: normalizedResidentId,
+            ledgerKey: canonicalCurrentKey,
+            versionNumber:
+                result.versionRecord.versionNumber,
+            versionKey:
+                result.versionRecord.versionKey,
+            previousVersionNumber:
+                result.versionRecord.previousVersionNumber,
+            deletionReason: normalizedReason,
+            versionPayloadHash:
+                result.versionRecord.versionPayloadHash,
+            deletedAt:
+                result.versionRecord.createdAt,
+            deletedTxId:
+                result.versionRecord.fabricTransactionId,
+            finalPayload:
+                result.versionRecord.payload
+        });
+    }
+
+    /**
+     * Creates the wallet and records the wallet change as a new full KYC
+     * version in the same Fabric transaction.
+     */
+    async CreateResidentWallet(
+        ctx,
+        residentId,
+        walletCurrency,
+        walletAddress
+    ) {
+        const normalizedResidentId = this._fullKycNormalizeResidentId(
+            residentId
+        );
+
+        const currentResult = await this._fullKycReadCurrent(
+            ctx,
+            normalizedResidentId
+        );
+
+        if (!currentResult) {
+            throw new Error(
+                `Resident not found on blockchain: ${normalizedResidentId}`
+            );
+        }
+
+        const txId = ctx.stub.getTxID();
+        const timestamp = this._customerCrudTimestamp(ctx);
+        const officialWalletAddress = (
+            walletAddress &&
+            String(walletAddress).trim() !== ''
+        )
+            ? String(walletAddress).trim()
+            : `WALLET-${normalizedResidentId}-${txId.substring(0, 16)}`;
+
+        const walletKey = `RESIDENT_WALLET_${normalizedResidentId}`;
+        const wallet = {
+            docType: 'residentWallet',
+            residentId: normalizedResidentId,
+            walletAddress: officialWalletAddress,
+            walletCurrency: walletCurrency || 'LBP',
+            walletStatus: 'Created',
+            blockchainStatus: 'Committed',
+            createdAt: timestamp,
+            updatedAt: timestamp,
+            createdTxId: txId,
+            updatedTxId: txId
+        };
+
+        await ctx.stub.putState(
+            walletKey,
+            Buffer.from(JSON.stringify(wallet))
+        );
+
+        const updateResult = JSON.parse(
+            await this.UpdateResident(
+                ctx,
+                JSON.stringify({
+                    residentId: normalizedResidentId,
+                    walletAddress: officialWalletAddress,
+                    walletCurrency: wallet.walletCurrency,
+                    walletStatus: wallet.walletStatus,
+                    blockchainStatus: wallet.blockchainStatus,
+                    changeReason: 'Resident wallet created'
+                })
+            )
+        );
+
+        return JSON.stringify({
+            ...wallet,
+            residentVersionNumber: updateResult.versionNumber,
+            residentVersionKey: updateResult.versionKey
+        });
+    }
+
+    /**
+     * Changes KYC status and risk category through the versioned update path.
+     */
+    async SubmitResidentKYC(ctx, residentId, riskCategory) {
+        const normalizedResidentId = this._fullKycNormalizeResidentId(
+            residentId
+        );
+
+        const updateResult = JSON.parse(
+            await this.UpdateResident(
+                ctx,
+                JSON.stringify({
+                    residentId: normalizedResidentId,
+                    kycStatus: 'Submitted',
+                    riskCategory: riskCategory || 'Low Risk',
+                    changeReason: 'Resident KYC submitted'
+                })
+            )
+        );
+
+        return JSON.stringify(updateResult.resident);
+    }
+
+    /* ===== VALOORES FULL KYC VERSIONING V1 END ===== */
 
 }
 

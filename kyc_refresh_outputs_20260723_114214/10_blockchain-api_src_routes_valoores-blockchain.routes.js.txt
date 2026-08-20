@@ -1,0 +1,439 @@
+===== FILE: /home/nix/u01/blockchain-integration/blockchain-api/src/routes/valoores-blockchain.routes.js =====
+     1	const express = require('express');
+     2	const crypto = require('crypto');
+     3	const pool = require('../config/database');
+     4	const fabricService = require('../services/fabric.service');
+     5	
+     6	const router = express.Router();
+     7	
+     8	
+     9	function toSafeJson(value) {
+    10	  return JSON.parse(
+    11	    JSON.stringify(value, (_, item) =>
+    12	      typeof item === 'bigint' ? item.toString() : item
+    13	    )
+    14	  );
+    15	}
+    16	
+    17	function sha256(value) {
+    18	  return crypto.createHash('sha256').update(value || '').digest('hex');
+    19	}
+    20	
+    21	router.post('/customers', async (req, res) => {
+    22	  try {
+    23	    const requestBody = req.body || {};
+    24	
+    25	    const formData =
+    26	      requestBody.formData ||
+    27	      requestBody.form_data ||
+    28	      requestBody.customer_payload?.formData ||
+    29	      requestBody.customerPayload?.formData ||
+    30	      {};
+    31	
+    32	    const customerId =
+    33	      requestBody.customer_id ||
+    34	      requestBody.customerId ||
+    35	      formData.customer_id ||
+    36	      formData.customerId ||
+    37	      null;
+    38	
+    39	    const sessionId =
+    40	      requestBody.session_id ||
+    41	      requestBody.sessionId ||
+    42	      formData.session_id ||
+    43	      formData.sessionId ||
+    44	      null;
+    45	
+    46	    const customerName = formData.CUSTOMER_NAME || null;
+    47	    const customerType = formData.CUSTOMER_TYPE || null;
+    48	    const branchCode = formData.BRANCH || null;
+    49	    // const tinNumber = formData.TIN_NUMBER || null;
+    50	    const vatNumber = formData.VAT_NUMBER || null;
+    51	
+    52	    if (!customerId) {
+    53	      return res.status(400).json({
+    54	        success: false,
+    55	        message: 'customer_id is required'
+    56	      });
+    57	    }
+    58	
+    59	    if (!customerName) {
+    60	      return res.status(400).json({
+    61	        success: false,
+    62	        message: 'formData.CUSTOMER_NAME is required'
+    63	      });
+    64	    }
+    65	
+    66	
+    67	    let selfieFileName = null;
+    68	    let selfieHash = null;
+    69	
+    70	    if (formData.UPLOAD_SELFIE) {
+    71	      const selfieParts = String(formData.UPLOAD_SELFIE).split(',');
+    72	      selfieFileName = selfieParts[0] || null;
+    73	      const selfieBase64 = selfieParts.slice(1).join(',');
+    74	      selfieHash = sha256(selfieBase64);
+    75	    }
+    76	
+    77	    const fabricResidentId = `VALOORES-${customerId}`;
+    78	
+    79	    const blockchainPayload = {
+    80	      sourceSystem: 'VALOORES',
+    81	      entityType: 'CUSTOMER',
+    82	      operationType: 'CREATE_CUSTOMER',
+    83	      ledgerKey: `KYC_${fabricResidentId}`,
+    84	      customer: {
+    85	        customerName,
+    86	        customerId,
+    87	        sessionId,
+    88	        customerType,
+    89	        branch: branchCode,
+    90	        vatNumber,
+    91	        street: formData.STREET || null,
+    92	        building: formData.BUILDING || null,
+    93	        floor: formData.FLOOR || null,
+    94	        comments: formData.COMMENTS || null,
+    95	        legalForm: formData.LEGAL_FORM || null,
+    96	        taxCountry: formData.TAX_COUNTRY || null,
+    97	        isResident: formData.IS_RESIDENT || null
+    98	      },
+    99	      documents: {
+   100	        selfieFileName,
+   101	        selfieHash
+   102	      }
+   103	    };
+   104	
+   105	    const payloadHash = sha256(JSON.stringify(blockchainPayload));
+   106	
+   107	    const insertResult = await pool.query(
+   108	      `
+   109	      INSERT INTO blockchain.valoores_customer_blockchain_proofs (
+   110	        customer_name,
+   111	        valoores_customer_id,
+   112	        valoores_session_id,
+   113	        customer_type,
+   114	        branch_code,
+   115	        vat_number,
+   116	        customer_payload,
+   117	        selfie_file_name,
+   118	        selfie_hash,
+   119	        blockchain_status,
+   120	        blockchain_hash,
+   121	        created_by
+   122	      )
+   123	      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+   124	      RETURNING *
+   125	      `,
+   126	      [
+   127	        customerName,
+   128	        customerId,
+   129	        sessionId,
+   130	        customerType,
+   131	        branchCode,
+   132	        vatNumber,
+   133	        blockchainPayload,
+   134	        selfieFileName,
+   135	        selfieHash,
+   136	        'PENDING',
+   137	        payloadHash,
+   138	        'SPRINGBOOT'
+   139	      ]
+   140	    );
+   141	
+   142	    const proofId = insertResult.rows[0].id;
+   143	
+   144	    let fabricResult = null;
+   145	    let fabricStatus = 'PENDING';
+   146	    let fabricTransactionId = null;
+   147	    let fabricError = null;
+   148	
+   149	    const nameParts = String(customerName || 'VALOORES CUSTOMER').trim().split(/\s+/);
+   150	
+   151	    const residentPayload = {
+   152	      residentId: fabricResidentId,
+   153	      firstName: nameParts[0] || 'VALOORES',
+   154	      fatherName: '',
+   155	      motherName: '',
+   156	      lastName: nameParts.slice(1).join(' ') || 'CUSTOMER',
+   157	      fullName: customerName || 'VALOORES CUSTOMER',
+   158	      arabicFullName: '',
+   159	      dateOfBirth: '',
+   160	      gender: '',
+   161	      nationality: String(formData.TAX_COUNTRY || ''),
+   162	      nationalIdNumber: '',
+   163	      passportNumber: '',
+   164	      residencyPermitNumber: '',
+   165	      taxNumber: String(vatNumber || ''),
+   166	      mobileNumber: '',
+   167	      email: '',
+   168	      governorate: '',
+   169	      district: '',
+   170	      municipality: '',
+   171	      address: [
+   172	        formData.STREET,
+   173	        formData.BUILDING,
+   174	        formData.FLOOR
+   175	      ].filter(Boolean).join(', '),
+   176	      employmentStatus: '',
+   177	      occupation: String(customerType || ''),
+   178	      monthlyIncome: 0,
+   179	      kycStatus: 'Submitted',
+   180	      riskCategory: 'LOW',
+   181	      walletAddress: '',
+   182	      walletCurrency: 'GOV',
+   183	      walletStatus: 'Not Created',
+   184	
+   185	      // Extra Valoores fields kept inside Fabric record safely.
+   186	      sourceSystem: 'VALOORES',
+   187	      sourceEntityType: 'CUSTOMER',
+   188	      branchCode: String(branchCode || ''),
+   189	      customerType: String(customerType || ''),
+   190	      payloadHash,
+   191	      selfieFileName,
+   192	      selfieHash
+   193	    };
+   194	
+   195	    try {
+   196	      fabricResult = await fabricService.submitTransaction(
+   197	        'CreateResident',
+   198	        [JSON.stringify(residentPayload)],
+   199	        {
+   200	          requestId: `VALOORES-CUSTOMER-${proofId}`,
+   201	          correlationId: `VALOORES-${customerId || proofId}`,
+   202	          sourceSystem: 'VALOORES',
+   203	          requestSource: 'SPRINGBOOT',
+   204	          createdBy: 'SPRINGBOOT'
+   205	        }
+   206	      );
+   207	
+   208	      fabricStatus = 'CONFIRMED';
+   209	      fabricTransactionId =
+   210	        fabricResult?.transactionId ||
+   211	        fabricResult?.txId ||
+   212	        fabricResult?.commitStatus?.transactionId ||
+   213	        null;
+   214	    } catch (error) {
+   215	      fabricStatus = 'FAILED';
+   216	      fabricError = error.message;
+   217	      console.error('Valoores customer Fabric submit error:', error);
+   218	    }
+   219	
+   220	    await pool.query(
+   221	      `
+   222	      UPDATE blockchain.valoores_customer_blockchain_proofs
+   223	      SET
+   224	        blockchain_status = $1,
+   225	        blockchain_transaction_id = $2,
+   226	        blockchain_error = $3,
+   227	        updated_at = CURRENT_TIMESTAMP
+   228	      WHERE id = $4
+   229	      `,
+   230	      [
+   231	        fabricStatus,
+   232	        fabricTransactionId,
+   233	        fabricError,
+   234	        proofId
+   235	      ]
+   236	    );
+   237	
+   238	    return res.status(fabricStatus === 'CONFIRMED' ? 201 : 202).json({
+   239	      success: fabricStatus === 'CONFIRMED',
+   240	      message:
+   241	        fabricStatus === 'CONFIRMED'
+   242	          ? 'Customer saved on PostgreSQL and Fabric Blockchain successfully'
+   243	          : 'Customer saved on PostgreSQL but Fabric Blockchain submit failed',
+   244	      data: {
+   245	        proofId,
+   246	        customerName,
+   247	        customerId,
+   248	        sessionId,
+   249	        customerType,
+   250	        branchCode,
+   251	        vatNumber,
+   252	        fabricResidentId,
+   253	        ledgerKey: `KYC_${fabricResidentId}`,
+   254	        blockchainStatus: fabricStatus,
+   255	        blockchainTransactionId: fabricTransactionId,
+   256	        blockchainHash: payloadHash,
+   257	        blockchainError: fabricError,
+   258	        fabricResult: fabricResult ? toSafeJson(fabricResult) : null
+   259	      }
+   260	    });
+   261	
+   262	  } catch (error) {
+   263	    console.error('Create Valoores customer blockchain error:', error);
+   264	
+   265	    return res.status(500).json({
+   266	      success: false,
+   267	      message: 'Failed to save customer on Blockchain',
+   268	      error: error.message
+   269	    });
+   270	  }
+   271	});
+   272	
+   273	router.get('/customers', async (req, res) => {
+   274	  try {
+   275	    const result = await pool.query(
+   276	      `
+   277	      SELECT
+   278	        id,
+   279	        source_system,
+   280	        entity_type,
+   281	        operation_type,
+   282	        customer_name,
+   283	        valoores_customer_id,
+   284	        valoores_session_id,
+   285	        customer_type,
+   286	        branch_code,
+   287	        vat_number,
+   288	        selfie_file_name,
+   289	        selfie_hash,
+   290	        blockchain_status,
+   291	        blockchain_transaction_id,
+   292	        blockchain_hash,
+   293	        blockchain_error,
+   294	        created_by,
+   295	        created_at,
+   296	        updated_at
+   297	      FROM blockchain.valoores_customer_blockchain_proofs
+   298	      ORDER BY created_at DESC
+   299	      LIMIT 100
+   300	      `
+   301	    );
+   302	
+   303	    return res.json({
+   304	      success: true,
+   305	      message: 'Valoores blockchain customers returned successfully',
+   306	      data: result.rows
+   307	    });
+   308	
+   309	  } catch (error) {
+   310	    console.error('Get Valoores customer blockchain proofs error:', error);
+   311	
+   312	    return res.status(500).json({
+   313	      success: false,
+   314	      message: 'Failed to retrieve Valoores blockchain customers',
+   315	      error: error.message
+   316	    });
+   317	  }
+   318	});
+   319	
+   320	router.get('/dashboard', async (req, res) => {
+   321	  try {
+   322	    const result = await pool.query(
+   323	      `
+   324	      SELECT
+   325	        COUNT(*)::int AS total_customers,
+   326	        COUNT(*) FILTER (WHERE blockchain_status = 'SAVED')::int AS saved_customers,
+   327	        COUNT(*) FILTER (WHERE blockchain_status = 'PENDING')::int AS pending_customers,
+   328	        COUNT(*) FILTER (WHERE blockchain_status = 'FAILED')::int AS failed_customers
+   329	      FROM blockchain.valoores_customer_blockchain_proofs
+   330	      `
+   331	    );
+   332	
+   333	    return res.json({
+   334	      success: true,
+   335	      message: 'Valoores blockchain dashboard returned successfully',
+   336	      data: result.rows[0]
+   337	    });
+   338	
+   339	  } catch (error) {
+   340	    console.error('Get Valoores blockchain dashboard error:', error);
+   341	
+   342	    return res.status(500).json({
+   343	      success: false,
+   344	      message: 'Failed to retrieve Valoores blockchain dashboard',
+   345	      error: error.message
+   346	    });
+   347	  }
+   348	});
+   349	
+   350	
+   351	/**
+   352	 * GET /api/v1/valoores-blockchain/kyc-daily-created?month=2026-06
+   353	 *
+   354	 * Purpose:
+   355	 * Display number of KYC records created on a daily basis by selected month.
+   356	 */
+   357	router.get('/kyc-daily-created', async (req, res) => {
+   358	  try {
+   359	    const month = req.query.month || new Date().toISOString().slice(0, 7);
+   360	
+   361	    if (!/^\d{4}-\d{2}$/.test(month)) {
+   362	      return res.status(400).json({
+   363	        success: false,
+   364	        message: 'Invalid month format. Use YYYY-MM, example: 2026-06'
+   365	      });
+   366	    }
+   367	
+   368	    const dateFrom = `${month}-01`;
+   369	
+   370	    const result = await pool.query(
+   371	      `
+   372	      WITH month_days AS (
+   373	        SELECT generate_series(
+   374	          date_trunc('month', $1::date),
+   375	          date_trunc('month', $1::date) + interval '1 month' - interval '1 day',
+   376	          interval '1 day'
+   377	        )::date AS kyc_date
+   378	      ),
+   379	      daily_counts AS (
+   380	        SELECT
+   381	          created_at::date AS kyc_date,
+   382	          COUNT(*)::int AS total_kyc_created,
+   383	          COUNT(*) FILTER (WHERE blockchain_status = 'CONFIRMED')::int AS confirmed_kyc,
+   384	          COUNT(*) FILTER (WHERE blockchain_status = 'FAILED')::int AS failed_kyc,
+   385	          COUNT(*) FILTER (WHERE blockchain_status = 'PENDING')::int AS pending_kyc
+   386	        FROM blockchain.valoores_customer_blockchain_proofs
+   387	        WHERE created_at >= date_trunc('month', $1::date)
+   388	          AND created_at < date_trunc('month', $1::date) + interval '1 month'
+   389	        GROUP BY created_at::date
+   390	      )
+   391	      SELECT
+   392	        to_char(md.kyc_date, 'YYYY-MM-DD') AS kyc_date,
+   393	        COALESCE(dc.total_kyc_created, 0)::int AS total_kyc_created,
+   394	        COALESCE(dc.confirmed_kyc, 0)::int AS confirmed_kyc,
+   395	        COALESCE(dc.failed_kyc, 0)::int AS failed_kyc,
+   396	        COALESCE(dc.pending_kyc, 0)::int AS pending_kyc
+   397	      FROM month_days md
+   398	      LEFT JOIN daily_counts dc ON dc.kyc_date = md.kyc_date
+   399	      ORDER BY md.kyc_date;
+   400	      `,
+   401	      [dateFrom]
+   402	    );
+   403	
+   404	    const summaryResult = await pool.query(
+   405	      `
+   406	      SELECT
+   407	        COUNT(*)::int AS total_kyc_created,
+   408	        COUNT(*) FILTER (WHERE blockchain_status = 'CONFIRMED')::int AS confirmed_kyc,
+   409	        COUNT(*) FILTER (WHERE blockchain_status = 'FAILED')::int AS failed_kyc,
+   410	        COUNT(*) FILTER (WHERE blockchain_status = 'PENDING')::int AS pending_kyc
+   411	      FROM blockchain.valoores_customer_blockchain_proofs
+   412	      WHERE created_at >= date_trunc('month', $1::date)
+   413	        AND created_at < date_trunc('month', $1::date) + interval '1 month';
+   414	      `,
+   415	      [dateFrom]
+   416	    );
+   417	
+   418	    return res.status(200).json({
+   419	      success: true,
+   420	      message: 'KYC daily created report retrieved successfully',
+   421	      data: {
+   422	        month,
+   423	        summary: summaryResult.rows[0],
+   424	        daily: result.rows
+   425	      }
+   426	    });
+   427	  } catch (error) {
+   428	    console.error('[VALOORES KYC DAILY CREATED ERROR]', error);
+   429	    return res.status(500).json({
+   430	      success: false,
+   431	      message: 'Failed to retrieve KYC daily created report',
+   432	      error: error.message
+   433	    });
+   434	  }
+   435	});
+   436	
+   437	
+   438	module.exports = router;

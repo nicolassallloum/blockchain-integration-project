@@ -1,0 +1,22 @@
+HTTP/1.1 404 Not Found
+x-request-id: REQ_298DB0C961E1ABD9FB4B7A68
+Vary: Origin
+Access-Control-Expose-Headers: x-request-id,x-correlation-id
+Cross-Origin-Opener-Policy: same-origin
+Origin-Agent-Cluster: ?1
+Referrer-Policy: no-referrer
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+X-Content-Type-Options: nosniff
+X-DNS-Prefetch-Control: off
+X-Download-Options: noopen
+X-Frame-Options: SAMEORIGIN
+X-Permitted-Cross-Domain-Policies: none
+X-XSS-Protection: 0
+x-correlation-id: REQ_298DB0C961E1ABD9FB4B7A68
+Content-Type: application/json; charset=utf-8
+Content-Length: 276
+ETag: W/"114-RAQPPCtUNEKZndEDg4jSKvVDfAc"
+Date: Thu, 23 Jul 2026 11:15:37 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+

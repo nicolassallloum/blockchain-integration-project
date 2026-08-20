@@ -1,0 +1,15 @@
+{
+	"sequence": 29,
+	"version": "2.29",
+	"endorsement_plugin": "escc",
+	"validation_plugin": "vscc",
+	"validation_parameter": "CiwSDBIKCAESAggAEgIIARoNEgsKB09yZzFNU1AQAxoNEgsKB09yZzJNU1AQAw==",
+	"collections": {},
+	"source": {
+		"Type": {
+			"LocalPackage": {
+				"package_id": "kyc-wallet-chaincode-js_2.29:efcd65e5bdeea19e94c0d7e2b6003e6a9ebd90cc61306dcec8accd1cd0ce7fd6"
+			}
+		}
+	}
+}

@@ -25,7 +25,17 @@ const riskFraudScreeningRoutes = require('./routes/government-risk-fraud-screeni
 const valooresBlockchainRoutes = require('./routes/valoores-blockchain.routes');
 const valooresAmlRulesSyncService = require('./services/valoores-aml-rules-sync.service');
 const blockchainApiProofService = require('./services/blockchain-api-proof.service');
+const licenseRecoveryRoutes =
+  require('../routes/licenseRecoveryRoutes');
 
+const licenseAccessRoutes =
+  require('../routes/licenseAccessRoutes');
+const licenseWalletRoutes =
+  require('../routes/licenseWalletRoutes');
+
+const {
+  licensePool
+} = require('./config/license-database');
 const cors = require('cors');
 const crypto = require('crypto');
 const os = require('os');
@@ -717,6 +727,58 @@ app.get('/', (req, res) => {
  * 404 handler.
  * Must stay after all routes.
  */
+try {
+  app.use(
+    '/api/license-access',
+    licenseAccessRoutes(licensePool)
+  );
+
+  console.log(
+    '[ROUTE MOUNTED] /api/license-access'
+  );
+} catch (error) {
+  console.error(
+    '[ROUTE ERROR] License Access route failed to mount:',
+    error.message
+  );
+}
+const {
+  httpAuditMiddleware
+} = require('./utils/professionalAuditLogger');
+
+app.use(
+  httpAuditMiddleware
+);
+try {
+  app.use(
+    '/api/license-wallets',
+    licenseWalletRoutes(licensePool)
+  );
+
+  console.log(
+    '[ROUTE MOUNTED] /api/license-wallets'
+  );
+} catch (error) {
+  console.error(
+    '[ROUTE ERROR] License Wallet route failed to mount:',
+    error.message
+  );
+}
+
+try {
+  app.use(
+    '/api/license-recovery',
+    licenseRecoveryRoutes(licensePool)
+  );
+console.log(
+    '[ROUTE MOUNTED] /api/license-recovery'
+  );
+} catch (error) {
+  console.error(
+    '[ROUTE ERROR] License Recovery route failed to mount:',
+    error.message
+  );
+}
 app.use((req, res) => {
   return res.status(404).json({
     success: false,

@@ -1,0 +1,929 @@
+===== FILE: /home/nix/u01/blockchain-integration/blockchain-api/src/services/wallet.service.js =====
+     1	'use strict';
+     2	
+     3	const bcrypt = require('bcryptjs');
+     4	const jwt = require('jsonwebtoken');
+     5	const crypto = require('crypto');
+     6	
+     7	const db = require('../config/database');
+     8	const fabricService = require('./fabric.service');
+     9	const enterprisePersistenceRepository = require('../repositories/enterprise-persistence.repository');
+    10	
+    11	const DEFAULT_JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '8h';
+    12	const JWT_SECRET =
+    13	  process.env.JWT_SECRET ||
+    14	  process.env.APP_JWT_SECRET ||
+    15	  'CHANGE_ME_DEV_SECRET';
+    16	
+    17	const DEFAULT_CHANNEL_NAME =
+    18	  process.env.FABRIC_CHANNEL_NAME ||
+    19	  process.env.CHANNEL_NAME ||
+    20	  'kycchannelnix1';
+    21	
+    22	const DEFAULT_CHAINCODE_NAME =
+    23	  process.env.FABRIC_CHAINCODE_NAME ||
+    24	  process.env.CHAINCODE_NAME ||
+    25	  'kyc-wallet-chaincode-js';
+    26	
+    27	exports.getNextCustomerId = async () => {
+    28	  const client = await db.getClient();
+    29	
+    30	  try {
+    31	    const customerId = await enterprisePersistenceRepository.getNextCustomerId(client);
+    32	
+    33	    return {
+    34	      customerId: String(customerId),
+    35	      customer_id: String(customerId)
+    36	    };
+    37	  } finally {
+    38	    client.release();
+    39	  }
+    40	};
+    41	
+    42	async function tableColumnExists(tableName, columnName) {
+    43	  const result = await db.query(
+    44	    `
+    45	    SELECT EXISTS (
+    46	      SELECT 1
+    47	      FROM information_schema.columns
+    48	      WHERE table_schema = 'blockchain'
+    49	        AND table_name = $1
+    50	        AND column_name = $2
+    51	    ) AS exists
+    52	    `,
+    53	    [tableName, columnName]
+    54	  );
+    55	
+    56	  return result.rows[0]?.exists === true;
+    57	}
+    58	
+    59	async function getWalletColumns() {
+    60	  const result = await db.query(
+    61	    `
+    62	    SELECT column_name
+    63	    FROM information_schema.columns
+    64	    WHERE table_schema = 'blockchain'
+    65	      AND table_name = 'wallets'
+    66	    ORDER BY ordinal_position
+    67	    `
+    68	  );
+    69	
+    70	  return result.rows.map((row) => row.column_name);
+    71	}
+    72	
+    73	function normalizeNumber(value, defaultValue = 0) {
+    74	  const numberValue = Number(value);
+    75	  return Number.isFinite(numberValue) ? numberValue : defaultValue;
+    76	}
+    77	
+    78	function normalizeWalletType(value) {
+    79	  const normalized = String(value || 'CUSTOMER').trim().toUpperCase();
+    80	
+    81	  if (normalized === 'ORGANIZATION' || normalized === 'ORG') {
+    82	    return 'ORGANIZATION';
+    83	  }
+    84	
+    85	  return 'CUSTOMER';
+    86	}
+    87	
+    88	function buildOrganizationEmail(organizationName) {
+    89	  const slug = String(organizationName || 'organization')
+    90	    .toLowerCase()
+    91	    .replace(/[^a-z0-9]+/g, '.')
+    92	    .replace(/^\.+|\.+$/g, '');
+    93	
+    94	  return `${slug || 'organization'}@gmail.com`;
+    95	}
+    96	
+    97	function generateOneTimePassword(prefix = 'Wallet') {
+    98	  return `${prefix}@${crypto.randomBytes(4).toString('hex')}${Date.now()
+    99	    .toString()
+   100	    .slice(-4)}`;
+   101	}
+   102	
+   103	function mapWalletProfile(profile) {
+   104	  if (!profile) {
+   105	    return null;
+   106	  }
+   107	
+   108	  const walletType = normalizeWalletType(profile.walletType);
+   109	
+   110	  return {
+   111	    walletAddress: profile.walletAddress,
+   112	    customerId: profile.customerId,
+   113	    organizationId: profile.organizationId,
+   114	    organizationName: profile.organizationName,
+   115	    organizationCode: profile.organizationCode || null,
+   116	    walletType,
+   117	    fullName: profile.fullName,
+   118	    customerName: profile.fullName,
+   119	    customerType: walletType,
+   120	    nationality: profile.nationalIdHash,
+   121	    countryName: profile.countryName,
+   122	    idType: 'wallet',
+   123	    idNumber: profile.walletAddress,
+   124	    nationalIdHash: profile.nationalIdHash,
+   125	    mobileHash: profile.mobileHash,
+   126	    emailHash: profile.emailHash,
+   127	    currentBalance: profile.currentBalance,
+   128	    currencyCode: profile.currencyCode,
+   129	    status: profile.status,
+   130	    createdAt: profile.createdAt
+   131	  };
+   132	}
+   133	
+   134	/**
+   135	 * Accepts either:
+   136	 * - organization_id UUID
+   137	 * - organization_code
+   138	 *
+   139	 * This allows the frontend to still send organizationId,
+   140	 * while the backend resolves and saves organization_code correctly.
+   141	 */
+   142	async function getOrganizationById(organizationIdOrCode) {
+   143	  const result = await db.query(
+   144	    `
+   145	    SELECT
+   146	      organization_id::text AS organization_id,
+   147	      organization_code::text AS organization_code,
+   148	      organization_name,
+   149	      organization_type,
+   150	      registration_number,
+   151	      country_code,
+   152	      status
+   153	    FROM blockchain.blockchain_organization
+   154	    WHERE organization_id::text = $1
+   155	       OR organization_code::text = $1
+   156	    LIMIT 1
+   157	    `,
+   158	    [String(organizationIdOrCode)]
+   159	  );
+   160	
+   161	  return result.rows[0] || null;
+   162	}
+   163	
+   164	function resolveOrganizationCode(organization, fallbackValue = null) {
+   165	  return (
+   166	    organization?.organization_code ||
+   167	    organization?.registration_number ||
+   168	    fallbackValue ||
+   169	    null
+   170	  );
+   171	}
+   172	
+   173	function extractBlockchainWallet(fabricResult) {
+   174	  const fabricData = fabricResult?.data || fabricResult || {};
+   175	  const nestedData = fabricData?.data || {};
+   176	
+   177	  const wallet =
+   178	    fabricData.wallet ||
+   179	    nestedData.wallet ||
+   180	    null;
+   181	
+   182	  const transaction =
+   183	    fabricData.transaction ||
+   184	    nestedData.transaction ||
+   185	    null;
+   186	
+   187	  if (!wallet || !wallet.walletAddress) {
+   188	    throw new Error('Blockchain CreateWallet did not return wallet.walletAddress');
+   189	  }
+   190	
+   191	  return {
+   192	    wallet,
+   193	    transaction,
+   194	    fabricData
+   195	  };
+   196	}
+   197	
+   198	function getFabricTransactionId(blockchainWallet, blockchainTransaction) {
+   199	  return (
+   200	    blockchainTransaction?.transactionId ||
+   201	    blockchainTransaction?.createdTxId ||
+   202	    blockchainWallet?.createdTxId ||
+   203	    blockchainWallet?.updatedTxId ||
+   204	    null
+   205	  );
+   206	}
+   207	
+   208	async function assertCustomerDoesNotExistInPostgres(customerId) {
+   209	  const existingWallet = await db.query(
+   210	    `
+   211	    SELECT customer_id, wallet_address
+   212	    FROM blockchain.wallets
+   213	    WHERE customer_id = $1
+   214	    LIMIT 1
+   215	    `,
+   216	    [customerId]
+   217	  );
+   218	
+   219	  if (existingWallet.rowCount > 0) {
+   220	    throw new Error(`Wallet already exists for customerId: ${customerId}`);
+   221	  }
+   222	}
+   223	
+   224	exports.listWallets = async ({ limit = 13, offset = 0, search = '' }) => {
+   225	  const values = [];
+   226	  let whereClause = '';
+   227	
+   228	  if (search && search.trim()) {
+   229	    values.push(`%${search.trim()}%`);
+   230	
+   231	    whereClause = `
+   232	      WHERE
+   233	        COALESCE(full_name, '') ILIKE $1
+   234	        OR COALESCE(wallet_type, '') ILIKE $1
+   235	        OR COALESCE(national_id_hash, '') ILIKE $1
+   236	        OR COALESCE(ledger_doc_type, '') ILIKE $1
+   237	        OR COALESCE(ledger_key, '') ILIKE $1
+   238	        OR COALESCE(customer_id, '') ILIKE $1
+   239	        OR COALESCE(wallet_address, '') ILIKE $1
+   240	        OR COALESCE(organization_code, '') ILIKE $1
+   241	    `;
+   242	  }
+   243	
+   244	  const hasCurrentBalance = await tableColumnExists('wallets', 'current_balance');
+   245	  const hasCurrencyCode = await tableColumnExists('wallets', 'currency_code');
+   246	
+   247	  const countSql = `
+   248	    SELECT COUNT(*)::int AS total
+   249	    FROM blockchain.wallets
+   250	    ${whereClause}
+   251	  `;
+   252	
+   253	  const dataSql = `
+   254	    SELECT
+   255	      wallet_id,
+   256	      wallet_address,
+   257	      customer_id,
+   258	      organization_id,
+   259	      organization_code,
+   260	      wallet_type,
+   261	      full_name,
+   262	      national_id_hash,
+   263	      ledger_doc_type,
+   264	      ledger_key,
+   265	      mobile_hash,
+   266	      email_hash,
+   267	      status,
+   268	      ${hasCurrentBalance ? 'current_balance' : '0 AS current_balance'},
+   269	      ${hasCurrencyCode ? 'currency_code' : `'USD' AS currency_code`},
+   270	      created_at,
+   271	      updated_at
+   272	    FROM blockchain.wallets
+   273	    ${whereClause}
+   274	    ORDER BY created_at DESC NULLS LAST
+   275	    LIMIT $${values.length + 1}
+   276	    OFFSET $${values.length + 2}
+   277	  `;
+   278	
+   279	  const countResult = await db.query(countSql, values);
+   280	  const dataResult = await db.query(dataSql, [...values, limit, offset]);
+   281	
+   282	  return {
+   283	    totalRecords: countResult.rows[0]?.total || 0,
+   284	    data: dataResult.rows.map((row) => ({
+   285	      id: row.wallet_id,
+   286	      walletId: row.wallet_id,
+   287	      walletAddress: row.wallet_address,
+   288	      customerId: row.customer_id,
+   289	      organizationId: row.organization_id,
+   290	      organizationCode: row.organization_code,
+   291	      customerName: row.full_name,
+   292	      customerType: normalizeWalletType(row.wallet_type),
+   293	      nationality: row.national_id_hash,
+   294	      idType: row.ledger_doc_type,
+   295	      idNumber: row.ledger_key,
+   296	      fullName: row.full_name,
+   297	      walletType: normalizeWalletType(row.wallet_type),
+   298	      nationalIdHash: row.national_id_hash,
+   299	      ledgerDocType: row.ledger_doc_type,
+   300	      ledgerKey: row.ledger_key,
+   301	      mobileHash: row.mobile_hash,
+   302	      emailHash: row.email_hash,
+   303	      status: row.status,
+   304	      currentBalance: row.current_balance,
+   305	      currencyCode: row.currency_code,
+   306	      createdAt: row.created_at,
+   307	      updatedAt: row.updated_at
+   308	    }))
+   309	  };
+   310	};
+   311	
+   312	const getProfessionalWalletProfileByCustomerId = async (customerId) => {
+   313	  const result = await db.query(
+   314	    `
+   315	    SELECT
+   316	        w.customer_id                                  AS "customerId",
+   317	        w.wallet_address                              AS "walletAddress",
+   318	        w.organization_id                             AS "organizationId",
+   319	        w.organization_code                           AS "organizationCode",
+   320	        bo.organization_name                          AS "organizationName",
+   321	        w.wallet_type                                 AS "walletType",
+   322	        w.full_name                                   AS "fullName",
+   323	        w.national_id_hash                            AS "nationalIdHash",
+   324	        c.cou_name                                    AS "countryName",
+   325	        w.email_hash                                  AS "emailHash",
+   326	        w.mobile_hash                                 AS "mobileHash",
+   327	        COALESCE(w.current_balance, 0)                AS "currentBalance",
+   328	        COALESCE(w.currency_code, 'USD')              AS "currencyCode",
+   329	        w.created_at                                  AS "createdAt",
+   330	        w.status                                      AS "status"
+   331	    FROM blockchain.wallets w
+   332	    LEFT JOIN blockchain.blockchain_organization bo
+   333	        ON bo.organization_id = w.organization_id
+   334	    LEFT JOIN blockchain.countries c
+   335	        ON c.cou_id::text = w.national_id_hash::text
+   336	    WHERE w.customer_id = $1
+   337	    LIMIT 1
+   338	    `,
+   339	    [customerId]
+   340	  );
+   341	
+   342	  return result.rows[0] || null;
+   343	};
+   344	
+   345	const getProfessionalWalletProfileByAddress = async (walletAddress) => {
+   346	  const result = await db.query(
+   347	    `
+   348	    SELECT
+   349	        w.customer_id                                  AS "customerId",
+   350	        w.wallet_address                              AS "walletAddress",
+   351	        w.organization_id                             AS "organizationId",
+   352	        w.organization_code                           AS "organizationCode",
+   353	        bo.organization_name                          AS "organizationName",
+   354	        w.wallet_type                                 AS "walletType",
+   355	        w.full_name                                   AS "fullName",
+   356	        w.national_id_hash                            AS "nationalIdHash",
+   357	        c.cou_name                                    AS "countryName",
+   358	        w.email_hash                                  AS "emailHash",
+   359	        w.mobile_hash                                 AS "mobileHash",
+   360	        COALESCE(w.current_balance, 0)                AS "currentBalance",
+   361	        COALESCE(w.currency_code, 'USD')              AS "currencyCode",
+   362	        w.created_at                                  AS "createdAt",
+   363	        w.status                                      AS "status"
+   364	    FROM blockchain.wallets w
+   365	    LEFT JOIN blockchain.blockchain_organization bo
+   366	        ON bo.organization_id = w.organization_id
+   367	    LEFT JOIN blockchain.countries c
+   368	        ON c.cou_id::text = w.national_id_hash::text
+   369	    WHERE w.wallet_address = $1
+   370	    LIMIT 1
+   371	    `,
+   372	    [walletAddress]
+   373	  );
+   374	
+   375	  return result.rows[0] || null;
+   376	};
+   377	
+   378	exports.getWalletByCustomerId = async (customerId) => {
+   379	  const profile = await getProfessionalWalletProfileByCustomerId(customerId);
+   380	  return mapWalletProfile(profile);
+   381	};
+   382	
+   383	exports.getWalletByAddress = async (walletAddress) => {
+   384	  const profile = await getProfessionalWalletProfileByAddress(walletAddress);
+   385	  return mapWalletProfile(profile);
+   386	};
+   387	
+   388	async function insertWallet(valuesByColumn) {
+   389	  const columns = await getWalletColumns();
+   390	
+   391	  const insertColumns = [];
+   392	  const insertValues = [];
+   393	  const placeholders = [];
+   394	
+   395	  Object.entries(valuesByColumn).forEach(([column, value]) => {
+   396	    if (columns.includes(column)) {
+   397	      insertColumns.push(column);
+   398	      insertValues.push(value);
+   399	      placeholders.push(`$${insertValues.length}`);
+   400	    }
+   401	  });
+   402	
+   403	  const sql = `
+   404	    INSERT INTO blockchain.wallets (${insertColumns.join(', ')})
+   405	    VALUES (${placeholders.join(', ')})
+   406	    RETURNING *
+   407	  `;
+   408	
+   409	  const result = await db.query(sql, insertValues);
+   410	  return result.rows[0];
+   411	}
+   412	
+   413	exports.createWallet = async (payload) => {
+   414	  const {
+   415	    customerId,
+   416	    organizationId,
+   417	    organizationCode = null,
+   418	    fullName,
+   419	    nationalIdHash = null,
+   420	    mobileHash = null,
+   421	    emailHash = null,
+   422	    passwordHash = null,
+   423	    ledgerDocType = 'wallet',
+   424	    requestSource = 'ANGULAR_TEST_UI',
+   425	    sourceSystem = 'BLOCKCHAIN_API',
+   426	    createdBy = 'angular-test-ui'
+   427	  } = payload;
+   428	
+   429	  const initialBalance = normalizeNumber(
+   430	    payload.initialBalance ?? payload.currentBalance ?? payload.current_balance,
+   431	    0
+   432	  );
+   433	
+   434	  if (!customerId) {
+   435	    throw new Error('customerId is required');
+   436	  }
+   437	
+   438	  if (!organizationId) {
+   439	    throw new Error('organizationId is required');
+   440	  }
+   441	
+   442	  if (!fullName) {
+   443	    throw new Error('fullName is required');
+   444	  }
+   445	
+   446	  if (initialBalance < 0) {
+   447	    throw new Error('initialBalance must be zero or greater');
+   448	  }
+   449	
+   450	  const organization = await getOrganizationById(organizationId);
+   451	
+   452	  if (!organization) {
+   453	    throw new Error(`Organization not found: ${organizationId}`);
+   454	  }
+   455	
+   456	  const resolvedOrganizationId = organization.organization_id;
+   457	  const resolvedOrganizationCode = resolveOrganizationCode(
+   458	    organization,
+   459	    organizationCode || organizationId
+   460	  );
+   461	
+   462	  if (!resolvedOrganizationCode) {
+   463	    throw new Error(`organizationCode could not be resolved for organizationId: ${organizationId}`);
+   464	  }
+   465	
+   466	  await assertCustomerDoesNotExistInPostgres(customerId);
+   467	
+   468	  const plainPassword =
+   469	    payload.password ||
+   470	    payload.oneTimePassword ||
+   471	    payload.plainPassword ||
+   472	    null;
+   473	
+   474	  const generatedPassword =
+   475	    !passwordHash && !plainPassword ? generateOneTimePassword('Wallet') : null;
+   476	
+   477	  const passwordForHash = passwordHash || plainPassword || generatedPassword;
+   478	
+   479	  const normalizedPasswordHash =
+   480	    passwordForHash && String(passwordForHash).startsWith('$2')
+   481	      ? String(passwordForHash)
+   482	      : await bcrypt.hash(String(passwordForHash), 10);
+   483	
+   484	  let fabricResult;
+   485	  let blockchainWallet;
+   486	  let blockchainTransaction;
+   487	
+   488	  try {
+   489	    fabricResult = await fabricService.submitTransaction(
+   490	      'CreateWallet',
+   491	      [
+   492	        customerId,
+   493	
+   494	        /*
+   495	         * IMPORTANT:
+   496	         * Save/send organization_code to Blockchain ledger,
+   497	         * not organization_id UUID.
+   498	         */
+   499	        resolvedOrganizationCode,
+   500	
+   501	        fullName,
+   502	        nationalIdHash || '',
+   503	        mobileHash || '',
+   504	        emailHash || '',
+   505	        normalizedPasswordHash,
+   506	        String(initialBalance)
+   507	      ],
+   508	      {
+   509	        requestId: payload.requestId || payload.request_id || null,
+   510	        correlationId: payload.correlationId || payload.correlation_id || null,
+   511	        sourceSystem,
+   512	        requestSource,
+   513	        createdBy
+   514	      }
+   515	    );
+   516	
+   517	    const extracted = extractBlockchainWallet(fabricResult);
+   518	    blockchainWallet = extracted.wallet;
+   519	    blockchainTransaction = extracted.transaction;
+   520	  } catch (error) {
+   521	    throw new Error(`Blockchain wallet creation failed: ${error.message}`);
+   522	  }
+   523	
+   524	  const walletAddress = blockchainWallet.walletAddress;
+   525	  const fabricTransactionId = getFabricTransactionId(
+   526	    blockchainWallet,
+   527	    blockchainTransaction
+   528	  );
+   529	
+   530	  const client = await db.getClient();
+   531	
+   532	  let enterpriseSaveResult;
+   533	
+   534	  try {
+   535	    await client.query('BEGIN');
+   536	
+   537	    enterpriseSaveResult = await enterprisePersistenceRepository.saveWalletEnterprise(
+   538	      client,
+   539	      {
+   540	        walletAddress,
+   541	        customerId,
+   542	
+   543	        /*
+   544	         * Keep UUID internally for FK/join.
+   545	         * Save organization_code separately for display/search/business code.
+   546	         */
+   547	        organizationId: resolvedOrganizationId,
+   548	        organizationCode: resolvedOrganizationCode,
+   549	
+   550	        walletType: 'CUSTOMER',
+   551	        fullName,
+   552	        nationalIdHash,
+   553	        mobileHash,
+   554	        emailHash,
+   555	        passwordHash: normalizedPasswordHash,
+   556	        ledgerDocType,
+   557	        currentBalance: blockchainWallet.balance ?? initialBalance,
+   558	        currencyCode: payload.currencyCode || payload.currency || 'USD',
+   559	        status: blockchainWallet.status || 'ACTIVE',
+   560	        fabricTxId: fabricTransactionId,
+   561	        fabricChannelName: fabricResult.channelName || DEFAULT_CHANNEL_NAME,
+   562	        chaincodeName: fabricResult.chaincodeName || DEFAULT_CHAINCODE_NAME,
+   563	        walletMetadata: {
+   564	          source: 'BLOCKCHAIN_API',
+   565	          walletType: 'CUSTOMER',
+   566	          fabricTxId: fabricTransactionId,
+   567	          createdFrom: requestSource,
+   568	          organizationId: resolvedOrganizationId,
+   569	          organizationCode: resolvedOrganizationCode
+   570	        },
+   571	        kycPayload: {
+   572	          fullName,
+   573	          nationalIdHash,
+   574	          mobileHash,
+   575	          emailHash,
+   576	          organizationId: resolvedOrganizationId,
+   577	          organizationCode: resolvedOrganizationCode
+   578	        },
+   579	        blockchainPayload: blockchainWallet,
+   580	        fabricResponse: fabricResult,
+   581	        requestId: payload.requestId || payload.request_id || null,
+   582	        requestSource,
+   583	        sourceSystem,
+   584	        createdBy,
+   585	        updatedBy: createdBy,
+   586	        originalPayload: {
+   587	          ...payload,
+   588	          organizationId: resolvedOrganizationId,
+   589	          organizationCode: resolvedOrganizationCode
+   590	        }
+   591	      }
+   592	    );
+   593	
+   594	    await client.query('COMMIT');
+   595	  } catch (error) {
+   596	    await client.query('ROLLBACK');
+   597	
+   598	    throw new Error(
+   599	      `Wallet created on Fabric but enterprise PostgreSQL save failed. Manual reconciliation required. FabricTxId=${fabricTransactionId || 'N/A'} WalletAddress=${walletAddress}. Error: ${error.message}`
+   600	    );
+   601	  } finally {
+   602	    client.release();
+   603	  }
+   604	
+   605	  const row = enterpriseSaveResult.wallet;
+   606	
+   607	  const profile =
+   608	    (await getProfessionalWalletProfileByAddress(row.wallet_address)) ||
+   609	    (await getProfessionalWalletProfileByCustomerId(row.customer_id));
+   610	
+   611	  return {
+   612	    wallet: profile || row,
+   613	    blockchain: {
+   614	      saved: true,
+   615	      walletAddress,
+   616	      fabricTransactionId,
+   617	      channelName: fabricResult.channelName || DEFAULT_CHANNEL_NAME,
+   618	      chaincodeName: fabricResult.chaincodeName || DEFAULT_CHAINCODE_NAME,
+   619	      transaction: blockchainTransaction || null
+   620	    },
+   621	    postgres: {
+   622	      saved: true,
+   623	      walletId: row.wallet_id || null
+   624	    },
+   625	    organization: {
+   626	      organizationId: resolvedOrganizationId,
+   627	      organizationCode: resolvedOrganizationCode
+   628	    },
+   629	    oneTimePassword:
+   630	      generatedPassword ||
+   631	      (!String(passwordForHash).startsWith('$2') ? passwordForHash : null)
+   632	  };
+   633	};
+   634	
+   635	exports.createOrganizationWallet = async (payload) => {
+   636	  const organizationId = payload.organizationId || payload.organization_id;
+   637	
+   638	  if (!organizationId) {
+   639	    throw new Error('organizationId is required');
+   640	  }
+   641	
+   642	  const organization = await getOrganizationById(organizationId);
+   643	
+   644	  if (!organization) {
+   645	    throw new Error(`Organization not found: ${organizationId}`);
+   646	  }
+   647	
+   648	  const resolvedOrganizationId = organization.organization_id;
+   649	  const organizationCode = resolveOrganizationCode(
+   650	    organization,
+   651	    payload.organizationCode || payload.organization_code || organizationId
+   652	  );
+   653	
+   654	  const existingOrgWallet = await db.query(
+   655	    `
+   656	    SELECT wallet_address
+   657	    FROM blockchain.wallets
+   658	    WHERE organization_id::text = $1
+   659	      AND UPPER(wallet_type) = 'ORGANIZATION'
+   660	    LIMIT 1
+   661	    `,
+   662	    [String(resolvedOrganizationId)]
+   663	  );
+   664	
+   665	  if (existingOrgWallet.rowCount > 0) {
+   666	    throw new Error(
+   667	      `Organization wallet already exists for organizationId: ${resolvedOrganizationId}`
+   668	    );
+   669	  }
+   670	
+   671	  const initialBalance = normalizeNumber(
+   672	    payload.initialBalance ?? payload.currentBalance ?? payload.current_balance,
+   673	    0
+   674	  );
+   675	
+   676	  if (initialBalance < 0) {
+   677	    throw new Error('initialBalance must be zero or greater');
+   678	  }
+   679	
+   680	  const plainPassword =
+   681	    payload.passwordHash ||
+   682	    payload.password ||
+   683	    generateOneTimePassword('Org');
+   684	
+   685	  const normalizedPasswordHash = String(plainPassword).startsWith('$2')
+   686	    ? String(plainPassword)
+   687	    : await bcrypt.hash(String(plainPassword), 10);
+   688	
+   689	  const customerId = `ORG_${String(resolvedOrganizationId)
+   690	    .replace(/-/g, '')
+   691	    .slice(0, 24)}`;
+   692	
+   693	  const organizationName = organization.organization_name;
+   694	  const emailHash = buildOrganizationEmail(organizationName);
+   695	
+   696	  let fabricResult;
+   697	  let blockchainWallet;
+   698	  let blockchainTransaction;
+   699	
+   700	  try {
+   701	    fabricResult = await fabricService.submitTransaction(
+   702	      'CreateWallet',
+   703	      [
+   704	        customerId,
+   705	
+   706	        /*
+   707	         * IMPORTANT:
+   708	         * Organization wallet also sends organization_code to Fabric.
+   709	         */
+   710	        organizationCode,
+   711	
+   712	        organizationName,
+   713	        organizationCode,
+   714	        '',
+   715	        emailHash,
+   716	        normalizedPasswordHash,
+   717	        String(initialBalance)
+   718	      ],
+   719	      {
+   720	        requestId: payload.requestId || payload.request_id || null,
+   721	        correlationId: payload.correlationId || payload.correlation_id || null,
+   722	        sourceSystem: payload.sourceSystem || payload.source_system || 'BLOCKCHAIN_API',
+   723	        requestSource: payload.requestSource || payload.request_source || 'ANGULAR_TEST_UI',
+   724	        createdBy: payload.createdBy || payload.created_by || 'angular-test-ui'
+   725	      }
+   726	    );
+   727	
+   728	    const extracted = extractBlockchainWallet(fabricResult);
+   729	    blockchainWallet = extracted.wallet;
+   730	    blockchainTransaction = extracted.transaction;
+   731	  } catch (error) {
+   732	    throw new Error(`Blockchain organization wallet creation failed: ${error.message}`);
+   733	  }
+   734	
+   735	  const walletAddress = blockchainWallet.walletAddress;
+   736	  const fabricTransactionId = getFabricTransactionId(
+   737	    blockchainWallet,
+   738	    blockchainTransaction
+   739	  );
+   740	
+   741	  const client = await db.getClient();
+   742	
+   743	  let enterpriseSaveResult;
+   744	
+   745	  try {
+   746	    await client.query('BEGIN');
+   747	
+   748	    enterpriseSaveResult = await enterprisePersistenceRepository.saveWalletEnterprise(
+   749	      client,
+   750	      {
+   751	        walletAddress,
+   752	        customerId,
+   753	        organizationId: resolvedOrganizationId,
+   754	        organizationCode,
+   755	        walletType: 'ORGANIZATION',
+   756	        fullName: organizationName,
+   757	        nationalIdHash: organizationCode,
+   758	        mobileHash: null,
+   759	        emailHash,
+   760	        passwordHash: normalizedPasswordHash,
+   761	        ledgerDocType: 'organization_wallet',
+   762	        currentBalance: blockchainWallet.balance ?? initialBalance,
+   763	        currencyCode: payload.currencyCode || payload.currency || 'USD',
+   764	        status: blockchainWallet.status || 'ACTIVE',
+   765	        fabricTxId: fabricTransactionId,
+   766	        fabricChannelName: fabricResult.channelName || DEFAULT_CHANNEL_NAME,
+   767	        chaincodeName: fabricResult.chaincodeName || DEFAULT_CHAINCODE_NAME,
+   768	        walletMetadata: {
+   769	          source: 'BLOCKCHAIN_API',
+   770	          walletType: 'ORGANIZATION',
+   771	          fabricTxId: fabricTransactionId,
+   772	          organizationId: resolvedOrganizationId,
+   773	          organizationCode
+   774	        },
+   775	        kycPayload: {
+   776	          organizationId: resolvedOrganizationId,
+   777	          organizationName,
+   778	          organizationCode
+   779	        },
+   780	        blockchainPayload: blockchainWallet,
+   781	        fabricResponse: fabricResult,
+   782	        requestId: payload.requestId || payload.request_id || null,
+   783	        requestSource: payload.requestSource || payload.request_source || 'ANGULAR_TEST_UI',
+   784	        sourceSystem: payload.sourceSystem || payload.source_system || 'BLOCKCHAIN_API',
+   785	        createdBy: payload.createdBy || payload.created_by || 'angular-test-ui',
+   786	        updatedBy: payload.createdBy || payload.created_by || 'angular-test-ui',
+   787	        originalPayload: {
+   788	          ...payload,
+   789	          organizationId: resolvedOrganizationId,
+   790	          organizationCode
+   791	        }
+   792	      }
+   793	    );
+   794	
+   795	    await client.query('COMMIT');
+   796	  } catch (error) {
+   797	    await client.query('ROLLBACK');
+   798	
+   799	    throw new Error(
+   800	      `Organization wallet created on Fabric but enterprise PostgreSQL save failed. Manual reconciliation required. FabricTxId=${fabricTransactionId || 'N/A'} WalletAddress=${walletAddress}. Error: ${error.message}`
+   801	    );
+   802	  } finally {
+   803	    client.release();
+   804	  }
+   805	
+   806	  const row = enterpriseSaveResult.wallet;
+   807	
+   808	  const profile = await getProfessionalWalletProfileByAddress(row.wallet_address);
+   809	
+   810	  return {
+   811	    wallet: profile || row,
+   812	    blockchain: {
+   813	      saved: true,
+   814	      walletAddress,
+   815	      fabricTransactionId,
+   816	      channelName: fabricResult.channelName || DEFAULT_CHANNEL_NAME,
+   817	      chaincodeName: fabricResult.chaincodeName || DEFAULT_CHAINCODE_NAME,
+   818	      transaction: blockchainTransaction || null
+   819	    },
+   820	    postgres: {
+   821	      saved: true,
+   822	      walletId: row.wallet_id || null
+   823	    },
+   824	    organization: {
+   825	      organizationId: resolvedOrganizationId,
+   826	      organizationCode
+   827	    },
+   828	    oneTimePassword: String(plainPassword).startsWith('$2') ? null : plainPassword
+   829	  };
+   830	};
+   831	
+   832	exports.loginWallet = async ({ walletAddress, customerId, password }) => {
+   833	  const loginIdentifier = walletAddress || customerId;
+   834	
+   835	  if (!loginIdentifier) {
+   836	    throw new Error('walletAddress is required');
+   837	  }
+   838	
+   839	  if (!password) {
+   840	    throw new Error('password is required');
+   841	  }
+   842	
+   843	  const result = await db.query(
+   844	    `
+   845	    SELECT
+   846	      wallet_id,
+   847	      wallet_address,
+   848	      customer_id,
+   849	      organization_id,
+   850	      organization_code,
+   851	      wallet_type,
+   852	      full_name,
+   853	      password_hash,
+   854	      status
+   855	    FROM blockchain.wallets
+   856	    WHERE wallet_address = $1
+   857	    LIMIT 1
+   858	    `,
+   859	    [loginIdentifier]
+   860	  );
+   861	
+   862	  if (result.rows.length === 0) {
+   863	    return null;
+   864	  }
+   865	
+   866	  const wallet = result.rows[0];
+   867	
+   868	  if (!wallet.password_hash) {
+   869	    throw new Error('Wallet has no password hash configured');
+   870	  }
+   871	
+   872	  const isPasswordValid = await bcrypt.compare(password, wallet.password_hash);
+   873	
+   874	  if (!isPasswordValid) {
+   875	    return null;
+   876	  }
+   877	
+   878	  const profile =
+   879	    (await getProfessionalWalletProfileByAddress(wallet.wallet_address)) ||
+   880	    (await getProfessionalWalletProfileByCustomerId(wallet.customer_id)) ||
+   881	    {};
+   882	
+   883	  const walletType = normalizeWalletType(profile.walletType || wallet.wallet_type);
+   884	
+   885	  const token = jwt.sign(
+   886	    {
+   887	      walletId: wallet.wallet_id,
+   888	      walletAddress: wallet.wallet_address,
+   889	      customerId: wallet.customer_id,
+   890	      organizationId: wallet.organization_id,
+   891	      organizationCode: wallet.organization_code || null,
+   892	      walletType
+   893	    },
+   894	    JWT_SECRET,
+   895	    {
+   896	      expiresIn: DEFAULT_JWT_EXPIRES_IN
+   897	    }
+   898	  );
+   899	
+   900	  return {
+   901	    token,
+   902	    wallet: {
+   903	      walletId: wallet.wallet_id,
+   904	      walletAddress: profile.walletAddress || wallet.wallet_address,
+   905	      customerId: profile.customerId || wallet.customer_id,
+   906	      organizationId: profile.organizationId || wallet.organization_id,
+   907	      organizationName: profile.organizationName || null,
+   908	      organizationCode: profile.organizationCode || wallet.organization_code,
+   909	      walletType,
+   910	      fullName: profile.fullName || wallet.full_name,
+   911	      customerName: profile.fullName || wallet.full_name,
+   912	      nationalIdHash: profile.nationalIdHash || null,
+   913	      countryName: profile.countryName || null,
+   914	      emailHash: profile.emailHash || null,
+   915	      mobileHash: profile.mobileHash || null,
+   916	      currentBalance: profile.currentBalance ?? 0,
+   917	      currencyCode: profile.currencyCode || 'TOKEN',
+   918	      createdAt: profile.createdAt || null,
+   919	      status: profile.status || wallet.status
+   920	    }
+   921	  };
+   922	};
+   923	
+   924	exports.login = exports.loginWallet;
+   925	exports.getByCustomerId = exports.getWalletByCustomerId;
+   926	exports.getByWalletAddress = exports.getWalletByAddress;
+   927	exports.getWalletProfileByCustomerId = getProfessionalWalletProfileByCustomerId;
+   928	exports.getWalletProfileByAddress = getProfessionalWalletProfileByAddress;

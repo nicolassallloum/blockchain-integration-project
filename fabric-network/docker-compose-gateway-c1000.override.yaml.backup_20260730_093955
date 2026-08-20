@@ -1,0 +1,8 @@
+services:
+  "peer0.org1.blockchain.local":
+    environment:
+      CORE_PEER_LIMITS_CONCURRENCY_GATEWAYSERVICE: "1200"
+
+  "peer0.org2.blockchain.local":
+    environment:
+      CORE_PEER_LIMITS_CONCURRENCY_GATEWAYSERVICE: "1200"

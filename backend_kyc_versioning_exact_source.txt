@@ -1,0 +1,896 @@
+============================================================
+IMPORTS AND HELPERS: LINES 1-140
+============================================================
+const express = require('express');
+const crypto = require('crypto');
+const pool = require('../config/database');
+const fabricService = require('../services/fabric.service');
+
+/* BLOCKCHAIN_CUSTOMER_CREATED_ONLY_LOGGER_V2 */
+const customerLogFs = require('fs');
+const customerLogPath = require('path');
+
+const BLOCKCHAIN_CUSTOMER_LOG_FILE = customerLogPath.resolve(
+  __dirname,
+  '../../logs/blockchain-customers.log'
+);
+
+const loggedBlockchainCustomerTransactions = new Set();
+
+function sanitizeCustomerLogValue(value) {
+  return String(value ?? '')
+    .replace(/[\r\n\t]+/g, ' ')
+    .trim();
+}
+
+function appendBlockchainCustomerLog(event) {
+  try {
+    customerLogFs.mkdirSync(
+      customerLogPath.dirname(BLOCKCHAIN_CUSTOMER_LOG_FILE),
+      { recursive: true }
+    );
+
+    customerLogFs.appendFileSync(
+      BLOCKCHAIN_CUSTOMER_LOG_FILE,
+      `${JSON.stringify(event)}\n`,
+      'utf8'
+    );
+
+    return true;
+  } catch (error) {
+    console.error(
+      '[BLOCKCHAIN CUSTOMER LOG] Failed to write log file:',
+      error.message
+    );
+
+    return false;
+  }
+}
+
+function logCreatedBlockchainCustomer(customer) {
+  const transactionId = sanitizeCustomerLogValue(
+    customer.blockchainTransactionId
+  );
+
+  if (!transactionId) {
+    console.error(
+      '[BLOCKCHAIN CUSTOMER LOG] Creation event skipped: ' +
+      'Fabric transaction ID is missing.'
+    );
+
+    return false;
+  }
+
+  if (
+    loggedBlockchainCustomerTransactions.has(transactionId)
+  ) {
+    return false;
+  }
+
+  loggedBlockchainCustomerTransactions.add(transactionId);
+
+  const event = {
+    timestamp: new Date().toISOString(),
+    eventType: 'BLOCKCHAIN_CUSTOMER_CREATED',
+    source: 'FABRIC_BLOCKCHAIN',
+    customerId: sanitizeCustomerLogValue(
+      customer.customerId
+    ),
+    residentId: sanitizeCustomerLogValue(
+      customer.residentId
+    ),
+    ledgerKey: sanitizeCustomerLogValue(
+      customer.ledgerKey
+    ),
+    fullName: sanitizeCustomerLogValue(
+      customer.fullName
+    ),
+    kycStatus: sanitizeCustomerLogValue(
+      customer.kycStatus || 'Submitted'
+    ),
+    riskCategory: sanitizeCustomerLogValue(
+      customer.riskCategory || 'LOW'
+    ),
+    blockchainTransactionId: transactionId,
+    channelName: sanitizeCustomerLogValue(
+      customer.channelName
+    ),
+    chaincodeName: sanitizeCustomerLogValue(
+      customer.chaincodeName
+    )
+  };
+
+  console.log('');
+  console.log(
+    '============================================================'
+  );
+  console.log('[BLOCKCHAIN CUSTOMER CREATED]');
+  console.log(`Customer ID:     ${event.customerId}`);
+  console.log(`Resident ID:     ${event.residentId}`);
+  console.log(`Ledger Key:      ${event.ledgerKey}`);
+  console.log(`Customer Name:   ${event.fullName}`);
+  console.log(`KYC Status:      ${event.kycStatus}`);
+  console.log(`Risk Category:   ${event.riskCategory}`);
+  console.log(`Fabric Tx ID:    ${event.blockchainTransactionId}`);
+  console.log(`Channel:         ${event.channelName}`);
+  console.log(`Chaincode:       ${event.chaincodeName}`);
+  console.log(`Created At:      ${event.timestamp}`);
+  console.log(
+    '============================================================'
+  );
+  console.log('');
+
+  appendBlockchainCustomerLog(event);
+
+  return true;
+}
+/* END BLOCKCHAIN_CUSTOMER_CREATED_ONLY_LOGGER_V2 */
+
+const router = express.Router();
+
+
+function toSafeJson(value) {
+  return JSON.parse(
+    JSON.stringify(value, (_, item) =>
+      typeof item === 'bigint' ? item.toString() : item
+    )
+  );
+}
+
+function sha256(value) {
+  return crypto.createHash('sha256').update(value || '').digest('hex');
+}
+
+
+============================================================
+CUSTOMER COUNT AND GET: LINES 370-605
+============================================================
+          fabricResidentId,
+          ledgerKey,
+          blockchainStatus: 'FAILED',
+          blockchainTransactionId: null,
+          blockchainHash: payloadHash,
+          blockchainError: fabricError.message,
+          fabricResult: null
+        }
+      });
+    }
+  } catch (error) {
+    console.error(
+      'Create Valoores blockchain-only customer error:',
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to save customer on Fabric Blockchain',
+      error: error.message
+    });
+  }
+});
+
+
+router.get('/customers/count', async (req, res) => {
+  try {
+    const fabricResult = await fabricService.evaluateTransaction(
+      'CountValooresCustomers',
+      [],
+      {
+        requestId: `VALOORES-CUSTOMER-COUNT-${Date.now()}`,
+        correlationId: `VALOORES-CUSTOMER-COUNT-${Date.now()}`,
+        sourceSystem: 'VALOORES',
+        requestSource: 'API'
+      }
+    );
+
+    const resultData =
+      fabricResult?.data ??
+      fabricResult?.result ??
+      fabricResult ??
+      {};
+
+    return res.status(200).json({
+      success: true,
+      message:
+        'VALOORES customer count returned from Fabric Blockchain',
+      source: 'FABRIC_BLOCKCHAIN',
+      data: {
+        totalCustomers: Number(
+          resultData.totalCustomers || 0
+        )
+      },
+      blockchain: {
+        channelName: fabricResult?.channelName || null,
+        chaincodeName: fabricResult?.chaincodeName || null,
+        functionName: 'CountValooresCustomers'
+      }
+    });
+  } catch (error) {
+    console.error(
+      'Count VALOORES customers from Fabric error:',
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message:
+        'Failed to count VALOORES customers from Fabric Blockchain',
+      source: 'FABRIC_BLOCKCHAIN',
+      error: error.message
+    });
+  }
+});
+
+router.get('/customers/:customerId', async (req, res) => {
+  const customerId = String(
+    req.params.customerId || ''
+  )
+    .trim()
+    .replace(/^VALOORES-/, '');
+
+  if (!customerId) {
+    return res.status(400).json({
+      success: false,
+      message: 'customerId is required'
+    });
+  }
+
+  const residentId = `VALOORES-${customerId}`;
+  const ledgerKey = `KYC_${residentId}`;
+
+  const baseContext = {
+    requestId:
+      `VALOORES-CUSTOMER-GET-${customerId}-${Date.now()}`,
+    correlationId:
+      `VALOORES-CUSTOMER-GET-${customerId}`,
+    sourceSystem: 'VALOORES',
+    requestSource: 'API'
+  };
+
+  const parseMaybeJson = (value) => {
+    if (typeof value !== 'string') {
+      return value;
+    }
+
+    try {
+      return JSON.parse(value);
+    } catch (_) {
+      return {
+        value
+      };
+    }
+  };
+
+  let functionName = 'GetResident';
+  let fallbackUsed = false;
+
+  try {
+    let fabricResult;
+    let customer;
+
+    try {
+      fabricResult = await fabricService.evaluateTransaction(
+        'GetResident',
+        [residentId],
+        baseContext
+      );
+
+      const rawCustomer =
+        fabricResult?.data ??
+        fabricResult?.result ??
+        fabricResult;
+
+      customer = parseMaybeJson(rawCustomer);
+    } catch (getResidentError) {
+      const residentNotFound =
+        /not found|does not exist/i.test(
+          String(
+            getResidentError.message ||
+            getResidentError
+          )
+        );
+
+      if (!residentNotFound) {
+        throw getResidentError;
+      }
+
+      functionName = 'GetHistoryForKey';
+      fallbackUsed = true;
+
+      fabricResult = await fabricService.evaluateTransaction(
+        'GetHistoryForKey',
+        [ledgerKey],
+        {
+          ...baseContext,
+          requestId:
+            `VALOORES-CUSTOMER-HISTORY-${customerId}-${Date.now()}`
+        }
+      );
+
+      const historyResult =
+        fabricResult?.data ??
+        fabricResult?.result ??
+        fabricResult;
+
+      const history = Array.isArray(historyResult)
+        ? historyResult
+        : Array.isArray(historyResult?.history)
+          ? historyResult.history
+          : [];
+
+      const latestRecord = [...history]
+        .reverse()
+        .find(
+          (entry) =>
+            entry &&
+            !entry.isDelete &&
+            entry.value
+        );
+
+      if (!latestRecord) {
+        throw new Error(
+          `Resident not found on blockchain: ${residentId}`
+        );
+      }
+
+      customer = parseMaybeJson(
+        latestRecord.value
+      );
+    }
+
+    return res.status(200).json({
+      success: true,
+      message:
+        'VALOORES customer returned from Fabric Blockchain',
+      source: 'FABRIC_BLOCKCHAIN',
+      data: {
+        ...(customer || {}),
+        ledgerKey,
+        customerId
+      },
+      blockchain: {
+        channelName:
+          fabricResult?.channelName || null,
+        chaincodeName:
+          fabricResult?.chaincodeName || null,
+        functionName,
+        fallbackUsed
+      }
+    });
+  } catch (error) {
+    const notFound =
+      /not found|does not exist/i.test(
+        String(error.message || error)
+      );
+
+    console.error(
+      'Get VALOORES customer from Fabric error:',
+      error
+    );
+
+    return res.status(notFound ? 404 : 500).json({
+      success: false,
+      message: notFound
+        ? 'VALOORES customer was not found on Fabric Blockchain'
+        : 'Failed to retrieve VALOORES customer from Fabric Blockchain',
+      source: 'FABRIC_BLOCKCHAIN',
+      ledgerKey,
+      error: error.message
+    });
+  }
+});
+
+router.get('/customers', async (req, res) => {
+
+============================================================
+CUSTOMER LIST AND DASHBOARD: LINES 605-735
+============================================================
+router.get('/customers', async (req, res) => {
+  try {
+    const requestedLimit = Number.parseInt(
+      String(req.query.limit || '100'),
+      10
+    );
+
+    const limit = Number.isFinite(requestedLimit)
+      ? Math.min(Math.max(requestedLimit, 1), 1000)
+      : 100;
+
+    const bookmark = String(req.query.bookmark || '');
+
+    const listResult = await fabricService.evaluateTransaction(
+      'QueryValooresCustomers',
+      [String(limit), bookmark],
+      {
+        requestId: `VALOORES-CUSTOMER-LIST-${Date.now()}`,
+        correlationId: `VALOORES-CUSTOMER-LIST-${Date.now()}`,
+        sourceSystem: 'VALOORES',
+        requestSource: 'API'
+      }
+    );
+
+    const countResult = await fabricService.evaluateTransaction(
+      'CountValooresCustomers',
+      [],
+      {
+        requestId: `VALOORES-CUSTOMER-COUNT-${Date.now()}`,
+        correlationId: `VALOORES-CUSTOMER-COUNT-${Date.now()}`,
+        sourceSystem: 'VALOORES',
+        requestSource: 'API'
+      }
+    );
+
+    const listData =
+      listResult?.data ??
+      listResult?.result ??
+      listResult ??
+      {};
+
+    const countData =
+      countResult?.data ??
+      countResult?.result ??
+      countResult ??
+      {};
+
+    const customers = Array.isArray(listData.customers)
+      ? listData.customers
+      : [];
+
+    const nextBookmark = String(
+      listData?.pagination?.bookmark || ''
+    );
+
+    return res.status(200).json({
+      success: true,
+      message:
+        'VALOORES customers returned from Fabric Blockchain',
+      source: 'FABRIC_BLOCKCHAIN',
+      data: customers,
+      pagination: {
+        totalCustomers: Number(
+          countData.totalCustomers || 0
+        ),
+        limit,
+        returnedCustomers: customers.length,
+        bookmark: nextBookmark,
+        hasMore:
+          customers.length === limit &&
+          Boolean(nextBookmark)
+      },
+      blockchain: {
+        channelName: listResult?.channelName || null,
+        chaincodeName: listResult?.chaincodeName || null,
+        functionName: 'QueryValooresCustomers'
+      }
+    });
+  } catch (error) {
+    console.error(
+      'List VALOORES customers from Fabric error:',
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message:
+        'Failed to retrieve VALOORES customers from Fabric Blockchain',
+      source: 'FABRIC_BLOCKCHAIN',
+      error: error.message
+    });
+  }
+});
+
+router.get('/dashboard', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `
+      SELECT
+        COUNT(*)::int AS total_customers,
+        COUNT(*) FILTER (WHERE blockchain_status = 'SAVED')::int AS saved_customers,
+        COUNT(*) FILTER (WHERE blockchain_status = 'PENDING')::int AS pending_customers,
+        COUNT(*) FILTER (WHERE blockchain_status = 'FAILED')::int AS failed_customers
+      FROM blockchain.valoores_customer_blockchain_proofs
+      `
+    );
+
+    return res.json({
+      success: true,
+      message: 'Valoores blockchain dashboard returned successfully',
+      data: result.rows[0]
+    });
+
+  } catch (error) {
+    console.error('Get Valoores blockchain dashboard error:', error);
+
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve Valoores blockchain dashboard',
+      error: error.message
+    });
+  }
+});
+
+
+/**
+ * GET /api/v1/valoores-blockchain/kyc-daily-created?month=2026-06
+ *
+ * Purpose:
+ * Display number of KYC records created on a daily basis by selected month.
+ */
+============================================================
+FABRIC SERVICE INITIALIZATION
+============================================================
+'use strict';
+
+const path = require('path');
+const fs = require('fs');
+const crypto = require('crypto');
+
+const grpc = require('@grpc/grpc-js');
+const { connect, signers } = require('@hyperledger/fabric-gateway');
+
+const auditService = require('./audit.service');
+
+const {
+  AUDIT_EVENT_TYPES,
+  AUDIT_EVENT_STATUS,
+  AUDIT_EVENT_CATEGORY
+} = require('../constants/audit.constants');
+
+class FabricService {
+  constructor() {
+    this.gateway = null;
+    this.client = null;
+    this.network = null;
+    this.contract = null;
+  }
+
+  getConfig() {
+    return {
+      channelName:
+        process.env.FABRIC_CHANNEL_NAME ||
+        process.env.CHANNEL_NAME ||
+        'kycchannelnix1',
+
+      chaincodeName:
+        process.env.FABRIC_CHAINCODE_NAME ||
+        process.env.CHAINCODE_NAME ||
+        'kyc-wallet-chaincode-js',
+
+      mspId:
+        process.env.FABRIC_MSP_ID ||
+        process.env.MSP_ID ||
+        'Org1MSP',
+
+      peerEndpoint:
+        process.env.FABRIC_PEER_ENDPOINT ||
+        process.env.PEER_ENDPOINT ||
+        process.env.GRPC_PEER_ENDPOINT ||
+        'localhost:7051',
+
+      peerHostAlias:
+        process.env.FABRIC_PEER_HOST_ALIAS ||
+        process.env.PEER_HOST_ALIAS ||
+        process.env.GRPC_PEER_HOST_ALIAS ||
+        'peer0.org1.blockchain.local',
+
+      tlsCertPath:
+        process.env.FABRIC_TLS_CERT_PATH ||
+        process.env.TLS_CERT_PATH ||
+        process.env.PEER_TLS_CERT_PATH ||
+        process.env.CORE_PEER_TLS_ROOTCERT_FILE ||
+        null,
+
+      certPath:
+        process.env.FABRIC_CERT_PATH ||
+        process.env.CERT_PATH ||
+        process.env.IDENTITY_CERT_PATH ||
+        null,
+
+      keyDirectoryPath:
+        process.env.FABRIC_KEY_DIRECTORY_PATH ||
+        process.env.KEY_DIRECTORY_PATH ||
+        process.env.PRIVATE_KEY_DIRECTORY_PATH ||
+        null,
+
+      evaluateTimeoutMs: Number(
+        process.env.FABRIC_EVALUATE_TIMEOUT_MS ||
+        process.env.FABRIC_DEFAULT_TIMEOUT_MS ||
+        10000
+      ),
+
+      endorseTimeoutMs: Number(
+        process.env.FABRIC_ENDORSE_TIMEOUT_MS ||
+        process.env.FABRIC_DEFAULT_TIMEOUT_MS ||
+        30000
+      ),
+
+      submitTimeoutMs: Number(
+        process.env.FABRIC_SUBMIT_TIMEOUT_MS ||
+        process.env.FABRIC_DEFAULT_TIMEOUT_MS ||
+        30000
+      ),
+
+      commitStatusTimeoutMs: Number(
+        process.env.FABRIC_COMMIT_STATUS_TIMEOUT_MS ||
+        process.env.FABRIC_DEFAULT_TIMEOUT_MS ||
+        60000
+      ),
+
+      endorsingOrganizations: String(
+        process.env.FABRIC_ENDORSING_ORGS ||
+        process.env.FABRIC_ENDORSING_ORGANIZATIONS ||
+        process.env.FABRIC_MSP_ID ||
+        'Org1MSP'
+      )
+        .split(',')
+        .map((item) => item.trim())
+        .filter(Boolean)
+    };
+  }
+
+  assertFileExists(filePath, label) {
+    if (!filePath) {
+      throw new Error(`${label} is not configured`);
+    }
+
+    if (!fs.existsSync(filePath)) {
+      throw new Error(`${label} does not exist: ${filePath}`);
+    }
+  }
+
+  assertDirectoryExists(directoryPath, label) {
+
+============================================================
+SUBMIT TRANSACTION
+============================================================
+    }
+
+    if (Array.isArray(args)) {
+      return args.map((arg) => String(arg));
+    }
+
+    return [String(args)];
+  }
+
+  getEndorsingOrganizations(functionName, config) {
+    /*
+      Chaincode policy is OR('Org1MSP.peer','Org2MSP.peer').
+      Backend connects through Org1 gateway, so Org1 endorsement is enough.
+      Do not request Org2 from this API server.
+    */
+    return ['Org1MSP'];
+  }
+
+  async submitTransaction(functionName, args = [], context = {}) {
+    const startedAt = Date.now();
+    const config = this.getConfig();
+    const auditContext = this.normalizeContext(context);
+
+    try {
+      await auditService.log({
+        ...auditContext,
+        eventType: AUDIT_EVENT_TYPES.BLOCKCHAIN_SUBMIT_REQUEST,
+        eventCategory: AUDIT_EVENT_CATEGORY.BLOCKCHAIN,
+        eventStatus: AUDIT_EVENT_STATUS.PENDING,
+        blockchainFunction: functionName,
+        chaincodeName: config.chaincodeName,
+        channelName: config.channelName,
+        requestPayload: {
+          functionName,
+          args
+        },
+        serviceName: 'fabric.service'
+      });
+
+      const connection = await this.connect();
+
+      const normalizedArgs = this.normalizeArgs(args);
+      const endorsingOrganizations = this.getEndorsingOrganizations(
+        functionName,
+        config
+      );
+
+      let resultBuffer;
+      let transactionId = null;
+      let commitStatus = null;
+
+      console.log('[FABRIC SUBMIT CONFIG]', {
+        functionName,
+        channelName: config.channelName,
+        chaincodeName: config.chaincodeName,
+        peerEndpoint: config.peerEndpoint,
+        peerHostAlias: config.peerHostAlias,
+        endorsingOrganizations,
+        argsCount: normalizedArgs.length
+      });
+
+      if (
+        connection.contract &&
+        typeof connection.contract.newProposal === 'function' &&
+        endorsingOrganizations &&
+        endorsingOrganizations.length > 0
+      ) {
+        const proposal = connection.contract.newProposal(functionName, {
+          arguments: normalizedArgs,
+          endorsingOrganizations
+        });
+
+        const endorsedProposal = await proposal.endorse();
+
+        resultBuffer = endorsedProposal.getResult();
+
+        const submittedTransaction = await endorsedProposal.submit();
+
+        commitStatus = await submittedTransaction.getStatus();
+        transactionId = commitStatus.transactionId || null;
+
+        console.log('[FABRIC COMMIT STATUS]', {
+          functionName,
+          transactionId,
+          successful: commitStatus.successful,
+          code: commitStatus.code
+        });
+
+        if (!commitStatus.successful) {
+          throw new Error(
+            `Transaction commit failed with code ${commitStatus.code} for transaction ${commitStatus.transactionId}`
+          );
+        }
+      } else {
+        console.log('[FABRIC FALLBACK SUBMIT]', {
+          functionName,
+          reason: 'newProposal not available or no endorsing organizations'
+        });
+
+        resultBuffer = await connection.contract.submitTransaction(
+          functionName,
+          ...normalizedArgs
+        );
+      }
+
+      const parsedResult = this.parseBufferResult(resultBuffer);
+
+      const result = {
+        success: true,
+        type: 'submit',
+        channelName: config.channelName,
+        chaincodeName: config.chaincodeName,
+        functionName,
+        args,
+        transactionId,
+        txId: transactionId,
+        commitStatus,
+        data: parsedResult,
+        durationMs: Date.now() - startedAt
+      };
+
+      await auditService.log({
+        ...auditContext,
+        eventType: AUDIT_EVENT_TYPES.BLOCKCHAIN_SUBMIT_SUCCESS,
+        eventCategory: AUDIT_EVENT_CATEGORY.BLOCKCHAIN,
+        eventStatus: AUDIT_EVENT_STATUS.SUCCESS,
+        blockchainFunction: functionName,
+        chaincodeName: config.chaincodeName,
+        channelName: config.channelName,
+        responsePayload: result,
+        durationMs: Date.now() - startedAt,
+        serviceName: 'fabric.service'
+      });
+
+      return result;
+    } catch (error) {
+      await auditService.log({
+        ...auditContext,
+        eventType: AUDIT_EVENT_TYPES.BLOCKCHAIN_SUBMIT_FAILED,
+        eventCategory: AUDIT_EVENT_CATEGORY.BLOCKCHAIN,
+        eventStatus: AUDIT_EVENT_STATUS.FAILED,
+        blockchainFunction: functionName,
+        chaincodeName: config.chaincodeName,
+        channelName: config.channelName,
+        errorCode: error.code || 'FABRIC_SUBMIT_ERROR',
+        errorMessage: error.message,
+        errorStack: error.stack,
+        requestPayload: {
+          functionName,
+          args
+        },
+        durationMs: Date.now() - startedAt,
+        serviceName: 'fabric.service'
+      });
+
+      throw error;
+    }
+  }
+
+  async evaluateTransaction(functionName, args = [], context = {}) {
+    const startedAt = Date.now();
+
+============================================================
+EVALUATE TRANSACTION
+============================================================
+        },
+        durationMs: Date.now() - startedAt,
+        serviceName: 'fabric.service'
+      });
+
+      throw error;
+    }
+  }
+
+  async evaluateTransaction(functionName, args = [], context = {}) {
+    const startedAt = Date.now();
+    const config = this.getConfig();
+    const auditContext = this.normalizeContext(context);
+
+    try {
+      await auditService.log({
+        ...auditContext,
+        eventType: AUDIT_EVENT_TYPES.BLOCKCHAIN_EVALUATE_REQUEST,
+        eventCategory: AUDIT_EVENT_CATEGORY.BLOCKCHAIN,
+        eventStatus: AUDIT_EVENT_STATUS.PENDING,
+        blockchainFunction: functionName,
+        chaincodeName: config.chaincodeName,
+        channelName: config.channelName,
+        requestPayload: {
+          functionName,
+          args
+        },
+        serviceName: 'fabric.service'
+      });
+
+      const connection = await this.connect();
+
+      const resultBuffer = await connection.contract.evaluateTransaction(
+        functionName,
+        ...this.normalizeArgs(args)
+      );
+
+      const parsedResult = this.parseBufferResult(resultBuffer);
+
+      const result = {
+        success: true,
+        type: 'evaluate',
+        channelName: config.channelName,
+        chaincodeName: config.chaincodeName,
+        functionName,
+        args,
+        data: parsedResult,
+        durationMs: Date.now() - startedAt
+      };
+
+      await auditService.log({
+        ...auditContext,
+        eventType: AUDIT_EVENT_TYPES.BLOCKCHAIN_EVALUATE_SUCCESS,
+        eventCategory: AUDIT_EVENT_CATEGORY.BLOCKCHAIN,
+        eventStatus: AUDIT_EVENT_STATUS.SUCCESS,
+        blockchainFunction: functionName,
+        chaincodeName: config.chaincodeName,
+        channelName: config.channelName,
+        responsePayload: result,
+        durationMs: Date.now() - startedAt,
+        serviceName: 'fabric.service'
+      });
+
+      return result;
+    } catch (error) {
+      await auditService.log({
+        ...auditContext,
+        eventType: AUDIT_EVENT_TYPES.BLOCKCHAIN_EVALUATE_FAILED,
+        eventCategory: AUDIT_EVENT_CATEGORY.BLOCKCHAIN,
+        eventStatus: AUDIT_EVENT_STATUS.FAILED,
+        blockchainFunction: functionName,
+        chaincodeName: config.chaincodeName,
+        channelName: config.channelName,
+        errorCode: error.code || 'FABRIC_EVALUATE_ERROR',
+        errorMessage: error.message,
+        errorStack: error.stack,
+        requestPayload: {
+          functionName,
+          args
+        },
+        durationMs: Date.now() - startedAt,
+        serviceName: 'fabric.service'
+      });
+
+      throw error;
+    }

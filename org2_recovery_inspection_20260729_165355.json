@@ -1,0 +1,77 @@
+[
+  {
+    "name": "/peer0.org2.blockchain.local",
+    "image": "hyperledger/fabric-peer:latest",
+    "state": "running",
+    "mounts": [
+      {
+        "type": "volume",
+        "name": "f107b444ade37858fe15d7b57532b0a9a0de3a2926449acaa36e9d56deeeb929",
+        "source": "/var/lib/docker/volumes/f107b444ade37858fe15d7b57532b0a9a0de3a2926449acaa36e9d56deeeb929/_data",
+        "destination": "/etc/hyperledger/fabric",
+        "readWrite": true
+      },
+      {
+        "type": "bind",
+        "name": null,
+        "source": "/home/nix/u01/blockchain-integration/fabric-network/organizations/peerOrganizations/org2.blockchain.local/peers/peer0.org2.blockchain.local/msp",
+        "destination": "/etc/hyperledger/fabric/msp",
+        "readWrite": true
+      },
+      {
+        "type": "bind",
+        "name": null,
+        "source": "/home/nix/u01/blockchain-integration/fabric-network/organizations/peerOrganizations/org2.blockchain.local/peers/peer0.org2.blockchain.local/tls",
+        "destination": "/etc/hyperledger/fabric/tls",
+        "readWrite": true
+      },
+      {
+        "type": "bind",
+        "name": null,
+        "source": "/var/run/docker.sock",
+        "destination": "/host/var/run/docker.sock",
+        "readWrite": true
+      },
+      {
+        "type": "volume",
+        "name": "f33e85452e81fa593525b2833f7d9cadfc426685fe5158261a24a2a311901789",
+        "source": "/var/lib/docker/volumes/f33e85452e81fa593525b2833f7d9cadfc426685fe5158261a24a2a311901789/_data",
+        "destination": "/var/hyperledger",
+        "readWrite": true
+      },
+      {
+        "type": "volume",
+        "name": "fabric-network_peer0.org2.blockchain.local",
+        "source": "/var/lib/docker/volumes/fabric-network_peer0.org2.blockchain.local/_data",
+        "destination": "/var/hyperledger/production",
+        "readWrite": true
+      }
+    ],
+    "compose": {
+      "project": "fabric-network",
+      "service": "peer0.org2.blockchain.local",
+      "workingDirectory": "/home/nix/u01/blockchain-integration/fabric-network",
+      "configFiles": "/home/nix/u01/blockchain-integration/fabric-network/docker-compose-fabric.yaml"
+    }
+  },
+  {
+    "name": "/couchdb0.org2",
+    "image": "couchdb:3",
+    "state": "running",
+    "mounts": [
+      {
+        "type": "volume",
+        "name": "fabric-network_couchdb0.org2",
+        "source": "/var/lib/docker/volumes/fabric-network_couchdb0.org2/_data",
+        "destination": "/opt/couchdb/data",
+        "readWrite": true
+      }
+    ],
+    "compose": {
+      "project": "fabric-network",
+      "service": "couchdb0.org2",
+      "workingDirectory": "/home/nix/u01/blockchain-integration/fabric-network",
+      "configFiles": "/home/nix/u01/blockchain-integration/fabric-network/docker-compose-couchdb.yaml,/home/nix/u01/blockchain-integration/fabric-network/docker-compose-fabric.yaml,/home/nix/u01/blockchain-integration/fabric-network/docker-compose-cli.yaml"
+    }
+  }
+]

@@ -1,0 +1,2 @@
+/home/nix/u01/blockchain-integration/blockchain-api/src/routes/valoores-blockchain.routes.js:46:    const customerName = formData.CUSTOMER_NAME || null;
+/home/nix/u01/blockchain-integration/blockchain-api/src/routes/valoores-blockchain.routes.js:62:        message: 'formData.CUSTOMER_NAME is required'

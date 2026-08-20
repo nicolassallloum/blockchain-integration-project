@@ -1,0 +1,45 @@
+===== COLLECTED FILES =====
+01_environment_information.txt
+02_project_tree.txt
+03_valoores_real_payload.json
+04_customer_route_locations.txt
+05_customer_name_validation.txt
+06_formdata_usage.txt
+07_storage_mode_support.txt
+08_relevant_active_files.txt
+09_blockchain-api_src_routes_valoores-blockchain.routes.js.txt
+09_route_file_paths.txt
+10_blockchain-api_src_routes_valoores-blockchain.routes.js.txt
+10_validation_file_paths.txt
+11_blockchain-api_src_controllers_blockchain-kyc.controller.js.txt
+11_blockchain-api_src_controllers_wallet.controller.js.txt
+11_blockchain-api_src_routes_blockchain-kyc.routes.js.txt
+11_blockchain-api_src_routes_valoores-blockchain.routes.js.txt
+11_blockchain-api_src_routes_wallet.routes.js.txt
+11_blockchain-api_src_services_blockchain-kyc.service.js.txt
+11_blockchain-api_src_services_fabric.service.js.txt
+11_blockchain-api_src_services_wallet.service.js.txt
+12_manifest.txt
+
+===== FILE SIZES =====
+0	/home/nix/u01/blockchain-integration/kyc_refresh_outputs_20260723_114324/06_formdata_usage.txt
+4.0K	/home/nix/u01/blockchain-integration/kyc_refresh_outputs_20260723_114324/01_environment_information.txt
+4.0K	/home/nix/u01/blockchain-integration/kyc_refresh_outputs_20260723_114324/04_customer_route_locations.txt
+4.0K	/home/nix/u01/blockchain-integration/kyc_refresh_outputs_20260723_114324/05_customer_name_validation.txt
+4.0K	/home/nix/u01/blockchain-integration/kyc_refresh_outputs_20260723_114324/07_storage_mode_support.txt
+4.0K	/home/nix/u01/blockchain-integration/kyc_refresh_outputs_20260723_114324/09_route_file_paths.txt
+4.0K	/home/nix/u01/blockchain-integration/kyc_refresh_outputs_20260723_114324/10_validation_file_paths.txt
+4.0K	/home/nix/u01/blockchain-integration/kyc_refresh_outputs_20260723_114324/11_blockchain-api_src_controllers_blockchain-kyc.controller.js.txt
+4.0K	/home/nix/u01/blockchain-integration/kyc_refresh_outputs_20260723_114324/11_blockchain-api_src_routes_blockchain-kyc.routes.js.txt
+4.0K	/home/nix/u01/blockchain-integration/kyc_refresh_outputs_20260723_114324/11_blockchain-api_src_routes_wallet.routes.js.txt
+4.0K	/home/nix/u01/blockchain-integration/kyc_refresh_outputs_20260723_114324/12_manifest.txt
+12K	/home/nix/u01/blockchain-integration/kyc_refresh_outputs_20260723_114324/11_blockchain-api_src_controllers_wallet.controller.js.txt
+12K	/home/nix/u01/blockchain-integration/kyc_refresh_outputs_20260723_114324/11_blockchain-api_src_services_blockchain-kyc.service.js.txt
+16K	/home/nix/u01/blockchain-integration/kyc_refresh_outputs_20260723_114324/08_relevant_active_files.txt
+16K	/home/nix/u01/blockchain-integration/kyc_refresh_outputs_20260723_114324/09_blockchain-api_src_routes_valoores-blockchain.routes.js.txt
+16K	/home/nix/u01/blockchain-integration/kyc_refresh_outputs_20260723_114324/10_blockchain-api_src_routes_valoores-blockchain.routes.js.txt
+16K	/home/nix/u01/blockchain-integration/kyc_refresh_outputs_20260723_114324/11_blockchain-api_src_routes_valoores-blockchain.routes.js.txt
+20K	/home/nix/u01/blockchain-integration/kyc_refresh_outputs_20260723_114324/11_blockchain-api_src_services_fabric.service.js.txt
+36K	/home/nix/u01/blockchain-integration/kyc_refresh_outputs_20260723_114324/11_blockchain-api_src_services_wallet.service.js.txt
+3.6M	/home/nix/u01/blockchain-integration/kyc_refresh_outputs_20260723_114324/03_valoores_real_payload.json
+8.1M	/home/nix/u01/blockchain-integration/kyc_refresh_outputs_20260723_114324/02_project_tree.txt

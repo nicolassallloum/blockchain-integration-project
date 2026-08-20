@@ -1,0 +1,216 @@
+--- original/blockchain-api/src/services/wallet.service.js	2026-07-23 09:54:16.000000000 +0000
++++ modified/blockchain-api/src/services/wallet.service.js	2026-07-23 10:46:26.913622309 +0000
+@@ -100,6 +100,21 @@
+     .slice(-4)}`;
+ }
+ 
++function sanitizePayloadForPersistence(payload = {}) {
++  const {
++    password,
++    passwordHash,
++    generatedPassword,
++    oneTimePassword,
++    plainPassword,
++    pin,
++    pinHash,
++    ...safePayload
++  } = payload;
++
++  return safePayload;
++}
++
+ function mapWalletProfile(profile) {
+   if (!profile) {
+     return null;
+@@ -584,7 +599,7 @@
+         createdBy,
+         updatedBy: createdBy,
+         originalPayload: {
+-          ...payload,
++          ...sanitizePayloadForPersistence(payload),
+           organizationId: resolvedOrganizationId,
+           organizationCode: resolvedOrganizationCode
+         }
+@@ -632,6 +647,173 @@
+   };
+ };
+ 
++/**
++ * Creates a CUSTOMER wallet on Hyperledger Fabric only.
++ *
++ * This function intentionally does not insert into blockchain.wallets or the
++ * enterprise PostgreSQL tables. The existing PostgreSQL-backed wallet login
++ * therefore cannot authenticate wallets created by this function.
++ */
++exports.createWalletOnFabricOnly = async (payload) => {
++  const {
++    customerId,
++    organizationId,
++    organizationCode = null,
++    fullName,
++    nationalIdHash = null,
++    mobileHash = null,
++    emailHash = null,
++    passwordHash = null,
++    requestSource = 'ANGULAR_TEST_UI',
++    sourceSystem = 'BLOCKCHAIN_API',
++    createdBy = 'angular-test-ui'
++  } = payload;
++
++  const initialBalance = normalizeNumber(
++    payload.initialBalance ?? payload.currentBalance ?? payload.current_balance,
++    0
++  );
++
++  if (!customerId) {
++    throw new Error('customerId is required');
++  }
++
++  if (!organizationId) {
++    throw new Error('organizationId is required');
++  }
++
++  if (!fullName) {
++    throw new Error('fullName is required');
++  }
++
++  if (initialBalance < 0) {
++    throw new Error('initialBalance must be zero or greater');
++  }
++
++  const organization = await getOrganizationById(organizationId);
++
++  if (!organization) {
++    throw new Error(`Organization not found: ${organizationId}`);
++  }
++
++  const resolvedOrganizationId = organization.organization_id;
++  const resolvedOrganizationCode = resolveOrganizationCode(
++    organization,
++    organizationCode || organizationId
++  );
++
++  if (!resolvedOrganizationCode) {
++    throw new Error(
++      `organizationCode could not be resolved for organizationId: ${organizationId}`
++    );
++  }
++
++  /*
++   * Prevent creating a second ledger wallet for a customer that already has a
++   * PostgreSQL wallet. Fabric/chaincode remains the final duplicate authority.
++   */
++  await assertCustomerDoesNotExistInPostgres(customerId);
++
++  const plainPassword =
++    payload.password ||
++    payload.oneTimePassword ||
++    payload.plainPassword ||
++    null;
++
++  const generatedPassword =
++    !passwordHash && !plainPassword ? generateOneTimePassword('Wallet') : null;
++
++  const passwordForHash = passwordHash || plainPassword || generatedPassword;
++
++  const normalizedPasswordHash =
++    passwordForHash && String(passwordForHash).startsWith('$2')
++      ? String(passwordForHash)
++      : await bcrypt.hash(String(passwordForHash), 10);
++
++  let fabricResult;
++  let blockchainWallet;
++  let blockchainTransaction;
++
++  try {
++    fabricResult = await fabricService.submitTransaction(
++      'CreateWallet',
++      [
++        customerId,
++        resolvedOrganizationCode,
++        fullName,
++        nationalIdHash || '',
++        mobileHash || '',
++        emailHash || '',
++        normalizedPasswordHash,
++        String(initialBalance)
++      ],
++      {
++        requestId: payload.requestId || payload.request_id || null,
++        correlationId: payload.correlationId || payload.correlation_id || null,
++        sourceSystem,
++        requestSource,
++        createdBy
++      }
++    );
++
++    const extracted = extractBlockchainWallet(fabricResult);
++    blockchainWallet = extracted.wallet;
++    blockchainTransaction = extracted.transaction;
++  } catch (error) {
++    throw new Error(`Blockchain wallet creation failed: ${error.message}`);
++  }
++
++  const walletAddress = blockchainWallet.walletAddress;
++  const fabricTransactionId = getFabricTransactionId(
++    blockchainWallet,
++    blockchainTransaction
++  );
++
++  return {
++    wallet: {
++      walletAddress,
++      customerId,
++      organizationId: resolvedOrganizationId,
++      organizationCode: resolvedOrganizationCode,
++      organizationName: organization.organization_name,
++      walletType: 'CUSTOMER',
++      fullName,
++      nationalIdHash,
++      mobileHash,
++      emailHash,
++      currentBalance: blockchainWallet.balance ?? initialBalance,
++      currencyCode: payload.currencyCode || payload.currency || 'USD',
++      status: blockchainWallet.status || 'ACTIVE'
++    },
++    blockchain: {
++      saved: true,
++      walletAddress,
++      ledgerReference:
++        blockchainWallet.ledgerKey ||
++        blockchainWallet.ledger_key ||
++        walletAddress,
++      fabricTransactionId,
++      channelName: fabricResult.channelName || DEFAULT_CHANNEL_NAME,
++      chaincodeName: fabricResult.chaincodeName || DEFAULT_CHAINCODE_NAME,
++      transaction: blockchainTransaction || null
++    },
++    postgres: {
++      saved: false,
++      walletId: null
++    },
++    organization: {
++      organizationId: resolvedOrganizationId,
++      organizationCode: resolvedOrganizationCode
++    },
++    oneTimePassword:
++      generatedPassword ||
++      (!String(passwordForHash).startsWith('$2') ? passwordForHash : null),
++    walletLoginEnabled: false,
++    walletLoginMessage:
++      'Wallet login is not enabled because no blockchain.wallets row was created.'
++  };
++};
++
+ exports.createOrganizationWallet = async (payload) => {
+   const organizationId = payload.organizationId || payload.organization_id;
+ 
+@@ -785,7 +967,7 @@
+         createdBy: payload.createdBy || payload.created_by || 'angular-test-ui',
+         updatedBy: payload.createdBy || payload.created_by || 'angular-test-ui',
+         originalPayload: {
+-          ...payload,
++          ...sanitizePayloadForPersistence(payload),
+           organizationId: resolvedOrganizationId,
+           organizationCode
+         }

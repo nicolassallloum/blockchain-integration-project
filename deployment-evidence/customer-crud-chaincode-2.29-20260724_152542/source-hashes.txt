@@ -1,0 +1,2 @@
+aba7a8ae44b10a34e6120babf04075cdeeec7d48356e7181ab462b9741da3bf2  /home/nix/u01/blockchain-integration/chaincode/kyc-wallet-chaincode-js/lib/kycWalletContract.js
+dcb33ff41d5f8d03c6024f5fce05d166af73e60f04a8aa499fc4bc58714ac3ec  /home/nix/u01/blockchain-integration/chaincode/kyc-wallet-chaincode-js/package.json

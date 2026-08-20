@@ -1,0 +1,561 @@
+===== FILE: /home/nix/u01/blockchain-integration/blockchain-api/src/services/fabric.service.js =====
+     1	'use strict';
+     2	
+     3	const path = require('path');
+     4	const fs = require('fs');
+     5	const crypto = require('crypto');
+     6	
+     7	const grpc = require('@grpc/grpc-js');
+     8	const { connect, signers } = require('@hyperledger/fabric-gateway');
+     9	
+    10	const auditService = require('./audit.service');
+    11	
+    12	const {
+    13	  AUDIT_EVENT_TYPES,
+    14	  AUDIT_EVENT_STATUS,
+    15	  AUDIT_EVENT_CATEGORY
+    16	} = require('../constants/audit.constants');
+    17	
+    18	class FabricService {
+    19	  constructor() {
+    20	    this.gateway = null;
+    21	    this.client = null;
+    22	    this.network = null;
+    23	    this.contract = null;
+    24	  }
+    25	
+    26	  getConfig() {
+    27	    return {
+    28	      channelName:
+    29	        process.env.FABRIC_CHANNEL_NAME ||
+    30	        process.env.CHANNEL_NAME ||
+    31	        'kycchannelnix1',
+    32	
+    33	      chaincodeName:
+    34	        process.env.FABRIC_CHAINCODE_NAME ||
+    35	        process.env.CHAINCODE_NAME ||
+    36	        'kyc-wallet-chaincode-js',
+    37	
+    38	      mspId:
+    39	        process.env.FABRIC_MSP_ID ||
+    40	        process.env.MSP_ID ||
+    41	        'Org1MSP',
+    42	
+    43	      peerEndpoint:
+    44	        process.env.FABRIC_PEER_ENDPOINT ||
+    45	        process.env.PEER_ENDPOINT ||
+    46	        process.env.GRPC_PEER_ENDPOINT ||
+    47	        'localhost:7051',
+    48	
+    49	      peerHostAlias:
+    50	        process.env.FABRIC_PEER_HOST_ALIAS ||
+    51	        process.env.PEER_HOST_ALIAS ||
+    52	        process.env.GRPC_PEER_HOST_ALIAS ||
+    53	        'peer0.org1.blockchain.local',
+    54	
+    55	      tlsCertPath:
+    56	        process.env.FABRIC_TLS_CERT_PATH ||
+    57	        process.env.TLS_CERT_PATH ||
+    58	        process.env.PEER_TLS_CERT_PATH ||
+    59	        process.env.CORE_PEER_TLS_ROOTCERT_FILE ||
+    60	        null,
+    61	
+    62	      certPath:
+    63	        process.env.FABRIC_CERT_PATH ||
+    64	        process.env.CERT_PATH ||
+    65	        process.env.IDENTITY_CERT_PATH ||
+    66	        null,
+    67	
+    68	      keyDirectoryPath:
+    69	        process.env.FABRIC_KEY_DIRECTORY_PATH ||
+    70	        process.env.KEY_DIRECTORY_PATH ||
+    71	        process.env.PRIVATE_KEY_DIRECTORY_PATH ||
+    72	        null,
+    73	
+    74	      evaluateTimeoutMs: Number(
+    75	        process.env.FABRIC_EVALUATE_TIMEOUT_MS ||
+    76	        process.env.FABRIC_DEFAULT_TIMEOUT_MS ||
+    77	        10000
+    78	      ),
+    79	
+    80	      endorseTimeoutMs: Number(
+    81	        process.env.FABRIC_ENDORSE_TIMEOUT_MS ||
+    82	        process.env.FABRIC_DEFAULT_TIMEOUT_MS ||
+    83	        30000
+    84	      ),
+    85	
+    86	      submitTimeoutMs: Number(
+    87	        process.env.FABRIC_SUBMIT_TIMEOUT_MS ||
+    88	        process.env.FABRIC_DEFAULT_TIMEOUT_MS ||
+    89	        30000
+    90	      ),
+    91	
+    92	      commitStatusTimeoutMs: Number(
+    93	        process.env.FABRIC_COMMIT_STATUS_TIMEOUT_MS ||
+    94	        process.env.FABRIC_DEFAULT_TIMEOUT_MS ||
+    95	        60000
+    96	      ),
+    97	
+    98	      endorsingOrganizations: String(
+    99	        process.env.FABRIC_ENDORSING_ORGS ||
+   100	        process.env.FABRIC_ENDORSING_ORGANIZATIONS ||
+   101	        process.env.FABRIC_MSP_ID ||
+   102	        'Org1MSP'
+   103	      )
+   104	        .split(',')
+   105	        .map((item) => item.trim())
+   106	        .filter(Boolean)
+   107	    };
+   108	  }
+   109	
+   110	  assertFileExists(filePath, label) {
+   111	    if (!filePath) {
+   112	      throw new Error(`${label} is not configured`);
+   113	    }
+   114	
+   115	    if (!fs.existsSync(filePath)) {
+   116	      throw new Error(`${label} does not exist: ${filePath}`);
+   117	    }
+   118	  }
+   119	
+   120	  assertDirectoryExists(directoryPath, label) {
+   121	    if (!directoryPath) {
+   122	      throw new Error(`${label} is not configured`);
+   123	    }
+   124	
+   125	    if (!fs.existsSync(directoryPath)) {
+   126	      throw new Error(`${label} does not exist: ${directoryPath}`);
+   127	    }
+   128	
+   129	    const stat = fs.statSync(directoryPath);
+   130	
+   131	    if (!stat.isDirectory()) {
+   132	      throw new Error(`${label} is not a directory: ${directoryPath}`);
+   133	    }
+   134	  }
+   135	
+   136	  async newGrpcConnection() {
+   137	    const config = this.getConfig();
+   138	
+   139	    this.assertFileExists(config.tlsCertPath, 'FABRIC_TLS_CERT_PATH');
+   140	
+   141	    const tlsRootCert = fs.readFileSync(config.tlsCertPath);
+   142	    const tlsCredentials = grpc.credentials.createSsl(tlsRootCert);
+   143	
+   144	    return new grpc.Client(config.peerEndpoint, tlsCredentials, {
+   145	      'grpc.ssl_target_name_override': config.peerHostAlias
+   146	    });
+   147	  }
+   148	
+   149	  async newIdentity() {
+   150	    const config = this.getConfig();
+   151	
+   152	    this.assertFileExists(config.certPath, 'FABRIC_CERT_PATH');
+   153	
+   154	    const credentials = fs.readFileSync(config.certPath);
+   155	
+   156	    return {
+   157	      mspId: config.mspId,
+   158	      credentials
+   159	    };
+   160	  }
+   161	
+   162	  async newSigner() {
+   163	    const config = this.getConfig();
+   164	
+   165	    this.assertDirectoryExists(
+   166	      config.keyDirectoryPath,
+   167	      'FABRIC_KEY_DIRECTORY_PATH'
+   168	    );
+   169	
+   170	    const files = fs
+   171	      .readdirSync(config.keyDirectoryPath)
+   172	      .filter((file) => !file.startsWith('.'));
+   173	
+   174	    if (!files || files.length === 0) {
+   175	      throw new Error(
+   176	        `No private key found inside FABRIC_KEY_DIRECTORY_PATH: ${config.keyDirectoryPath}`
+   177	      );
+   178	    }
+   179	
+   180	    const keyPath = path.join(config.keyDirectoryPath, files[0]);
+   181	    const privateKeyPem = fs.readFileSync(keyPath);
+   182	    const privateKey = crypto.createPrivateKey(privateKeyPem);
+   183	
+   184	    return signers.newPrivateKeySigner(privateKey);
+   185	  }
+   186	
+   187	  async connect() {
+   188	    if (this.gateway && this.contract) {
+   189	      return {
+   190	        gateway: this.gateway,
+   191	        client: this.client,
+   192	        network: this.network,
+   193	        contract: this.contract
+   194	      };
+   195	    }
+   196	
+   197	    const config = this.getConfig();
+   198	
+   199	    this.client = await this.newGrpcConnection();
+   200	
+   201	    this.gateway = connect({
+   202	      client: this.client,
+   203	      identity: await this.newIdentity(),
+   204	      signer: await this.newSigner(),
+   205	      evaluateOptions: () => {
+   206	        return { deadline: Date.now() + config.evaluateTimeoutMs };
+   207	      },
+   208	      endorseOptions: () => {
+   209	        return { deadline: Date.now() + config.endorseTimeoutMs };
+   210	      },
+   211	      submitOptions: () => {
+   212	        return { deadline: Date.now() + config.submitTimeoutMs };
+   213	      },
+   214	      commitStatusOptions: () => {
+   215	        return { deadline: Date.now() + config.commitStatusTimeoutMs };
+   216	      }
+   217	    });
+   218	
+   219	    this.network = this.gateway.getNetwork(config.channelName);
+   220	    this.contract = this.network.getContract(config.chaincodeName);
+   221	
+   222	    return {
+   223	      gateway: this.gateway,
+   224	      client: this.client,
+   225	      network: this.network,
+   226	      contract: this.contract
+   227	    };
+   228	  }
+   229	
+   230	  parseBufferResult(buffer) {
+   231	    if (!buffer) {
+   232	      return null;
+   233	    }
+   234	
+   235	    const text = Buffer.from(buffer).toString('utf8');
+   236	
+   237	    if (!text) {
+   238	      return null;
+   239	    }
+   240	
+   241	    try {
+   242	      return JSON.parse(text);
+   243	    } catch {
+   244	      return text;
+   245	    }
+   246	  }
+   247	
+   248	  normalizeContext(context = {}) {
+   249	    return {
+   250	      requestId: context.requestId || context.request_id || null,
+   251	      correlationId: context.correlationId || context.correlation_id || null,
+   252	      sourceSystem:
+   253	        context.sourceSystem ||
+   254	        context.source_system ||
+   255	        'BLOCKCHAIN_API',
+   256	      requestSource:
+   257	        context.requestSource ||
+   258	        context.request_source ||
+   259	        'API',
+   260	      createdBy:
+   261	        context.createdBy ||
+   262	        context.created_by ||
+   263	        'system'
+   264	    };
+   265	  }
+   266	
+   267	  normalizeArgs(args = []) {
+   268	    if (args === undefined || args === null) {
+   269	      return [];
+   270	    }
+   271	
+   272	    if (Array.isArray(args)) {
+   273	      return args.map((arg) => String(arg));
+   274	    }
+   275	
+   276	    return [String(args)];
+   277	  }
+   278	
+   279	  getEndorsingOrganizations(functionName, config) {
+   280	    /*
+   281	      Chaincode policy is OR('Org1MSP.peer','Org2MSP.peer').
+   282	      Backend connects through Org1 gateway, so Org1 endorsement is enough.
+   283	      Do not request Org2 from this API server.
+   284	    */
+   285	    return ['Org1MSP'];
+   286	  }
+   287	
+   288	  async submitTransaction(functionName, args = [], context = {}) {
+   289	    const startedAt = Date.now();
+   290	    const config = this.getConfig();
+   291	    const auditContext = this.normalizeContext(context);
+   292	
+   293	    try {
+   294	      await auditService.log({
+   295	        ...auditContext,
+   296	        eventType: AUDIT_EVENT_TYPES.BLOCKCHAIN_SUBMIT_REQUEST,
+   297	        eventCategory: AUDIT_EVENT_CATEGORY.BLOCKCHAIN,
+   298	        eventStatus: AUDIT_EVENT_STATUS.PENDING,
+   299	        blockchainFunction: functionName,
+   300	        chaincodeName: config.chaincodeName,
+   301	        channelName: config.channelName,
+   302	        requestPayload: {
+   303	          functionName,
+   304	          args
+   305	        },
+   306	        serviceName: 'fabric.service'
+   307	      });
+   308	
+   309	      const connection = await this.connect();
+   310	
+   311	      const normalizedArgs = this.normalizeArgs(args);
+   312	      const endorsingOrganizations = this.getEndorsingOrganizations(
+   313	        functionName,
+   314	        config
+   315	      );
+   316	
+   317	      let resultBuffer;
+   318	      let transactionId = null;
+   319	      let commitStatus = null;
+   320	
+   321	      console.log('[FABRIC SUBMIT CONFIG]', {
+   322	        functionName,
+   323	        channelName: config.channelName,
+   324	        chaincodeName: config.chaincodeName,
+   325	        peerEndpoint: config.peerEndpoint,
+   326	        peerHostAlias: config.peerHostAlias,
+   327	        endorsingOrganizations,
+   328	        argsCount: normalizedArgs.length
+   329	      });
+   330	
+   331	      if (
+   332	        connection.contract &&
+   333	        typeof connection.contract.newProposal === 'function' &&
+   334	        endorsingOrganizations &&
+   335	        endorsingOrganizations.length > 0
+   336	      ) {
+   337	        const proposal = connection.contract.newProposal(functionName, {
+   338	          arguments: normalizedArgs,
+   339	          endorsingOrganizations
+   340	        });
+   341	
+   342	        const endorsedProposal = await proposal.endorse();
+   343	
+   344	        resultBuffer = endorsedProposal.getResult();
+   345	
+   346	        const submittedTransaction = await endorsedProposal.submit();
+   347	
+   348	        commitStatus = await submittedTransaction.getStatus();
+   349	        transactionId = commitStatus.transactionId || null;
+   350	
+   351	        console.log('[FABRIC COMMIT STATUS]', {
+   352	          functionName,
+   353	          transactionId,
+   354	          successful: commitStatus.successful,
+   355	          code: commitStatus.code
+   356	        });
+   357	
+   358	        if (!commitStatus.successful) {
+   359	          throw new Error(
+   360	            `Transaction commit failed with code ${commitStatus.code} for transaction ${commitStatus.transactionId}`
+   361	          );
+   362	        }
+   363	      } else {
+   364	        console.log('[FABRIC FALLBACK SUBMIT]', {
+   365	          functionName,
+   366	          reason: 'newProposal not available or no endorsing organizations'
+   367	        });
+   368	
+   369	        resultBuffer = await connection.contract.submitTransaction(
+   370	          functionName,
+   371	          ...normalizedArgs
+   372	        );
+   373	      }
+   374	
+   375	      const parsedResult = this.parseBufferResult(resultBuffer);
+   376	
+   377	      const result = {
+   378	        success: true,
+   379	        type: 'submit',
+   380	        channelName: config.channelName,
+   381	        chaincodeName: config.chaincodeName,
+   382	        functionName,
+   383	        args,
+   384	        transactionId,
+   385	        txId: transactionId,
+   386	        commitStatus,
+   387	        data: parsedResult,
+   388	        durationMs: Date.now() - startedAt
+   389	      };
+   390	
+   391	      await auditService.log({
+   392	        ...auditContext,
+   393	        eventType: AUDIT_EVENT_TYPES.BLOCKCHAIN_SUBMIT_SUCCESS,
+   394	        eventCategory: AUDIT_EVENT_CATEGORY.BLOCKCHAIN,
+   395	        eventStatus: AUDIT_EVENT_STATUS.SUCCESS,
+   396	        blockchainFunction: functionName,
+   397	        chaincodeName: config.chaincodeName,
+   398	        channelName: config.channelName,
+   399	        responsePayload: result,
+   400	        durationMs: Date.now() - startedAt,
+   401	        serviceName: 'fabric.service'
+   402	      });
+   403	
+   404	      return result;
+   405	    } catch (error) {
+   406	      await auditService.log({
+   407	        ...auditContext,
+   408	        eventType: AUDIT_EVENT_TYPES.BLOCKCHAIN_SUBMIT_FAILED,
+   409	        eventCategory: AUDIT_EVENT_CATEGORY.BLOCKCHAIN,
+   410	        eventStatus: AUDIT_EVENT_STATUS.FAILED,
+   411	        blockchainFunction: functionName,
+   412	        chaincodeName: config.chaincodeName,
+   413	        channelName: config.channelName,
+   414	        errorCode: error.code || 'FABRIC_SUBMIT_ERROR',
+   415	        errorMessage: error.message,
+   416	        errorStack: error.stack,
+   417	        requestPayload: {
+   418	          functionName,
+   419	          args
+   420	        },
+   421	        durationMs: Date.now() - startedAt,
+   422	        serviceName: 'fabric.service'
+   423	      });
+   424	
+   425	      throw error;
+   426	    }
+   427	  }
+   428	
+   429	  async evaluateTransaction(functionName, args = [], context = {}) {
+   430	    const startedAt = Date.now();
+   431	    const config = this.getConfig();
+   432	    const auditContext = this.normalizeContext(context);
+   433	
+   434	    try {
+   435	      await auditService.log({
+   436	        ...auditContext,
+   437	        eventType: AUDIT_EVENT_TYPES.BLOCKCHAIN_EVALUATE_REQUEST,
+   438	        eventCategory: AUDIT_EVENT_CATEGORY.BLOCKCHAIN,
+   439	        eventStatus: AUDIT_EVENT_STATUS.PENDING,
+   440	        blockchainFunction: functionName,
+   441	        chaincodeName: config.chaincodeName,
+   442	        channelName: config.channelName,
+   443	        requestPayload: {
+   444	          functionName,
+   445	          args
+   446	        },
+   447	        serviceName: 'fabric.service'
+   448	      });
+   449	
+   450	      const connection = await this.connect();
+   451	
+   452	      const resultBuffer = await connection.contract.evaluateTransaction(
+   453	        functionName,
+   454	        ...this.normalizeArgs(args)
+   455	      );
+   456	
+   457	      const parsedResult = this.parseBufferResult(resultBuffer);
+   458	
+   459	      const result = {
+   460	        success: true,
+   461	        type: 'evaluate',
+   462	        channelName: config.channelName,
+   463	        chaincodeName: config.chaincodeName,
+   464	        functionName,
+   465	        args,
+   466	        data: parsedResult,
+   467	        durationMs: Date.now() - startedAt
+   468	      };
+   469	
+   470	      await auditService.log({
+   471	        ...auditContext,
+   472	        eventType: AUDIT_EVENT_TYPES.BLOCKCHAIN_EVALUATE_SUCCESS,
+   473	        eventCategory: AUDIT_EVENT_CATEGORY.BLOCKCHAIN,
+   474	        eventStatus: AUDIT_EVENT_STATUS.SUCCESS,
+   475	        blockchainFunction: functionName,
+   476	        chaincodeName: config.chaincodeName,
+   477	        channelName: config.channelName,
+   478	        responsePayload: result,
+   479	        durationMs: Date.now() - startedAt,
+   480	        serviceName: 'fabric.service'
+   481	      });
+   482	
+   483	      return result;
+   484	    } catch (error) {
+   485	      await auditService.log({
+   486	        ...auditContext,
+   487	        eventType: AUDIT_EVENT_TYPES.BLOCKCHAIN_EVALUATE_FAILED,
+   488	        eventCategory: AUDIT_EVENT_CATEGORY.BLOCKCHAIN,
+   489	        eventStatus: AUDIT_EVENT_STATUS.FAILED,
+   490	        blockchainFunction: functionName,
+   491	        chaincodeName: config.chaincodeName,
+   492	        channelName: config.channelName,
+   493	        errorCode: error.code || 'FABRIC_EVALUATE_ERROR',
+   494	        errorMessage: error.message,
+   495	        errorStack: error.stack,
+   496	        requestPayload: {
+   497	          functionName,
+   498	          args
+   499	        },
+   500	        durationMs: Date.now() - startedAt,
+   501	        serviceName: 'fabric.service'
+   502	      });
+   503	
+   504	      throw error;
+   505	    }
+   506	  }
+   507	
+   508	  async createPublicAdministration(payload, context = {}) {
+   509	    return this.submitTransaction(
+   510	      'CreatePublicAdministration',
+   511	      [JSON.stringify(payload)],
+   512	      context
+   513	    );
+   514	  }
+   515	
+   516	  async getPublicAdministration(administrationId, context = {}) {
+   517	    return this.evaluateTransaction(
+   518	      'GetPublicAdministration',
+   519	      [administrationId],
+   520	      context
+   521	    );
+   522	  }
+   523	
+   524	  async publicAdministrationExists(administrationId, context = {}) {
+   525	    return this.evaluateTransaction(
+   526	      'PublicAdministrationExists',
+   527	      [administrationId],
+   528	      context
+   529	    );
+   530	  }
+   531	
+   532	  async disconnect() {
+   533	    try {
+   534	      if (this.gateway) {
+   535	        this.gateway.close();
+   536	      }
+   537	
+   538	      if (this.client) {
+   539	        this.client.close();
+   540	      }
+   541	
+   542	      this.gateway = null;
+   543	      this.client = null;
+   544	      this.network = null;
+   545	      this.contract = null;
+   546	
+   547	      return {
+   548	        success: true,
+   549	        message: 'Fabric gateway disconnected successfully'
+   550	      };
+   551	    } catch (error) {
+   552	      return {
+   553	        success: false,
+   554	        message: error.message
+   555	      };
+   556	    }
+   557	  }
+   558	}
+   559	
+   560	module.exports = new FabricService();

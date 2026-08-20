@@ -1,0 +1,304 @@
+===== FILE: /home/nix/u01/blockchain-integration/blockchain-api/src/services/blockchain-kyc.service.js =====
+     1	'use strict';
+     2	
+     3	const db = require('../config/database');
+     4	const walletService = require('./wallet.service');
+     5	
+     6	function toNumber(value, defaultValue = 0) {
+     7	  const numberValue = Number(value);
+     8	  return Number.isFinite(numberValue) ? numberValue : defaultValue;
+     9	}
+    10	
+    11	function normalizeWalletType(value) {
+    12	  const normalized = String(value || 'CUSTOMER').trim().toUpperCase();
+    13	  return normalized === 'ORGANIZATION' ? 'ORGANIZATION' : 'CUSTOMER';
+    14	}
+    15	
+    16	function resolveFullName(payload) {
+    17	  const fullName =
+    18	    payload.fullName ||
+    19	    payload.customerName ||
+    20	    payload.customer_name ||
+    21	    payload.full_name ||
+    22	    payload.name ||
+    23	    payload.emailHash ||
+    24	    payload.email ||
+    25	    `KYC CUSTOMER ${payload.customerId}`;
+    26	
+    27	  return String(fullName).trim();
+    28	}
+    29	
+    30	function extractWalletAddress(walletResult) {
+    31	  return (
+    32	    walletResult?.wallet?.walletAddress ||
+    33	    walletResult?.wallet?.wallet_address ||
+    34	    walletResult?.walletAddress ||
+    35	    walletResult?.wallet_address ||
+    36	    walletResult?.blockchain?.walletAddress ||
+    37	    walletResult?.data?.walletAddress ||
+    38	    walletResult?.data?.wallet_address ||
+    39	    null
+    40	  );
+    41	}
+    42	
+    43	function extractFabricTxId(walletResult) {
+    44	  return (
+    45	    walletResult?.blockchain?.fabricTransactionId ||
+    46	    walletResult?.fabricTransactionId ||
+    47	    walletResult?.fabric_tx_id ||
+    48	    walletResult?.wallet?.fabricTxId ||
+    49	    walletResult?.wallet?.fabric_tx_id ||
+    50	    walletResult?.data?.fabricTransactionId ||
+    51	    walletResult?.data?.fabric_tx_id ||
+    52	    null
+    53	  );
+    54	}
+    55	
+    56	async function insertKycRequest(payload, files) {
+    57	  const proofOfAddressFile = files?.proofOfAddressFile?.[0] || null;
+    58	  const documentFile = files?.documentFile?.[0] || null;
+    59	
+    60	  const sql = `
+    61	    INSERT INTO blockchain.blockchain_kyc_wallet_requests (
+    62	      customer_id,
+    63	      nationality,
+    64	      country_of_residence,
+    65	
+    66	      mobile_hash,
+    67	      email_hash,
+    68	      national_id_hash,
+    69	
+    70	      organization_type,
+    71	      organization_id,
+    72	      organization_code,
+    73	      organization_name,
+    74	
+    75	      city,
+    76	      area,
+    77	      address_hash,
+    78	      proof_of_address_file_name,
+    79	      proof_of_address_file_path,
+    80	
+    81	      source_of_funds,
+    82	      occupation,
+    83	      employment_sector,
+    84	      monthly_income,
+    85	      expected_monthly_transaction_volume,
+    86	      expected_cash_transactions,
+    87	
+    88	      wallet_type,
+    89	      party_type_code,
+    90	      wallet_status,
+    91	      initial_balance,
+    92	      currency_code,
+    93	      daily_transfer_limit,
+    94	      monthly_transfer_limit,
+    95	
+    96	      legal_document_type,
+    97	      legal_id_number_hash,
+    98	      document_file_name,
+    99	      document_file_path,
+   100	      document_expiry_date,
+   101	
+   102	      request_status,
+   103	      created_at,
+   104	      updated_at
+   105	    )
+   106	    VALUES (
+   107	      $1, $2, $3,
+   108	      $4, $5, $6,
+   109	      $7, $8, $9, $10,
+   110	      $11, $12, $13, $14, $15,
+   111	      $16, $17, $18, $19, $20, $21,
+   112	      $22, $23, $24, $25, $26, $27, $28,
+   113	      $29, $30, $31, $32, $33,
+   114	      'KYC_REQUEST_CREATED',
+   115	      NOW(),
+   116	      NOW()
+   117	    )
+   118	    RETURNING *
+   119	  `;
+   120	
+   121	  const values = [
+   122	    payload.customerId,
+   123	    payload.nationality || null,
+   124	    payload.countryOfResidence || null,
+   125	
+   126	    payload.mobileHash || null,
+   127	    payload.emailHash || null,
+   128	    payload.nationalIdHash || null,
+   129	
+   130	    payload.organizationType || null,
+   131	    payload.organizationId || null,
+   132	    payload.organizationCode || null,
+   133	    payload.organization || payload.organizationName || null,
+   134	
+   135	    payload.city || null,
+   136	    payload.area || null,
+   137	    payload.addressHash || null,
+   138	    proofOfAddressFile?.originalname || null,
+   139	    proofOfAddressFile?.path || null,
+   140	
+   141	    payload.sourceOfFunds || null,
+   142	    payload.occupation || null,
+   143	    payload.employmentSector || null,
+   144	    payload.monthlyIncome ? Number(payload.monthlyIncome) : null,
+   145	    payload.expectedMonthlyTransactionVolume
+   146	      ? Number(payload.expectedMonthlyTransactionVolume)
+   147	      : null,
+   148	    payload.expectedCashTransactions ? Number(payload.expectedCashTransactions) : null,
+   149	
+   150	    normalizeWalletType(payload.walletType),
+   151	    payload.partyTypeCode ? Number(payload.partyTypeCode) : 7,
+   152	    payload.walletStatus || 'ACTIVE',
+   153	    payload.initialBalance ? Number(payload.initialBalance) : 0,
+   154	    payload.currencyCode || 'USD',
+   155	    payload.dailyTransferLimit ? Number(payload.dailyTransferLimit) : null,
+   156	    payload.monthlyTransferLimit ? Number(payload.monthlyTransferLimit) : null,
+   157	
+   158	    payload.legalDocumentType || null,
+   159	    payload.legalIdNumberHash || null,
+   160	    documentFile?.originalname || null,
+   161	    documentFile?.path || null,
+   162	    payload.documentExpiryDate || null
+   163	  ];
+   164	
+   165	  const result = await db.query(sql, values);
+   166	  return result.rows[0];
+   167	}
+   168	
+   169	async function markKycRequestWalletCreated(requestId, walletResult) {
+   170	  const walletAddress = extractWalletAddress(walletResult);
+   171	  const fabricTxId = extractFabricTxId(walletResult);
+   172	
+   173	  const result = await db.query(
+   174	    `
+   175	    UPDATE blockchain.blockchain_kyc_wallet_requests
+   176	    SET
+   177	      wallet_address = $1,
+   178	      ledger_reference = $2,
+   179	      blockchain_tx_id = $3,
+   180	      request_status = 'WALLET_CREATED',
+   181	      error_message = NULL,
+   182	      updated_at = NOW()
+   183	    WHERE request_id = $4
+   184	    RETURNING *
+   185	    `,
+   186	    [walletAddress, fabricTxId, fabricTxId, requestId]
+   187	  );
+   188	
+   189	  return result.rows[0];
+   190	}
+   191	
+   192	async function markKycRequestWalletFailed(requestId, error) {
+   193	  const errorMessage = error?.message || String(error);
+   194	
+   195	  const result = await db.query(
+   196	    `
+   197	    UPDATE blockchain.blockchain_kyc_wallet_requests
+   198	    SET
+   199	      request_status = 'WALLET_CREATION_FAILED',
+   200	      error_message = $1,
+   201	      updated_at = NOW()
+   202	    WHERE request_id = $2
+   203	    RETURNING *
+   204	    `,
+   205	    [errorMessage, requestId]
+   206	  );
+   207	
+   208	  return result.rows[0];
+   209	}
+   210	
+   211	async function createBlockchainKycWallet(payload, files) {
+   212	  if (!payload.customerId) {
+   213	    throw new Error('customerId is required');
+   214	  }
+   215	
+   216	  if (!payload.organizationId) {
+   217	    throw new Error('organizationId is required');
+   218	  }
+   219	
+   220	  const kycRequest = await insertKycRequest(payload, files);
+   221	
+   222	  try {
+   223	    const walletResult = await walletService.createWallet({
+   224	      ...payload,
+   225	
+   226	      customerId: payload.customerId,
+   227	
+   228	      organizationId: payload.organizationId,
+   229	      organizationCode: payload.organizationCode,
+   230	      organizationName: payload.organization || payload.organizationName,
+   231	
+   232	      fullName: resolveFullName(payload),
+   233	
+   234	      nationalIdHash: payload.nationalIdHash || payload.legalIdNumberHash || '',
+   235	      mobileHash: payload.mobileHash || '',
+   236	      emailHash: payload.emailHash || '',
+   237	
+   238	      password:
+   239	        payload.password ||
+   240	        payload.generatedPassword ||
+   241	        payload.oneTimePassword ||
+   242	        null,
+   243	
+   244	      initialBalance: toNumber(payload.initialBalance, 0),
+   245	      currencyCode: payload.currencyCode || 'USD',
+   246	
+   247	      /**
+   248	       * Important:
+   249	       * Blockchain KYC creates a CUSTOMER wallet linked to an organization.
+   250	       * Do not call createOrganizationWallet here because it generates ORG_* IDs,
+   251	       * and enterprise tables require numeric customer_id.
+   252	       */
+   253	      walletType: 'CUSTOMER',
+   254	      partyTypeCode: 7,
+   255	
+   256	      requestSource:
+   257	        payload.requestSource ||
+   258	        payload.request_source ||
+   259	        'BLOCKCHAIN_KYC_MODULE',
+   260	
+   261	      sourceSystem:
+   262	        payload.sourceSystem ||
+   263	        payload.source_system ||
+   264	        'BLOCKCHAIN_KYC_MODULE',
+   265	
+   266	      createdBy:
+   267	        payload.createdBy ||
+   268	        payload.created_by ||
+   269	        'blockchain-kyc-module'
+   270	    });
+   271	
+   272	    const updatedKycRequest = await markKycRequestWalletCreated(
+   273	      kycRequest.request_id,
+   274	      walletResult
+   275	    );
+   276	
+   277	    return {
+   278	      success: true,
+   279	      message:
+   280	        'Blockchain KYC customer wallet created successfully in enterprise tables, PostgreSQL wallet table, and Fabric ledger.',
+   281	      kycRequest: updatedKycRequest,
+   282	      walletCreationStatus: 'SUCCESS',
+   283	      walletResult
+   284	    };
+   285	  } catch (error) {
+   286	    const failedKycRequest = await markKycRequestWalletFailed(
+   287	      kycRequest.request_id,
+   288	      error
+   289	    );
+   290	
+   291	    const finalError = new Error(
+   292	      `KYC request was saved, but wallet creation failed: ${error.message}`
+   293	    );
+   294	
+   295	    finalError.kycRequest = failedKycRequest;
+   296	    finalError.originalError = error;
+   297	    throw finalError;
+   298	  }
+   299	}
+   300	
+   301	module.exports = {
+   302	  createBlockchainKycWallet
+   303	};

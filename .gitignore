@@ -44,3 +44,6 @@ inspection-output/
 # Uploaded/generated bundles
 *.zip
 audit-validation-real-objects/
+
+# Generated benchmark output
+benchmark-results/

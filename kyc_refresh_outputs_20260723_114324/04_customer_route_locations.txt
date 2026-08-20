@@ -1,0 +1,2 @@
+/home/nix/u01/blockchain-integration/blockchain-api/src/routes/valoores-blockchain.routes.js:21:router.post('/customers', async (req, res) => {
+/home/nix/u01/blockchain-integration/blockchain-api/src/routes/valoores-blockchain.routes.js:273:router.get('/customers', async (req, res) => {

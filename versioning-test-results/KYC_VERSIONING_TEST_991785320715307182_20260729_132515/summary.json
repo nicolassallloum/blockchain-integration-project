@@ -1,0 +1,16 @@
+{
+  "runId": "KYC_VERSIONING_TEST_991785320715307182_20260729_132515",
+  "status": "PASSED",
+  "chaincodeVersion": "2.30",
+  "chaincodeSequence": 30,
+  "customerId": "991785320715307182",
+  "residentId": "VALOORES-991785320715307182",
+  "sessionId": "320715",
+  "versionsCreated": 2,
+  "version1Operation": "CREATE",
+  "version2Operation": "UPDATE",
+  "completePayloadStored": true,
+  "version1Immutable": true,
+  "resultDirectory": "/home/nix/u01/blockchain-integration/versioning-test-results/KYC_VERSIONING_TEST_991785320715307182_20260729_132515",
+  "completedAt": "2026-07-29T13:25:31+03:00"
+}

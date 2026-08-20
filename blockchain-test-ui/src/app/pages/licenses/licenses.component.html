@@ -1,0 +1,687 @@
+<div class="licenses-page">
+
+  <header class="page-header">
+
+    <div>
+      <span class="eyebrow">
+        Blockchain License Management
+      </span>
+
+      <h1>Licenses</h1>
+
+      <p>
+        Access your application license using
+        your wallet address and wallet password.
+      </p>
+    </div>
+
+    <div class="security-indicator">
+      <span class="security-dot"></span>
+      Password processed locally
+    </div>
+
+  </header>
+
+
+  <section class="access-card">
+
+    <h2>Application License Access</h2>
+
+    <p class="subtitle">
+      Enter your generated wallet credentials.
+    </p>
+
+
+    <label class="field">
+
+      <span>Wallet Address</span>
+
+      <input
+        type="text"
+        autocomplete="off"
+        [value]="walletAddress"
+        (input)="
+          walletAddress =
+            $any($event.target).value
+        "
+        placeholder="0x..."
+      />
+
+    </label>
+
+
+    <label class="field">
+
+      <span>Wallet Password</span>
+
+      <div class="password-row">
+
+        <input
+          [type]="
+            showPassword
+              ? 'text'
+              : 'password'
+          "
+          autocomplete="off"
+          [value]="walletPassword"
+          (input)="
+            walletPassword =
+              $any($event.target).value
+          "
+        />
+
+        <button
+          type="button"
+          class="secondary-button"
+          (click)="togglePassword()"
+        >
+          {{
+            showPassword
+              ? 'Hide'
+              : 'Show'
+          }}
+        </button>
+
+      </div>
+
+    </label>
+
+
+    <div
+      class="message error-message"
+      *ngIf="errorMessage"
+    >
+      {{ errorMessage }}
+    </div>
+
+
+    <div class="actions">
+
+      <button
+        type="button"
+        class="link-button"
+        [disabled]="
+          !walletAddress.trim()
+        "
+        (click)="forgotPassword()"
+      >
+        Forgot Wallet Password?
+      </button>
+
+      <button
+        type="button"
+        class="primary-button"
+        [disabled]="!canAccess"
+        (click)="viewLicense()"
+      >
+        {{
+          loading
+            ? 'Verifying...'
+            : 'View License'
+        }}
+      </button>
+
+    </div>
+
+  </section>
+
+
+  <!-- FORGOT PASSWORD POPUP -->
+  <div
+    class="modal-backdrop"
+    *ngIf="
+      showRecoveryPopup &&
+      recoveryChallenge
+    "
+  >
+
+    <section class="modal recovery-modal">
+
+      <header class="modal-header">
+
+        <div>
+          <span class="modal-eyebrow">
+            Recovery Verification
+          </span>
+
+          <h2>Verify Recovery Words</h2>
+
+          <p>
+            Enter the requested words from your
+            original 12-word recovery phrase.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          class="close-button"
+          (click)="closeRecoveryPopup()"
+        >
+          ×
+        </button>
+
+      </header>
+
+
+      <div class="recovery-fields">
+
+        <label class="field">
+
+          <span>
+            Recovery Word
+            #{{
+              recoveryChallenge
+                .wordPosition1
+            }}
+          </span>
+
+          <input
+            type="password"
+            autocomplete="off"
+            [value]="recoveryWord1"
+            (input)="
+              recoveryWord1 =
+                $any($event.target).value
+            "
+          />
+
+        </label>
+
+
+        <label class="field">
+
+          <span>
+            Recovery Word
+            #{{
+              recoveryChallenge
+                .wordPosition2
+            }}
+          </span>
+
+          <input
+            type="password"
+            autocomplete="off"
+            [value]="recoveryWord2"
+            (input)="
+              recoveryWord2 =
+                $any($event.target).value
+            "
+          />
+
+        </label>
+
+      </div>
+
+
+      <div
+        class="message error-message recovery-error"
+        *ngIf="errorMessage"
+      >
+        {{ errorMessage }}
+      </div>
+
+      <div class="security-note">
+        The actual recovery words are not stored
+        in PostgreSQL.
+      </div>
+
+
+      <footer class="modal-footer">
+
+        <button
+          type="button"
+          class="secondary-button"
+          (click)="closeRecoveryPopup()"
+        >
+          Cancel
+        </button>
+
+        <button
+          type="button"
+          class="primary-button"
+          [disabled]="
+            loading ||
+            !recoveryWord1 ||
+            !recoveryWord2
+          "
+          (click)="verifyRecoveryWords()"
+        >
+          Verify Recovery Words
+        </button>
+
+      </footer>
+
+    </section>
+
+  </div>
+
+
+  <!-- LICENSE POPUP -->
+  <div
+    class="modal-backdrop"
+    *ngIf="
+      showLicensePopup &&
+      license
+    "
+  >
+
+    <section class="modal license-modal">
+
+      <header class="modal-header">
+
+        <div>
+          <span class="modal-eyebrow">
+            Application License
+          </span>
+
+          <h2>
+            {{ license.contractRef }}
+          </h2>
+
+          <p>
+            License successfully verified.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          class="close-button"
+          (click)="closeLicensePopup()"
+        >
+          ×
+        </button>
+
+      </header>
+
+
+      <div class="license-grid">
+
+        <div>
+          <span>License ID</span>
+          <strong>
+            {{ license.licenseId }}
+          </strong>
+        </div>
+
+        <div>
+          <span>Customer ID</span>
+          <strong>
+            {{ license.customerId }}
+          </strong>
+        </div>
+
+        <div>
+          <span>Installation ID</span>
+          <strong>
+            {{ license.installId }}
+          </strong>
+        </div>
+
+        <div>
+          <span>Status</span>
+          <strong class="status">
+            {{ license.calculatedStatus }}
+          </strong>
+        </div>
+
+        <div>
+          <span>Maximum Users</span>
+          <strong>
+            {{ license.maxUsers }}
+          </strong>
+        </div>
+
+        <div>
+          <span>Modules</span>
+          <strong>
+            {{
+              formatModules(
+                license.productModules
+              )
+            }}
+          </strong>
+        </div>
+
+        <div>
+          <span>Valid From</span>
+          <strong>
+            {{
+              license.validFrom |
+              date:'medium'
+            }}
+          </strong>
+        </div>
+
+        <div>
+          <span>Valid Until</span>
+          <strong>
+            {{
+              license.validUntil |
+              date:'medium'
+            }}
+          </strong>
+        </div>
+
+      </div>
+
+
+      <section class="hash-section">
+
+        <div class="hash-heading">
+
+          <div>
+            <h3>License Hash</h3>
+
+            <p>
+              
+            </p>
+          </div>
+
+          <button
+            type="button"
+            class="secondary-button"
+            (click)="toggleLicenseHash()"
+          >
+            {{
+              showLicenseHash
+                ? 'Hide License Hash'
+                : 'Show License Hash'
+            }}
+          </button>
+
+        </div>
+
+
+        <div class="license-hash">
+
+          {{
+            showLicenseHash
+              ? licenseHash
+              : '••••••••••••••••••••••••••••••••••••••••'
+          }}
+
+        </div>
+
+      </section>
+
+
+      <section
+        class="password-recovery-action"
+        *ngIf="
+          recoveredByWords &&
+          passwordResetToken
+        "
+      >
+        <div>
+          <h3>Account Recovery</h3>
+
+          <p>
+            Recovery verification was successful.
+            You can generate a new password while
+            preserving the same Wallet Address.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          class="password-change-button"
+          (click)="openPasswordReset()"
+        >
+          Change Wallet Password
+        </button>
+      </section>
+
+      <footer class="modal-footer">
+
+        <button
+          type="button"
+          class="primary-button"
+          (click)="closeLicensePopup()"
+        >
+          Done
+        </button>
+
+      </footer>
+
+    </section>
+
+  </div>
+
+
+  <!-- CHANGE WALLET PASSWORD -->
+  <div
+    class="modal-backdrop"
+    *ngIf="showPasswordResetPopup"
+  >
+    <section
+      class="modal password-reset-modal"
+    >
+
+      <header class="modal-header">
+        <div>
+          <span class="modal-eyebrow">
+            Wallet Recovery
+          </span>
+
+          <h2>Change Wallet Password</h2>
+
+          <p>
+            Enter all 12 original recovery words.
+            The application will reconstruct the
+            same wallet locally and generate a
+            new password.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          class="close-button"
+          (click)="closePasswordResetPopup()"
+        >
+          ×
+        </button>
+      </header>
+
+
+      <div class="reset-security-message">
+        <strong>
+          Wallet Address Will Not Change
+        </strong>
+
+        The existing wallet identity and license
+        relationship will be preserved.
+      </div>
+
+
+      <div class="reset-word-grid">
+
+        <label
+          class="reset-word"
+          *ngFor="
+            let word of resetRecoveryWords;
+            let index = index
+          "
+        >
+          <span>
+            Recovery Word
+            #{{ index + 1 }}
+          </span>
+
+          <input
+            type="password"
+            autocomplete="off"
+            [value]="
+              resetRecoveryWords[index]
+            "
+            (input)="
+              updateResetRecoveryWord(
+                index,
+                $any($event.target).value
+              )
+            "
+          />
+        </label>
+
+      </div>
+
+
+      <div
+        class="message error-message reset-error"
+        *ngIf="errorMessage"
+      >
+        {{ errorMessage }}
+      </div>
+
+
+      <div class="security-note">
+        Recovery words and the new plaintext
+        password are processed only inside the
+        browser and are not sent to PostgreSQL.
+      </div>
+
+
+      <footer class="modal-footer">
+
+        <button
+          type="button"
+          class="secondary-button"
+          [disabled]="resettingPassword"
+          (click)="closePasswordResetPopup()"
+        >
+          Cancel
+        </button>
+
+        <button
+          type="button"
+          class="primary-button"
+          [disabled]="
+            !canResetWalletPassword
+          "
+          (click)="completeWalletPasswordReset()"
+        >
+          {{
+            resettingPassword
+              ? 'Changing Password...'
+              : 'Verify & Generate New Password'
+          }}
+        </button>
+
+      </footer>
+
+    </section>
+  </div>
+
+
+  <!-- NEW PASSWORD SUCCESS -->
+  <div
+    class="modal-backdrop"
+    *ngIf="
+      showPasswordResetSuccessPopup
+    "
+  >
+    <section
+      class="modal password-success-modal"
+    >
+
+      <header class="password-success-header">
+
+        <div class="password-success-icon">
+          ✓
+        </div>
+
+        <div>
+          <span class="modal-eyebrow">
+            Password Changed Successfully
+          </span>
+
+          <h2>
+            Save Your New Wallet Password
+          </h2>
+
+          <p>
+            Your Wallet Address remains unchanged.
+          </p>
+        </div>
+
+      </header>
+
+
+      <div class="unchanged-wallet-card">
+
+        <span>Wallet Address</span>
+
+        <strong>
+          {{ passwordResetWalletAddress }}
+        </strong>
+
+        <small>
+          Same wallet address — unchanged
+        </small>
+
+      </div>
+
+
+      <div class="new-password-card">
+
+        <span>New Wallet Password</span>
+
+        <div class="new-password-row">
+
+          <code>
+            {{
+              showNewGeneratedPassword
+                ? newGeneratedPassword
+                : '••••••••••••••••••••••••••••••'
+            }}
+          </code>
+
+          <button
+            type="button"
+            class="secondary-button"
+            (click)="toggleNewGeneratedPassword()"
+          >
+            {{
+              showNewGeneratedPassword
+                ? 'Hide'
+                : 'Show'
+            }}
+          </button>
+
+          <button
+            type="button"
+            class="secondary-button"
+            (click)="copyNewGeneratedPassword()"
+          >
+            Copy
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <div class="credential-warning">
+        <strong>Important</strong>
+
+        Save this new password now. It will not
+        be stored or displayed again after you
+        close this popup.
+      </div>
+
+
+      <footer class="modal-footer">
+
+        <button
+          type="button"
+          class="primary-button"
+          (click)="confirmNewPasswordSaved()"
+        >
+          I Saved My New Password
+        </button>
+
+      </footer>
+
+    </section>
+  </div>
+
+</div>

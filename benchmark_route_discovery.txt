@@ -1,0 +1,1084 @@
+blockchain-api/src/middlewares/wallet-login.validator.js:10:      message: "walletAddress or customerId is required",
+blockchain-api/src/services/wallet.service.js.backup_before_blockchain_first_20260511_152225:374:    throw new Error('customerId is required');
+blockchain-api/src/services/wallet.service.js.bak_login_wallet_address:359:    throw new Error('customerId is required');
+blockchain-api/src/services/wallet.service.js.bak_login_wallet_address:464:    throw new Error('customerId is required');
+blockchain-api/src/services/wallet.service.js:435:    throw new Error('customerId is required');
+blockchain-api/src/services/wallet.service.js.bak_fix_wallet_create_profile:370:    throw new Error('customerId is required');
+blockchain-api/src/services/wallet.service.js.bak_next_customer_id:359:    throw new Error('customerId is required');
+blockchain-api/src/services/blockchain-kyc.service.js:213:    throw new Error('customerId is required');
+blockchain-api/src/utils/jwt.util.js:6:const JWT_AUDIENCE = process.env.JWT_AUDIENCE || "blockchain-wallet-users";
+blockchain-api/src/routes/government-transactions.routes.js.bak_db_config_fix_20260604_162316:5:router.get('/', async (req, res) => {
+blockchain-api/src/routes/government-transactions.routes.js.bak_db_config_fix_20260604_162316:178:router.get('/reference/transaction-status', async (req, res) => {
+blockchain-api/src/routes/government-transactions.routes.js.bak_db_config_fix_20260604_162316:208:router.get('/reference/payment-methods', async (req, res) => {
+blockchain-api/src/routes/government-documents.routes.js:162:router.post('/upload', uploadSingleDocument, async (req, res) => {
+blockchain-api/src/routes/government-documents.routes.js:309:router.get('/transaction/:transactionId', async (req, res) => {
+blockchain-api/src/routes/government-documents.routes.js:343:router.get('/resident/:residentId', async (req, res) => {
+blockchain-api/src/routes/data-change-invalid-record-review.routes.js:6:router.get('/health', controller.health);
+blockchain-api/src/routes/data-change-invalid-record-review.routes.js:7:router.get('/summary', controller.summary);
+blockchain-api/src/routes/data-change-invalid-record-review.routes.js:8:router.get('/candidates', controller.candidates);
+blockchain-api/src/routes/data-change-invalid-record-review.routes.js:9:router.get('/reviews', controller.list);
+blockchain-api/src/routes/data-change-invalid-record-review.routes.js:10:router.get('/reviews/:reviewIdOrKey', controller.detail);
+blockchain-api/src/routes/data-change-invalid-record-review.routes.js:11:router.post('/reviews', controller.open);
+blockchain-api/src/routes/data-change-invalid-record-review.routes.js:12:router.post('/reviews/:reviewIdOrKey/approve-correction', controller.approveCorrection);
+blockchain-api/src/routes/data-change-invalid-record-review.routes.js:13:router.post('/reviews/:reviewIdOrKey/mark-new-proof-submitted', controller.markNewProofSubmitted);
+blockchain-api/src/routes/data-change-invalid-record-review.routes.js:14:router.post('/reviews/:reviewIdOrKey/reactivate', controller.reactivate);
+blockchain-api/src/routes/data-change-invalid-record-review.routes.js:15:router.post('/reviews/:reviewIdOrKey/reject', controller.rejectReactivation);
+blockchain-api/src/routes/data-change-invalid-record-review.routes.js:16:router.post('/reviews/:reviewIdOrKey/close', controller.close);
+blockchain-api/src/routes/dev-transaction.routes.js.bak_clean_blockchain_response_position_20260617_151401:18:router.post("/create", async (req, res) => {
+blockchain-api/src/routes/audit-validation.routes.js:191:router.get('/events', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js:260:router.get('/events/:eventId', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js:281:router.post('/events/:eventId/validate', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js:361:router.post('/events/:eventId/approve', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js:397:router.post('/events/:eventId/reject', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js:431:router.post('/events/:eventId/submit-blockchain', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js:543:router.get('/events/:eventId/blockchain-proof', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js:678:router.get('/dashboard', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js:807:router.post('/events/:eventId/hash-verify', async (req, res) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_strict_record_pk_and_object_filter:182:router.get('/events', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_strict_record_pk_and_object_filter:251:router.get('/events/:eventId', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_strict_record_pk_and_object_filter:272:router.post('/events/:eventId/validate', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_strict_record_pk_and_object_filter:352:router.post('/events/:eventId/approve', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_strict_record_pk_and_object_filter:388:router.post('/events/:eventId/reject', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_strict_record_pk_and_object_filter:422:router.post('/events/:eventId/submit-blockchain', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_strict_record_pk_and_object_filter:534:router.get('/events/:eventId/blockchain-proof', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_strict_record_pk_and_object_filter:636:router.get('/dashboard', async (req, res, next) => {
+blockchain-api/src/routes/government-transactions.routes.js.bak_add_residents_services_20260604_163834:15:router.get('/', async (req, res) => {
+blockchain-api/src/routes/government-transactions.routes.js.bak_add_residents_services_20260604_163834:188:router.get('/reference/transaction-status', async (req, res) => {
+blockchain-api/src/routes/government-transactions.routes.js.bak_add_residents_services_20260604_163834:218:router.get('/reference/payment-methods', async (req, res) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_fix_hash_verify_columns:192:router.get('/events', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_fix_hash_verify_columns:261:router.get('/events/:eventId', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_fix_hash_verify_columns:282:router.post('/events/:eventId/validate', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_fix_hash_verify_columns:362:router.post('/events/:eventId/approve', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_fix_hash_verify_columns:398:router.post('/events/:eventId/reject', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_fix_hash_verify_columns:432:router.post('/events/:eventId/submit-blockchain', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_fix_hash_verify_columns:544:router.get('/events/:eventId/blockchain-proof', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_fix_hash_verify_columns:646:router.get('/dashboard', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_fix_hash_verify_columns:775:router.post('/events/:eventId/hash-verify', async (req, res) => {
+blockchain-api/src/routes/data-change-compliance-proof-rule.routes.js:6:router.get('/health', controller.health);
+blockchain-api/src/routes/data-change-compliance-proof-rule.routes.js:7:router.get('/summary', controller.summary);
+blockchain-api/src/routes/data-change-compliance-proof-rule.routes.js:8:router.get('/rules', controller.rules);
+blockchain-api/src/routes/data-change-compliance-proof-rule.routes.js:9:router.get('/candidates', controller.candidates);
+blockchain-api/src/routes/data-change-compliance-proof-rule.routes.js:10:router.get('/evaluations', controller.evaluations);
+blockchain-api/src/routes/data-change-compliance-proof-rule.routes.js:11:router.post('/evaluate/:auditId', controller.evaluate);
+blockchain-api/src/routes/data-change-compliance-proof-rule.routes.js:12:router.post('/scan', controller.scan);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:15:router.get('/health', controller.health);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:17:router.get('/records/:recordType/create-candidates', controller.createCandidates);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:18:router.get('/records/:recordType/update-candidates', controller.updateCandidates);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:19:router.get('/records/:recordType/unchanged', controller.unchangedRecords);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:21:router.get('/records/:recordType/hash-preview', controller.hashPreview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:22:router.get('/records/:recordType/hash', controller.hashOne);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:24:router.get('/records/:recordType/blockchain-key-preview', controller.blockchainKeyPreview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:25:router.get('/records/:recordType/blockchain-key', controller.blockchainKeyOne);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:27:router.get('/records/:recordType/proof-only/preview', controller.proofOnlyPreview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:28:router.post('/records/:recordType/proof-only/submit', controller.proofOnlySubmit);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:30:router.get('/history/:historyId/transaction-link', controller.transactionLink);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:31:router.post('/history/:historyId/link-transaction', controller.linkTransaction);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:38:router.get('/history/health', historyController.health);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:39:router.get('/history/summary', historyController.summary);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:40:router.get('/history', historyController.listHistory);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:41:router.get('/history/:historyId', historyController.getHistoryById);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:42:router.get('/records/:recordType/history/latest', historyController.getLatestRecordHistory);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:43:router.get('/records/:recordType/history', historyController.listRecordHistory);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:51:router.get('/verification/health', verificationController.health);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:52:router.get('/verification/summary', verificationController.summary);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:53:router.get('/verification/logs', verificationController.listLogs);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:54:router.get('/verification/logs/:verificationId', verificationController.getLogById);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:55:router.get('/records/:recordType/verification/preview', verificationController.preview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:56:router.get('/records/:recordType/verification/latest', verificationController.getLatestRecordLog);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:57:router.get('/records/:recordType/verification/logs', verificationController.listRecordLogs);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:65:router.get('/records/AML/history/source-count', amlHistoryController.sourceCount);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:66:router.get('/records/AML/history/preview', amlHistoryController.preview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:67:router.post('/records/AML/history/sync', amlHistoryController.sync);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:76:router.get('/records/CUSTOMER/history/source-discovery', customerHistoryController.sourceDiscovery);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:77:router.get('/records/CUSTOMER/history/source-count', customerHistoryController.sourceCount);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:78:router.get('/records/CUSTOMER/history/preview', customerHistoryController.preview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:79:router.post('/records/CUSTOMER/history/sync', customerHistoryController.sync);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:88:router.get('/records/TRANSACTION/history/source-discovery', transactionHistoryController.sourceDiscovery);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:89:router.get('/records/TRANSACTION/history/source-count', transactionHistoryController.sourceCount);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:90:router.get('/records/TRANSACTION/history/preview', transactionHistoryController.preview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:91:router.post('/records/TRANSACTION/history/sync', transactionHistoryController.sync);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:100:router.get('/records/SCREENING_ACTIVITY/history/source-discovery', screeningHistoryController.sourceDiscovery);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:101:router.get('/records/SCREENING_ACTIVITY/history/source-count', screeningHistoryController.sourceCount);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:102:router.get('/records/SCREENING_ACTIVITY/history/preview', screeningHistoryController.preview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:103:router.post('/records/SCREENING_ACTIVITY/history/sync', screeningHistoryController.sync);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:112:router.get('/retry/health', retryController.health);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:113:router.get('/retry/candidates', retryController.candidates);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:114:router.post('/retry/run', retryController.run);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:122:router.get('/verification/logic/health', verificationLogicController.health);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:123:router.get('/verification/candidates', verificationLogicController.candidates);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:124:router.post('/verification/run', verificationLogicController.run);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step24_20260625_145054:125:router.post('/records/:recordType/verification/run', verificationLogicController.runRecord);
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_remove_tin_number_20260616_161642:21:router.post('/customers', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_remove_tin_number_20260616_161642:283:router.get('/customers', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_remove_tin_number_20260616_161642:331:router.get('/dashboard', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_remove_tin_number_20260616_161642:368:router.get('/kyc-daily-created', async (req, res) => {
+blockchain-api/src/routes/governmentBlockchainAuth.routes.js:8:router.post('/login', async (req, res) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_hash_verify_pg_function:192:router.get('/events', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_hash_verify_pg_function:261:router.get('/events/:eventId', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_hash_verify_pg_function:282:router.post('/events/:eventId/validate', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_hash_verify_pg_function:362:router.post('/events/:eventId/approve', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_hash_verify_pg_function:398:router.post('/events/:eventId/reject', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_hash_verify_pg_function:432:router.post('/events/:eventId/submit-blockchain', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_hash_verify_pg_function:544:router.get('/events/:eventId/blockchain-proof', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_hash_verify_pg_function:646:router.get('/dashboard', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_hash_verify_pg_function:775:router.post('/events/:eventId/hash-verify', async (req, res) => {
+blockchain-api/src/routes/audit-blockchain-proof.routes.js:6:router.get('/health', controller.health);
+blockchain-api/src/routes/audit-blockchain-proof.routes.js:7:router.get('/summary', controller.summary);
+blockchain-api/src/routes/audit-blockchain-proof.routes.js:8:router.get('/pending', controller.pending);
+blockchain-api/src/routes/audit-blockchain-proof.routes.js:9:router.post('/submit-next', controller.submitNext);
+blockchain-api/src/routes/audit-blockchain-proof.routes.js:10:router.post('/submit/:outboxId', controller.submitByOutboxId);
+blockchain-api/src/routes/audit-blockchain-proof.routes.js:11:router.get('/fabric/:auditIdOrBlockchainKey', controller.getFabricProof);
+blockchain-api/src/routes/audit-blockchain-proof.routes.js:12:router.post('/verify', controller.verifyFabricProof);
+blockchain-api/src/routes/payments-digital-stamps.routes.js.bak_fix_post_20260605_141910:9:router.get('/', async (req, res) => {
+blockchain-api/src/routes/payments-digital-stamps.routes.js.bak_fix_post_20260605_141910:47:router.get('/summary', async (req, res) => {
+blockchain-api/src/routes/payments-digital-stamps.routes.js.bak_fix_post_20260605_141910:84:router.post('/', async (req, res) => {
+blockchain-api/src/routes/index.js.bak_register_dev_transactions_20260617_143113:102:router.get('/health', (req, res) => {
+blockchain-api/src/routes/index.js.bak_register_dev_transactions_20260617_143113:123:router.get('/government-blockchain/accounts/:accountId/transactions', async (req, res) => {
+blockchain-api/src/routes/government-transactions.routes.js.bak_add_ministries_dropdown_20260605_114240:15:router.get('/', async (req, res) => {
+blockchain-api/src/routes/government-transactions.routes.js.bak_add_ministries_dropdown_20260605_114240:188:router.get('/reference/transaction-status', async (req, res) => {
+blockchain-api/src/routes/government-transactions.routes.js.bak_add_ministries_dropdown_20260605_114240:218:router.get('/reference/payment-methods', async (req, res) => {
+blockchain-api/src/routes/government-transactions.routes.js.bak_add_ministries_dropdown_20260605_114240:251:router.get('/residents-dropdown', async (req, res) => {
+blockchain-api/src/routes/government-transactions.routes.js.bak_add_ministries_dropdown_20260605_114240:355:router.get('/services', async (req, res) => {
+blockchain-api/src/routes/government-transactions.routes.js.bak_add_ministries_dropdown_20260605_114240:466:router.post('/', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_final_remove_tin_get_20260616_163135:21:router.post('/customers', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_final_remove_tin_get_20260616_163135:273:router.get('/customers', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_final_remove_tin_get_20260616_163135:320:router.get('/dashboard', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_final_remove_tin_get_20260616_163135:357:router.get('/kyc-daily-created', async (req, res) => {
+blockchain-api/src/routes/government-aml-cases.routes.js:104:router.get('/summary', async (req, res) => {
+blockchain-api/src/routes/government-aml-cases.routes.js:140:router.get('/', async (req, res) => {
+blockchain-api/src/routes/government-aml-cases.routes.js:289:router.get('/:caseId', async (req, res) => {
+blockchain-api/src/routes/government-aml-cases.routes.js:434:router.post('/', async (req, res) => {
+blockchain-api/src/routes/government-aml-cases.routes.js:591:router.patch('/:caseId/assign', async (req, res) => {
+blockchain-api/src/routes/government-aml-cases.routes.js:673:router.patch('/:caseId/status', async (req, res) => {
+blockchain-api/src/routes/government-aml-cases.routes.js:762:router.patch('/:caseId/close', async (req, res) => {
+blockchain-api/src/routes/dev-transaction.routes.js:20:router.get("/daily-created", async (req, res) => {
+blockchain-api/src/routes/dev-transaction.routes.js:113:router.get("/", async (req, res) => {
+blockchain-api/src/routes/dev-transaction.routes.js:234:router.get("/:transactionId", async (req, res) => {
+blockchain-api/src/routes/dev-transaction.routes.js:272:router.post("/create", async (req, res) => {
+blockchain-api/src/routes/government-risk-fraud-screening.routes.js:118:router.get('/summary', async (req, res) => {
+blockchain-api/src/routes/government-risk-fraud-screening.routes.js:193:router.get('/', async (req, res) => {
+blockchain-api/src/routes/government-blockchain/ministry.routes.js.bak_force_gov_20260608_105720:16:router.post('/login', loginMinistry);
+blockchain-api/src/routes/government-blockchain/ministry.routes.js.bak_force_gov_20260608_105720:17:router.post('/draft', saveMinistryDraft);
+blockchain-api/src/routes/government-blockchain/ministry.routes.js.bak_force_gov_20260608_105720:18:router.post('/bulk', bulkCreateMinistries);
+blockchain-api/src/routes/government-blockchain/ministry.routes.js.bak_force_gov_20260608_105720:19:router.get('/reference/next-ministry-id', getNextMinistryId);
+blockchain-api/src/routes/government-blockchain/ministry.routes.js.bak_force_gov_20260608_105720:20:router.post('/', createMinistryAccount);
+blockchain-api/src/routes/government-blockchain/ministry.routes.js.bak_force_gov_20260608_105720:21:router.get('/', getMinistries);
+blockchain-api/src/routes/government-blockchain/ministry.routes.js.bak_force_gov_20260608_105720:23:router.post('/:ministryId/wallet', createMinistryWallet);
+blockchain-api/src/routes/government-blockchain/ministry.routes.js.bak_force_gov_20260608_105720:24:router.get('/:ministryId', getMinistryById);
+blockchain-api/src/routes/government-blockchain/settings.routes.js:357:router.get('/', async (req, res) => {
+blockchain-api/src/routes/government-blockchain/settings.routes.js:385:router.put('/', async (req, res) => {
+blockchain-api/src/routes/government-blockchain/settings.routes.js:474:router.get('/status', async (req, res) => {
+blockchain-api/src/routes/government-blockchain/settings.routes.js:560:router.post('/test-connection', async (req, res) => {
+blockchain-api/src/routes/government-blockchain/settings.routes.js.bak_step6_audit_fix_20260610_142745:330:router.get('/', async (req, res) => {
+blockchain-api/src/routes/government-blockchain/settings.routes.js.bak_step6_audit_fix_20260610_142745:358:router.put('/', async (req, res) => {
+blockchain-api/src/routes/government-blockchain/settings.routes.js.bak_step6_audit_fix_20260610_142745:447:router.get('/status', async (req, res) => {
+blockchain-api/src/routes/government-blockchain/settings.routes.js.bak_step6_audit_fix_20260610_142745:533:router.post('/test-connection', async (req, res) => {
+blockchain-api/src/routes/government-blockchain/settings.routes.js.bak_step4_fix_20260610_142613:332:router.get('/', async (req, res) => {
+blockchain-api/src/routes/government-blockchain/settings.routes.js.bak_step4_fix_20260610_142613:360:router.put('/', async (req, res) => {
+blockchain-api/src/routes/government-blockchain/settings.routes.js.bak_step4_fix_20260610_142613:449:router.get('/status', async (req, res) => {
+blockchain-api/src/routes/government-blockchain/settings.routes.js.bak_step4_fix_20260610_142613:532:router.post('/test-connection', async (req, res) => {
+blockchain-api/src/routes/government-blockchain/ministry.routes.js.bak_bulk_multer_20260608_111005:16:router.post('/login', loginMinistry);
+blockchain-api/src/routes/government-blockchain/ministry.routes.js.bak_bulk_multer_20260608_111005:17:router.post('/draft', saveMinistryDraft);
+blockchain-api/src/routes/government-blockchain/ministry.routes.js.bak_bulk_multer_20260608_111005:18:router.post('/bulk', bulkCreateMinistries);
+blockchain-api/src/routes/government-blockchain/ministry.routes.js.bak_bulk_multer_20260608_111005:19:router.get('/reference/next-ministry-id', getNextMinistryId);
+blockchain-api/src/routes/government-blockchain/ministry.routes.js.bak_bulk_multer_20260608_111005:20:router.post('/', createMinistryAccount);
+blockchain-api/src/routes/government-blockchain/ministry.routes.js.bak_bulk_multer_20260608_111005:21:router.get('/', getMinistries);
+blockchain-api/src/routes/government-blockchain/ministry.routes.js.bak_bulk_multer_20260608_111005:23:router.post('/:ministryId/wallet', createMinistryWallet);
+blockchain-api/src/routes/government-blockchain/ministry.routes.js.bak_bulk_multer_20260608_111005:24:router.get('/:ministryId', getMinistryById);
+blockchain-api/src/routes/government-blockchain/reference.routes.js:12:router.get('/countries', getCountries);
+blockchain-api/src/routes/government-blockchain/reference.routes.js:13:router.get('/governorates', getGovernorates);
+blockchain-api/src/routes/government-blockchain/reference.routes.js:14:router.get('/wallet-types', getWalletTypes);
+blockchain-api/src/routes/government-blockchain/reference.routes.js:15:router.get('/wallet-statuses', getWalletStatuses);
+blockchain-api/src/routes/government-blockchain/ministry.routes.js:24:router.post('/login', loginMinistry);
+blockchain-api/src/routes/government-blockchain/ministry.routes.js:25:router.post('/draft', saveMinistryDraft);
+blockchain-api/src/routes/government-blockchain/ministry.routes.js:26:router.post('/bulk', upload.single('file'), bulkCreateMinistries);
+blockchain-api/src/routes/government-blockchain/ministry.routes.js:27:router.get('/reference/next-ministry-id', getNextMinistryId);
+blockchain-api/src/routes/government-blockchain/ministry.routes.js:28:router.post('/', createMinistryAccount);
+blockchain-api/src/routes/government-blockchain/ministry.routes.js:29:router.get('/', getMinistries);
+blockchain-api/src/routes/government-blockchain/ministry.routes.js:31:router.post('/:ministryId/wallet', createMinistryWallet);
+blockchain-api/src/routes/government-blockchain/ministry.routes.js:32:router.get('/:ministryId', getMinistryById);
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_fabric_resident_submit_20260616_122824:12:router.post('/customers', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_fabric_resident_submit_20260616_122824:185:router.get('/customers', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_fabric_resident_submit_20260616_122824:231:router.get('/dashboard', async (req, res) => {
+blockchain-api/src/routes/government-audit-logs.routes.js:116:router.get('/summary', async (req, res) => {
+blockchain-api/src/routes/government-audit-logs.routes.js:166:router.get('/', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_fix_customerId_not_defined_20260616_150740:21:router.post('/customers', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_fix_customerId_not_defined_20260616_150740:241:router.get('/customers', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_fix_customerId_not_defined_20260616_150740:289:router.get('/dashboard', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_kyc_valoores_key_20260616_140003:21:router.post('/customers', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_kyc_valoores_key_20260616_140003:233:router.get('/customers', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_kyc_valoores_key_20260616_140003:279:router.get('/dashboard', async (req, res) => {
+blockchain-api/src/routes/payments-digital-stamps.routes.js:24:router.get('/', async (req, res) => {
+blockchain-api/src/routes/payments-digital-stamps.routes.js:62:router.get('/summary', async (req, res) => {
+blockchain-api/src/routes/payments-digital-stamps.routes.js:104:router.get('/residents/dropdown', async (req, res) => {
+blockchain-api/src/routes/payments-digital-stamps.routes.js:139:router.get('/services/dropdown', async (req, res) => {
+blockchain-api/src/routes/payments-digital-stamps.routes.js:174:router.get('/services/:serviceId/fees', async (req, res) => {
+blockchain-api/src/routes/payments-digital-stamps.routes.js:225:router.post('/issue', async (req, res) => {
+blockchain-api/src/routes/payments-digital-stamps.routes.js:404:router.post('/', async (req, res) => {
+blockchain-api/src/routes/transaction.routes.js:257:router.post(
+blockchain-api/src/routes/transaction.routes.js:268:router.post(
+blockchain-api/src/routes/transaction.routes.js:279:router.get(
+blockchain-api/src/routes/documents-kyc.routes.js.bak_upload_fix_20260605_154816:76:router.get('/', async (req, res) => {
+blockchain-api/src/routes/documents-kyc.routes.js.bak_upload_fix_20260605_154816:123:router.get('/summary', async (req, res) => {
+blockchain-api/src/routes/documents-kyc.routes.js.bak_upload_fix_20260605_154816:154:router.post('/upload', (req, res) => {
+blockchain-api/src/routes/documents-kyc.routes.js.bak_upload_fix_20260605_154816:264:router.patch('/:id/status', async (req, res) => {
+blockchain-api/src/routes/documents-kyc.routes.js.bak_upload_fix_20260605_154816:341:router.get('/:id/download', async (req, res) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_reconcile_blockchain_status_v2:191:router.get('/events', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_reconcile_blockchain_status_v2:260:router.get('/events/:eventId', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_reconcile_blockchain_status_v2:281:router.post('/events/:eventId/validate', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_reconcile_blockchain_status_v2:361:router.post('/events/:eventId/approve', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_reconcile_blockchain_status_v2:397:router.post('/events/:eventId/reject', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_reconcile_blockchain_status_v2:431:router.post('/events/:eventId/submit-blockchain', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_reconcile_blockchain_status_v2:543:router.get('/events/:eventId/blockchain-proof', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_reconcile_blockchain_status_v2:645:router.get('/dashboard', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_reconcile_blockchain_status_v2:774:router.post('/events/:eventId/hash-verify', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_fix_kyc_daily_date_format_20260616_154530:21:router.post('/customers', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_fix_kyc_daily_date_format_20260616_154530:245:router.get('/customers', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_fix_kyc_daily_date_format_20260616_154530:293:router.get('/dashboard', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_fix_kyc_daily_date_format_20260616_154530:330:router.get('/kyc-daily-created', async (req, res) => {
+blockchain-api/src/routes/government-reports.routes.js.bak_summary_order_20260610_165607:12:router.get('/', controller.getDashboard);
+blockchain-api/src/routes/government-reports.routes.js.bak_summary_order_20260610_165607:18:router.get('/templates', controller.getTemplates);
+blockchain-api/src/routes/government-reports.routes.js.bak_summary_order_20260610_165607:24:router.get('/recent', controller.getRecentReports);
+blockchain-api/src/routes/government-reports.routes.js.bak_summary_order_20260610_165607:30:router.get('/:reportCode', controller.getReportDetails);
+blockchain-api/src/routes/government-reports.routes.js.bak_summary_order_20260610_165607:36:router.post('/generate', controller.generateReport);
+blockchain-api/src/routes/audit-batch-proof.routes.js:6:router.get('/health', controller.health);
+blockchain-api/src/routes/audit-batch-proof.routes.js:7:router.get('/summary', controller.summary);
+blockchain-api/src/routes/audit-batch-proof.routes.js:8:router.get('/batches', controller.listBatches);
+blockchain-api/src/routes/audit-batch-proof.routes.js:9:router.post('/batches', controller.createBatch);
+blockchain-api/src/routes/audit-batch-proof.routes.js:10:router.get('/batches/:batchIdOrKey', controller.getBatch);
+blockchain-api/src/routes/audit-batch-proof.routes.js:11:router.post('/batches/:batchIdOrKey/submit', controller.submitBatch);
+blockchain-api/src/routes/audit-batch-proof.routes.js:12:router.post('/batches/:batchIdOrKey/verify', controller.verifyBatchProof);
+blockchain-api/src/routes/audit-batch-proof.routes.js:13:router.post('/batches/:batchIdOrKey/items/:auditId/verify', controller.verifyBatchItem);
+blockchain-api/src/routes/audit-batch-proof.routes.js:14:router.get('/fabric/:batchIdOrKey', controller.getFabricBatchProof);
+blockchain-api/src/routes/audit-validation.routes.js.bak_business_object_history_filter:90:router.get('/events', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_business_object_history_filter:159:router.get('/events/:eventId', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_business_object_history_filter:180:router.post('/events/:eventId/validate', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_business_object_history_filter:260:router.post('/events/:eventId/approve', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_business_object_history_filter:296:router.post('/events/:eventId/reject', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_business_object_history_filter:330:router.post('/events/:eventId/submit-blockchain', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_business_object_history_filter:442:router.get('/events/:eventId/blockchain-proof', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_business_object_history_filter:544:router.get('/dashboard', async (req, res, next) => {
+blockchain-api/src/routes/government-aml-alerts-queue.routes.js:48:router.get('/', async (req, res) => {
+blockchain-api/src/routes/government-aml-alerts-queue.routes.js:184:router.post('/:alertId/review', async (req, res) => {
+blockchain-api/src/routes/government-aml-alerts-queue.routes.js:277:router.post('/:alertId/close', async (req, res) => {
+blockchain-api/src/routes/dev-transaction.routes.js.bak_clean_blockchain_response_regex_20260617_151317:18:router.post("/create", async (req, res) => {
+blockchain-api/src/routes/resident-wallets.routes.js.bak_20260604_094752:5:router.get('/resident-wallets', async (req, res) => {
+blockchain-api/src/routes/governmentBlockchainAuth.routes.js.bak_phase5_account_login_inspect_20260608_120955:8:router.post('/login', async (req, res) => {
+blockchain-api/src/routes/government-approval-queue.routes.js:32:router.get('/summary', async (req, res) => {
+blockchain-api/src/routes/government-approval-queue.routes.js:72:router.get('/transactions', async (req, res) => {
+blockchain-api/src/routes/government-approval-queue.routes.js:135:router.patch('/transactions/approve-selected', async (req, res) => {
+blockchain-api/src/routes/government-approval-queue.routes.js:172:router.get('/transactions/:transactionId', async (req, res) => {
+blockchain-api/src/routes/government-approval-queue.routes.js:201:router.patch('/transactions/:transactionId/approve', async (req, res) => {
+blockchain-api/src/routes/government-approval-queue.routes.js:234:router.patch('/transactions/:transactionId/reject', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_fix_kyc_ledger_response_20260616_143414:21:router.post('/customers', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_fix_kyc_ledger_response_20260616_143414:233:router.get('/customers', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_fix_kyc_ledger_response_20260616_143414:279:router.get('/dashboard', async (req, res) => {
+blockchain-api/src/routes/publicAdministration.routes.js:15:router.post('/', createPublicAdministration);
+blockchain-api/src/routes/publicAdministration.routes.js:25:router.get('/dropdown', async (req, res) => {
+blockchain-api/src/routes/publicAdministration.routes.js:55:router.get('/next-codes', getNextPublicAdministrationCodes);
+blockchain-api/src/routes/publicAdministration.routes.js:56:router.post('/bulk-upload', bulkUploadPublicAdministrations);
+blockchain-api/src/routes/publicAdministration.routes.js:57:router.post('/drafts', savePublicAdministrationDraft);
+blockchain-api/src/routes/publicAdministration.routes.js:58:router.post('/:administrationId/wallet', createPublicAdministrationWallet);
+blockchain-api/src/routes/publicAdministration.routes.js:59:// router.post('/:administrationId/wallet', getNextPublicAdministrationCodes);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step17_20260625_102815:8:router.get('/health', controller.health);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step17_20260625_102815:10:router.get('/records/:recordType/create-candidates', controller.createCandidates);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step17_20260625_102815:11:router.get('/records/:recordType/update-candidates', controller.updateCandidates);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step17_20260625_102815:12:router.get('/records/:recordType/unchanged', controller.unchangedRecords);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step17_20260625_102815:14:router.get('/records/:recordType/hash-preview', controller.hashPreview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step17_20260625_102815:15:router.get('/records/:recordType/hash', controller.hashOne);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step17_20260625_102815:17:router.get('/records/:recordType/blockchain-key-preview', controller.blockchainKeyPreview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step17_20260625_102815:18:router.get('/records/:recordType/blockchain-key', controller.blockchainKeyOne);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step17_20260625_102815:20:router.get('/records/:recordType/proof-only/preview', controller.proofOnlyPreview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step17_20260625_102815:21:router.post('/records/:recordType/proof-only/submit', controller.proofOnlySubmit);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step17_20260625_102815:23:router.get('/history/:historyId/transaction-link', controller.transactionLink);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step17_20260625_102815:24:router.post('/history/:historyId/link-transaction', controller.linkTransaction);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step17_20260625_102815:31:router.get('/history/health', historyController.health);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step17_20260625_102815:32:router.get('/history/summary', historyController.summary);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step17_20260625_102815:33:router.get('/history', historyController.listHistory);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step17_20260625_102815:34:router.get('/history/:historyId', historyController.getHistoryById);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step17_20260625_102815:35:router.get('/records/:recordType/history/latest', historyController.getLatestRecordHistory);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step17_20260625_102815:36:router.get('/records/:recordType/history', historyController.listRecordHistory);
+blockchain-api/src/routes/valoores-blockchain.routes.js:141:router.post('/customers', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js:395:router.get('/customers/count', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js:446:router.get('/customers/:customerId', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js:456:      message: 'customerId is required'
+blockchain-api/src/routes/valoores-blockchain.routes.js:605:router.get('/customers', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js:699:router.get('/dashboard', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js:736:router.get('/kyc-daily-created', async (req, res) => {
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step23_20260625_142319:14:router.get('/health', controller.health);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step23_20260625_142319:16:router.get('/records/:recordType/create-candidates', controller.createCandidates);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step23_20260625_142319:17:router.get('/records/:recordType/update-candidates', controller.updateCandidates);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step23_20260625_142319:18:router.get('/records/:recordType/unchanged', controller.unchangedRecords);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step23_20260625_142319:20:router.get('/records/:recordType/hash-preview', controller.hashPreview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step23_20260625_142319:21:router.get('/records/:recordType/hash', controller.hashOne);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step23_20260625_142319:23:router.get('/records/:recordType/blockchain-key-preview', controller.blockchainKeyPreview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step23_20260625_142319:24:router.get('/records/:recordType/blockchain-key', controller.blockchainKeyOne);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step23_20260625_142319:26:router.get('/records/:recordType/proof-only/preview', controller.proofOnlyPreview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step23_20260625_142319:27:router.post('/records/:recordType/proof-only/submit', controller.proofOnlySubmit);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step23_20260625_142319:29:router.get('/history/:historyId/transaction-link', controller.transactionLink);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step23_20260625_142319:30:router.post('/history/:historyId/link-transaction', controller.linkTransaction);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step23_20260625_142319:37:router.get('/history/health', historyController.health);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step23_20260625_142319:38:router.get('/history/summary', historyController.summary);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step23_20260625_142319:39:router.get('/history', historyController.listHistory);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step23_20260625_142319:40:router.get('/history/:historyId', historyController.getHistoryById);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step23_20260625_142319:41:router.get('/records/:recordType/history/latest', historyController.getLatestRecordHistory);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step23_20260625_142319:42:router.get('/records/:recordType/history', historyController.listRecordHistory);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step23_20260625_142319:50:router.get('/verification/health', verificationController.health);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step23_20260625_142319:51:router.get('/verification/summary', verificationController.summary);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step23_20260625_142319:52:router.get('/verification/logs', verificationController.listLogs);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step23_20260625_142319:53:router.get('/verification/logs/:verificationId', verificationController.getLogById);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step23_20260625_142319:54:router.get('/records/:recordType/verification/preview', verificationController.preview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step23_20260625_142319:55:router.get('/records/:recordType/verification/latest', verificationController.getLatestRecordLog);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step23_20260625_142319:56:router.get('/records/:recordType/verification/logs', verificationController.listRecordLogs);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step23_20260625_142319:64:router.get('/records/AML/history/source-count', amlHistoryController.sourceCount);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step23_20260625_142319:65:router.get('/records/AML/history/preview', amlHistoryController.preview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step23_20260625_142319:66:router.post('/records/AML/history/sync', amlHistoryController.sync);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step23_20260625_142319:75:router.get('/records/CUSTOMER/history/source-discovery', customerHistoryController.sourceDiscovery);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step23_20260625_142319:76:router.get('/records/CUSTOMER/history/source-count', customerHistoryController.sourceCount);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step23_20260625_142319:77:router.get('/records/CUSTOMER/history/preview', customerHistoryController.preview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step23_20260625_142319:78:router.post('/records/CUSTOMER/history/sync', customerHistoryController.sync);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step23_20260625_142319:87:router.get('/records/TRANSACTION/history/source-discovery', transactionHistoryController.sourceDiscovery);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step23_20260625_142319:88:router.get('/records/TRANSACTION/history/source-count', transactionHistoryController.sourceCount);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step23_20260625_142319:89:router.get('/records/TRANSACTION/history/preview', transactionHistoryController.preview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step23_20260625_142319:90:router.post('/records/TRANSACTION/history/sync', transactionHistoryController.sync);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step23_20260625_142319:99:router.get('/records/SCREENING_ACTIVITY/history/source-discovery', screeningHistoryController.sourceDiscovery);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step23_20260625_142319:100:router.get('/records/SCREENING_ACTIVITY/history/source-count', screeningHistoryController.sourceCount);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step23_20260625_142319:101:router.get('/records/SCREENING_ACTIVITY/history/preview', screeningHistoryController.preview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step23_20260625_142319:102:router.post('/records/SCREENING_ACTIVITY/history/sync', screeningHistoryController.sync);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step23_20260625_142319:111:router.get('/retry/health', retryController.health);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step23_20260625_142319:112:router.get('/retry/candidates', retryController.candidates);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step23_20260625_142319:113:router.post('/retry/run', retryController.run);
+blockchain-api/src/routes/government-account-login.routes.js.bak_add_account_type_20260608_122831:200:router.post('/', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_fix_valoores_customer_name_20260616_155204:21:router.post('/customers', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_fix_valoores_customer_name_20260616_155204:245:router.get('/customers', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_fix_valoores_customer_name_20260616_155204:293:router.get('/dashboard', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_fix_valoores_customer_name_20260616_155204:330:router.get('/kyc-daily-created', async (req, res) => {
+blockchain-api/src/routes/resident.routes.js.bak_force_gov_resident_20260608_114935:27:router.post('/', requireHandler('createResident'));
+blockchain-api/src/routes/resident.routes.js.bak_force_gov_resident_20260608_114935:29:router.post('/draft', requireHandler('saveDraft'));
+blockchain-api/src/routes/resident.routes.js.bak_force_gov_resident_20260608_114935:31:router.get('/search', requireHandler('searchResidents'));
+blockchain-api/src/routes/resident.routes.js.bak_force_gov_resident_20260608_114935:39:router.post('/wallet-login', requireHandler('walletLogin'));
+blockchain-api/src/routes/resident.routes.js.bak_force_gov_resident_20260608_114935:41:router.get('/:residentId', requireHandler('getResidentById'));
+blockchain-api/src/routes/resident.routes.js.bak_force_gov_resident_20260608_114935:43:router.post('/:residentId/wallet', requireHandler('createWallet'));
+blockchain-api/src/routes/resident.routes.js.bak_force_gov_resident_20260608_114935:45:router.post('/:residentId/submit-kyc', requireHandler('submitKyc'));
+blockchain-api/src/routes/resident.routes.js.bak_force_gov_resident_20260608_114935:47:router.post('/:residentId/sync-blockchain', requireHandler('syncResidentToBlockchain'));
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_pagination_20260723_204745:21:router.post('/customers', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_pagination_20260723_204745:260:router.get('/customers/count', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_pagination_20260723_204745:311:router.get('/customers/:customerId', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_pagination_20260723_204745:321:      message: 'customerId is required'
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_pagination_20260723_204745:470:router.get('/customers', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_pagination_20260723_204745:562:router.get('/dashboard', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_pagination_20260723_204745:599:router.get('/kyc-daily-created', async (req, res) => {
+blockchain-api/src/routes/couchdb.routes.js:6:router.get('/status', couchdbController.getStatus);
+blockchain-api/src/routes/couchdb.routes.js:7:router.get('/databases', couchdbController.getDatabases);
+blockchain-api/src/routes/couchdb.routes.js:8:router.get('/database-counts', couchdbController.getAllDatabaseCounts);
+blockchain-api/src/routes/couchdb.routes.js:10:router.get('/:database/info', couchdbController.getDatabaseInfo);
+blockchain-api/src/routes/couchdb.routes.js:11:router.get('/:database/documents', couchdbController.getDocuments);
+blockchain-api/src/routes/couchdb.routes.js:12:router.get('/:database/counts', couchdbController.getCounts);
+blockchain-api/src/routes/couchdb.routes.js:13:router.get('/:database/documents/:documentId', couchdbController.getDocumentById);
+blockchain-api/src/routes/dev-transaction.routes.js.bak_fix_db_connection_20260617_143743:18:router.post("/create", async (req, res) => {
+blockchain-api/src/routes/data-change-bulk-compliance-approval.routes.js:6:router.get('/health', controller.health);
+blockchain-api/src/routes/data-change-bulk-compliance-approval.routes.js:7:router.get('/summary', controller.summary);
+blockchain-api/src/routes/data-change-bulk-compliance-approval.routes.js:8:router.get('/candidates', controller.candidates);
+blockchain-api/src/routes/data-change-bulk-compliance-approval.routes.js:9:router.get('/batches', controller.batches);
+blockchain-api/src/routes/data-change-bulk-compliance-approval.routes.js:10:router.get('/batches/:batchIdOrKey', controller.batchDetail);
+blockchain-api/src/routes/data-change-bulk-compliance-approval.routes.js:11:router.post('/batches', controller.create);
+blockchain-api/src/routes/data-change-bulk-compliance-approval.routes.js:12:router.post('/batches/:batchIdOrKey/approve', controller.approve);
+blockchain-api/src/routes/data-change-bulk-compliance-approval.routes.js:13:router.post('/batches/:batchIdOrKey/reject', controller.reject);
+blockchain-api/src/routes/transactions.routes.js:19:router.get("/", transactionController.searchTransactions);
+blockchain-api/src/routes/transactions.routes.js:22:router.get("/:transactionId", transactionController.getTransactionById);
+blockchain-api/src/routes/dev-transaction.routes.js.bak_add_get_apis_20260617_163722:18:router.post("/create", async (req, res) => {
+blockchain-api/src/routes/government-services.routes.js:89:router.get('/summary', async (req, res) => {
+blockchain-api/src/routes/government-services.routes.js:115:router.get('/reference/categories', async (req, res) => {
+blockchain-api/src/routes/government-services.routes.js:142:router.get('/reference/currency', async (req, res) => {
+blockchain-api/src/routes/government-services.routes.js:171:router.get('/', async (req, res) => {
+blockchain-api/src/routes/government-services.routes.js:259:router.get('/:serviceId', async (req, res) => {
+blockchain-api/src/routes/government-services.routes.js:297:router.post('/', async (req, res) => {
+blockchain-api/src/routes/government-services.routes.js:400:router.put('/:serviceId', async (req, res) => {
+blockchain-api/src/routes/government-services.routes.js:498:router.patch('/:serviceId/status', async (req, res) => {
+blockchain-api/src/routes/government-services.routes.js:540:router.delete('/:serviceId', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.before_professional_log_rollback_20260724_140044:183:router.post('/customers', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.before_professional_log_rollback_20260724_140044:442:router.get('/customers/count', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.before_professional_log_rollback_20260724_140044:493:router.get('/customers/:customerId', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.before_professional_log_rollback_20260724_140044:503:      message: 'customerId is required'
+blockchain-api/src/routes/valoores-blockchain.routes.js.before_professional_log_rollback_20260724_140044:652:router.get('/customers', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.before_professional_log_rollback_20260724_140044:746:router.get('/dashboard', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.before_professional_log_rollback_20260724_140044:783:router.get('/kyc-daily-created', async (req, res) => {
+blockchain-api/src/routes/dev-transaction.routes.js.bak_keep_pg_record_on_fabric_fail_20260617_143351:18:router.post("/create", async (req, res) => {
+blockchain-api/src/routes/blockchain-kyc.routes.js:7:router.post(
+blockchain-api/src/routes/blockchain-kyc.routes.js:8:  '/blockchain-wallet',
+blockchain-api/src/routes/audit-validation.routes.js.bak_final_strict_record_pk_filter:184:router.get('/events', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_final_strict_record_pk_filter:253:router.get('/events/:eventId', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_final_strict_record_pk_filter:274:router.post('/events/:eventId/validate', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_final_strict_record_pk_filter:354:router.post('/events/:eventId/approve', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_final_strict_record_pk_filter:390:router.post('/events/:eventId/reject', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_final_strict_record_pk_filter:424:router.post('/events/:eventId/submit-blockchain', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_final_strict_record_pk_filter:536:router.get('/events/:eventId/blockchain-proof', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_final_strict_record_pk_filter:638:router.get('/dashboard', async (req, res, next) => {
+blockchain-api/src/routes/auth.routes.js:109:router.post(
+blockchain-api/src/routes/auth.routes.js:120:router.post(
+blockchain-api/src/routes/auth.routes.js:131:router.get(
+blockchain-api/src/routes/audit-validation.routes.js.bak_fix_hash_verify_db_client:192:router.get('/events', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_fix_hash_verify_db_client:261:router.get('/events/:eventId', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_fix_hash_verify_db_client:282:router.post('/events/:eventId/validate', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_fix_hash_verify_db_client:362:router.post('/events/:eventId/approve', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_fix_hash_verify_db_client:398:router.post('/events/:eventId/reject', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_fix_hash_verify_db_client:432:router.post('/events/:eventId/submit-blockchain', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_fix_hash_verify_db_client:544:router.get('/events/:eventId/blockchain-proof', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_fix_hash_verify_db_client:646:router.get('/dashboard', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_fix_hash_verify_db_client:775:router.post('/events/:eventId/hash-verify', async (req, res) => {
+blockchain-api/src/routes/wallet.routes.js:7:router.get('/next-customer-id', walletController.getNextCustomerId);
+blockchain-api/src/routes/wallet.routes.js:20:router.get('/', walletController.listWallets);
+blockchain-api/src/routes/wallet.routes.js:27:router.post('/', walletController.createWallet);
+blockchain-api/src/routes/wallet.routes.js:29:router.post('/organization-wallets', walletController.createOrganizationWallet);
+blockchain-api/src/routes/wallet.routes.js:36:router.post('/login', walletController.loginWallet);
+blockchain-api/src/routes/wallet.routes.js:43:router.get('/customer/:customerId', walletController.getWalletByCustomerId);
+blockchain-api/src/routes/wallet.routes.js:50:router.get('/:walletAddress', walletController.getWalletByAddress);
+blockchain-api/src/routes/payments-digital-stamps.routes.js.bak_fix_post_20260605_141914:9:router.get('/', async (req, res) => {
+blockchain-api/src/routes/payments-digital-stamps.routes.js.bak_fix_post_20260605_141914:47:router.get('/summary', async (req, res) => {
+blockchain-api/src/routes/payments-digital-stamps.routes.js.bak_fix_post_20260605_141914:84:router.post('/', async (req, res) => {
+blockchain-api/src/routes/dev-transaction.routes.js.bak_clean_blockchain_response_20260617_151228:18:router.post("/create", async (req, res) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_hash_microseconds_fix:89:router.get('/events', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_hash_microseconds_fix:158:router.get('/events/:eventId', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_hash_microseconds_fix:179:router.post('/events/:eventId/validate', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_hash_microseconds_fix:272:router.post('/events/:eventId/approve', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_hash_microseconds_fix:308:router.post('/events/:eventId/reject', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_hash_microseconds_fix:342:router.post('/events/:eventId/submit-blockchain', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_exact_record_pk_filter:174:router.get('/events', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_exact_record_pk_filter:243:router.get('/events/:eventId', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_exact_record_pk_filter:264:router.post('/events/:eventId/validate', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_exact_record_pk_filter:344:router.post('/events/:eventId/approve', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_exact_record_pk_filter:380:router.post('/events/:eventId/reject', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_exact_record_pk_filter:414:router.post('/events/:eventId/submit-blockchain', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_exact_record_pk_filter:526:router.get('/events/:eventId/blockchain-proof', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_exact_record_pk_filter:628:router.get('/dashboard', async (req, res, next) => {
+blockchain-api/src/routes/government-aml-dashboard.routes.js:43:router.get('/summary', async (req, res) => {
+blockchain-api/src/routes/government-aml-dashboard.routes.js:91:router.get('/charts', async (req, res) => {
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135807:12:router.get('/health', controller.health);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135807:14:router.get('/records/:recordType/create-candidates', controller.createCandidates);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135807:15:router.get('/records/:recordType/update-candidates', controller.updateCandidates);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135807:16:router.get('/records/:recordType/unchanged', controller.unchangedRecords);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135807:18:router.get('/records/:recordType/hash-preview', controller.hashPreview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135807:19:router.get('/records/:recordType/hash', controller.hashOne);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135807:21:router.get('/records/:recordType/blockchain-key-preview', controller.blockchainKeyPreview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135807:22:router.get('/records/:recordType/blockchain-key', controller.blockchainKeyOne);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135807:24:router.get('/records/:recordType/proof-only/preview', controller.proofOnlyPreview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135807:25:router.post('/records/:recordType/proof-only/submit', controller.proofOnlySubmit);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135807:27:router.get('/history/:historyId/transaction-link', controller.transactionLink);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135807:28:router.post('/history/:historyId/link-transaction', controller.linkTransaction);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135807:35:router.get('/history/health', historyController.health);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135807:36:router.get('/history/summary', historyController.summary);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135807:37:router.get('/history', historyController.listHistory);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135807:38:router.get('/history/:historyId', historyController.getHistoryById);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135807:39:router.get('/records/:recordType/history/latest', historyController.getLatestRecordHistory);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135807:40:router.get('/records/:recordType/history', historyController.listRecordHistory);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135807:48:router.get('/verification/health', verificationController.health);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135807:49:router.get('/verification/summary', verificationController.summary);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135807:50:router.get('/verification/logs', verificationController.listLogs);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135807:51:router.get('/verification/logs/:verificationId', verificationController.getLogById);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135807:52:router.get('/records/:recordType/verification/preview', verificationController.preview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135807:53:router.get('/records/:recordType/verification/latest', verificationController.getLatestRecordLog);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135807:54:router.get('/records/:recordType/verification/logs', verificationController.listRecordLogs);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135807:62:router.get('/records/AML/history/source-count', amlHistoryController.sourceCount);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135807:63:router.get('/records/AML/history/preview', amlHistoryController.preview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135807:64:router.post('/records/AML/history/sync', amlHistoryController.sync);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135807:73:router.get('/records/CUSTOMER/history/source-discovery', customerHistoryController.sourceDiscovery);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135807:74:router.get('/records/CUSTOMER/history/source-count', customerHistoryController.sourceCount);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135807:75:router.get('/records/CUSTOMER/history/preview', customerHistoryController.preview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135807:76:router.post('/records/CUSTOMER/history/sync', customerHistoryController.sync);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135807:85:router.get('/records/TRANSACTION/history/source-discovery', transactionHistoryController.sourceDiscovery);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135807:86:router.get('/records/TRANSACTION/history/source-count', transactionHistoryController.sourceCount);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135807:87:router.get('/records/TRANSACTION/history/preview', transactionHistoryController.preview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135807:88:router.post('/records/TRANSACTION/history/sync', transactionHistoryController.sync);
+blockchain-api/src/routes/hash-verification.routes.js:386:router.post('/', async (req, res) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_safe_exact_record_pk_final:209:router.get('/events', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_safe_exact_record_pk_final:279:router.get('/events/:eventId', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_safe_exact_record_pk_final:300:router.post('/events/:eventId/validate', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_safe_exact_record_pk_final:380:router.post('/events/:eventId/approve', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_safe_exact_record_pk_final:416:router.post('/events/:eventId/reject', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_safe_exact_record_pk_final:450:router.post('/events/:eventId/submit-blockchain', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_safe_exact_record_pk_final:562:router.get('/events/:eventId/blockchain-proof', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_safe_exact_record_pk_final:664:router.get('/dashboard', async (req, res, next) => {
+blockchain-api/src/routes/data-change-audit-dashboard.routes.js:14:router.get('/health', controller.health);
+blockchain-api/src/routes/data-change-audit-dashboard.routes.js:15:router.get('/metrics', controller.metrics);
+blockchain-api/src/routes/data-change-audit-dashboard.routes.js:16:router.get('/events', controller.list);
+blockchain-api/src/routes/data-change-audit-dashboard.routes.js:17:router.get('/events/:auditId', controller.detail);
+blockchain-api/src/routes/data-change-audit-dashboard.routes.js:18:router.get('/dashboard', controller.dashboard);
+blockchain-api/src/routes/data-change-audit-dashboard.routes.js:19:router.get('/export', controller.exportReport);
+blockchain-api/src/routes/data-change-audit-dashboard.routes.js:20:router.get('/reports/export', controller.exportReport);
+blockchain-api/src/routes/documents-kyc.routes.js.bak_final_20260605_161436:71:router.get('/', async (req, res) => {
+blockchain-api/src/routes/documents-kyc.routes.js.bak_final_20260605_161436:113:router.get('/summary', async (req, res) => {
+blockchain-api/src/routes/documents-kyc.routes.js.bak_final_20260605_161436:139:router.post('/upload', (req, res) => {
+blockchain-api/src/routes/documents-kyc.routes.js.bak_final_20260605_161436:244:router.patch('/:id/status', async (req, res) => {
+blockchain-api/src/routes/documents-kyc.routes.js.bak_final_20260605_161436:312:router.get('/:id/download', async (req, res) => {
+blockchain-api/src/routes/government-account-login.routes.js:236:router.post('/', async (req, res) => {
+blockchain-api/src/routes/index.js.bak_valoores_blockchain:101:router.get('/health', (req, res) => {
+blockchain-api/src/routes/index.js.bak_valoores_blockchain:122:router.get('/government-blockchain/accounts/:accountId/transactions', async (req, res) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_force_record_pk_where_clause:176:router.get('/events', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_force_record_pk_where_clause:245:router.get('/events/:eventId', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_force_record_pk_where_clause:266:router.post('/events/:eventId/validate', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_force_record_pk_where_clause:346:router.post('/events/:eventId/approve', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_force_record_pk_where_clause:382:router.post('/events/:eventId/reject', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_force_record_pk_where_clause:416:router.post('/events/:eventId/submit-blockchain', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_force_record_pk_where_clause:528:router.get('/events/:eventId/blockchain-proof', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_force_record_pk_where_clause:630:router.get('/dashboard', async (req, res, next) => {
+blockchain-api/src/routes/residentWallet.routes.js:6:router.get('/', residentWalletController.getResidentWallets);
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_revert_real_fabric_key_20260616_141115:21:router.post('/customers', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_revert_real_fabric_key_20260616_141115:233:router.get('/customers', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_revert_real_fabric_key_20260616_141115:279:router.get('/dashboard', async (req, res) => {
+blockchain-api/src/routes/resident.routes.js:27:router.post('/', requireHandler('createResident'));
+blockchain-api/src/routes/resident.routes.js:29:router.post('/draft', requireHandler('saveDraft'));
+blockchain-api/src/routes/resident.routes.js:31:router.get('/search', requireHandler('searchResidents'));
+blockchain-api/src/routes/resident.routes.js:39:router.post('/wallet-login', requireHandler('walletLogin'));
+blockchain-api/src/routes/resident.routes.js:41:router.get('/:residentId', requireHandler('getResidentById'));
+blockchain-api/src/routes/resident.routes.js:43:router.post('/:residentId/wallet', requireHandler('createWallet'));
+blockchain-api/src/routes/resident.routes.js:45:router.post('/:residentId/submit-kyc', requireHandler('submitKyc'));
+blockchain-api/src/routes/resident.routes.js:47:router.post('/:residentId/sync-blockchain', requireHandler('syncResidentToBlockchain'));
+blockchain-api/src/routes/government-transactions.routes.js:101:router.get('/', async (req, res) => {
+blockchain-api/src/routes/government-transactions.routes.js:435:router.get('/next-reference', async (req, res) => {
+blockchain-api/src/routes/government-transactions.routes.js:476:router.get('/reference/transaction-status', async (req, res) => {
+blockchain-api/src/routes/government-transactions.routes.js:507:router.get('/reference/payment-methods', async (req, res) => {
+blockchain-api/src/routes/government-transactions.routes.js:538:router.get('/residents-dropdown', async (req, res) => {
+blockchain-api/src/routes/government-transactions.routes.js:590:router.get('/services', async (req, res) => {
+blockchain-api/src/routes/government-transactions.routes.js:640:router.post('/fee-preview', async (req, res) => {
+blockchain-api/src/routes/government-transactions.routes.js:668:router.post('/', async (req, res) => {
+blockchain-api/src/routes/government-transactions.routes.js:1121:router.get('/ministries-dropdown', async (req, res) => {
+blockchain-api/src/routes/index.js.bak_couchdb_explorer_mount_20260715_092952:113:router.get('/health', (req, res) => {
+blockchain-api/src/routes/index.js.bak_couchdb_explorer_mount_20260715_092952:134:router.get('/government-blockchain/accounts/:accountId/transactions', async (req, res) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_dashboard_11_charts:90:router.get('/events', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_dashboard_11_charts:159:router.get('/events/:eventId', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_dashboard_11_charts:180:router.post('/events/:eventId/validate', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_dashboard_11_charts:260:router.post('/events/:eventId/approve', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_dashboard_11_charts:296:router.post('/events/:eventId/reject', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_dashboard_11_charts:330:router.post('/events/:eventId/submit-blockchain', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_dashboard_11_charts:442:router.get('/events/:eventId/blockchain-proof', async (req, res, next) => {
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step20_20260625_114826:11:router.get('/health', controller.health);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step20_20260625_114826:13:router.get('/records/:recordType/create-candidates', controller.createCandidates);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step20_20260625_114826:14:router.get('/records/:recordType/update-candidates', controller.updateCandidates);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step20_20260625_114826:15:router.get('/records/:recordType/unchanged', controller.unchangedRecords);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step20_20260625_114826:17:router.get('/records/:recordType/hash-preview', controller.hashPreview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step20_20260625_114826:18:router.get('/records/:recordType/hash', controller.hashOne);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step20_20260625_114826:20:router.get('/records/:recordType/blockchain-key-preview', controller.blockchainKeyPreview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step20_20260625_114826:21:router.get('/records/:recordType/blockchain-key', controller.blockchainKeyOne);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step20_20260625_114826:23:router.get('/records/:recordType/proof-only/preview', controller.proofOnlyPreview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step20_20260625_114826:24:router.post('/records/:recordType/proof-only/submit', controller.proofOnlySubmit);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step20_20260625_114826:26:router.get('/history/:historyId/transaction-link', controller.transactionLink);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step20_20260625_114826:27:router.post('/history/:historyId/link-transaction', controller.linkTransaction);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step20_20260625_114826:34:router.get('/history/health', historyController.health);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step20_20260625_114826:35:router.get('/history/summary', historyController.summary);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step20_20260625_114826:36:router.get('/history', historyController.listHistory);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step20_20260625_114826:37:router.get('/history/:historyId', historyController.getHistoryById);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step20_20260625_114826:38:router.get('/records/:recordType/history/latest', historyController.getLatestRecordHistory);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step20_20260625_114826:39:router.get('/records/:recordType/history', historyController.listRecordHistory);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step20_20260625_114826:47:router.get('/verification/health', verificationController.health);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step20_20260625_114826:48:router.get('/verification/summary', verificationController.summary);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step20_20260625_114826:49:router.get('/verification/logs', verificationController.listLogs);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step20_20260625_114826:50:router.get('/verification/logs/:verificationId', verificationController.getLogById);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step20_20260625_114826:51:router.get('/records/:recordType/verification/preview', verificationController.preview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step20_20260625_114826:52:router.get('/records/:recordType/verification/latest', verificationController.getLatestRecordLog);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step20_20260625_114826:53:router.get('/records/:recordType/verification/logs', verificationController.listRecordLogs);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step20_20260625_114826:61:router.get('/records/AML/history/source-count', amlHistoryController.sourceCount);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step20_20260625_114826:62:router.get('/records/AML/history/preview', amlHistoryController.preview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step20_20260625_114826:63:router.post('/records/AML/history/sync', amlHistoryController.sync);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step20_20260625_114826:72:router.get('/records/CUSTOMER/history/source-discovery', customerHistoryController.sourceDiscovery);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step20_20260625_114826:73:router.get('/records/CUSTOMER/history/source-count', customerHistoryController.sourceCount);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step20_20260625_114826:74:router.get('/records/CUSTOMER/history/preview', customerHistoryController.preview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step20_20260625_114826:75:router.post('/records/CUSTOMER/history/sync', customerHistoryController.sync);
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_kyc_daily_month_report_20260616_151913:21:router.post('/customers', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_kyc_daily_month_report_20260616_151913:245:router.get('/customers', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_kyc_daily_month_report_20260616_151913:293:router.get('/dashboard', async (req, res) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_hash_validate_fix:205:router.get('/events', async (req, res) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_hash_validate_fix:246:router.get('/events/:eventId', async (req, res) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_hash_validate_fix:278:router.post('/test/insert', async (req, res) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_hash_validate_fix:309:router.post('/test/update', async (req, res) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_hash_validate_fix:363:router.post('/test/delete', async (req, res) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_hash_validate_fix:412:router.post('/events/:eventId/validate', async (req, res) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_hash_validate_fix:486:router.post('/events/:eventId/approve', async (req, res) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_hash_validate_fix:515:router.post('/events/:eventId/reject', async (req, res) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_hash_validate_fix:544:router.post('/events/:eventId/submit-blockchain', async (req, res) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_hash_validate_fix:624:router.post('/clear-test-data', async (req, res) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_hash_verify_endpoint:191:router.get('/events', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_hash_verify_endpoint:260:router.get('/events/:eventId', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_hash_verify_endpoint:281:router.post('/events/:eventId/validate', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_hash_verify_endpoint:361:router.post('/events/:eventId/approve', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_hash_verify_endpoint:397:router.post('/events/:eventId/reject', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_hash_verify_endpoint:431:router.post('/events/:eventId/submit-blockchain', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_hash_verify_endpoint:543:router.get('/events/:eventId/blockchain-proof', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_hash_verify_endpoint:645:router.get('/dashboard', async (req, res, next) => {
+blockchain-api/src/routes/resident.routes.js.bak_force_gov_resident_20260608_115024:27:router.post('/', requireHandler('createResident'));
+blockchain-api/src/routes/resident.routes.js.bak_force_gov_resident_20260608_115024:29:router.post('/draft', requireHandler('saveDraft'));
+blockchain-api/src/routes/resident.routes.js.bak_force_gov_resident_20260608_115024:31:router.get('/search', requireHandler('searchResidents'));
+blockchain-api/src/routes/resident.routes.js.bak_force_gov_resident_20260608_115024:39:router.post('/wallet-login', requireHandler('walletLogin'));
+blockchain-api/src/routes/resident.routes.js.bak_force_gov_resident_20260608_115024:41:router.get('/:residentId', requireHandler('getResidentById'));
+blockchain-api/src/routes/resident.routes.js.bak_force_gov_resident_20260608_115024:43:router.post('/:residentId/wallet', requireHandler('createWallet'));
+blockchain-api/src/routes/resident.routes.js.bak_force_gov_resident_20260608_115024:45:router.post('/:residentId/submit-kyc', requireHandler('submitKyc'));
+blockchain-api/src/routes/resident.routes.js.bak_force_gov_resident_20260608_115024:47:router.post('/:residentId/sync-blockchain', requireHandler('syncResidentToBlockchain'));
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_final_customer_id_session_fix_20260616_151003:21:router.post('/customers', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_final_customer_id_session_fix_20260616_151003:241:router.get('/customers', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_final_customer_id_session_fix_20260616_151003:289:router.get('/dashboard', async (req, res) => {
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135948:12:router.get('/health', controller.health);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135948:14:router.get('/records/:recordType/create-candidates', controller.createCandidates);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135948:15:router.get('/records/:recordType/update-candidates', controller.updateCandidates);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135948:16:router.get('/records/:recordType/unchanged', controller.unchangedRecords);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135948:18:router.get('/records/:recordType/hash-preview', controller.hashPreview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135948:19:router.get('/records/:recordType/hash', controller.hashOne);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135948:21:router.get('/records/:recordType/blockchain-key-preview', controller.blockchainKeyPreview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135948:22:router.get('/records/:recordType/blockchain-key', controller.blockchainKeyOne);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135948:24:router.get('/records/:recordType/proof-only/preview', controller.proofOnlyPreview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135948:25:router.post('/records/:recordType/proof-only/submit', controller.proofOnlySubmit);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135948:27:router.get('/history/:historyId/transaction-link', controller.transactionLink);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135948:28:router.post('/history/:historyId/link-transaction', controller.linkTransaction);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135948:35:router.get('/history/health', historyController.health);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135948:36:router.get('/history/summary', historyController.summary);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135948:37:router.get('/history', historyController.listHistory);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135948:38:router.get('/history/:historyId', historyController.getHistoryById);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135948:39:router.get('/records/:recordType/history/latest', historyController.getLatestRecordHistory);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135948:40:router.get('/records/:recordType/history', historyController.listRecordHistory);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135948:48:router.get('/verification/health', verificationController.health);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135948:49:router.get('/verification/summary', verificationController.summary);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135948:50:router.get('/verification/logs', verificationController.listLogs);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135948:51:router.get('/verification/logs/:verificationId', verificationController.getLogById);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135948:52:router.get('/records/:recordType/verification/preview', verificationController.preview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135948:53:router.get('/records/:recordType/verification/latest', verificationController.getLatestRecordLog);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135948:54:router.get('/records/:recordType/verification/logs', verificationController.listRecordLogs);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135948:62:router.get('/records/AML/history/source-count', amlHistoryController.sourceCount);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135948:63:router.get('/records/AML/history/preview', amlHistoryController.preview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135948:64:router.post('/records/AML/history/sync', amlHistoryController.sync);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135948:73:router.get('/records/CUSTOMER/history/source-discovery', customerHistoryController.sourceDiscovery);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135948:74:router.get('/records/CUSTOMER/history/source-count', customerHistoryController.sourceCount);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135948:75:router.get('/records/CUSTOMER/history/preview', customerHistoryController.preview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135948:76:router.post('/records/CUSTOMER/history/sync', customerHistoryController.sync);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135948:85:router.get('/records/TRANSACTION/history/source-discovery', transactionHistoryController.sourceDiscovery);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135948:86:router.get('/records/TRANSACTION/history/source-count', transactionHistoryController.sourceCount);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135948:87:router.get('/records/TRANSACTION/history/preview', transactionHistoryController.preview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step21_20260625_135948:88:router.post('/records/TRANSACTION/history/sync', transactionHistoryController.sync);
+blockchain-api/src/routes/audit-validation.routes.js.bak_check_blockchain_exists:89:router.get('/events', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_check_blockchain_exists:158:router.get('/events/:eventId', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_check_blockchain_exists:179:router.post('/events/:eventId/validate', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_check_blockchain_exists:259:router.post('/events/:eventId/approve', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_check_blockchain_exists:295:router.post('/events/:eventId/reject', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_check_blockchain_exists:329:router.post('/events/:eventId/submit-blockchain', async (req, res, next) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_add_customer_session_payload_20260616_150142:21:router.post('/customers', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_add_customer_session_payload_20260616_150142:233:router.get('/customers', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_add_customer_session_payload_20260616_150142:279:router.get('/dashboard', async (req, res) => {
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step19_20260625_113952:10:router.get('/health', controller.health);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step19_20260625_113952:12:router.get('/records/:recordType/create-candidates', controller.createCandidates);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step19_20260625_113952:13:router.get('/records/:recordType/update-candidates', controller.updateCandidates);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step19_20260625_113952:14:router.get('/records/:recordType/unchanged', controller.unchangedRecords);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step19_20260625_113952:16:router.get('/records/:recordType/hash-preview', controller.hashPreview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step19_20260625_113952:17:router.get('/records/:recordType/hash', controller.hashOne);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step19_20260625_113952:19:router.get('/records/:recordType/blockchain-key-preview', controller.blockchainKeyPreview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step19_20260625_113952:20:router.get('/records/:recordType/blockchain-key', controller.blockchainKeyOne);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step19_20260625_113952:22:router.get('/records/:recordType/proof-only/preview', controller.proofOnlyPreview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step19_20260625_113952:23:router.post('/records/:recordType/proof-only/submit', controller.proofOnlySubmit);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step19_20260625_113952:25:router.get('/history/:historyId/transaction-link', controller.transactionLink);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step19_20260625_113952:26:router.post('/history/:historyId/link-transaction', controller.linkTransaction);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step19_20260625_113952:33:router.get('/history/health', historyController.health);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step19_20260625_113952:34:router.get('/history/summary', historyController.summary);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step19_20260625_113952:35:router.get('/history', historyController.listHistory);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step19_20260625_113952:36:router.get('/history/:historyId', historyController.getHistoryById);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step19_20260625_113952:37:router.get('/records/:recordType/history/latest', historyController.getLatestRecordHistory);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step19_20260625_113952:38:router.get('/records/:recordType/history', historyController.listRecordHistory);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step19_20260625_113952:46:router.get('/verification/health', verificationController.health);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step19_20260625_113952:47:router.get('/verification/summary', verificationController.summary);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step19_20260625_113952:48:router.get('/verification/logs', verificationController.listLogs);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step19_20260625_113952:49:router.get('/verification/logs/:verificationId', verificationController.getLogById);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step19_20260625_113952:50:router.get('/records/:recordType/verification/preview', verificationController.preview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step19_20260625_113952:51:router.get('/records/:recordType/verification/latest', verificationController.getLatestRecordLog);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step19_20260625_113952:52:router.get('/records/:recordType/verification/logs', verificationController.listRecordLogs);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step19_20260625_113952:60:router.get('/records/AML/history/source-count', amlHistoryController.sourceCount);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step19_20260625_113952:61:router.get('/records/AML/history/preview', amlHistoryController.preview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step19_20260625_113952:62:router.post('/records/AML/history/sync', amlHistoryController.sync);
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_fix_insert_after_remove_tin_20260616_162833:21:router.post('/customers', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_fix_insert_after_remove_tin_20260616_162833:274:router.get('/customers', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_fix_insert_after_remove_tin_20260616_162833:322:router.get('/dashboard', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_fix_insert_after_remove_tin_20260616_162833:359:router.get('/kyc-daily-created', async (req, res) => {
+blockchain-api/src/routes/government-blockchain-proofs.routes.js:56:router.get('/dashboard/audit-metrics', dashboardController.auditMetrics);
+blockchain-api/src/routes/government-blockchain-proofs.routes.js:61:router.get('/dashboard/audit-report/export', dashboardController.auditReportExport);
+blockchain-api/src/routes/government-blockchain-proofs.routes.js:66:router.get('/dashboard/full', dashboardController.full);
+blockchain-api/src/routes/government-blockchain-proofs.routes.js:72:router.get('/summary', async (req, res) => {
+blockchain-api/src/routes/government-blockchain-proofs.routes.js:161:router.get('/', async (req, res) => {
+blockchain-api/src/routes/project-view.routes.js:8:router.post('/track', projectViewController.trackProjectView);
+blockchain-api/src/routes/project-view.routes.js:9:router.get('/stats', projectViewController.getProjectViewStats);
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_customer_id_primary_key_20260616_150459:21:router.post('/customers', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_customer_id_primary_key_20260616_150459:233:router.get('/customers', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_customer_id_primary_key_20260616_150459:279:router.get('/dashboard', async (req, res) => {
+blockchain-api/src/routes/wallet-query.routes.js:14:router.get("/:walletAddress", walletQueryController.getWalletByAddress);
+blockchain-api/src/routes/wallet-query.routes.js:16:router.get("/:walletAddress/balance", walletQueryController.getWalletBalance);
+blockchain-api/src/routes/wallet-query.routes.js:18:router.get("/:walletAddress/history", walletQueryController.getWalletHistory);
+blockchain-api/src/routes/government-blockchain-proofs.routes.js.bak_missing_summary_20260610_165607:63:router.get('/', async (req, res) => {
+blockchain-api/src/routes/index.js:114:router.get('/health', (req, res) => {
+blockchain-api/src/routes/index.js:135:router.get('/government-blockchain/accounts/:accountId/transactions', async (req, res) => {
+blockchain-api/src/routes/dev-transaction.routes.js.bak_use_create_government_transaction_20260617_144615:18:router.post("/create", async (req, res) => {
+blockchain-api/src/routes/blockchain-proof-api.routes.js:18:router.get('/health', controller.health);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:20:router.get('/records/:recordType/create-candidates', controller.createCandidates);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:21:router.get('/records/:recordType/update-candidates', controller.updateCandidates);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:22:router.get('/records/:recordType/unchanged', controller.unchangedRecords);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:24:router.get('/records/:recordType/hash-preview', controller.hashPreview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:25:router.get('/records/:recordType/hash', controller.hashOne);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:27:router.get('/records/:recordType/blockchain-key-preview', controller.blockchainKeyPreview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:28:router.get('/records/:recordType/blockchain-key', controller.blockchainKeyOne);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:30:router.get('/records/:recordType/proof-only/preview', controller.proofOnlyPreview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:31:router.post('/records/:recordType/proof-only/submit', controller.proofOnlySubmit);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:33:router.get('/history/:historyId/transaction-link', controller.transactionLink);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:34:router.post('/history/:historyId/link-transaction', controller.linkTransaction);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:41:router.get('/history/health', historyController.health);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:42:router.get('/history/summary', historyController.summary);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:43:router.get('/history', historyController.listHistory);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:44:router.get('/history/:historyId', historyController.getHistoryById);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:45:router.get('/records/:recordType/history/latest', historyController.getLatestRecordHistory);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:46:router.get('/records/:recordType/history', historyController.listRecordHistory);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:54:router.get('/verification/health', verificationController.health);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:55:router.get('/verification/summary', verificationController.summary);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:56:router.get('/verification/logs', verificationController.listLogs);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:57:router.get('/verification/logs/:verificationId', verificationController.getLogById);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:58:router.get('/records/:recordType/verification/preview', verificationController.preview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:59:router.get('/records/:recordType/verification/latest', verificationController.getLatestRecordLog);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:60:router.get('/records/:recordType/verification/logs', verificationController.listRecordLogs);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:68:router.get('/records/AML/history/source-count', amlHistoryController.sourceCount);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:69:router.get('/records/AML/history/preview', amlHistoryController.preview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:70:router.post('/records/AML/history/sync', amlHistoryController.sync);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:79:router.get('/records/AML_CASE_CLOSURE/history/source-discovery', amlCaseClosureHistoryController.sourceDiscovery);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:80:router.get('/records/AML_CASE_CLOSURE/history/source-count', amlCaseClosureHistoryController.sourceCount);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:81:router.get('/records/AML_CASE_CLOSURE/history/preview', amlCaseClosureHistoryController.preview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:82:router.post('/records/AML_CASE_CLOSURE/history/sync', amlCaseClosureHistoryController.sync);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:90:router.get('/records/CUSTOMER/history/source-discovery', customerHistoryController.sourceDiscovery);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:91:router.get('/records/CUSTOMER/history/source-count', customerHistoryController.sourceCount);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:92:router.get('/records/CUSTOMER/history/preview', customerHistoryController.preview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:93:router.post('/records/CUSTOMER/history/sync', customerHistoryController.sync);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:102:router.get('/records/TRANSACTION/history/source-discovery', transactionHistoryController.sourceDiscovery);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:103:router.get('/records/TRANSACTION/history/source-count', transactionHistoryController.sourceCount);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:104:router.get('/records/TRANSACTION/history/preview', transactionHistoryController.preview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:105:router.post('/records/TRANSACTION/history/sync', transactionHistoryController.sync);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:114:router.get('/records/SCREENING_ACTIVITY/history/source-discovery', screeningHistoryController.sourceDiscovery);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:115:router.get('/records/SCREENING_ACTIVITY/history/source-count', screeningHistoryController.sourceCount);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:116:router.get('/records/SCREENING_ACTIVITY/history/preview', screeningHistoryController.preview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:117:router.post('/records/SCREENING_ACTIVITY/history/sync', screeningHistoryController.sync);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:126:router.get('/retry/health', retryController.health);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:127:router.get('/retry/candidates', retryController.candidates);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:128:router.post('/retry/run', retryController.run);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:136:router.get('/verification/logic/health', verificationLogicController.health);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:137:router.get('/verification/candidates', verificationLogicController.candidates);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:138:router.post('/verification/run', verificationLogicController.run);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:139:router.post('/records/:recordType/verification/run', verificationLogicController.runRecord);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:146:router.post('/verification/by-module-record', genericVerificationController.verifyByModuleAndSourceRecordId);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:147:router.post('/verification/by-blockchain-key', genericVerificationController.verifyByBlockchainKey);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:155:router.get('/dashboard/health', dashboardController.health);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:156:router.get('/dashboard/summary', dashboardController.summary);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:157:router.get('/dashboard/record-types', dashboardController.recordTypes);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:158:router.get('/dashboard/sync-status', dashboardController.syncStatus);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:159:router.get('/dashboard/verification-status', dashboardController.verificationStatus);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:160:router.get('/dashboard/retry-summary', dashboardController.retrySummary);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:161:router.get('/dashboard/latest-runs', dashboardController.latestRuns);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:162:router.get('/dashboard/latest-history', dashboardController.latestHistory);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:163:router.get('/dashboard/latest-verification-logs', dashboardController.latestVerificationLogs);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:164:router.get('/dashboard/audit-metrics', dashboardController.auditMetrics);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:165:router.get('/dashboard/audit-report/export', dashboardController.auditReportExport);
+blockchain-api/src/routes/blockchain-proof-api.routes.js:166:router.get('/dashboard/full', dashboardController.full);
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_customer_history_fallback_20260723_190615:21:router.post('/customers', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_customer_history_fallback_20260723_190615:260:router.get('/customers/count', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_customer_history_fallback_20260723_190615:311:router.get('/customers/:customerId', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_customer_history_fallback_20260723_190615:322:        message: 'customerId is required'
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_customer_history_fallback_20260723_190615:383:router.get('/customers', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_customer_history_fallback_20260723_190615:475:router.get('/dashboard', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_customer_history_fallback_20260723_190615:512:router.get('/kyc-daily-created', async (req, res) => {
+blockchain-api/src/routes/postgres-browser.routes.js:35:router.get('/health', requireUiSecret, async (req, res) => {
+blockchain-api/src/routes/postgres-browser.routes.js:58:router.get('/schemas', requireUiSecret, async (req, res) => {
+blockchain-api/src/routes/postgres-browser.routes.js:79:router.get('/tables', requireUiSecret, async (req, res) => {
+blockchain-api/src/routes/postgres-browser.routes.js:105:router.get('/columns', requireUiSecret, async (req, res) => {
+blockchain-api/src/routes/postgres-browser.routes.js:137:router.get('/rows', requireUiSecret, async (req, res) => {
+blockchain-api/src/routes/postgres-browser.routes.js:173:router.post('/query', requireUiSecret, async (req, res) => {
+blockchain-api/src/routes/government-transactions.routes.js.bak_safe_dropdown_columns_20260604_164005:15:router.get('/', async (req, res) => {
+blockchain-api/src/routes/government-transactions.routes.js.bak_safe_dropdown_columns_20260604_164005:188:router.get('/reference/transaction-status', async (req, res) => {
+blockchain-api/src/routes/government-transactions.routes.js.bak_safe_dropdown_columns_20260604_164005:218:router.get('/reference/payment-methods', async (req, res) => {
+blockchain-api/src/routes/government-transactions.routes.js.bak_safe_dropdown_columns_20260604_164005:250:router.get('/residents-dropdown', async (req, res) => {
+blockchain-api/src/routes/government-transactions.routes.js.bak_safe_dropdown_columns_20260604_164005:300:router.get('/services', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.before_scope_fix_rollback_20260724_134922:141:router.post('/customers', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.before_scope_fix_rollback_20260724_134922:395:router.get('/customers/count', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.before_scope_fix_rollback_20260724_134922:446:router.get('/customers/:customerId', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.before_scope_fix_rollback_20260724_134922:456:      message: 'customerId is required'
+blockchain-api/src/routes/valoores-blockchain.routes.js.before_scope_fix_rollback_20260724_134922:605:router.get('/customers', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.before_scope_fix_rollback_20260724_134922:699:router.get('/dashboard', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.before_scope_fix_rollback_20260724_134922:736:router.get('/kyc-daily-created', async (req, res) => {
+blockchain-api/src/routes/government-transactions.routes.js.bak_pool_fix_20260602_111655:86:router.get('/residents/search', async (req, res) => {
+blockchain-api/src/routes/government-transactions.routes.js.bak_pool_fix_20260602_111655:199:router.get('/services', async (req, res) => {
+blockchain-api/src/routes/government-transactions.routes.js.bak_pool_fix_20260602_111655:297:router.post('/', async (req, res) => {
+blockchain-api/src/routes/government-transactions.routes.js.bak_pool_fix_20260602_111655:547:router.get('/', async (req, res) => {
+blockchain-api/src/routes/government-transactions.routes.js.bak_pool_fix_20260602_111655:674:router.get('/:transactionReference', async (req, res) => {
+blockchain-api/src/routes/government-transactions.routes.js.bak_add_post_create_20260604_165335:15:router.get('/', async (req, res) => {
+blockchain-api/src/routes/government-transactions.routes.js.bak_add_post_create_20260604_165335:188:router.get('/reference/transaction-status', async (req, res) => {
+blockchain-api/src/routes/government-transactions.routes.js.bak_add_post_create_20260604_165335:218:router.get('/reference/payment-methods', async (req, res) => {
+blockchain-api/src/routes/government-transactions.routes.js.bak_add_post_create_20260604_165335:251:router.get('/residents-dropdown', async (req, res) => {
+blockchain-api/src/routes/government-transactions.routes.js.bak_add_post_create_20260604_165335:355:router.get('/services', async (req, res) => {
+blockchain-api/src/routes/organization.routes.js:8:router.get('/', organizationController.getOrganizations);
+blockchain-api/src/routes/reference.routes.js:27:router.get('/next-resident-id', requireHandler('getNextResidentId'));
+blockchain-api/src/routes/reference.routes.js:29:router.get('/governorates', requireHandler('getGovernorates'));
+blockchain-api/src/routes/reference.routes.js:31:router.get('/districts', requireHandler('getDistricts'));
+blockchain-api/src/routes/reference.routes.js:33:router.get('/municipalities', requireHandler('getMunicipalities'));
+blockchain-api/src/routes/reference.routes.js:35:router.get('/kyc-statuses', requireHandler('getKycStatuses'));
+blockchain-api/src/routes/reference.routes.js:37:router.get('/risk-categories', requireHandler('getRiskCategories'));
+blockchain-api/src/routes/reference.routes.js:39:router.get('/employment-statuses', requireHandler('getEmploymentStatuses'));
+blockchain-api/src/routes/blockchain-proof-source-views.routes.js:11:router.get('/', listSourceViews);
+blockchain-api/src/routes/blockchain-proof-source-views.routes.js:12:router.get('/validate', validateSourceViews);
+blockchain-api/src/routes/blockchain-proof-source-views.routes.js:13:router.get('/:recordType', getSourceView);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step22_20260625_140953:13:router.get('/health', controller.health);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step22_20260625_140953:15:router.get('/records/:recordType/create-candidates', controller.createCandidates);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step22_20260625_140953:16:router.get('/records/:recordType/update-candidates', controller.updateCandidates);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step22_20260625_140953:17:router.get('/records/:recordType/unchanged', controller.unchangedRecords);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step22_20260625_140953:19:router.get('/records/:recordType/hash-preview', controller.hashPreview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step22_20260625_140953:20:router.get('/records/:recordType/hash', controller.hashOne);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step22_20260625_140953:22:router.get('/records/:recordType/blockchain-key-preview', controller.blockchainKeyPreview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step22_20260625_140953:23:router.get('/records/:recordType/blockchain-key', controller.blockchainKeyOne);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step22_20260625_140953:25:router.get('/records/:recordType/proof-only/preview', controller.proofOnlyPreview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step22_20260625_140953:26:router.post('/records/:recordType/proof-only/submit', controller.proofOnlySubmit);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step22_20260625_140953:28:router.get('/history/:historyId/transaction-link', controller.transactionLink);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step22_20260625_140953:29:router.post('/history/:historyId/link-transaction', controller.linkTransaction);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step22_20260625_140953:36:router.get('/history/health', historyController.health);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step22_20260625_140953:37:router.get('/history/summary', historyController.summary);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step22_20260625_140953:38:router.get('/history', historyController.listHistory);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step22_20260625_140953:39:router.get('/history/:historyId', historyController.getHistoryById);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step22_20260625_140953:40:router.get('/records/:recordType/history/latest', historyController.getLatestRecordHistory);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step22_20260625_140953:41:router.get('/records/:recordType/history', historyController.listRecordHistory);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step22_20260625_140953:49:router.get('/verification/health', verificationController.health);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step22_20260625_140953:50:router.get('/verification/summary', verificationController.summary);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step22_20260625_140953:51:router.get('/verification/logs', verificationController.listLogs);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step22_20260625_140953:52:router.get('/verification/logs/:verificationId', verificationController.getLogById);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step22_20260625_140953:53:router.get('/records/:recordType/verification/preview', verificationController.preview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step22_20260625_140953:54:router.get('/records/:recordType/verification/latest', verificationController.getLatestRecordLog);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step22_20260625_140953:55:router.get('/records/:recordType/verification/logs', verificationController.listRecordLogs);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step22_20260625_140953:63:router.get('/records/AML/history/source-count', amlHistoryController.sourceCount);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step22_20260625_140953:64:router.get('/records/AML/history/preview', amlHistoryController.preview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step22_20260625_140953:65:router.post('/records/AML/history/sync', amlHistoryController.sync);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step22_20260625_140953:74:router.get('/records/CUSTOMER/history/source-discovery', customerHistoryController.sourceDiscovery);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step22_20260625_140953:75:router.get('/records/CUSTOMER/history/source-count', customerHistoryController.sourceCount);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step22_20260625_140953:76:router.get('/records/CUSTOMER/history/preview', customerHistoryController.preview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step22_20260625_140953:77:router.post('/records/CUSTOMER/history/sync', customerHistoryController.sync);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step22_20260625_140953:86:router.get('/records/TRANSACTION/history/source-discovery', transactionHistoryController.sourceDiscovery);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step22_20260625_140953:87:router.get('/records/TRANSACTION/history/source-count', transactionHistoryController.sourceCount);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step22_20260625_140953:88:router.get('/records/TRANSACTION/history/preview', transactionHistoryController.preview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step22_20260625_140953:89:router.post('/records/TRANSACTION/history/sync', transactionHistoryController.sync);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step22_20260625_140953:98:router.get('/records/SCREENING_ACTIVITY/history/source-discovery', screeningHistoryController.sourceDiscovery);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step22_20260625_140953:99:router.get('/records/SCREENING_ACTIVITY/history/source-count', screeningHistoryController.sourceCount);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step22_20260625_140953:100:router.get('/records/SCREENING_ACTIVITY/history/preview', screeningHistoryController.preview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step22_20260625_140953:101:router.post('/records/SCREENING_ACTIVITY/history/sync', screeningHistoryController.sync);
+blockchain-api/src/routes/wallet.routes.js.bak_next_customer_id:20:router.get('/', walletController.listWallets);
+blockchain-api/src/routes/wallet.routes.js.bak_next_customer_id:27:router.post('/', walletController.createWallet);
+blockchain-api/src/routes/wallet.routes.js.bak_next_customer_id:34:router.post('/login', walletController.loginWallet);
+blockchain-api/src/routes/wallet.routes.js.bak_next_customer_id:41:router.get('/customer/:customerId', walletController.getWalletByCustomerId);
+blockchain-api/src/routes/wallet.routes.js.bak_next_customer_id:48:router.get('/:walletAddress', walletController.getWalletByAddress);
+blockchain-api/src/routes/dev-transaction.routes.js.bak_commit_pg_before_fabric_20260617_145855:18:router.post("/create", async (req, res) => {
+blockchain-api/src/routes/data-generator.routes.js:8:router.post('/run', dataGeneratorController.runDataGenerator);
+blockchain-api/src/routes/blockchain-proof-ownership.routes.js:11:router.get('/', getOwnership);
+blockchain-api/src/routes/blockchain-proof-ownership.routes.js:12:router.get('/validate', validateOwnership);
+blockchain-api/src/routes/blockchain-proof-ownership.routes.js:13:router.get('/:area', getOwnershipByArea);
+blockchain-api/src/routes/government-risk-fraud-screening.routes.js.bak_missing_summary_20260610_165607:89:router.get('/', async (req, res) => {
+blockchain-api/src/routes/government-transactions.routes.js.bak_cli_fabric_submit_20260602_140320:86:router.get('/residents/search', async (req, res) => {
+blockchain-api/src/routes/government-transactions.routes.js.bak_cli_fabric_submit_20260602_140320:199:router.get('/services', async (req, res) => {
+blockchain-api/src/routes/government-transactions.routes.js.bak_cli_fabric_submit_20260602_140320:301:router.post('/', async (req, res) => {
+blockchain-api/src/routes/government-transactions.routes.js.bak_cli_fabric_submit_20260602_140320:540:router.get('/', async (req, res) => {
+blockchain-api/src/routes/government-transactions.routes.js.bak_cli_fabric_submit_20260602_140320:667:router.get('/:transactionReference', async (req, res) => {
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step16_20260625_100234:7:router.get('/health', controller.health);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step16_20260625_100234:9:router.get('/records/:recordType/create-candidates', controller.createCandidates);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step16_20260625_100234:10:router.get('/records/:recordType/update-candidates', controller.updateCandidates);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step16_20260625_100234:11:router.get('/records/:recordType/unchanged', controller.unchangedRecords);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step16_20260625_100234:13:router.get('/records/:recordType/hash-preview', controller.hashPreview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step16_20260625_100234:14:router.get('/records/:recordType/hash', controller.hashOne);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step16_20260625_100234:16:router.get('/records/:recordType/blockchain-key-preview', controller.blockchainKeyPreview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step16_20260625_100234:17:router.get('/records/:recordType/blockchain-key', controller.blockchainKeyOne);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step16_20260625_100234:19:router.get('/records/:recordType/proof-only/preview', controller.proofOnlyPreview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step16_20260625_100234:20:router.post('/records/:recordType/proof-only/submit', controller.proofOnlySubmit);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step16_20260625_100234:22:router.get('/history/:historyId/transaction-link', controller.transactionLink);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step16_20260625_100234:23:router.post('/history/:historyId/link-transaction', controller.linkTransaction);
+blockchain-api/src/routes/audit-validation.routes.js.bak_reconcile_blockchain_status:191:router.get('/events', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_reconcile_blockchain_status:260:router.get('/events/:eventId', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_reconcile_blockchain_status:281:router.post('/events/:eventId/validate', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_reconcile_blockchain_status:361:router.post('/events/:eventId/approve', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_reconcile_blockchain_status:397:router.post('/events/:eventId/reject', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_reconcile_blockchain_status:431:router.post('/events/:eventId/submit-blockchain', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_reconcile_blockchain_status:543:router.get('/events/:eventId/blockchain-proof', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_reconcile_blockchain_status:645:router.get('/dashboard', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_reconcile_blockchain_status:774:router.post('/events/:eventId/hash-verify', async (req, res) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_patch_build_events_filter_record_pk:176:router.get('/events', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_patch_build_events_filter_record_pk:245:router.get('/events/:eventId', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_patch_build_events_filter_record_pk:266:router.post('/events/:eventId/validate', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_patch_build_events_filter_record_pk:346:router.post('/events/:eventId/approve', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_patch_build_events_filter_record_pk:382:router.post('/events/:eventId/reject', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_patch_build_events_filter_record_pk:416:router.post('/events/:eventId/submit-blockchain', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_patch_build_events_filter_record_pk:528:router.get('/events/:eventId/blockchain-proof', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_patch_build_events_filter_record_pk:630:router.get('/dashboard', async (req, res, next) => {
+blockchain-api/src/routes/government-dashboard.routes.js:23:router.get('/summary', async (req, res) => {
+blockchain-api/src/routes/government-dashboard.routes.js:32:router.get('/charts', async (req, res) => {
+blockchain-api/src/routes/government-dashboard.routes.js:41:router.get('/health', async (req, res) => {
+blockchain-api/src/routes/government-dashboard.routes.js:50:router.get('/recent-transactions', async (req, res) => {
+blockchain-api/src/routes/fabric.routes.js:57:router.post(
+blockchain-api/src/routes/fabric.routes.js:68:router.post(
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_bigint_response_fix_20260616_122936:12:router.post('/customers', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_bigint_response_fix_20260616_122936:224:router.get('/customers', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_bigint_response_fix_20260616_122936:270:router.get('/dashboard', async (req, res) => {
+blockchain-api/src/routes/dev-transaction.routes.js.bak_fabric_service_instance_20260617_143212:18:router.post("/create", async (req, res) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_gen_random_uuid_fix:209:router.get('/events', async (req, res) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_gen_random_uuid_fix:250:router.get('/events/:eventId', async (req, res) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_gen_random_uuid_fix:282:router.post('/test/insert', async (req, res) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_gen_random_uuid_fix:313:router.post('/test/update', async (req, res) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_gen_random_uuid_fix:367:router.post('/test/delete', async (req, res) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_gen_random_uuid_fix:416:router.post('/events/:eventId/validate', async (req, res) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_gen_random_uuid_fix:490:router.post('/events/:eventId/approve', async (req, res) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_gen_random_uuid_fix:519:router.post('/events/:eventId/reject', async (req, res) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_gen_random_uuid_fix:548:router.post('/events/:eventId/submit-blockchain', async (req, res) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_gen_random_uuid_fix:628:router.post('/clear-test-data', async (req, res) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_bigint_response_fix:89:router.get('/events', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_bigint_response_fix:158:router.get('/events/:eventId', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_bigint_response_fix:179:router.post('/events/:eventId/validate', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_bigint_response_fix:259:router.post('/events/:eventId/approve', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_bigint_response_fix:295:router.post('/events/:eventId/reject', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_bigint_response_fix:329:router.post('/events/:eventId/submit-blockchain', async (req, res, next) => {
+blockchain-api/src/routes/blockchain.routes.js:9:router.get("/status", asyncHandler(blockchainController.getBlockchainStatus));
+blockchain-api/src/routes/blockchain.routes.js:11:router.get(
+blockchain-api/src/routes/blockchain.routes.js:16:router.get(
+blockchain-api/src/routes/blockchain.routes.js:21:router.post(
+blockchain-api/src/routes/blockchain.routes.js:26:router.get(
+blockchain-api/src/routes/blockchain.routes.js:31:router.post(
+blockchain-api/src/routes/blockchain.routes.js:36:router.post(
+blockchain-api/src/routes/blockchain.routes.js:41:router.get(
+blockchain-api/src/routes/government-reports.routes.js:12:router.get('/', controller.getDashboard);
+blockchain-api/src/routes/government-reports.routes.js:18:router.get('/templates', controller.getTemplates);
+blockchain-api/src/routes/government-reports.routes.js:24:router.get('/recent', controller.getRecentReports);
+blockchain-api/src/routes/government-reports.routes.js:31:router.get('/summary', controller.getDashboard);
+blockchain-api/src/routes/government-reports.routes.js:37:router.get('/:reportCode', controller.getReportDetails);
+blockchain-api/src/routes/government-reports.routes.js:43:router.post('/generate', controller.generateReport);
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_remove_tin_from_get_response_20260616_162528:21:router.post('/customers', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_remove_tin_from_get_response_20260616_162528:274:router.get('/customers', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_remove_tin_from_get_response_20260616_162528:322:router.get('/dashboard', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_remove_tin_from_get_response_20260616_162528:359:router.get('/kyc-daily-created', async (req, res) => {
+blockchain-api/src/routes/health.routes.js:6:router.get("/", healthController.getHealthStatus);
+blockchain-api/src/routes/dev-transaction.routes.js.bak_fix_daily_created_date_param_20260617_165255:20:router.get("/daily-created", async (req, res) => {
+blockchain-api/src/routes/dev-transaction.routes.js.bak_fix_daily_created_date_param_20260617_165255:113:router.get("/", async (req, res) => {
+blockchain-api/src/routes/dev-transaction.routes.js.bak_fix_daily_created_date_param_20260617_165255:234:router.get("/:transactionId", async (req, res) => {
+blockchain-api/src/routes/dev-transaction.routes.js.bak_fix_daily_created_date_param_20260617_165255:272:router.post("/create", async (req, res) => {
+blockchain-api/src/routes/reference.routes.js.bak_org_type_filter:11:router.get('/next-customer-id', referenceController.getNextCustomerId);
+blockchain-api/src/routes/reference.routes.js.bak_org_type_filter:12:router.get('/organizations', referenceController.getOrganizations);
+blockchain-api/src/routes/reference.routes.js.bak_org_type_filter:13:router.get('/countries', referenceController.getCountries);
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_kyc_daily_month_report_20260616_151917:21:router.post('/customers', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_kyc_daily_month_report_20260616_151917:245:router.get('/customers', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_kyc_daily_month_report_20260616_151917:293:router.get('/dashboard', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_kyc_daily_month_report_20260616_151917:330:router.get('/kyc-daily-created', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_add_fabric_submit_20260616_122400:11:router.post('/customers', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_add_fabric_submit_20260616_122400:117:router.get('/customers', async (req, res) => {
+blockchain-api/src/routes/valoores-blockchain.routes.js.bak_add_fabric_submit_20260616_122400:163:router.get('/dashboard', async (req, res) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_verify_true_fix:90:router.get('/events', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_verify_true_fix:159:router.get('/events/:eventId', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_verify_true_fix:180:router.post('/events/:eventId/validate', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_verify_true_fix:260:router.post('/events/:eventId/approve', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_verify_true_fix:296:router.post('/events/:eventId/reject', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_verify_true_fix:330:router.post('/events/:eventId/submit-blockchain', async (req, res, next) => {
+blockchain-api/src/routes/audit-validation.routes.js.bak_verify_true_fix:442:router.get('/events/:eventId/blockchain-proof', async (req, res, next) => {
+blockchain-api/src/routes/dev-transaction.routes.js.bak_daily_created_api_20260617_165046:19:router.get("/", async (req, res) => {
+blockchain-api/src/routes/dev-transaction.routes.js.bak_daily_created_api_20260617_165046:140:router.get("/:transactionId", async (req, res) => {
+blockchain-api/src/routes/dev-transaction.routes.js.bak_daily_created_api_20260617_165046:178:router.post("/create", async (req, res) => {
+blockchain-api/src/routes/resident-reference.routes.js:8:router.get('/next-resident-id', controller.getNextResidentId);
+blockchain-api/src/routes/resident-reference.routes.js:9:router.get('/governorates', controller.getGovernorates);
+blockchain-api/src/routes/resident-reference.routes.js:10:router.get('/districts', controller.getDistricts);
+blockchain-api/src/routes/resident-reference.routes.js:11:router.get('/municipalities', controller.getMunicipalities);
+blockchain-api/src/routes/resident-reference.routes.js:12:router.get('/kyc-statuses', controller.getKycStatuses);
+blockchain-api/src/routes/resident-reference.routes.js:13:router.get('/risk-categories', controller.getRiskCategories);
+blockchain-api/src/routes/resident-reference.routes.js:14:router.get('/employment-statuses', controller.getEmploymentStatuses);
+blockchain-api/src/routes/couchdb-explorer.routes.js:126:router.get('/health', async (req, res, next) => {
+blockchain-api/src/routes/couchdb-explorer.routes.js:141:router.get('/databases', async (req, res, next) => {
+blockchain-api/src/routes/couchdb-explorer.routes.js:177:router.get('/databases/:dbName/documents', async (req, res, next) => {
+blockchain-api/src/routes/couchdb-explorer.routes.js:250:router.get('/databases/:dbName/documents/:docId', async (req, res, next) => {
+blockchain-api/src/routes/couchdb-explorer.routes.js:276:router.get('/databases/:dbName/changes', async (req, res, next) => {
+blockchain-api/src/routes/documents-kyc.routes.js:74:router.get('/', async (req, res) => {
+blockchain-api/src/routes/documents-kyc.routes.js:121:router.get('/summary', async (req, res) => {
+blockchain-api/src/routes/documents-kyc.routes.js:152:router.post('/upload', (req, res) => {
+blockchain-api/src/routes/documents-kyc.routes.js:258:router.patch('/:id/status', async (req, res) => {
+blockchain-api/src/routes/documents-kyc.routes.js:335:router.get('/:id/download', async (req, res) => {
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step18_20260625_104516:9:router.get('/health', controller.health);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step18_20260625_104516:11:router.get('/records/:recordType/create-candidates', controller.createCandidates);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step18_20260625_104516:12:router.get('/records/:recordType/update-candidates', controller.updateCandidates);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step18_20260625_104516:13:router.get('/records/:recordType/unchanged', controller.unchangedRecords);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step18_20260625_104516:15:router.get('/records/:recordType/hash-preview', controller.hashPreview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step18_20260625_104516:16:router.get('/records/:recordType/hash', controller.hashOne);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step18_20260625_104516:18:router.get('/records/:recordType/blockchain-key-preview', controller.blockchainKeyPreview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step18_20260625_104516:19:router.get('/records/:recordType/blockchain-key', controller.blockchainKeyOne);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step18_20260625_104516:21:router.get('/records/:recordType/proof-only/preview', controller.proofOnlyPreview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step18_20260625_104516:22:router.post('/records/:recordType/proof-only/submit', controller.proofOnlySubmit);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step18_20260625_104516:24:router.get('/history/:historyId/transaction-link', controller.transactionLink);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step18_20260625_104516:25:router.post('/history/:historyId/link-transaction', controller.linkTransaction);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step18_20260625_104516:32:router.get('/history/health', historyController.health);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step18_20260625_104516:33:router.get('/history/summary', historyController.summary);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step18_20260625_104516:34:router.get('/history', historyController.listHistory);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step18_20260625_104516:35:router.get('/history/:historyId', historyController.getHistoryById);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step18_20260625_104516:36:router.get('/records/:recordType/history/latest', historyController.getLatestRecordHistory);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step18_20260625_104516:37:router.get('/records/:recordType/history', historyController.listRecordHistory);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step18_20260625_104516:45:router.get('/verification/health', verificationController.health);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step18_20260625_104516:46:router.get('/verification/summary', verificationController.summary);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step18_20260625_104516:47:router.get('/verification/logs', verificationController.listLogs);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step18_20260625_104516:48:router.get('/verification/logs/:verificationId', verificationController.getLogById);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step18_20260625_104516:49:router.get('/records/:recordType/verification/preview', verificationController.preview);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step18_20260625_104516:50:router.get('/records/:recordType/verification/latest', verificationController.getLatestRecordLog);
+blockchain-api/src/routes/blockchain-proof-api.routes.js.bak_step18_20260625_104516:51:router.get('/records/:recordType/verification/logs', verificationController.listRecordLogs);
+blockchain-api/src/routes/government-valoores-customer-kyc.routes.js:40:router.get('/proof/preview/:sourceRecordId', async (req, res) => {
+blockchain-api/src/routes/government-valoores-customer-kyc.routes.js:95:router.post('/proof/submit', submitCustomerKycProofRequest);
+blockchain-api/src/routes/government-valoores-customer-kyc.routes.js:96:router.post('/proof/submit/:sourceRecordId', submitCustomerKycProofRequest);
+blockchain-api/src/routes/government-valoores-customer-kyc.routes.js:104:router.get('/proof/verify/preview/:sourceRecordId', async (req, res) => {
+blockchain-api/src/routes/government-valoores-customer-kyc.routes.js:159:router.post('/proof/verify', verifyCustomerKycProofRequest);
+blockchain-api/src/routes/government-valoores-customer-kyc.routes.js:160:router.post('/proof/verify/:sourceRecordId', verifyCustomerKycProofRequest);
+blockchain-api/src/routes/government-valoores-customer-kyc.routes.js:168:router.get('/proof/status', async (req, res) => {
+blockchain-api/src/routes/government-valoores-customer-kyc.routes.js:186:router.get('/proof/status/:sourceRecordId', async (req, res) => {
+blockchain-api/src/routes/resident-wallets.routes.js:192:router.get('/resident-wallets/summary', async (req, res) => {
+blockchain-api/src/routes/resident-wallets.routes.js:221:router.get('/resident-wallets', async (req, res) => {
+blockchain-api/src/routes/dashboard.routes.js:8:router.get('/summary', dashboardController.getDashboardSummary);
+blockchain-api/src/routes/government-valoores-aml-rules.routes.js:78:router.get('/proof/preview/:sourceRecordId', async (req, res) => {
+blockchain-api/src/routes/government-valoores-aml-rules.routes.js:133:router.post('/proof/submit', submitAmlRuleProofRequest);
+blockchain-api/src/routes/government-valoores-aml-rules.routes.js:134:router.post('/proof/submit/:sourceRecordId', submitAmlRuleProofRequest);
+blockchain-api/src/routes/government-valoores-aml-rules.routes.js:143:router.get('/proof/verify/preview/:sourceRecordId', async (req, res) => {
+blockchain-api/src/routes/government-valoores-aml-rules.routes.js:198:router.post('/proof/verify', verifyAmlRuleProofRequest);
+blockchain-api/src/routes/government-valoores-aml-rules.routes.js:199:router.post('/proof/verify/:sourceRecordId', verifyAmlRuleProofRequest);
+blockchain-api/src/routes/government-valoores-aml-rules.routes.js:210:router.get('/proof/status', async (req, res) => {
+blockchain-api/src/routes/government-valoores-aml-rules.routes.js:228:router.get('/proof/status/:sourceRecordId', async (req, res) => {
+blockchain-api/src/routes/government-valoores-aml-rules.routes.js:252:router.get('/source', async (req, res) => {
+blockchain-api/src/routes/government-valoores-aml-rules.routes.js:278:router.post('/sync', async (req, res) => {
+blockchain-api/src/routes/government-valoores-aml-rules.routes.js:304:router.get('/sync-status', async (req, res) => {
+blockchain-api/src/routes/government-valoores-aml-rules.routes.js:321:router.get('/fabric/:ruleId/:ruleQueryId', async (req, res) => {
+blockchain-api/src/routes/government-valoores-aml-rules.routes.js:350:router.get('/history/:ruleId/:ruleQueryId', async (req, res) => {
+blockchain-api/src/routes/government-valoores-aml-rules.routes.js:379:router.get('/fabric/:ruleId', async (req, res) => {
+blockchain-api/src/routes/government-valoores-aml-rules.routes.js:408:router.get('/history/:ruleId', async (req, res) => {
+blockchain-api/src/routes/government-valoores-aml-rules.routes.js:437:router.get('/all-fabric', async (req, res) => {
+blockchain-api/src/routes/government-valoores-aml-rules.routes.js:469:router.get('/dashboard', async (req, res) => {
+blockchain-api/src/routes/documents-kyc.routes.js.bak_20260605_145252:55:router.get('/', async (req, res) => {
+blockchain-api/src/routes/documents-kyc.routes.js.bak_20260605_145252:100:router.get('/summary', async (req, res) => {
+blockchain-api/src/routes/documents-kyc.routes.js.bak_20260605_145252:129:router.post('/upload', (req, res) => {
+blockchain-api/src/routes/documents-kyc.routes.js.bak_20260605_145252:256:router.patch('/:id/status', async (req, res) => {
+blockchain-api/src/routes/documents-kyc.routes.js.bak_20260605_145252:314:router.get('/:id/download', async (req, res) => {
+blockchain-api/src/routes/blockchain-proof-history-sync.routes.js:25:router.get('/health', healthCheck);
+blockchain-api/src/routes/blockchain-proof-history-sync.routes.js:26:router.get('/source/:recordType/preview', previewSourceRecords);
+blockchain-api/src/routes/blockchain-proof-history-sync.routes.js:27:router.get('/source/:recordType/detect-create', detectCreateRecords);
+blockchain-api/src/routes/blockchain-proof-history-sync.routes.js:28:router.get('/source/:recordType/detect-update', detectUpdateRecords);
+blockchain-api/src/routes/blockchain-proof-history-sync.routes.js:29:router.get('/source/:recordType/detect-unchanged', detectUnchangedRecords);
+blockchain-api/src/routes/blockchain-proof-history-sync.routes.js:30:router.get('/source/:recordType/hash-preview', previewStableHashes);
+blockchain-api/src/routes/blockchain-proof-history-sync.routes.js:31:router.get('/source/:recordType/hash/validate', validateStableHash);
+blockchain-api/src/routes/blockchain-proof-history-sync.routes.js:32:router.get('/source/:recordType/hash', generateStableHash);
+blockchain-api/src/routes/blockchain-proof-history-sync.routes.js:33:router.get('/source/:recordType/blockchain-key-preview', previewBlockchainKeys);
+blockchain-api/src/routes/blockchain-proof-history-sync.routes.js:34:router.get('/source/:recordType/blockchain-key', generateBlockchainKey);
+blockchain-api/src/routes/blockchain-proof-history-sync.routes.js:35:router.get('/blockchain-key/validate', validateBlockchainKey);
+blockchain-api/src/routes/blockchain-proof-history-sync.routes.js:36:router.get('/fabric-submit/diagnostics', getFabricSubmitDiagnostics);
+blockchain-api/src/routes/blockchain-proof-history-sync.routes.js:37:router.get('/source/:recordType/proof-only/preview', previewProofOnlyPayload);
+blockchain-api/src/routes/blockchain-proof-history-sync.routes.js:38:router.post('/source/:recordType/proof-only/submit', submitProofOnly);
+blockchain-api/src/routes/blockchain-proof-history-sync.routes.js:39:router.post('/history/:historyId/link-transaction', linkBlockchainTransaction);
+blockchain-api/src/routes/blockchain-proof-history-sync.routes.js:40:router.get('/history/:historyId/transaction-link', getBlockchainTransactionLink);
+blockchain-api/src/routes/blockchain-proof-history-sync.routes.js:41:router.post('/runs/test/:recordType', createValidationRun);
+blockchain-api/src/routes/data-change-high-risk-alert.routes.js:6:router.get('/health', controller.health);
+blockchain-api/src/routes/data-change-high-risk-alert.routes.js:7:router.get('/summary', controller.summary);
+blockchain-api/src/routes/data-change-high-risk-alert.routes.js:8:router.post('/scan', controller.scan);
+blockchain-api/src/routes/data-change-high-risk-alert.routes.js:9:router.get('/alerts', controller.list);
+blockchain-api/src/routes/data-change-high-risk-alert.routes.js:10:router.get('/alerts/:alertIdOrKey', controller.detail);
+blockchain-api/src/routes/data-change-high-risk-alert.routes.js:11:router.patch('/alerts/:alertIdOrKey/status', controller.updateStatus);
+blockchain-api/src/routes/government-transactions.routes.js.bak_phase9_sequence_txn_ref_20260612_141831:101:router.get('/', async (req, res) => {
+blockchain-api/src/routes/government-transactions.routes.js.bak_phase9_sequence_txn_ref_20260612_141831:433:router.get('/reference/transaction-status', async (req, res) => {
+blockchain-api/src/routes/government-transactions.routes.js.bak_phase9_sequence_txn_ref_20260612_141831:464:router.get('/reference/payment-methods', async (req, res) => {
+blockchain-api/src/routes/government-transactions.routes.js.bak_phase9_sequence_txn_ref_20260612_141831:495:router.get('/residents-dropdown', async (req, res) => {
+blockchain-api/src/routes/government-transactions.routes.js.bak_phase9_sequence_txn_ref_20260612_141831:547:router.get('/services', async (req, res) => {
+blockchain-api/src/routes/government-transactions.routes.js.bak_phase9_sequence_txn_ref_20260612_141831:597:router.post('/fee-preview', async (req, res) => {
+blockchain-api/src/routes/government-transactions.routes.js.bak_phase9_sequence_txn_ref_20260612_141831:625:router.post('/', async (req, res) => {
+blockchain-api/src/routes/government-transactions.routes.js.bak_phase9_sequence_txn_ref_20260612_141831:1077:router.get('/ministries-dropdown', async (req, res) => {
+blockchain-api/logs/valoores_fabric_customer_api.log:780:  message: 'customerId is required',
+blockchain-api/logs/valoores

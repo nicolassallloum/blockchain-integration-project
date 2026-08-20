@@ -1,0 +1,2631 @@
+nohup: ignoring input
+◇ injected env (97) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+[VALOORES_AML_RULES_AUTO_SYNC] Started { intervalMs: 60000, limit: 1000 }
+[BLOCKCHAIN_AUTO_RETRY] Disabled by env.
+[ROUTE MOUNTED] /api/v1/audit-validation
+[ROUTE MOUNTED] /api/v1/government-blockchain/documents
+[ROUTE MOUNTED] /api/v1/government-blockchain/hash-verification
+[ROUTE MOUNTED] /api/v1/government-blockchain/risk-fraud-screening
+[ROUTE MOUNTED] /api/v1/government-blockchain/valoores-aml-rules
+[ROUTE MOUNTED] /api/v1/government-blockchain/valoores-customer-kyc
+[ROUTE MOUNTED] /api/v1/government-blockchain/audit-logs
+[ROUTE MOUNTED] /api/v1/government-blockchain/audit-proofs
+[ROUTE MOUNTED] /api/v1/government-blockchain/audit-batch-proofs
+[ROUTE MOUNTED] /api/v1/government-blockchain/high-risk-data-change-alerts
+[ROUTE MOUNTED] /api/v1/government-blockchain/invalid-record-reviews
+[ROUTE MOUNTED] /api/v1/government-blockchain/compliance-proof-rules
+[ROUTE MOUNTED] /api/v1/government-blockchain/bulk-compliance-approvals
+[ROUTE MOUNTED] /api/v1/government-blockchain/settings
+[ROUTE MOUNTED] /api/v1/government-blockchain/dashboard
+[ROUTE MOUNTED] /api/v1/government-blockchain/aml-dashboard
+[ROUTE MOUNTED] /api/v1/government-blockchain/aml-alerts-queue
+[ROUTE MOUNTED] /api/v1/government-blockchain/aml-cases
+[ROUTE MOUNTED] /api/v1/government-blockchain/aml-case-management
+[ROUTE MOUNTED] /api/v1/government-blockchain/reports
+[ROUTE MOUNTED] /api/v1/government-blockchain/blockchain-proofs
+[ROUTE LOADED] /api/v1/government-blockchain/payments-digital-stamps
+[ROUTES] wallet.routes loaded
+[ROUTES] data-generator.routes loaded
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+[ROUTES] transaction.routes loaded
+[ROUTES] fabric.routes loaded
+[ROUTES] reference.routes loaded
+[ROUTES] organization.routes loaded
+[ROUTES] project-view.routes loaded
+[ROUTES] dashboard.routes loaded
+[ROUTES] blockchain-kyc.routes loaded
+[ROUTES] governmentBlockchainAuth.routes loaded
+[ROUTES] government-blockchain/reference.routes loaded
+[ROUTES] government-blockchain/ministry.routes loaded
+[ROUTES] residentWallet.routes loaded
+[ROUTES] resident.routes loaded
+[ROUTES] government-services.routes loaded
+[ROUTES] publicAdministration.routes loaded
+[ROUTES] government-transactions.routes loaded
+[ROUTES] government-approval-queue.routes loaded
+[ROUTES] government-account-login.routes loaded
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+[COUCHDB CONFIG] {
+  url: 'http://127.0.0.1:5984',
+  username: 'admin',
+  passwordLoaded: true
+}
+[ROUTES] dashboard route loaded
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+[ROUTES] health route loaded
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+[ROUTES] blockchain route loaded
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+[ROUTES] routes/index loaded
+[ROUTE MOUNTED] /api/v1/government-blockchain/auth
+[ROUTE MOUNTED] /api/v1/government-blockchain/account-login
+[ROUTE MOUNTED] /api/v1/government-blockchain/services
+[ROUTE MOUNTED] /api/v1/government-blockchain/public-administrations
+[ROUTE MOUNTED] /api/v1/government-blockchain/transactions
+[ROUTE MOUNTED] /api/v1/government-blockchain/approval-queue
+[ROUTE MOUNTED] /api/v1/government-blockchain/resident-wallets
+[ROUTE MOUNTED] /api/v1/government-blockchain/digital-kyc/resident-wallets
+[ROUTE MOUNTED] /api/v1/government-blockchain/ministries
+[ROUTE MOUNTED] /api/v1/government-blockchain/reference
+[ROUTE MOUNTED] /api/v1/government-blockchain/digital-kyc/resident-wallets
+[ROUTE MOUNTED] /api/v1/government-blockchain/residents
+[ROUTE MOUNTED] /api/v1/kyc
+[ROUTE MOUNTED] /api/v1/wallets
+[ROUTE MOUNTED] /api/v1/data-generator
+[ROUTE MOUNTED] /api/v1/transactions
+[ROUTE MOUNTED] /api/v1/fabric
+[ROUTE MOUNTED] /api/v1/reference
+[ROUTE MOUNTED] /api/v1/organizations
+[ROUTE MOUNTED] /api/v1/project-views
+[ROUTE MOUNTED] /api/v1/dashboard
+[ROUTE MOUNTED] /api/v1 generic routes
+[ROUTE MOUNTED] /api/license-access
+[ROUTE MOUNTED] /api/license-wallets
+[ROUTE MOUNTED] /api/license-recovery
+======================================================
+Blockchain API Middleware started successfully
+Environment: production
+Listening: http://0.0.0.0:3001
+Health: http://0.0.0.0:3001/api/v1/health
+Government Transactions: http://0.0.0.0:3001/api/v1/government-blockchain/transactions
+Government Transaction Services: http://0.0.0.0:3001/api/v1/government-blockchain/transactions/services
+Resident Search: http://0.0.0.0:3001/api/v1/government-blockchain/transactions/residents/search
+Allowed CORS Origins: http://localhost:4200, http://127.0.0.1:4200, http://localhost:8080, http://127.0.0.1:8080, http://localhost:5173, http://127.0.0.1:5173, http://172.31.13.90:4200, http://172.31.13.90:8080, http://172.31.3.90:4200, http://172.31.3.90:8080
+======================================================
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/forgot-password/challenge',
+  statusCode: 201,
+  durationMs: 96,
+  requestId: 'REQ_5759A55BEC3B8B0EF0E2EA90',
+  correlationId: 'REQ_5759A55BEC3B8B0EF0E2EA90',
+  origin: null
+}
+[LICENSE_WORD_VERIFY_SUCCESS] {
+  licenseId: '70b7013e-4407-41dd-ab23-17c86e0d77eb',
+  contractRef: 'Val-GSS-01',
+  walletAddress: '0xA3C1B91F3b69fe5A5CF7769886a24a2A1e0ACd05'
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/forgot-password/verify',
+  statusCode: 200,
+  durationMs: 83,
+  requestId: 'REQ_0D018AFC9DFB8706B7D90E81',
+  correlationId: 'REQ_0D018AFC9DFB8706B7D90E81',
+  origin: null
+}
+[LICENSE_SIMPLE_PASSWORD_RESET_SUCCESS] {
+  licenseId: '70b7013e-4407-41dd-ab23-17c86e0d77eb',
+  walletAddress: '0xA3C1B91F3b69fe5A5CF7769886a24a2A1e0ACd05',
+  walletVersion: 2
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/password-reset',
+  statusCode: 200,
+  durationMs: 922,
+  requestId: 'REQ_8D12A203A7BCC70AB46235CB',
+  correlationId: 'REQ_8D12A203A7BCC70AB46235CB',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/forgot-password/challenge',
+  statusCode: 201,
+  durationMs: 35,
+  requestId: 'REQ_99ED7406CB6944A0EC280549',
+  correlationId: 'REQ_99ED7406CB6944A0EC280549',
+  origin: null
+}
+[LICENSE_WORD_VERIFY_SUCCESS] {
+  licenseId: '70b7013e-4407-41dd-ab23-17c86e0d77eb',
+  contractRef: 'Val-GSS-01',
+  walletAddress: '0xA3C1B91F3b69fe5A5CF7769886a24a2A1e0ACd05'
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/forgot-password/verify',
+  statusCode: 200,
+  durationMs: 38,
+  requestId: 'REQ_00E333761329AFAD674F372C',
+  correlationId: 'REQ_00E333761329AFAD674F372C',
+  origin: null
+}
+[LICENSE_SIMPLE_PASSWORD_RESET_SUCCESS] {
+  licenseId: '70b7013e-4407-41dd-ab23-17c86e0d77eb',
+  walletAddress: '0xA3C1B91F3b69fe5A5CF7769886a24a2A1e0ACd05',
+  walletVersion: 3
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/password-reset',
+  statusCode: 200,
+  durationMs: 833,
+  requestId: 'REQ_C72E35997826BC478D3AFBFC',
+  correlationId: 'REQ_C72E35997826BC478D3AFBFC',
+  origin: null
+}
+[FABRIC SUBMIT CONFIG] {
+  functionName: 'SaveAmlRule',
+  channelName: 'kycchannelnix1',
+  chaincodeName: 'kyc-wallet-chaincode-js',
+  peerEndpoint: 'peer0.org1.blockchain.local:7051',
+  peerHostAlias: 'peer0.org1.blockchain.local',
+  endorsingOrganizations: [ 'Org1MSP' ],
+  argsCount: 1
+}
+[LICENSE_WALLET_GENERATED] {
+  generationId: '8e123b87-c22f-4a46-a178-61e0c9be3e02',
+  licenseId: 'f49f75ae-9f62-4343-872b-2e1f0f949fbd',
+  contractRef: 'Val-GSS-01',
+  walletAddress: '0xa4a1017151A82371A28Caa067551Fd4281f5861d'
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-wallets/generate',
+  statusCode: 201,
+  durationMs: 975,
+  requestId: 'REQ_89BA17AF93DE5BD6B5FBC3A8',
+  correlationId: 'REQ_89BA17AF93DE5BD6B5FBC3A8',
+  origin: null
+}
+[FABRIC COMMIT STATUS] {
+  functionName: 'SaveAmlRule',
+  transactionId: 'bcb9b86ddf930fbb7956de757fcecfad43bcaba86b6df54e80e56ccadd5618e4',
+  successful: true,
+  code: 0
+}
+[VALOORES_AML_RULES_AUTO_SYNC_RESULT] {
+  totalSourceRecords: 56,
+  syncedCount: 1,
+  skippedCount: 55,
+  failedCount: 0
+}
+[LICENSE_GENERATED_WALLET_PROVISION_SUCCESS] {
+  generationId: '8e123b87-c22f-4a46-a178-61e0c9be3e02',
+  licenseId: 'f49f75ae-9f62-4343-872b-2e1f0f949fbd',
+  contractRef: 'Val-GSS-01',
+  walletAddress: '0xa4a1017151A82371A28Caa067551Fd4281f5861d'
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-wallets/provision-generated',
+  statusCode: 201,
+  durationMs: 34,
+  requestId: 'REQ_15D1D3BBE8BB2EB7F66544EC',
+  correlationId: 'REQ_15D1D3BBE8BB2EB7F66544EC',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 200,
+  durationMs: 21,
+  requestId: 'REQ_0AE4F5ECF436F8AF728BAAD0',
+  correlationId: 'REQ_0AE4F5ECF436F8AF728BAAD0',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 200,
+  durationMs: 3,
+  requestId: 'REQ_EFF40B541F2ABA8B9214CA0E',
+  correlationId: 'REQ_EFF40B541F2ABA8B9214CA0E',
+  origin: null
+}
+[LICENSE_ACCESS_WALLET_ERROR] Wallet was not found.
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-access/wallet/0xA3C1B91F3b69fe5A5CF7769886a24a2A1e0ACd05',
+  statusCode: 404,
+  durationMs: 4,
+  requestId: 'REQ_74859591D0050A11F20607B3',
+  correlationId: 'REQ_74859591D0050A11F20607B3',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 200,
+  durationMs: 20,
+  requestId: 'REQ_A3EE5AA2578D080F2B6BF155',
+  correlationId: 'REQ_A3EE5AA2578D080F2B6BF155',
+  origin: null
+}
+[LICENSE_WALLET_GENERATED] {
+  generationId: '8e94136a-4005-41d5-b425-a4287b5bf3d4',
+  licenseId: '4f0c289b-b80b-479c-a46d-6e3873ea4985',
+  contractRef: 'VAL-TTT-01',
+  walletAddress: '0xE08c5a8be6c1557d74EC76E47dc1e762A6712041'
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-wallets/generate',
+  statusCode: 201,
+  durationMs: 851,
+  requestId: 'REQ_B1B89FA750D8A66FCAFD4B93',
+  correlationId: 'REQ_B1B89FA750D8A66FCAFD4B93',
+  origin: null
+}
+[LICENSE_GENERATED_WALLET_PROVISION_SUCCESS] {
+  generationId: '8e94136a-4005-41d5-b425-a4287b5bf3d4',
+  licenseId: '4f0c289b-b80b-479c-a46d-6e3873ea4985',
+  contractRef: 'VAL-TTT-01',
+  walletAddress: '0xE08c5a8be6c1557d74EC76E47dc1e762A6712041'
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-wallets/provision-generated',
+  statusCode: 201,
+  durationMs: 44,
+  requestId: 'REQ_8A2BE290134087E7860E0252',
+  correlationId: 'REQ_8A2BE290134087E7860E0252',
+  origin: null
+}
+[LICENSE_LOGIN_SUCCESS] {
+  licenseId: '4f0c289b-b80b-479c-a46d-6e3873ea4985',
+  contractRef: 'VAL-TTT-01',
+  walletAddress: '0xE08c5a8be6c1557d74EC76E47dc1e762A6712041'
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/login',
+  statusCode: 200,
+  durationMs: 801,
+  requestId: 'REQ_4D1FF1A411E4DF68921D589F',
+  correlationId: 'REQ_4D1FF1A411E4DF68921D589F',
+  origin: null
+}
+[LICENSE_WORD_CHALLENGE_ERROR] Wallet was not found.
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/forgot-password/challenge',
+  statusCode: 404,
+  durationMs: 4,
+  requestId: 'REQ_E5C67DB3AFB701A16325525F',
+  correlationId: 'REQ_E5C67DB3AFB701A16325525F',
+  origin: 'http://172.31.13.90:4200'
+}
+[LICENSE_WORD_CHALLENGE_ERROR] Wallet was not found.
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/forgot-password/challenge',
+  statusCode: 404,
+  durationMs: 4,
+  requestId: 'REQ_7C57F3869CDD5CF9B01BBC42',
+  correlationId: 'REQ_7C57F3869CDD5CF9B01BBC42',
+  origin: 'http://172.31.13.90:4200'
+}
+[LICENSE_WORD_CHALLENGE_ERROR] Wallet was not found.
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/forgot-password/challenge',
+  statusCode: 404,
+  durationMs: 5,
+  requestId: 'REQ_7C461AC22AABDF2C04AF044E',
+  correlationId: 'REQ_7C461AC22AABDF2C04AF044E',
+  origin: 'http://172.31.13.90:4200'
+}
+[LICENSE_WORD_CHALLENGE_ERROR] Wallet was not found.
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/forgot-password/challenge',
+  statusCode: 404,
+  durationMs: 4,
+  requestId: 'REQ_52DBF86C8125BBA5EF036E62',
+  correlationId: 'REQ_52DBF86C8125BBA5EF036E62',
+  origin: 'http://172.31.13.90:4200'
+}
+[LICENSE_WORD_CHALLENGE_ERROR] Wallet was not found.
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/forgot-password/challenge',
+  statusCode: 404,
+  durationMs: 4,
+  requestId: 'REQ_9B752A321291BB81C8103BCB',
+  correlationId: 'REQ_9B752A321291BB81C8103BCB',
+  origin: 'http://172.31.13.90:4200'
+}
+[LICENSE_WORD_CHALLENGE_ERROR] Wallet was not found.
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/forgot-password/challenge',
+  statusCode: 404,
+  durationMs: 4,
+  requestId: 'REQ_9B64A858D195FFD74C7AADA2',
+  correlationId: 'REQ_9B64A858D195FFD74C7AADA2',
+  origin: 'http://172.31.13.90:4200'
+}
+[LICENSE_WORD_CHALLENGE_ERROR] Wallet was not found.
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/forgot-password/challenge',
+  statusCode: 404,
+  durationMs: 5,
+  requestId: 'REQ_C64D033CB8538A331BF53FE1',
+  correlationId: 'REQ_C64D033CB8538A331BF53FE1',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/forgot-password/challenge',
+  statusCode: 201,
+  durationMs: 19,
+  requestId: 'REQ_6E94A5F7160E0B983DD3ACE5',
+  correlationId: 'REQ_6E94A5F7160E0B983DD3ACE5',
+  origin: null
+}
+[LICENSE_WORD_VERIFY_SUCCESS] {
+  licenseId: '4f0c289b-b80b-479c-a46d-6e3873ea4985',
+  contractRef: 'VAL-TTT-01',
+  walletAddress: '0xE08c5a8be6c1557d74EC76E47dc1e762A6712041'
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/forgot-password/verify',
+  statusCode: 200,
+  durationMs: 44,
+  requestId: 'REQ_0FD8CAA6D6CCFC8F941B5C77',
+  correlationId: 'REQ_0FD8CAA6D6CCFC8F941B5C77',
+  origin: null
+}
+[LICENSE_SIMPLE_PASSWORD_RESET_SUCCESS] {
+  licenseId: '4f0c289b-b80b-479c-a46d-6e3873ea4985',
+  walletAddress: '0xE08c5a8be6c1557d74EC76E47dc1e762A6712041',
+  walletVersion: 2
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/password-reset',
+  statusCode: 200,
+  durationMs: 1046,
+  requestId: 'REQ_46460E4362F52C592AD39D42',
+  correlationId: 'REQ_46460E4362F52C592AD39D42',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 200,
+  durationMs: 4,
+  requestId: 'REQ_0B5B363533C888FEC8E71E5F',
+  correlationId: 'REQ_0B5B363533C888FEC8E71E5F',
+  origin: null
+}
+[LICENSE_WALLET_PROVISION_SUCCESS] {
+  licenseId: 'b76ba07c-1a58-4de1-872a-3f0c29940a98',
+  contractRef: 'VAL_BOB_01',
+  walletAddress: '0xd3F22AcF57A548F358B48f2F2E2279B012Da086A'
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-wallets/provision',
+  statusCode: 201,
+  durationMs: 179,
+  requestId: 'REQ_DED30C8402C8E3EB694EC1C8',
+  correlationId: 'REQ_DED30C8402C8E3EB694EC1C8',
+  origin: 'http://172.31.13.90:4200'
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 200,
+  durationMs: 3,
+  requestId: 'REQ_28FD3DB45A602B9EB44C1033',
+  correlationId: 'REQ_28FD3DB45A602B9EB44C1033',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-access/wallet/0xd3F22AcF57A548F358B48f2F2E2279B012Da086A',
+  statusCode: 200,
+  durationMs: 88,
+  requestId: 'REQ_5BE005C4050D1246D7FD4ADB',
+  correlationId: 'REQ_5BE005C4050D1246D7FD4ADB',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-recovery/challenge',
+  statusCode: 200,
+  durationMs: 102,
+  requestId: 'REQ_61D3BAF5F9C66897F1FA24C9',
+  correlationId: 'REQ_61D3BAF5F9C66897F1FA24C9',
+  origin: 'http://172.31.13.90:4200'
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-recovery/recover',
+  statusCode: 200,
+  durationMs: 22,
+  requestId: 'REQ_7DC3AE4D359448762C6512E2',
+  correlationId: 'REQ_7DC3AE4D359448762C6512E2',
+  origin: 'http://172.31.13.90:4200'
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/forgot-password/challenge',
+  statusCode: 201,
+  durationMs: 23,
+  requestId: 'REQ_9EA434E3FC167D2DDE0231E3',
+  correlationId: 'REQ_9EA434E3FC167D2DDE0231E3',
+  origin: 'http://172.31.13.90:4200'
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/forgot-password/challenge',
+  statusCode: 201,
+  durationMs: 44,
+  requestId: 'REQ_3506AFEFDA4C0364F58C9417',
+  correlationId: 'REQ_3506AFEFDA4C0364F58C9417',
+  origin: 'http://172.31.13.90:4200'
+}
+[LICENSE_WORD_VERIFY_SUCCESS] {
+  licenseId: 'b76ba07c-1a58-4de1-872a-3f0c29940a98',
+  contractRef: 'VAL_BOB_01',
+  walletAddress: '0xd3F22AcF57A548F358B48f2F2E2279B012Da086A'
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/forgot-password/verify',
+  statusCode: 200,
+  durationMs: 239,
+  requestId: 'REQ_2CCC206D644FB5BFC3FFB8E9',
+  correlationId: 'REQ_2CCC206D644FB5BFC3FFB8E9',
+  origin: 'http://172.31.13.90:4200'
+}
+[FABRIC SUBMIT CONFIG] {
+  functionName: 'SaveAmlRule',
+  channelName: 'kycchannelnix1',
+  chaincodeName: 'kyc-wallet-chaincode-js',
+  peerEndpoint: 'peer0.org1.blockchain.local:7051',
+  peerHostAlias: 'peer0.org1.blockchain.local',
+  endorsingOrganizations: [ 'Org1MSP' ],
+  argsCount: 1
+}
+[FABRIC COMMIT STATUS] {
+  functionName: 'SaveAmlRule',
+  transactionId: 'e5fcd64593d1269ad9a0a8a17a33f0b045e9a6a8db8376939ae070ea92235f39',
+  successful: true,
+  code: 0
+}
+[VALOORES_AML_RULES_AUTO_SYNC_RESULT] {
+  totalSourceRecords: 56,
+  syncedCount: 1,
+  skippedCount: 55,
+  failedCount: 0
+}
+[LICENSE_PASSWORD_RESET_SUCCESS] {
+  licenseId: 'b76ba07c-1a58-4de1-872a-3f0c29940a98',
+  walletAddress: '0xd3F22AcF57A548F358B48f2F2E2279B012Da086A',
+  walletVersion: 2
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/password-reset/complete',
+  statusCode: 200,
+  durationMs: 38,
+  requestId: 'REQ_BF1EA9CFC74AF8AC7E4EC9A9',
+  correlationId: 'REQ_BF1EA9CFC74AF8AC7E4EC9A9',
+  origin: 'http://172.31.13.90:4200'
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-access/wallet/0xd3F22AcF57A548F358B48f2F2E2279B012Da086A',
+  statusCode: 200,
+  durationMs: 3,
+  requestId: 'REQ_AA10F4E4CFA2FCB6E467471F',
+  correlationId: 'REQ_AA10F4E4CFA2FCB6E467471F',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-recovery/challenge',
+  statusCode: 200,
+  durationMs: 11,
+  requestId: 'REQ_0E9A9DADA3B7D7991027AEF2',
+  correlationId: 'REQ_0E9A9DADA3B7D7991027AEF2',
+  origin: 'http://172.31.13.90:4200'
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-recovery/recover',
+  statusCode: 200,
+  durationMs: 21,
+  requestId: 'REQ_CC4A4545AE7DEAFF2A33C8F1',
+  correlationId: 'REQ_CC4A4545AE7DEAFF2A33C8F1',
+  origin: 'http://172.31.13.90:4200'
+}
+[FABRIC SUBMIT CONFIG] {
+  functionName: 'SaveAmlRule',
+  channelName: 'kycchannelnix1',
+  chaincodeName: 'kyc-wallet-chaincode-js',
+  peerEndpoint: 'peer0.org1.blockchain.local:7051',
+  peerHostAlias: 'peer0.org1.blockchain.local',
+  endorsingOrganizations: [ 'Org1MSP' ],
+  argsCount: 1
+}
+[FABRIC COMMIT STATUS] {
+  functionName: 'SaveAmlRule',
+  transactionId: '2637d4e8bcf24f6225a46751d70237f7f659c10c9a2bcf77074acc7980a538ea',
+  successful: true,
+  code: 0
+}
+[VALOORES_AML_RULES_AUTO_SYNC_RESULT] {
+  totalSourceRecords: 56,
+  syncedCount: 1,
+  skippedCount: 55,
+  failedCount: 0
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/forgot-password/challenge',
+  statusCode: 201,
+  durationMs: 30,
+  requestId: 'REQ_02B6B823A271304372BBD721',
+  correlationId: 'REQ_02B6B823A271304372BBD721',
+  origin: 'http://172.31.13.90:4200'
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/forgot-password/challenge',
+  statusCode: 201,
+  durationMs: 17,
+  requestId: 'REQ_551009DE428081D355909BB7',
+  correlationId: 'REQ_551009DE428081D355909BB7',
+  origin: 'http://172.31.13.90:4200'
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 200,
+  durationMs: 21,
+  requestId: 'REQ_7E619BB3E80D4B735624D0DA',
+  correlationId: 'REQ_7E619BB3E80D4B735624D0DA',
+  origin: null
+}
+[LICENSE_WALLET_GENERATED] {
+  generationId: '3e217e58-7f31-4eab-805b-2ac3fe9bdf97',
+  licenseId: 'c89f9abd-414e-4c5a-9ecd-987e7081084a',
+  contractRef: 'VAL-01',
+  walletAddress: '0x78D75534Ce9C37B590D65F99C46eEB09C8A4cAf4'
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-wallets/generate',
+  statusCode: 201,
+  durationMs: 970,
+  requestId: 'REQ_3EA125BFC440647B6BC457FB',
+  correlationId: 'REQ_3EA125BFC440647B6BC457FB',
+  origin: null
+}
+[LICENSE_GENERATED_WALLET_PROVISION_SUCCESS] {
+  generationId: '3e217e58-7f31-4eab-805b-2ac3fe9bdf97',
+  licenseId: 'c89f9abd-414e-4c5a-9ecd-987e7081084a',
+  contractRef: 'VAL-01',
+  walletAddress: '0x78D75534Ce9C37B590D65F99C46eEB09C8A4cAf4'
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-wallets/provision-generated',
+  statusCode: 201,
+  durationMs: 30,
+  requestId: 'REQ_0004E0B2A966D000273E330F',
+  correlationId: 'REQ_0004E0B2A966D000273E330F',
+  origin: null
+}
+[LICENSE_LOGIN_SUCCESS] {
+  licenseId: 'c89f9abd-414e-4c5a-9ecd-987e7081084a',
+  contractRef: 'VAL-01',
+  walletAddress: '0x78D75534Ce9C37B590D65F99C46eEB09C8A4cAf4'
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/login',
+  statusCode: 200,
+  durationMs: 782,
+  requestId: 'REQ_7EE8EFAC193D1C88BF3D760F',
+  correlationId: 'REQ_7EE8EFAC193D1C88BF3D760F',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-access/wallet/0x78D75534Ce9C37B590D65F99C46eEB09C8A4cAf4',
+  statusCode: 200,
+  durationMs: 3,
+  requestId: 'REQ_DA51609CB625495C8FD56359',
+  correlationId: 'REQ_DA51609CB625495C8FD56359',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-recovery/challenge',
+  statusCode: 200,
+  durationMs: 54,
+  requestId: 'REQ_99F17BD55D4AA87AC28E59AE',
+  correlationId: 'REQ_99F17BD55D4AA87AC28E59AE',
+  origin: 'http://172.31.13.90:4200'
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-recovery/recover',
+  statusCode: 200,
+  durationMs: 45,
+  requestId: 'REQ_93C98C69002AF5543CE849F9',
+  correlationId: 'REQ_93C98C69002AF5543CE849F9',
+  origin: 'http://172.31.13.90:4200'
+}
+[LICENSE_LOGIN_SUCCESS] {
+  licenseId: 'c89f9abd-414e-4c5a-9ecd-987e7081084a',
+  contractRef: 'VAL-01',
+  walletAddress: '0x78D75534Ce9C37B590D65F99C46eEB09C8A4cAf4'
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/login',
+  statusCode: 200,
+  durationMs: 852,
+  requestId: 'REQ_0A504D67FA56E3EFF27B8253',
+  correlationId: 'REQ_0A504D67FA56E3EFF27B8253',
+  origin: null
+}
+[LICENSE_GENERATED_WALLET_PROVISION_ERROR] This wallet generation has already been used.
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-wallets/provision-generated',
+  statusCode: 409,
+  durationMs: 6,
+  requestId: 'REQ_343878793F3130C55393EC00',
+  correlationId: 'REQ_343878793F3130C55393EC00',
+  origin: null
+}
+[LICENSE_WALLET_GENERATE_ERROR] License was not found or already has a wallet.
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-wallets/generate',
+  statusCode: 409,
+  durationMs: 4,
+  requestId: 'REQ_343C2AA046879F66F730EC28',
+  correlationId: 'REQ_343C2AA046879F66F730EC28',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/forgot-password/challenge',
+  statusCode: 201,
+  durationMs: 69,
+  requestId: 'REQ_4A280148ED0BD63CCFAA0507',
+  correlationId: 'REQ_4A280148ED0BD63CCFAA0507',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/forgot-password/challenge',
+  statusCode: 201,
+  durationMs: 15,
+  requestId: 'REQ_FD21453060F090B882FCC7AA',
+  correlationId: 'REQ_FD21453060F090B882FCC7AA',
+  origin: null
+}
+[FABRIC SUBMIT CONFIG] {
+  functionName: 'SaveAmlRule',
+  channelName: 'kycchannelnix1',
+  chaincodeName: 'kyc-wallet-chaincode-js',
+  peerEndpoint: 'peer0.org1.blockchain.local:7051',
+  peerHostAlias: 'peer0.org1.blockchain.local',
+  endorsingOrganizations: [ 'Org1MSP' ],
+  argsCount: 1
+}
+[FABRIC COMMIT STATUS] {
+  functionName: 'SaveAmlRule',
+  transactionId: 'e5688db2aa0631bf380636f315dcd7eeb06feb093db1550682e85e96106282c7',
+  successful: true,
+  code: 0
+}
+[VALOORES_AML_RULES_AUTO_SYNC_RESULT] {
+  totalSourceRecords: 56,
+  syncedCount: 1,
+  skippedCount: 55,
+  failedCount: 0
+}
+[FABRIC SUBMIT CONFIG] {
+  functionName: 'SaveAmlRule',
+  channelName: 'kycchannelnix1',
+  chaincodeName: 'kyc-wallet-chaincode-js',
+  peerEndpoint: 'peer0.org1.blockchain.local:7051',
+  peerHostAlias: 'peer0.org1.blockchain.local',
+  endorsingOrganizations: [ 'Org1MSP' ],
+  argsCount: 1
+}
+[FABRIC COMMIT STATUS] {
+  functionName: 'SaveAmlRule',
+  transactionId: 'adfb1da7994f357b3b58a89f03cc606e4f0df863311747d824078a851485ae2d',
+  successful: true,
+  code: 0
+}
+[VALOORES_AML_RULES_AUTO_SYNC_RESULT] {
+  totalSourceRecords: 56,
+  syncedCount: 1,
+  skippedCount: 55,
+  failedCount: 0
+}
+[FABRIC SUBMIT CONFIG] {
+  functionName: 'SaveAmlRule',
+  channelName: 'kycchannelnix1',
+  chaincodeName: 'kyc-wallet-chaincode-js',
+  peerEndpoint: 'peer0.org1.blockchain.local:7051',
+  peerHostAlias: 'peer0.org1.blockchain.local',
+  endorsingOrganizations: [ 'Org1MSP' ],
+  argsCount: 1
+}
+[FABRIC COMMIT STATUS] {
+  functionName: 'SaveAmlRule',
+  transactionId: 'cb3715263374d2b36c6f7a6308f857c9abd1dccbc021e23bf162c2dcb2ecf266',
+  successful: true,
+  code: 0
+}
+[VALOORES_AML_RULES_AUTO_SYNC_RESULT] {
+  totalSourceRecords: 56,
+  syncedCount: 1,
+  skippedCount: 55,
+  failedCount: 0
+}
+[LICENSE_WALLET_GENERATED] {
+  generationId: '01089913-1b79-47c5-bc04-170e81e4f2c4',
+  licenseId: '6c4ee64d-706d-4ca4-becd-250eef304b74',
+  contractRef: 'VALOORES-VFDS',
+  walletAddress: '0xAFCa9Dc41b9041976986F5b10da2fbaB8a49897e'
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-wallets/generate',
+  statusCode: 201,
+  durationMs: 1013,
+  requestId: 'REQ_E0617EE54C717A8EFAD3C2CB',
+  correlationId: 'REQ_E0617EE54C717A8EFAD3C2CB',
+  origin: null
+}
+[LICENSE_GENERATED_WALLET_PROVISION_SUCCESS] {
+  generationId: '01089913-1b79-47c5-bc04-170e81e4f2c4',
+  licenseId: '6c4ee64d-706d-4ca4-becd-250eef304b74',
+  contractRef: 'VALOORES-VFDS',
+  walletAddress: '0xAFCa9Dc41b9041976986F5b10da2fbaB8a49897e'
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-wallets/provision-generated',
+  statusCode: 201,
+  durationMs: 221,
+  requestId: 'REQ_FF251B37DD6CED405FC53299',
+  correlationId: 'REQ_FF251B37DD6CED405FC53299',
+  origin: null
+}
+[LICENSE_WALLET_GENERATED] {
+  generationId: '9aa47c40-d66c-4b60-86d6-8ca0dd845fb4',
+  licenseId: '7291d6d2-3945-45cd-bf3a-55a46aa0d691',
+  contractRef: 'VALOORES-VFDS',
+  walletAddress: '0xC076A9b46A3570E907a7920efE1a378fb30cae7b'
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-wallets/generate',
+  statusCode: 201,
+  durationMs: 932,
+  requestId: 'REQ_254663C5174A56DC5F6681C2',
+  correlationId: 'REQ_254663C5174A56DC5F6681C2',
+  origin: null
+}
+[FABRIC SUBMIT CONFIG] {
+  functionName: 'SaveAmlRule',
+  channelName: 'kycchannelnix1',
+  chaincodeName: 'kyc-wallet-chaincode-js',
+  peerEndpoint: 'peer0.org1.blockchain.local:7051',
+  peerHostAlias: 'peer0.org1.blockchain.local',
+  endorsingOrganizations: [ 'Org1MSP' ],
+  argsCount: 1
+}
+[FABRIC COMMIT STATUS] {
+  functionName: 'SaveAmlRule',
+  transactionId: '16037c2846894a4a72202f2b1e6cf8c4c2a7d9f024d2861e997596c917bdbdb6',
+  successful: true,
+  code: 0
+}
+[VALOORES_AML_RULES_AUTO_SYNC_RESULT] {
+  totalSourceRecords: 56,
+  syncedCount: 1,
+  skippedCount: 55,
+  failedCount: 0
+}
+[LICENSE_GENERATED_WALLET_PROVISION_SUCCESS] {
+  generationId: '9aa47c40-d66c-4b60-86d6-8ca0dd845fb4',
+  licenseId: '7291d6d2-3945-45cd-bf3a-55a46aa0d691',
+  contractRef: 'VALOORES-VFDS',
+  walletAddress: '0xC076A9b46A3570E907a7920efE1a378fb30cae7b'
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-wallets/provision-generated',
+  statusCode: 201,
+  durationMs: 282,
+  requestId: 'REQ_6EFA0118D5F536FE67DF5A2A',
+  correlationId: 'REQ_6EFA0118D5F536FE67DF5A2A',
+  origin: null
+}
+[LICENSE_LOGIN_SUCCESS] {
+  licenseId: '7291d6d2-3945-45cd-bf3a-55a46aa0d691',
+  contractRef: 'VALOORES-VFDS',
+  walletAddress: '0xC076A9b46A3570E907a7920efE1a378fb30cae7b'
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/login',
+  statusCode: 200,
+  durationMs: 896,
+  requestId: 'REQ_D2188DE8C8705986B9B2D046',
+  correlationId: 'REQ_D2188DE8C8705986B9B2D046',
+  origin: null
+}
+[FABRIC SUBMIT CONFIG] {
+  functionName: 'SaveAmlRule',
+  channelName: 'kycchannelnix1',
+  chaincodeName: 'kyc-wallet-chaincode-js',
+  peerEndpoint: 'peer0.org1.blockchain.local:7051',
+  peerHostAlias: 'peer0.org1.blockchain.local',
+  endorsingOrganizations: [ 'Org1MSP' ],
+  argsCount: 1
+}
+[FABRIC COMMIT STATUS] {
+  functionName: 'SaveAmlRule',
+  transactionId: '45b609c248fa649f160e48f7ad3f1d0a245d7511c7916e6880f7e00bad982361',
+  successful: true,
+  code: 0
+}
+[VALOORES_AML_RULES_AUTO_SYNC_RESULT] {
+  totalSourceRecords: 56,
+  syncedCount: 1,
+  skippedCount: 55,
+  failedCount: 0
+}
+[FABRIC SUBMIT CONFIG] {
+  functionName: 'SaveAmlRule',
+  channelName: 'kycchannelnix1',
+  chaincodeName: 'kyc-wallet-chaincode-js',
+  peerEndpoint: 'peer0.org1.blockchain.local:7051',
+  peerHostAlias: 'peer0.org1.blockchain.local',
+  endorsingOrganizations: [ 'Org1MSP' ],
+  argsCount: 1
+}
+[FABRIC COMMIT STATUS] {
+  functionName: 'SaveAmlRule',
+  transactionId: '8a9b4ec8e73896442e024c27ca57f5e90897d148c8e7a7662ee7506ef0d4908b',
+  successful: true,
+  code: 0
+}
+[FABRIC SUBMIT CONFIG] {
+  functionName: 'SaveAmlRule',
+  channelName: 'kycchannelnix1',
+  chaincodeName: 'kyc-wallet-chaincode-js',
+  peerEndpoint: 'peer0.org1.blockchain.local:7051',
+  peerHostAlias: 'peer0.org1.blockchain.local',
+  endorsingOrganizations: [ 'Org1MSP' ],
+  argsCount: 1
+}
+[FABRIC COMMIT STATUS] {
+  functionName: 'SaveAmlRule',
+  transactionId: 'e6b73ee0d8830dbde3434f130369f2e3cd0b432b3c2e7aee8c1c7554dad96a59',
+  successful: true,
+  code: 0
+}
+[FABRIC SUBMIT CONFIG] {
+  functionName: 'SaveAmlRule',
+  channelName: 'kycchannelnix1',
+  chaincodeName: 'kyc-wallet-chaincode-js',
+  peerEndpoint: 'peer0.org1.blockchain.local:7051',
+  peerHostAlias: 'peer0.org1.blockchain.local',
+  endorsingOrganizations: [ 'Org1MSP' ],
+  argsCount: 1
+}
+[FABRIC COMMIT STATUS] {
+  functionName: 'SaveAmlRule',
+  transactionId: 'f7d8d2a8bd721b3e94d57026fd21490cb639555ee5cd5a80a309a56a9419cc18',
+  successful: true,
+  code: 0
+}
+[VALOORES_AML_RULES_AUTO_SYNC_RESULT] {
+  totalSourceRecords: 56,
+  syncedCount: 3,
+  skippedCount: 53,
+  failedCount: 0
+}
+[FABRIC SUBMIT CONFIG] {
+  functionName: 'SaveAmlRule',
+  channelName: 'kycchannelnix1',
+  chaincodeName: 'kyc-wallet-chaincode-js',
+  peerEndpoint: 'peer0.org1.blockchain.local:7051',
+  peerHostAlias: 'peer0.org1.blockchain.local',
+  endorsingOrganizations: [ 'Org1MSP' ],
+  argsCount: 1
+}
+[FABRIC COMMIT STATUS] {
+  functionName: 'SaveAmlRule',
+  transactionId: '5f0e734ff2a7c58cce9757a05292b722bc9348c7f3de8c5ec75cdf54b0fda831',
+  successful: true,
+  code: 0
+}
+[FABRIC SUBMIT CONFIG] {
+  functionName: 'SaveAmlRule',
+  channelName: 'kycchannelnix1',
+  chaincodeName: 'kyc-wallet-chaincode-js',
+  peerEndpoint: 'peer0.org1.blockchain.local:7051',
+  peerHostAlias: 'peer0.org1.blockchain.local',
+  endorsingOrganizations: [ 'Org1MSP' ],
+  argsCount: 1
+}
+[FABRIC COMMIT STATUS] {
+  functionName: 'SaveAmlRule',
+  transactionId: '5035f23aa541caafa09cf3d85d77ef80fc9036382fda19ca5c51c9081bca5971',
+  successful: true,
+  code: 0
+}
+[VALOORES_AML_RULES_AUTO_SYNC_RESULT] {
+  totalSourceRecords: 56,
+  syncedCount: 2,
+  skippedCount: 54,
+  failedCount: 0
+}
+[FABRIC SUBMIT CONFIG] {
+  functionName: 'SaveAmlRule',
+  channelName: 'kycchannelnix1',
+  chaincodeName: 'kyc-wallet-chaincode-js',
+  peerEndpoint: 'peer0.org1.blockchain.local:7051',
+  peerHostAlias: 'peer0.org1.blockchain.local',
+  endorsingOrganizations: [ 'Org1MSP' ],
+  argsCount: 1
+}
+[FABRIC COMMIT STATUS] {
+  functionName: 'SaveAmlRule',
+  transactionId: '0c602cbda6f5df2065bcaef42a52770fe972120c9e4b173933e2ddb2abcc0719',
+  successful: true,
+  code: 0
+}
+[VALOORES_AML_RULES_AUTO_SYNC_RESULT] {
+  totalSourceRecords: 56,
+  syncedCount: 1,
+  skippedCount: 55,
+  failedCount: 0
+}
+[FABRIC SUBMIT CONFIG] {
+  functionName: 'SaveAmlRule',
+  channelName: 'kycchannelnix1',
+  chaincodeName: 'kyc-wallet-chaincode-js',
+  peerEndpoint: 'peer0.org1.blockchain.local:7051',
+  peerHostAlias: 'peer0.org1.blockchain.local',
+  endorsingOrganizations: [ 'Org1MSP' ],
+  argsCount: 1
+}
+[FABRIC COMMIT STATUS] {
+  functionName: 'SaveAmlRule',
+  transactionId: 'f3f4eec52754eb8196cac51aaa0b4926930f1a822edcc63a4c0c6c2011cea232',
+  successful: true,
+  code: 0
+}
+[VALOORES_AML_RULES_AUTO_SYNC_RESULT] {
+  totalSourceRecords: 56,
+  syncedCount: 1,
+  skippedCount: 55,
+  failedCount: 0
+}
+[FABRIC SUBMIT CONFIG] {
+  functionName: 'SaveAmlRule',
+  channelName: 'kycchannelnix1',
+  chaincodeName: 'kyc-wallet-chaincode-js',
+  peerEndpoint: 'peer0.org1.blockchain.local:7051',
+  peerHostAlias: 'peer0.org1.blockchain.local',
+  endorsingOrganizations: [ 'Org1MSP' ],
+  argsCount: 1
+}
+[FABRIC COMMIT STATUS] {
+  functionName: 'SaveAmlRule',
+  transactionId: 'a20bf3f4f0e5a3efc9de8536b3aaae85f46274640857454670c02e2b44c8593d',
+  successful: true,
+  code: 0
+}
+[VALOORES_AML_RULES_AUTO_SYNC_RESULT] {
+  totalSourceRecords: 56,
+  syncedCount: 1,
+  skippedCount: 55,
+  failedCount: 0
+}
+[FABRIC SUBMIT CONFIG] {
+  functionName: 'SaveAmlRule',
+  channelName: 'kycchannelnix1',
+  chaincodeName: 'kyc-wallet-chaincode-js',
+  peerEndpoint: 'peer0.org1.blockchain.local:7051',
+  peerHostAlias: 'peer0.org1.blockchain.local',
+  endorsingOrganizations: [ 'Org1MSP' ],
+  argsCount: 1
+}
+[FABRIC COMMIT STATUS] {
+  functionName: 'SaveAmlRule',
+  transactionId: '6af5a73d936b16c507547517ad0b9f9749d19fd7b4bd6958ea833f87bb81a43a',
+  successful: true,
+  code: 0
+}
+[VALOORES_AML_RULES_AUTO_SYNC_RESULT] {
+  totalSourceRecords: 56,
+  syncedCount: 1,
+  skippedCount: 55,
+  failedCount: 0
+}
+[FABRIC SUBMIT CONFIG] {
+  functionName: 'SaveAmlRule',
+  channelName: 'kycchannelnix1',
+  chaincodeName: 'kyc-wallet-chaincode-js',
+  peerEndpoint: 'peer0.org1.blockchain.local:7051',
+  peerHostAlias: 'peer0.org1.blockchain.local',
+  endorsingOrganizations: [ 'Org1MSP' ],
+  argsCount: 1
+}
+[FABRIC COMMIT STATUS] {
+  functionName: 'SaveAmlRule',
+  transactionId: 'f2ebb6b5901de8ae8109d9b5741a51112fb63aa52e40236d451244bc0b16e4f1',
+  successful: true,
+  code: 0
+}
+[VALOORES_AML_RULES_AUTO_SYNC_RESULT] {
+  totalSourceRecords: 56,
+  syncedCount: 1,
+  skippedCount: 55,
+  failedCount: 0
+}
+[FABRIC SUBMIT CONFIG] {
+  functionName: 'SaveAmlRule',
+  channelName: 'kycchannelnix1',
+  chaincodeName: 'kyc-wallet-chaincode-js',
+  peerEndpoint: 'peer0.org1.blockchain.local:7051',
+  peerHostAlias: 'peer0.org1.blockchain.local',
+  endorsingOrganizations: [ 'Org1MSP' ],
+  argsCount: 1
+}
+[FABRIC COMMIT STATUS] {
+  functionName: 'SaveAmlRule',
+  transactionId: 'ffa4bc027ef6601774650a80d1eec772909c71bc2675327f6c764937949f91de',
+  successful: true,
+  code: 0
+}
+[VALOORES_AML_RULES_AUTO_SYNC_RESULT] {
+  totalSourceRecords: 56,
+  syncedCount: 1,
+  skippedCount: 55,
+  failedCount: 0
+}
+[FABRIC SUBMIT CONFIG] {
+  functionName: 'SaveAmlRule',
+  channelName: 'kycchannelnix1',
+  chaincodeName: 'kyc-wallet-chaincode-js',
+  peerEndpoint: 'peer0.org1.blockchain.local:7051',
+  peerHostAlias: 'peer0.org1.blockchain.local',
+  endorsingOrganizations: [ 'Org1MSP' ],
+  argsCount: 1
+}
+[FABRIC COMMIT STATUS] {
+  functionName: 'SaveAmlRule',
+  transactionId: '3d21c3d7359f46fc95ef189c57f630526001cd228b92b4f272188113ef08484d',
+  successful: true,
+  code: 0
+}
+[VALOORES_AML_RULES_AUTO_SYNC_RESULT] {
+  totalSourceRecords: 56,
+  syncedCount: 1,
+  skippedCount: 55,
+  failedCount: 0
+}
+[FABRIC SUBMIT CONFIG] {
+  functionName: 'SaveAmlRule',
+  channelName: 'kycchannelnix1',
+  chaincodeName: 'kyc-wallet-chaincode-js',
+  peerEndpoint: 'peer0.org1.blockchain.local:7051',
+  peerHostAlias: 'peer0.org1.blockchain.local',
+  endorsingOrganizations: [ 'Org1MSP' ],
+  argsCount: 1
+}
+[FABRIC COMMIT STATUS] {
+  functionName: 'SaveAmlRule',
+  transactionId: '2dbf9eab8ec5b49853eef7bdeceaddb20bf0e0101f014e1be89c2a9181a99fe2',
+  successful: true,
+  code: 0
+}
+[VALOORES_AML_RULES_AUTO_SYNC_RESULT] {
+  totalSourceRecords: 56,
+  syncedCount: 1,
+  skippedCount: 55,
+  failedCount: 0
+}
+[FABRIC SUBMIT CONFIG] {
+  functionName: 'SaveAmlRule',
+  channelName: 'kycchannelnix1',
+  chaincodeName: 'kyc-wallet-chaincode-js',
+  peerEndpoint: 'peer0.org1.blockchain.local:7051',
+  peerHostAlias: 'peer0.org1.blockchain.local',
+  endorsingOrganizations: [ 'Org1MSP' ],
+  argsCount: 1
+}
+[FABRIC COMMIT STATUS] {
+  functionName: 'SaveAmlRule',
+  transactionId: '7b1b0b0946a3d3cf42426252b8101937a018d1185c91f40393390cbadeb20967',
+  successful: true,
+  code: 0
+}
+[FABRIC SUBMIT CONFIG] {
+  functionName: 'SaveAmlRule',
+  channelName: 'kycchannelnix1',
+  chaincodeName: 'kyc-wallet-chaincode-js',
+  peerEndpoint: 'peer0.org1.blockchain.local:7051',
+  peerHostAlias: 'peer0.org1.blockchain.local',
+  endorsingOrganizations: [ 'Org1MSP' ],
+  argsCount: 1
+}
+[FABRIC COMMIT STATUS] {
+  functionName: 'SaveAmlRule',
+  transactionId: '4dd4fb969bf236ffc5ac32fd76c5e6be30ae414dc1b738a56e13fb4bd65cd04a',
+  successful: true,
+  code: 0
+}
+[VALOORES_AML_RULES_AUTO_SYNC_RESULT] {
+  totalSourceRecords: 56,
+  syncedCount: 2,
+  skippedCount: 54,
+  failedCount: 0
+}
+[FABRIC SUBMIT CONFIG] {
+  functionName: 'SaveAmlRule',
+  channelName: 'kycchannelnix1',
+  chaincodeName: 'kyc-wallet-chaincode-js',
+  peerEndpoint: 'peer0.org1.blockchain.local:7051',
+  peerHostAlias: 'peer0.org1.blockchain.local',
+  endorsingOrganizations: [ 'Org1MSP' ],
+  argsCount: 1
+}
+[FABRIC COMMIT STATUS] {
+  functionName: 'SaveAmlRule',
+  transactionId: '55be0d2b4fb3a56100fa9f3b6eccaf329f25fe5519b07e6dda12f29ad608fd71',
+  successful: true,
+  code: 0
+}
+[VALOORES_AML_RULES_AUTO_SYNC_RESULT] {
+  totalSourceRecords: 56,
+  syncedCount: 1,
+  skippedCount: 55,
+  failedCount: 0
+}
+[FABRIC SUBMIT CONFIG] {
+  functionName: 'SaveAmlRule',
+  channelName: 'kycchannelnix1',
+  chaincodeName: 'kyc-wallet-chaincode-js',
+  peerEndpoint: 'peer0.org1.blockchain.local:7051',
+  peerHostAlias: 'peer0.org1.blockchain.local',
+  endorsingOrganizations: [ 'Org1MSP' ],
+  argsCount: 1
+}
+[FABRIC COMMIT STATUS] {
+  functionName: 'SaveAmlRule',
+  transactionId: '7bf0ddbb936a2714b02598237d5061a89752637f7968c15501b18d20d866bf84',
+  successful: true,
+  code: 0
+}
+[VALOORES_AML_RULES_AUTO_SYNC_RESULT] {
+  totalSourceRecords: 56,
+  syncedCount: 1,
+  skippedCount: 55,
+  failedCount: 0
+}
+[FABRIC SUBMIT CONFIG] {
+  functionName: 'SaveAmlRule',
+  channelName: 'kycchannelnix1',
+  chaincodeName: 'kyc-wallet-chaincode-js',
+  peerEndpoint: 'peer0.org1.blockchain.local:7051',
+  peerHostAlias: 'peer0.org1.blockchain.local',
+  endorsingOrganizations: [ 'Org1MSP' ],
+  argsCount: 1
+}
+[FABRIC COMMIT STATUS] {
+  functionName: 'SaveAmlRule',
+  transactionId: 'e1857d5f9a9cc45d6f86da674caa9aea29941eb71463a472ee8d18389b2ff708',
+  successful: true,
+  code: 0
+}
+[VALOORES_AML_RULES_AUTO_SYNC_RESULT] {
+  totalSourceRecords: 56,
+  syncedCount: 1,
+  skippedCount: 55,
+  failedCount: 0
+}
+[FABRIC SUBMIT CONFIG] {
+  functionName: 'SaveAmlRule',
+  channelName: 'kycchannelnix1',
+  chaincodeName: 'kyc-wallet-chaincode-js',
+  peerEndpoint: 'peer0.org1.blockchain.local:7051',
+  peerHostAlias: 'peer0.org1.blockchain.local',
+  endorsingOrganizations: [ 'Org1MSP' ],
+  argsCount: 1
+}
+[FABRIC COMMIT STATUS] {
+  functionName: 'SaveAmlRule',
+  transactionId: '57cfa5de7cc835844bd27ea0ec74fc37d5202b82701f53108594fc638227ec72',
+  successful: true,
+  code: 0
+}
+[VALOORES_AML_RULES_AUTO_SYNC_RESULT] {
+  totalSourceRecords: 56,
+  syncedCount: 1,
+  skippedCount: 55,
+  failedCount: 0
+}
+[FABRIC SUBMIT CONFIG] {
+  functionName: 'SaveAmlRule',
+  channelName: 'kycchannelnix1',
+  chaincodeName: 'kyc-wallet-chaincode-js',
+  peerEndpoint: 'peer0.org1.blockchain.local:7051',
+  peerHostAlias: 'peer0.org1.blockchain.local',
+  endorsingOrganizations: [ 'Org1MSP' ],
+  argsCount: 1
+}
+[FABRIC COMMIT STATUS] {
+  functionName: 'SaveAmlRule',
+  transactionId: '9e84b56dc537426a047fb261c7cc921e730f7dd83e47b5d4324b226420fb4be4',
+  successful: true,
+  code: 0
+}
+[VALOORES_AML_RULES_AUTO_SYNC_RESULT] {
+  totalSourceRecords: 56,
+  syncedCount: 1,
+  skippedCount: 55,
+  failedCount: 0
+}
+[FABRIC SUBMIT CONFIG] {
+  functionName: 'SaveAmlRule',
+  channelName: 'kycchannelnix1',
+  chaincodeName: 'kyc-wallet-chaincode-js',
+  peerEndpoint: 'peer0.org1.blockchain.local:7051',
+  peerHostAlias: 'peer0.org1.blockchain.local',
+  endorsingOrganizations: [ 'Org1MSP' ],
+  argsCount: 1
+}
+[FABRIC COMMIT STATUS] {
+  functionName: 'SaveAmlRule',
+  transactionId: '3ca78c8e2ef09a9d01376b355d3f1ab01fe995758d51f1e1af2a2e6d9fd6269e',
+  successful: true,
+  code: 0
+}
+[VALOORES_AML_RULES_AUTO_SYNC_RESULT] {
+  totalSourceRecords: 56,
+  syncedCount: 1,
+  skippedCount: 55,
+  failedCount: 0
+}
+[HTTP_REQUEST] {
+  method: 'GET',
+  url: '/api/license-wallets/available-licenses',
+  statusCode: 200,
+  durationMs: 19,
+  requestId: 'REQ_24B1CFD6B14D369819B9A44A',
+  correlationId: 'REQ_24B1CFD6B14D369819B9A44A',
+  origin: null
+}
+[FABRIC SUBMIT CONFIG] {
+  functionName: 'SaveAmlRule',
+  channelName: 'kycchannelnix1',
+  chaincodeName: 'kyc-wallet-chaincode-js',
+  peerEndpoint: 'peer0.org1.blockchain.local:7051',
+  peerHostAlias: 'peer0.org1.blockchain.local',
+  endorsingOrganizations: [ 'Org1MSP' ],
+  argsCount: 1
+}
+[FABRIC COMMIT STATUS] {
+  functionName: 'SaveAmlRule',
+  transactionId: '0831172457a8203e142bae1677361017895b1161ca3b9acd8d5e6bd3cea52e46',
+  successful: true,
+  code: 0
+}
+[VALOORES_AML_RULES_AUTO_SYNC_RESULT] {
+  totalSourceRecords: 56,
+  syncedCount: 1,
+  skippedCount: 55,
+  failedCount: 0
+}
+[FABRIC SUBMIT CONFIG] {
+  functionName: 'SaveAmlRule',
+  channelName: 'kycchannelnix1',
+  chaincodeName: 'kyc-wallet-chaincode-js',
+  peerEndpoint: 'peer0.org1.blockchain.local:7051',
+  peerHostAlias: 'peer0.org1.blockchain.local',
+  endorsingOrganizations: [ 'Org1MSP' ],
+  argsCount: 1
+}
+[FABRIC COMMIT STATUS] {
+  functionName: 'SaveAmlRule',
+  transactionId: '4e791b0d04a24b3ed73b8eb94cb06d3791b07a02aeef81b854b4a7380bc48fe2',
+  successful: true,
+  code: 0
+}
+[VALOORES_AML_RULES_AUTO_SYNC_RESULT] {
+  totalSourceRecords: 56,
+  syncedCount: 1,
+  skippedCount: 55,
+  failedCount: 0
+}
+[FABRIC SUBMIT CONFIG] {
+  functionName: 'SaveAmlRule',
+  channelName: 'kycchannelnix1',
+  chaincodeName: 'kyc-wallet-chaincode-js',
+  peerEndpoint: 'peer0.org1.blockchain.local:7051',
+  peerHostAlias: 'peer0.org1.blockchain.local',
+  endorsingOrganizations: [ 'Org1MSP' ],
+  argsCount: 1
+}
+[FABRIC COMMIT STATUS] {
+  functionName: 'SaveAmlRule',
+  transactionId: '41c2830c527de3f1773276821bc88160c2477b7e8bb9b3f151d517370ad31a3f',
+  successful: true,
+  code: 0
+}
+[VALOORES_AML_RULES_AUTO_SYNC_RESULT] {
+  totalSourceRecords: 56,
+  syncedCount: 1,
+  skippedCount: 55,
+  failedCount: 0
+}
+[FABRIC SUBMIT CONFIG] {
+  functionName: 'SaveAmlRule',
+  channelName: 'kycchannelnix1',
+  chaincodeName: 'kyc-wallet-chaincode-js',
+  peerEndpoint: 'peer0.org1.blockchain.local:7051',
+  peerHostAlias: 'peer0.org1.blockchain.local',
+  endorsingOrganizations: [ 'Org1MSP' ],
+  argsCount: 1
+}
+[FABRIC COMMIT STATUS] {
+  functionName: 'SaveAmlRule',
+  transactionId: 'ffa19ff15beb87833ccf8406eac4b9cd5706cdf34a55fd05d6424aaebc7bc107',
+  successful: true,
+  code: 0
+}
+[VALOORES_AML_RULES_AUTO_SYNC_RESULT] {
+  totalSourceRecords: 56,
+  syncedCount: 1,
+  skippedCount: 55,
+  failedCount: 0
+}
+[FABRIC SUBMIT CONFIG] {
+  functionName: 'SaveAmlRule',
+  channelName: 'kycchannelnix1',
+  chaincodeName: 'kyc-wallet-chaincode-js',
+  peerEndpoint: 'peer0.org1.blockchain.local:7051',
+  peerHostAlias: 'peer0.org1.blockchain.local',
+  endorsingOrganizations: [ 'Org1MSP' ],
+  argsCount: 1
+}
+[FABRIC COMMIT STATUS] {
+  functionName: 'SaveAmlRule',
+  transactionId: 'ed92cdda1ea25d34124c9239507f8c4f31e29b4bb16b650ed65c46dadc88e59f',
+  successful: true,
+  code: 0
+}
+[VALOORES_AML_RULES_AUTO_SYNC_RESULT] {
+  totalSourceRecords: 56,
+  syncedCount: 1,
+  skippedCount: 55,
+  failedCount: 0
+}
+[FABRIC SUBMIT CONFIG] {
+  functionName: 'SaveAmlRule',
+  channelName: 'kycchannelnix1',
+  chaincodeName: 'kyc-wallet-chaincode-js',
+  peerEndpoint: 'peer0.org1.blockchain.local:7051',
+  peerHostAlias: 'peer0.org1.blockchain.local',
+  endorsingOrganizations: [ 'Org1MSP' ],
+  argsCount: 1
+}
+[FABRIC COMMIT STATUS] {
+  functionName: 'SaveAmlRule',
+  transactionId: '3a466c0f5fb9122e6d59790646d51bd63b0c2504262bf762f841bb370933340e',
+  successful: true,
+  code: 0
+}
+[VALOORES_AML_RULES_AUTO_SYNC_RESULT] {
+  totalSourceRecords: 56,
+  syncedCount: 1,
+  skippedCount: 55,
+  failedCount: 0
+}
+[LICENSE_WORD_CHALLENGE_ERROR] Wallet was not found.
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/forgot-password/challenge',
+  statusCode: 404,
+  durationMs: 24,
+  requestId: 'REQ_371D219B23DC9806BAB06F3A',
+  correlationId: 'REQ_371D219B23DC9806BAB06F3A',
+  origin: 'http://172.31.13.90:4200'
+}
+[LICENSE_WORD_CHALLENGE_ERROR] Wallet was not found.
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/forgot-password/challenge',
+  statusCode: 404,
+  durationMs: 4,
+  requestId: 'REQ_EF4F5D06DBB09F0A83033ED6',
+  correlationId: 'REQ_EF4F5D06DBB09F0A83033ED6',
+  origin: 'http://172.31.13.90:4200'
+}
+[LICENSE_WORD_CHALLENGE_ERROR] Wallet was not found.
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/forgot-password/challenge',
+  statusCode: 404,
+  durationMs: 4,
+  requestId: 'REQ_91450D7523480EBA046F9B0C',
+  correlationId: 'REQ_91450D7523480EBA046F9B0C',
+  origin: 'http://172.31.13.90:4200'
+}
+[LICENSE_WORD_CHALLENGE_ERROR] Wallet was not found.
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/forgot-password/challenge',
+  statusCode: 404,
+  durationMs: 4,
+  requestId: 'REQ_418AC8E63AD977FEEF201D50',
+  correlationId: 'REQ_418AC8E63AD977FEEF201D50',
+  origin: 'http://172.31.13.90:4200'
+}
+[LICENSE_WORD_CHALLENGE_ERROR] Wallet was not found.
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/forgot-password/challenge',
+  statusCode: 404,
+  durationMs: 4,
+  requestId: 'REQ_D2DE37279CBE1EE4B020B127',
+  correlationId: 'REQ_D2DE37279CBE1EE4B020B127',
+  origin: 'http://172.31.13.90:4200'
+}
+[FABRIC SUBMIT CONFIG] {
+  functionName: 'SaveAmlRule',
+  channelName: 'kycchannelnix1',
+  chaincodeName: 'kyc-wallet-chaincode-js',
+  peerEndpoint: 'peer0.org1.blockchain.local:7051',
+  peerHostAlias: 'peer0.org1.blockchain.local',
+  endorsingOrganizations: [ 'Org1MSP' ],
+  argsCount: 1
+}
+[FABRIC COMMIT STATUS] {
+  functionName: 'SaveAmlRule',
+  transactionId: '78088cc64469856c3b4437f63c835d9668622fd8c3ba45d94f73a2888b54f2f7',
+  successful: true,
+  code: 0
+}
+[VALOORES_AML_RULES_AUTO_SYNC_RESULT] {
+  totalSourceRecords: 56,
+  syncedCount: 1,
+  skippedCount: 55,
+  failedCount: 0
+}
+[FABRIC SUBMIT CONFIG] {
+  functionName: 'SaveAmlRule',
+  channelName: 'kycchannelnix1',
+  chaincodeName: 'kyc-wallet-chaincode-js',
+  peerEndpoint: 'peer0.org1.blockchain.local:7051',
+  peerHostAlias: 'peer0.org1.blockchain.local',
+  endorsingOrganizations: [ 'Org1MSP' ],
+  argsCount: 1
+}
+[FABRIC COMMIT STATUS] {
+  functionName: 'SaveAmlRule',
+  transactionId: '4eb7f7a40a383a8fa27346fff8c767a4599f9df56341d3fa00791b0b12c29272',
+  successful: true,
+  code: 0
+}
+[VALOORES_AML_RULES_AUTO_SYNC_RESULT] {
+  totalSourceRecords: 56,
+  syncedCount: 1,
+  skippedCount: 55,
+  failedCount: 0
+}
+[LICENSE_WALLET_GENERATE_ERROR] License was not found or already has a wallet.
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-wallets/generate',
+  statusCode: 409,
+  durationMs: 18,
+  requestId: 'REQ_6A75D07BD2B02A0E2088698C',
+  correlationId: 'REQ_6A75D07BD2B02A0E2088698C',
+  origin: null
+}
+[LICENSE_WALLET_GENERATE_ERROR] License was not found or already has a wallet.
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-wallets/generate',
+  statusCode: 409,
+  durationMs: 3,
+  requestId: 'REQ_237F63D0EAC3D869944E04EA',
+  correlationId: 'REQ_237F63D0EAC3D869944E04EA',
+  origin: null
+}
+[LICENSE_WALLET_GENERATE_ERROR] License was not found or already has a wallet.
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-wallets/generate',
+  statusCode: 409,
+  durationMs: 3,
+  requestId: 'REQ_361C7041CBC97B0E7FB38D11',
+  correlationId: 'REQ_361C7041CBC97B0E7FB38D11',
+  origin: null
+}
+[LICENSE_WALLET_GENERATE_ERROR] License was not found or already has a wallet.
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-wallets/generate',
+  statusCode: 409,
+  durationMs: 3,
+  requestId: 'REQ_482E5FC70EFBAB3B6F2F0776',
+  correlationId: 'REQ_482E5FC70EFBAB3B6F2F0776',
+  origin: null
+}
+[LICENSE_WALLET_GENERATE_ERROR] License was not found or already has a wallet.
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-wallets/generate',
+  statusCode: 409,
+  durationMs: 3,
+  requestId: 'REQ_A28F8FAF409A36A4FAF7BAA1',
+  correlationId: 'REQ_A28F8FAF409A36A4FAF7BAA1',
+  origin: null
+}
+[LICENSE_WALLET_GENERATE_ERROR] License was not found or already has a wallet.
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-wallets/generate',
+  statusCode: 409,
+  durationMs: 2,
+  requestId: 'REQ_A3025A5A048C6DCCA29BB8FD',
+  correlationId: 'REQ_A3025A5A048C6DCCA29BB8FD',
+  origin: null
+}
+[LICENSE_WALLET_GENERATE_ERROR] licenseId must be a valid UUID.
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-wallets/generate',
+  statusCode: 400,
+  durationMs: 0,
+  requestId: 'REQ_4788CF36960B46A814FCC9E2',
+  correlationId: 'REQ_4788CF36960B46A814FCC9E2',
+  origin: null
+}
+[LICENSE_WALLET_GENERATE_ERROR] licenseId must be a valid UUID.
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-wallets/generate',
+  statusCode: 400,
+  durationMs: 1,
+  requestId: 'REQ_5FE878DD65CB066023AB8597',
+  correlationId: 'REQ_5FE878DD65CB066023AB8597',
+  origin: null
+}
+[LICENSE_WALLET_GENERATED] {
+  generationId: 'b2fe28ea-6a4c-482a-ba47-480b3c2b8c3e',
+  licenseId: '3f2174e7-5166-48bf-939b-40a6268b56cc',
+  contractRef: 'Val-FSB-01',
+  walletAddress: '0x0E4f38Bf2531f1Abad859477570559Aa8c5C49d3'
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-wallets/generate',
+  statusCode: 201,
+  durationMs: 1039,
+  requestId: 'REQ_B5F5A65DAE38179AD8CCD3CA',
+  correlationId: 'REQ_B5F5A65DAE38179AD8CCD3CA',
+  origin: null
+}
+[LICENSE_GENERATED_WALLET_PROVISION_SUCCESS] {
+  generationId: 'b2fe28ea-6a4c-482a-ba47-480b3c2b8c3e',
+  licenseId: '3f2174e7-5166-48bf-939b-40a6268b56cc',
+  contractRef: 'Val-FSB-01',
+  walletAddress: '0x0E4f38Bf2531f1Abad859477570559Aa8c5C49d3'
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-wallets/provision-generated',
+  statusCode: 201,
+  durationMs: 400,
+  requestId: 'REQ_EA9315EAAC5A22FF564AA4B0',
+  correlationId: 'REQ_EA9315EAAC5A22FF564AA4B0',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/forgot-password/challenge',
+  statusCode: 201,
+  durationMs: 280,
+  requestId: 'REQ_8EF1D0FE66C9B1DD014F8E30',
+  correlationId: 'REQ_8EF1D0FE66C9B1DD014F8E30',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/forgot-password/challenge',
+  statusCode: 201,
+  durationMs: 50,
+  requestId: 'REQ_B7852004E86FF0FE35B8D473',
+  correlationId: 'REQ_B7852004E86FF0FE35B8D473',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/forgot-password/challenge',
+  statusCode: 201,
+  durationMs: 95,
+  requestId: 'REQ_9C7ECF4F24F75E0BD0CCF888',
+  correlationId: 'REQ_9C7ECF4F24F75E0BD0CCF888',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/forgot-password/challenge',
+  statusCode: 201,
+  durationMs: 37,
+  requestId: 'REQ_79BAC2F4CE418B08499E04B2',
+  correlationId: 'REQ_79BAC2F4CE418B08499E04B2',
+  origin: null
+}
+[LICENSE_WALLET_GENERATED] {
+  generationId: '7ec89565-34c1-4bd3-9999-65ed6a046f87',
+  licenseId: '4f57c521-9cbd-4f5f-9bb3-58943dadb002',
+  contractRef: 'Val-BOB-01',
+  walletAddress: '0xe48586A0Bc2253818105e4206C62000c7FfaEB2A'
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-wallets/generate',
+  statusCode: 201,
+  durationMs: 880,
+  requestId: 'REQ_A3A6CE6A3E17FCF6C11DA369',
+  correlationId: 'REQ_A3A6CE6A3E17FCF6C11DA369',
+  origin: null
+}
+[LICENSE_WORD_CHALLENGE_ERROR] Wallet was not found.
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/forgot-password/challenge',
+  statusCode: 404,
+  durationMs: 24,
+  requestId: 'REQ_9282304089637C187E490266',
+  correlationId: 'REQ_9282304089637C187E490266',
+  origin: null
+}
+[LICENSE_WORD_CHALLENGE_ERROR] Wallet was not found.
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/forgot-password/challenge',
+  statusCode: 404,
+  durationMs: 4,
+  requestId: 'REQ_924DC1ED5B0223FC9369D3EF',
+  correlationId: 'REQ_924DC1ED5B0223FC9369D3EF',
+  origin: null
+}
+[LICENSE_GENERATED_WALLET_PROVISION_SUCCESS] {
+  generationId: '7ec89565-34c1-4bd3-9999-65ed6a046f87',
+  licenseId: '4f57c521-9cbd-4f5f-9bb3-58943dadb002',
+  contractRef: 'Val-BOB-01',
+  walletAddress: '0xe48586A0Bc2253818105e4206C62000c7FfaEB2A'
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-wallets/provision-generated',
+  statusCode: 201,
+  durationMs: 29,
+  requestId: 'REQ_5147D8DDE53A3EE19826276E',
+  correlationId: 'REQ_5147D8DDE53A3EE19826276E',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/forgot-password/challenge',
+  statusCode: 201,
+  durationMs: 15,
+  requestId: 'REQ_2A1960EAFC04370C085628D7',
+  correlationId: 'REQ_2A1960EAFC04370C085628D7',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/forgot-password/verify',
+  statusCode: 401,
+  durationMs: 1043,
+  requestId: 'REQ_220D7AA1B7F50D42E3095A45',
+  correlationId: 'REQ_220D7AA1B7F50D42E3095A45',
+  origin: null
+}
+[LICENSE_WORD_VERIFY_SUCCESS] {
+  licenseId: '4f57c521-9cbd-4f5f-9bb3-58943dadb002',
+  contractRef: 'Val-BOB-01',
+  walletAddress: '0xe48586A0Bc2253818105e4206C62000c7FfaEB2A'
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/forgot-password/verify',
+  statusCode: 200,
+  durationMs: 2680,
+  requestId: 'REQ_6FC2CF3B54DB54B24172D74E',
+  correlationId: 'REQ_6FC2CF3B54DB54B24172D74E',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/password-reset',
+  statusCode: 400,
+  durationMs: 21,
+  requestId: 'REQ_36A0BB4BF042F36E61470C98',
+  correlationId: 'REQ_36A0BB4BF042F36E61470C98',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/password-reset',
+  statusCode: 400,
+  durationMs: 3,
+  requestId: 'REQ_39E6109B8CEFC9B4AB940A92',
+  correlationId: 'REQ_39E6109B8CEFC9B4AB940A92',
+  origin: null
+}
+[LICENSE_SIMPLE_PASSWORD_RESET_SUCCESS] {
+  licenseId: '4f57c521-9cbd-4f5f-9bb3-58943dadb002',
+  walletAddress: '0xe48586A0Bc2253818105e4206C62000c7FfaEB2A',
+  walletVersion: 2
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/password-reset',
+  statusCode: 200,
+  durationMs: 799,
+  requestId: 'REQ_3596E5B5A5DDCE9B09398901',
+  correlationId: 'REQ_3596E5B5A5DDCE9B09398901',
+  origin: null
+}
+[LICENSE_WALLET_GENERATED] {
+  generationId: '0c314bda-420a-47bb-ad7d-724a2afe4d69',
+  licenseId: '3fe98f49-ac57-4eb1-a92c-bb52c78877cd',
+  contractRef: 'VAL-VCIS',
+  walletAddress: '0x061563aeeFFFdf4c8E879E8a56e458B28DdBE89E'
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-wallets/generate',
+  statusCode: 201,
+  durationMs: 918,
+  requestId: 'REQ_A584701744475616503FF8E6',
+  correlationId: 'REQ_A584701744475616503FF8E6',
+  origin: null
+}
+[LICENSE_GENERATED_WALLET_PROVISION_SUCCESS] {
+  generationId: '0c314bda-420a-47bb-ad7d-724a2afe4d69',
+  licenseId: '3fe98f49-ac57-4eb1-a92c-bb52c78877cd',
+  contractRef: 'VAL-VCIS',
+  walletAddress: '0x061563aeeFFFdf4c8E879E8a56e458B28DdBE89E'
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-wallets/provision-generated',
+  statusCode: 201,
+  durationMs: 32,
+  requestId: 'REQ_ADD0A8248D832B658EFC193D',
+  correlationId: 'REQ_ADD0A8248D832B658EFC193D',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/forgot-password/challenge',
+  statusCode: 201,
+  durationMs: 32,
+  requestId: 'REQ_A6EEF5D99703FD0AA304AA7C',
+  correlationId: 'REQ_A6EEF5D99703FD0AA304AA7C',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/forgot-password/verify',
+  statusCode: 401,
+  durationMs: 12,
+  requestId: 'REQ_EB24904F6045719F8639609D',
+  correlationId: 'REQ_EB24904F6045719F8639609D',
+  origin: null
+}
+[LICENSE_WORD_VERIFY_SUCCESS] {
+  licenseId: '4f57c521-9cbd-4f5f-9bb3-58943dadb002',
+  contractRef: 'Val-BOB-01',
+  walletAddress: '0xe48586A0Bc2253818105e4206C62000c7FfaEB2A'
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/forgot-password/verify',
+  statusCode: 200,
+  durationMs: 14,
+  requestId: 'REQ_0398D70B3A4717B1EA3E78DC',
+  correlationId: 'REQ_0398D70B3A4717B1EA3E78DC',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/password-reset',
+  statusCode: 400,
+  durationMs: 24,
+  requestId: 'REQ_4DA5F8E7DC491B0F571CC55A',
+  correlationId: 'REQ_4DA5F8E7DC491B0F571CC55A',
+  origin: null
+}
+[LICENSE_SIMPLE_PASSWORD_RESET_SUCCESS] {
+  licenseId: '4f57c521-9cbd-4f5f-9bb3-58943dadb002',
+  walletAddress: '0xe48586A0Bc2253818105e4206C62000c7FfaEB2A',
+  walletVersion: 3
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/password-reset',
+  statusCode: 200,
+  durationMs: 819,
+  requestId: 'REQ_9E1D19615CC57BA5E7CFE30D',
+  correlationId: 'REQ_9E1D19615CC57BA5E7CFE30D',
+  origin: null
+}
+[LICENSE_LOGIN_ERROR] Wallet address or password is incorrect.
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/login',
+  statusCode: 401,
+  durationMs: 792,
+  requestId: 'REQ_0EFEBD1BB7A5A1F3A0913656',
+  correlationId: 'REQ_0EFEBD1BB7A5A1F3A0913656',
+  origin: null
+}
+[LICENSE_LOGIN_SUCCESS] {
+  licenseId: '4f57c521-9cbd-4f5f-9bb3-58943dadb002',
+  contractRef: 'Val-BOB-01',
+  walletAddress: '0xe48586A0Bc2253818105e4206C62000c7FfaEB2A'
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/login',
+  statusCode: 200,
+  durationMs: 750,
+  requestId: 'REQ_3E10F447DE5685FB5908C629',
+  correlationId: 'REQ_3E10F447DE5685FB5908C629',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/forgot-password/challenge',
+  statusCode: 201,
+  durationMs: 37,
+  requestId: 'REQ_1CB712B93BEBEAEAD622F7EA',
+  correlationId: 'REQ_1CB712B93BEBEAEAD622F7EA',
+  origin: null
+}
+[LICENSE_WORD_VERIFY_SUCCESS] {
+  licenseId: '4f57c521-9cbd-4f5f-9bb3-58943dadb002',
+  contractRef: 'Val-BOB-01',
+  walletAddress: '0xe48586A0Bc2253818105e4206C62000c7FfaEB2A'
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/forgot-password/verify',
+  statusCode: 200,
+  durationMs: 16,
+  requestId: 'REQ_F1B047E9EA86878BF18143D1',
+  correlationId: 'REQ_F1B047E9EA86878BF18143D1',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/forgot-password/challenge',
+  statusCode: 201,
+  durationMs: 189,
+  requestId: 'REQ_5D9BD47204A2FFF626881A93',
+  correlationId: 'REQ_5D9BD47204A2FFF626881A93',
+  origin: null
+}
+[LICENSE_WORD_VERIFY_SUCCESS] {
+  licenseId: '4f57c521-9cbd-4f5f-9bb3-58943dadb002',
+  contractRef: 'Val-BOB-01',
+  walletAddress: '0xe48586A0Bc2253818105e4206C62000c7FfaEB2A'
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/forgot-password/verify',
+  statusCode: 200,
+  durationMs: 16,
+  requestId: 'REQ_042F3F1D63292D7D4D4267A7',
+  correlationId: 'REQ_042F3F1D63292D7D4D4267A7',
+  origin: null
+}
+[LICENSE_SIMPLE_PASSWORD_RESET_SUCCESS] {
+  licenseId: '4f57c521-9cbd-4f5f-9bb3-58943dadb002',
+  walletAddress: '0xe48586A0Bc2253818105e4206C62000c7FfaEB2A',
+  walletVersion: 4
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/password-reset',
+  statusCode: 200,
+  durationMs: 903,
+  requestId: 'REQ_1FCB64F77E0536A46DD9FBB5',
+  correlationId: 'REQ_1FCB64F77E0536A46DD9FBB5',
+  origin: null
+}
+[LICENSE_LOGIN_SUCCESS] {
+  licenseId: '4f57c521-9cbd-4f5f-9bb3-58943dadb002',
+  contractRef: 'Val-BOB-01',
+  walletAddress: '0xe48586A0Bc2253818105e4206C62000c7FfaEB2A'
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/login',
+  statusCode: 200,
+  durationMs: 791,
+  requestId: 'REQ_4485E36CC5F378895FB12EF3',
+  correlationId: 'REQ_4485E36CC5F378895FB12EF3',
+  origin: null
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/forgot-password/challenge',
+  statusCode: 201,
+  durationMs: 14,
+  requestId: 'REQ_337DC2BE649C1FA5A4A0900B',
+  correlationId: 'REQ_337DC2BE649C1FA5A4A0900B',
+  origin: null
+}
+[LICENSE_WORD_VERIFY_SUCCESS] {
+  licenseId: '4f57c521-9cbd-4f5f-9bb3-58943dadb002',
+  contractRef: 'Val-BOB-01',
+  walletAddress: '0xe48586A0Bc2253818105e4206C62000c7FfaEB2A'
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/forgot-password/verify',
+  statusCode: 200,
+  durationMs: 15,
+  requestId: 'REQ_EBAC4618588410E84DE02450',
+  correlationId: 'REQ_EBAC4618588410E84DE02450',
+  origin: null
+}
+[LICENSE_SIMPLE_PASSWORD_RESET_SUCCESS] {
+  licenseId: '4f57c521-9cbd-4f5f-9bb3-58943dadb002',
+  walletAddress: '0xe48586A0Bc2253818105e4206C62000c7FfaEB2A',
+  walletVersion: 5
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/password-reset',
+  statusCode: 200,
+  durationMs: 759,
+  requestId: 'REQ_356093F2A312ECACFA79E784',
+  correlationId: 'REQ_356093F2A312ECACFA79E784',
+  origin: null
+}
+[LICENSE_LOGIN_ERROR] Wallet address or password is incorrect.
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/login',
+  statusCode: 401,
+  durationMs: 807,
+  requestId: 'REQ_51ACE327714ED475E84D57AE',
+  correlationId: 'REQ_51ACE327714ED475E84D57AE',
+  origin: null
+}
+[LICENSE_LOGIN_SUCCESS] {
+  licenseId: '4f57c521-9cbd-4f5f-9bb3-58943dadb002',
+  contractRef: 'Val-BOB-01',
+  walletAddress: '0xe48586A0Bc2253818105e4206C62000c7FfaEB2A'
+}
+[HTTP_REQUEST] {
+  method: 'POST',
+  url: '/api/license-access/login',
+  statusCode: 200,
+  durationMs: 789,
+  requestId: 'REQ_CAA702A143FC6B4C0F749232',
+  correlationId: 'REQ_CAA702A143FC6B4C0F749232',
+  origin: null
+}
+node:events:502
+      throw er; // Unhandled 'error' event
+      ^
+
+error: terminating connection due to administrator command
+    at parseErrorMessage (/home/nix/u01/blockchain-integration/blockchain-api/node_modules/pg-protocol/dist/parser.js:305:11)
+    at Parser.handlePacket (/home/nix/u01/blockchain-integration/blockchain-api/node_modules/pg-protocol/dist/parser.js:143:27)
+    at Parser.parse (/home/nix/u01/blockchain-integration/blockchain-api/node_modules/pg-protocol/dist/parser.js:37:38)
+    at Socket.<anonymous> (/home/nix/u01/blockchain-integration/blockchain-api/node_modules/pg-protocol/dist/index.js:12:42)
+    at Socket.emit (node:events:524:28)
+    at addChunk (node:internal/streams/readable:561:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)
+    at Readable.push (node:internal/streams/readable:392:5)
+    at TCP.onStreamRead (node:internal/stream_base_commons:191:23)
+    at TCP.callbackTrampoline (node:internal/async_hooks:130:17)
+Emitted 'error' event on BoundPool instance at:
+    at Client.idleListener (/home/nix/u01/blockchain-integration/blockchain-api/node_modules/pg-pool/index.js:62:10)
+    at Client.emit (node:events:524:28)
+    at Client._handleErrorEvent (/home/nix/u01/blockchain-integration/blockchain-api/node_modules/pg/lib/client.js:417:10)
+    at Client._handleErrorMessage (/home/nix/u01/blockchain-integration/blockchain-api/node_modules/pg/lib/client.js:428:12)
+    at Connection.emit (node:events:524:28)
+    at /home/nix/u01/blockchain-integration/blockchain-api/node_modules/pg/lib/connection.js:136:12
+    at Parser.parse (/home/nix/u01/blockchain-integration/blockchain-api/node_modules/pg-protocol/dist/parser.js:38:17)
+    at Socket.<anonymous> (/home/nix/u01/blockchain-integration/blockchain-api/node_modules/pg-protocol/dist/index.js:12:42)
+    at Socket.emit (node:events:524:28)
+    at addChunk (node:internal/streams/readable:561:12) {
+  length: 116,
+  severity: 'FATAL',
+  code: '57P01',
+  detail: undefined,
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'postgres.c',
+  line: '3354',
+  routine: 'ProcessInterrupts',
+  client: Client {
+    _events: [Object: null prototype] { error: [Function (anonymous)] },
+    _eventsCount: 1,
+    _maxListeners: undefined,
+    connectionParameters: ConnectionParameters {
+      user: 'pgdata',
+      database: 'vfds_dev',
+      port: 5444,
+      host: '172.31.13.133',
+      binary: false,
+      options: undefined,
+      ssl: false,
+      sslnegotiation: undefined,
+      client_encoding: '',
+      replication: undefined,
+      isDomainSocket: false,
+      application_name: undefined,
+      fallback_application_name: undefined,
+      statement_timeout: false,
+      lock_timeout: false,
+      idle_in_transaction_session_timeout: false,
+      query_timeout: false,
+      connect_timeout: 10
+    },
+    user: 'pgdata',
+    database: 'vfds_dev',
+    port: 5444,
+    host: '172.31.13.133',
+    replication: undefined,
+    _Promise: [Function: Promise],
+    _types: TypeOverrides {
+      _types: {
+        getTypeParser: [Function: getTypeParser],
+        setTypeParser: [Function: setTypeParser],
+        arrayParser: { create: [Function: create] },
+        builtins: {
+          BOOL: 16,
+          BYTEA: 17,
+          CHAR: 18,
+          INT8: 20,
+          INT2: 21,
+          INT4: 23,
+          REGPROC: 24,
+          TEXT: 25,
+          OID: 26,
+          TID: 27,
+          XID: 28,
+          CID: 29,
+          JSON: 114,
+          XML: 142,
+          PG_NODE_TREE: 194,
+          SMGR: 210,
+          PATH: 602,
+          POLYGON: 604,
+          CIDR: 650,
+          FLOAT4: 700,
+          FLOAT8: 701,
+          ABSTIME: 702,
+          RELTIME: 703,
+          TINTERVAL: 704,
+          CIRCLE: 718,
+          MACADDR8: 774,
+          MONEY: 790,
+          MACADDR: 829,
+          INET: 869,
+          ACLITEM: 1033,
+          BPCHAR: 1042,
+          VARCHAR: 1043,
+          DATE: 1082,
+          TIME: 1083,
+          TIMESTAMP: 1114,
+          TIMESTAMPTZ: 1184,
+          INTERVAL: 1186,
+          TIMETZ: 1266,
+          BIT: 1560,
+          VARBIT: 1562,
+          NUMERIC: 1700,
+          REFCURSOR: 1790,
+          REGPROCEDURE: 2202,
+          REGOPER: 2203,
+          REGOPERATOR: 2204,
+          REGCLASS: 2205,
+          REGTYPE: 2206,
+          UUID: 2950,
+          TXID_SNAPSHOT: 2970,
+          PG_LSN: 3220,
+          PG_NDISTINCT: 3361,
+          PG_DEPENDENCIES: 3402,
+          TSVECTOR: 3614,
+          TSQUERY: 3615,
+          GTSVECTOR: 3642,
+          REGCONFIG: 3734,
+          REGDICTIONARY: 3769,
+          JSONB: 3802,
+          REGNAMESPACE: 4089,
+          REGROLE: 4096
+        }
+      },
+      text: {},
+      binary: {}
+    },
+    _ending: true,
+    _ended: false,
+    _connecting: false,
+    _connected: true,
+    _connectionError: false,
+    _queryable: false,
+    _activeQuery: null,
+    _txStatus: 'I',
+    enableChannelBinding: false,
+    scramMaxIterations: 100000,
+    connection: Connection {
+      _events: [Object: null prototype] {
+        newListener: [Function (anonymous)],
+        connect: [Function (anonymous)],
+        sslconnect: [Function (anonymous)],
+        authenticationCleartextPassword: [Function: bound _handleAuthCleartextPassword],
+        authenticationMD5Password: [Function: bound _handleAuthMD5Password],
+        authenticationSASL: [Function: bound _handleAuthSASL],
+        authenticationSASLContinue: [Function: bound _handleAuthSASLContinue] AsyncFunction,
+        authenticationSASLFinal: [Function: bound _handleAuthSASLFinal],
+        backendKeyData: [Function: bound _handleBackendKeyData],
+        error: [Function: bound _handleErrorEvent],
+        errorMessage: [Function: bound _handleErrorMessage],
+        readyForQuery: [Function: bound _handleReadyForQuery],
+        notice: [Function: bound _handleNotice],
+        rowDescription: [Function: bound _handleRowDescription],
+        dataRow: [Function: bound _handleDataRow],
+        portalSuspended: [Function: bound _handlePortalSuspended],
+        emptyQuery: [Function: bound _handleEmptyQuery],
+        commandComplete: [Function: bound _handleCommandComplete],
+        parseComplete: [Function: bound _handleParseComplete],
+        copyInResponse: [Function: bound _handleCopyInResponse],
+        copyData: [Function: bound _handleCopyData],
+        notification: [Function: bound _handleNotification],
+        end: [
+          [Function: bound onceWrapper] {
+            listener: [Function (anonymous)]
+          },
+          [Function: bound onceWrapper] {
+            listener: [Function (anonymous)]
+          }
+        ]
+      },
+      _eventsCount: 23,
+      _maxListeners: undefined,
+      stream: Socket {
+        connecting: false,
+        _hadError: false,
+        _parent: null,
+        _host: null,
+        _closeAfterHandlingError: false,
+        _events: {
+          close: [Function (anonymous)],
+          error: [Function: reportStreamError],
+          prefinish: undefined,
+          finish: undefined,
+          drain: undefined,
+          data: [Function (anonymous)],
+          end: [ [Function: onReadableStreamEnd], [Function (anonymous)] ],
+          readable: undefined,
+          connect: undefined
+        },
+        _readableState: ReadableState {
+          highWaterMark: 16384,
+          buffer: [],
+          bufferIndex: 0,
+          length: 0,
+          pipes: [],
+          awaitDrainWriters: null,
+          [Symbol(kState)]: 194519348
+        },
+        _writableState: WritableState {
+          highWaterMark: 16384,
+          length: 0,
+          corked: 0,
+          onwrite: [Function: bound onwrite],
+          writelen: 0,
+          bufferedIndex: 0,
+          pendingcb: 0,
+          [Symbol(kState)]: 17563956,
+          [Symbol(kBufferedValue)]: null,
+          [Symbol(kWriteCbValue)]: null
+        },
+        allowHalfOpen: false,
+        _maxListeners: undefined,
+        _eventsCount: 4,
+        _sockname: null,
+        _pendingData: null,
+        _pendingEncoding: '',
+        server: null,
+        _server: null,
+        [Symbol(async_id_symbol)]: 1171282,
+        [Symbol(kHandle)]: null,
+        [Symbol(lastWriteQueueSize)]: 0,
+        [Symbol(timeout)]: null,
+        [Symbol(kBuffer)]: null,
+        [Symbol(kBufferCb)]: null,
+        [Symbol(kBufferGen)]: null,
+        [Symbol(shapeMode)]: true,
+        [Symbol(kCapture)]: false,
+        [Symbol(kSetNoDelay)]: true,
+        [Symbol(kSetKeepAlive)]: false,
+        [Symbol(kSetKeepAliveInitialDelay)]: 0,
+        [Symbol(kBytesRead)]: 3599,
+        [Symbol(kBytesWritten)]: 90356
+      },
+      _keepAlive: false,
+      _keepAliveInitialDelayMillis: 0,
+      parsedStatements: {},
+      ssl: false,
+      sslNegotiation: 'postgres',
+      _ending: true,
+      _emitMessage: false,
+      _connecting: true,
+      [Symbol(shapeMode)]: false,
+      [Symbol(kCapture)]: false
+    },
+    _queryQueue: [],
+    binary: false,
+    processID: 1157442,
+    secretKey: 1293705420,
+    ssl: false,
+    sslNegotiation: 'postgres',
+    _connectionTimeoutMillis: 10000,
+    _connectionCallback: null,
+    connectionTimeoutHandle: Timeout {
+      _idleTimeout: -1,
+      _idlePrev: null,
+      _idleNext: null,
+      _idleStart: 82483834,
+      _onTimeout: null,
+      _timerArgs: undefined,
+      _repeat: null,
+      _destroyed: true,
+      [Symbol(refed)]: false,
+      [Symbol(kHasPrimitive)]: false,
+      [Symbol(asyncId)]: 1171281,
+      [Symbol(triggerId)]: 1171239,
+      [Symbol(kResourceStore)]: {
+        username: 'anonymous',
+        user_id: 'anonymous',
+        user_role: 'UNKNOWN',
+        client_ip: '172.31.13.131',
+        client_hostname: '172.31.13.90:3001',
+        user_agent: 'Apache-HttpClient/5.3.1 (Java/21.0.11)',
+        request_id: 'REQ_GOVERNMENT-BLOCKCHAIN/VALOORES-AML-RULES/ALL-FABRIC_5bbc36f5-1faa-409b-ab21-21ad4fa312f4',
+        request: <ref *1> IncomingMessage {
+          _events: {
+            close: undefined,
+            error: undefined,
+            data: undefined,
+            end: [Function: clearIncoming],
+            readable: undefined
+          },
+          _readableState: ReadableState {
+            highWaterMark: 16384,
+            buffer: [],
+            bufferIndex: 0,
+            length: 0,
+            pipes: [],
+            awaitDrainWriters: null,
+            [Symbol(kState)]: 60036988
+          },
+          _maxListeners: undefined,
+          socket: Socket {
+            connecting: false,
+            _hadError: false,
+            _parent: null,
+            _host: null,
+            _closeAfterHandlingError: false,
+            _events: [Object],
+            _readableState: [ReadableState],
+            _writableState: [WritableState],
+            allowHalfOpen: true,
+            _maxListeners: undefined,
+            _eventsCount: 8,
+            _sockname: null,
+            _pendingData: null,
+            _pendingEncoding: '',
+            server: [Server],
+            _server: [Server],
+            parser: null,
+            on: [Function: socketListenerWrap],
+            addListener: [Function: socketListenerWrap],
+            prependListener: [Function: socketListenerWrap],
+            setEncoding: [Function: socketSetEncoding],
+            _paused: false,
+            _httpMessage: null,
+            _peername: [Object],
+            timeout: 6000,
+            [Symbol(async_id_symbol)]: 1171226,
+            [Symbol(kHandle)]: null,
+            [Symbol(lastWriteQueueSize)]: 0,
+            [Symbol(timeout)]: [Timeout],
+            [Symbol(kBuffer)]: null,
+            [Symbol(kBufferCb)]: null,
+            [Symbol(kBufferGen)]: null,
+            [Symbol(shapeMode)]: true,
+            [Symbol(kCapture)]: false,
+            [Symbol(kSetNoDelay)]: true,
+            [Symbol(kSetKeepAlive)]: false,
+            [Symbol(kSetKeepAliveInitialDelay)]: 0,
+            [Symbol(kBytesRead)]: 731,
+            [Symbol(kBytesWritten)]: 556752
+          },
+          httpVersionMajor: 1,
+          httpVersionMinor: 1,
+          httpVersion: '1.1',
+          complete: true,
+          rawHeaders: [
+            'Accept',
+            'text/plain, application/xml, text/xml, application/json, application/*+xml, application/*+json, */*',
+            'x-api-key',
+            '20bd6a16f56de09bba960ebf3994fc2354c0a3f91fb2bd5743ad82cdeece29b5ff69cea9b3c85f56c187abc46de4491a',
+            'x-request-id',
+            'REQ_GOVERNMENT-BLOCKCHAIN/VALOORES-AML-RULES/ALL-FABRIC_5bbc36f5-1faa-409b-ab21-21ad4fa312f4',
+            'x-correlation-id',
+            'CORR_GOVERNMENT-BLOCKCHAIN/VALOORES-AML-RULES/ALL-FABRIC_a67d26b1-0053-438e-a738-1f3fa1f97161',
+            'x-source-system',
+            'BLOCKCHAIN_TEST_UI',
+            'x-request-source',
+            'BLOCKCHAIN_TEST_UI',
+            'Accept-Encoding',
+            'gzip, x-gzip, deflate',
+            'Host',
+            '172.31.13.90:3001',
+            'Connection',
+            'keep-alive',
+            'User-Agent',
+            'Apache-HttpClient/5.3.1 (Java/21.0.11)'
+          ],
+          rawTrailers: [],
+          joinDuplicateHeaders: null,
+          aborted: false,
+          upgrade: false,
+          url: '/all-fabric',
+          method: 'GET',
+          statusCode: null,
+          statusMessage: null,
+          client: Socket {
+            connecting: false,
+            _hadError: false,
+            _parent: null,
+            _host: null,
+            _closeAfterHandlingError: false,
+            _events: [Object],
+            _readableState: [ReadableState],
+            _writableState: [WritableState],
+            allowHalfOpen: true,
+            _maxListeners: undefined,
+            _eventsCount: 8,
+            _sockname: null,
+            _pendingData: null,
+            _pendingEncoding: '',
+            server: [Server],
+            _server: [Server],
+            parser: null,
+            on: [Function: socketListenerWrap],
+            addListener: [Function: socketListenerWrap],
+            prependListener: [Function: socketListenerWrap],
+            setEncoding: [Function: socketSetEncoding],
+            _paused: false,
+            _httpMessage: null,
+            _peername: [Object],
+            timeout: 6000,
+            [Symbol(async_id_symbol)]: 1171226,
+            [Symbol(kHandle)]: null,
+            [Symbol(lastWriteQueueSize)]: 0,
+            [Symbol(timeout)]: [Timeout],
+            [Symbol(kBuffer)]: null,
+            [Symbol(kBufferCb)]: null,
+            [Symbol(kBufferGen)]: null,
+            [Symbol(shapeMode)]: true,
+            [Symbol(kCapture)]: false,
+            [Symbol(kSetNoDelay)]: true,
+            [Symbol(kSetKeepAlive)]: false,
+            [Symbol(kSetKeepAliveInitialDelay)]: 0,
+            [Symbol(kBytesRead)]: 731,
+            [Symbol(kBytesWritten)]: 556752
+          },
+          _consuming: false,
+          _dumped: true,
+          res: ServerResponse {
+            _events: [Object: null prototype],
+            _eventsCount: 1,
+            _maxListeners: undefined,
+            outputData: [],
+            outputSize: 0,
+            writable: true,
+            destroyed: true,
+            _last: false,
+            chunkedEncoding: false,
+            shouldKeepAlive: true,
+            maxRequestsOnConnectionReached: false,
+            _defaultKeepAlive: true,
+            useChunkedEncodingByDefault: true,
+            sendDate: true,
+            _removedConnection: false,
+            _removedContLen: false,
+            _removedTE: false,
+            strictContentLength: false,
+            _contentLength: 556326,
+            _hasBody: true,
+            _trailer: '',
+            finished: true,
+            _headerSent: true,
+            _closed: true,
+            socket: null,
+            _header: 'HTTP/1.1 200 OK\r\n' +
+              'X-Powered-By: Express\r\n' +
+              'x-request-id: REQ_GOVERNMENT-BLOCKCHAIN/VALOORES-AML-RULES/ALL-FABRIC_5bbc36f5-1faa-409b-ab21-21ad4fa312f4\r\n' +
+              'Vary: Origin\r\n' +
+              'Access-Control-Expose-Headers: x-request-id,x-correlation-id\r\n' +
+              'Content-Type: application/json; charset=utf-8\r\n' +
+              'Content-Length: 556326\r\n' +
+              'ETag: W/"87d26-fJu7U9nRTGaWhbIuOnW3Wk/F6Tk"\r\n' +
+              'Date: Wed, 19 Aug 2026 06:20:42 GMT\r\n' +
+              'Connection: keep-alive\r\n' +
+              'Keep-Alive: timeout=5\r\n' +
+              '\r\n',
+            _keepAliveTimeout: 5000,
+            _onPendingData: [Function: bound updateOutgoingData],
+            req: [Circular *1],
+            _sent100: false,
+            _expect_continue: false,
+            _maxRequestsPerSocket: 0,
+            locals: [Object: null prototype] {},
+            statusCode: 200,
+            statusMessage: 'OK',
+            [Symbol(shapeMode)]: false,
+            [Symbol(kCapture)]: false,
+            [Symbol(kBytesWritten)]: 0,
+            [Symbol(kNeedDrain)]: false,
+            [Symbol(corked)]: 0,
+            [Symbol(kOutHeaders)]: [Object: null prototype],
+            [Symbol(errored)]: null,
+            [Symbol(kHighWaterMark)]: 16384,
+            [Symbol(kRejectNonStandardBodyWrites)]: false,
+            [Symbol(kUniqueHeaders)]: null
+          },
+          next: [Function: next],
+          baseUrl: '/api/v1/government-blockchain/valoores-aml-rules',
+          originalUrl: '/api/v1/government-blockchain/valoores-aml-rules/all-fabric',
+          _parsedUrl: Url {
+            protocol: null,
+            slashes: null,
+            auth: null,
+            host: null,
+            port: null,
+            hostname: null,
+            hash: null,
+            search: null,
+            query: null,
+            pathname: '/all-fabric',
+            path: '/all-fabric',
+            href: '/all-fabric',
+            _raw: '/all-fabric'
+          },
+          params: [Object: null prototype] {},
+          _parsedOriginalUrl: Url {
+            protocol: null,
+            slashes: null,
+            auth: null,
+            host: null,
+            port: null,
+            hostname: null,
+            hash: null,
+            search: null,
+            query: null,
+            pathname: '/api/v1/government-blockchain/valoores-aml-rules/all-fabric',
+            path: '/api/v1/government-blockchain/valoores-aml-rules/all-fabric',
+            href: '/api/v1/government-blockchain/valoores-aml-rules/all-fabric',
+            _raw: '/api/v1/government-blockchain/valoores-aml-rules/all-fabric'
+          },
+          body: undefined,
+          auditSessionContext: {
+            username: 'anonymous',
+            user_id: 'anonymous',
+            user_role: 'UNKNOWN',
+            client_ip: '172.31.13.131',
+            client_hostname: '172.31.13.90:3001',
+            user_agent: 'Apache-HttpClient/5.3.1 (Java/21.0.11)',
+            request_id: 'REQ_GOVERNMENT-BLOCKCHAIN/VALOORES-AML-RULES/ALL-FABRIC_5bbc36f5-1faa-409b-ab21-21ad4fa312f4'
+          },
+          requestId: 'REQ_GOVERNMENT-BLOCKCHAIN/VALOORES-AML-RULES/ALL-FABRIC_5bbc36f5-1faa-409b-ab21-21ad4fa312f4',
+          correlationId: 'REQ_GOVERNMENT-BLOCKCHAIN/VALOORES-AML-RULES/ALL-FABRIC_5bbc36f5-1faa-409b-ab21-21ad4fa312f4',
+          getAuditSessionContext: [Function: getAuditSessionContext],
+          setAuditSessionContext: [AsyncFunction: setAuditContextOnClient],
+          withAuditSessionContext: [AsyncFunction: runWithAuditContext],
+          route: Route {
+            path: '/all-fabric',
+            stack: [Array],
+            methods: [Object: null prototype]
+          },
+          _eventsCount: 1,
+          [Symbol(shapeMode)]: false,
+          [Symbol(kCapture)]: false,
+          [Symbol(kHeaders)]: {
+            accept: 'text/plain, application/xml, text/xml, application/json, application/*+xml, application/*+json, */*',
+            'x-api-key': '20bd6a16f56de09bba960ebf3994fc2354c0a3f91fb2bd5743ad82cdeece29b5ff69cea9b3c85f56c187abc46de4491a',
+            'x-request-id': 'REQ_GOVERNMENT-BLOCKCHAIN/VALOORES-AML-RULES/ALL-FABRIC_5bbc36f5-1faa-409b-ab21-21ad4fa312f4',
+            'x-correlation-id': 'CORR_GOVERNMENT-BLOCKCHAIN/VALOORES-AML-RULES/ALL-FABRIC_a67d26b1-0053-438e-a738-1f3fa1f97161',
+            'x-source-system': 'BLOCKCHAIN_TEST_UI',
+            'x-request-source': 'BLOCKCHAIN_TEST_UI',
+            'accept-encoding': 'gzip, x-gzip, deflate',
+            host: '172.31.13.90:3001',
+            connection: 'keep-alive',
+            'user-agent': 'Apache-HttpClient/5.3.1 (Java/21.0.11)'
+          },
+          [Symbol(kHeadersCount)]: 20,
+          [Symbol(kTrailers)]: null,
+          [Symbol(kTrailersCount)]: 0
+        }
+      }
+    },
+    saslSession: null,
+    release: [Function (anonymous)],
+    readyForQuery: true,
+    hasExecuted: true,
+    _poolUseCount: 4,
+    [Symbol(shapeMode)]: false,
+    [Symbol(kCapture)]: false
+  }
+}
+
+Node.js v20.20.2

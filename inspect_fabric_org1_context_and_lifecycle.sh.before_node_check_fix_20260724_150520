@@ -1,0 +1,336 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+PROJECT_ROOT="${1:-$HOME/u01/blockchain-integration}"
+CLI_CONTAINER="${CLI_CONTAINER:-cli}"
+PEER_CONTAINER="${PEER_CONTAINER:-peer0.org1.blockchain.local}"
+CHANNEL_NAME="${CHANNEL_NAME:-kycchannelnix1}"
+CHAINCODE_NAME="${CHAINCODE_NAME:-kyc-wallet-chaincode-js}"
+CONTRACT_FILE="$PROJECT_ROOT/chaincode/kyc-wallet-chaincode-js/lib/kycWalletContract.js"
+
+STAMP="$(date +%Y%m%d_%H%M%S)"
+REPORT="$PROJECT_ROOT/fabric_org1_lifecycle_context_${STAMP}.txt"
+COMMITTED_JSON="/tmp/${CHAINCODE_NAME}_committed_${STAMP}.json"
+INSTALLED_JSON="/tmp/${CHAINCODE_NAME}_installed_${STAMP}.json"
+APPROVED_JSON="/tmp/${CHAINCODE_NAME}_approved_org1_${STAMP}.json"
+
+exec > >(tee "$REPORT") 2>&1
+
+section() {
+  echo
+  echo "======================================================================"
+  echo "$1"
+  echo "======================================================================"
+}
+
+fail() {
+  echo "ERROR: $*" >&2
+  exit 1
+}
+
+section "FABRIC ORG1 CONTEXT AND LIFECYCLE — READ-ONLY INSPECTION"
+echo "Generated At:   $(date -Is)"
+echo "Project Root:   $PROJECT_ROOT"
+echo "CLI Container:  $CLI_CONTAINER"
+echo "Peer Container: $PEER_CONTAINER"
+echo "Channel:        $CHANNEL_NAME"
+echo "Chaincode:      $CHAINCODE_NAME"
+echo "Report:         $REPORT"
+
+command -v docker >/dev/null 2>&1 || fail "docker is not available."
+docker inspect "$CLI_CONTAINER" >/dev/null 2>&1 || fail "CLI container not found: $CLI_CONTAINER"
+docker inspect "$PEER_CONTAINER" >/dev/null 2>&1 || fail "Peer container not found: $PEER_CONTAINER"
+
+section "1. ACTIVE SOURCE CHECK"
+
+[[ -f "$CONTRACT_FILE" ]] || fail "Contract file not found: $CONTRACT_FILE"
+
+node --check "$CONTRACT_FILE"
+
+UPDATE_COUNT="$(grep -c "async UpdateResident" "$CONTRACT_FILE" || true)"
+DELETE_COUNT="$(grep -c "async DeleteResident" "$CONTRACT_FILE" || true)"
+
+echo "UpdateResident count: $UPDATE_COUNT"
+echo "DeleteResident count: $DELETE_COUNT"
+
+[[ "$UPDATE_COUNT" -eq 1 ]] || fail "UpdateResident must exist exactly once."
+[[ "$DELETE_COUNT" -eq 1 ]] || fail "DeleteResident must exist exactly once."
+
+section "2. CLI MOUNTS"
+
+docker inspect "$CLI_CONTAINER" \
+  --format '{{range .Mounts}}{{println .Source "->" .Destination}}{{end}}'
+
+section "3. PEER CONTAINER FABRIC ENVIRONMENT"
+
+PEER_ENV="$(
+  docker inspect "$PEER_CONTAINER" \
+    --format '{{range .Config.Env}}{{println .}}{{end}}'
+)"
+
+printf '%s\n' "$PEER_ENV" \
+  | grep -E '^(CORE_PEER_|FABRIC_CFG_PATH=)' \
+  | sort || true
+
+MSP_ID="$(
+  printf '%s\n' "$PEER_ENV" \
+    | sed -n 's/^CORE_PEER_LOCALMSPID=//p' \
+    | head -n 1
+)"
+
+PEER_ADDRESS="$(
+  printf '%s\n' "$PEER_ENV" \
+    | sed -n 's/^CORE_PEER_ADDRESS=//p' \
+    | head -n 1
+)"
+
+TLS_ENABLED="$(
+  printf '%s\n' "$PEER_ENV" \
+    | sed -n 's/^CORE_PEER_TLS_ENABLED=//p' \
+    | head -n 1
+)"
+
+[[ -n "$MSP_ID" ]] || MSP_ID="Org1MSP"
+[[ -n "$PEER_ADDRESS" ]] || PEER_ADDRESS="peer0.org1.blockchain.local:7051"
+[[ -n "$TLS_ENABLED" ]] || TLS_ENABLED="true"
+
+echo
+echo "Resolved MSP ID:       $MSP_ID"
+echo "Resolved Peer Address: $PEER_ADDRESS"
+echo "Resolved TLS Enabled:  $TLS_ENABLED"
+
+section "4. DISCOVER ORG1 ADMIN MSP INSIDE CLI"
+
+ADMIN_MSP="$(
+  docker exec "$CLI_CONTAINER" sh -lc '
+    set -e
+
+    preferred="$(
+      find /organizations/peerOrganizations/org1.blockchain.local/users \
+        -type d \
+        -path "*/Admin@org1.blockchain.local/msp" \
+        2>/dev/null \
+        | head -n 1
+    )"
+
+    if [ -n "$preferred" ]; then
+      printf "%s\n" "$preferred"
+      exit 0
+    fi
+
+    find /organizations/peerOrganizations/org1.blockchain.local/users \
+      -type d \
+      -name msp \
+      2>/dev/null \
+      | head -n 1
+  '
+)"
+
+[[ -n "$ADMIN_MSP" ]] || fail "Org1 Admin MSP directory was not found in the CLI container."
+
+echo "Admin MSP: $ADMIN_MSP"
+
+docker exec "$CLI_CONTAINER" sh -lc "
+  set -e
+  test -d '$ADMIN_MSP/signcerts'
+  test -d '$ADMIN_MSP/keystore'
+  echo 'PASS: Admin MSP signcerts and keystore exist.'
+  find '$ADMIN_MSP/signcerts' -maxdepth 1 -type f -printf 'Signcert: %p\n'
+  find '$ADMIN_MSP/keystore' -maxdepth 1 -type f -printf 'Private key: %p\n'
+"
+
+section "5. DISCOVER ORG1 PEER TLS ROOT CERTIFICATE"
+
+TLS_ROOT_CERT="$(
+  docker exec "$CLI_CONTAINER" sh -lc '
+    set -e
+
+    preferred="/organizations/peerOrganizations/org1.blockchain.local/peers/peer0.org1.blockchain.local/tls/ca.crt"
+
+    if [ -f "$preferred" ]; then
+      printf "%s\n" "$preferred"
+      exit 0
+    fi
+
+    find /organizations/peerOrganizations/org1.blockchain.local \
+      -type f \
+      \( -path "*/tls/ca.crt" -o -path "*/tlsca/*.pem" \) \
+      2>/dev/null \
+      | head -n 1
+  '
+)"
+
+[[ -n "$TLS_ROOT_CERT" ]] || fail "Org1 peer TLS root certificate was not found."
+
+echo "TLS root certificate: $TLS_ROOT_CERT"
+
+docker exec "$CLI_CONTAINER" sh -lc "
+  set -e
+  test -r '$TLS_ROOT_CERT'
+  echo 'PASS: TLS root certificate is readable.'
+"
+
+section "6. VERIFY CHAINCODE SOURCE MOUNT INSIDE CLI"
+
+CLI_CONTRACT="/chaincode/kyc-wallet-chaincode-js/lib/kycWalletContract.js"
+
+docker exec "$CLI_CONTAINER" sh -lc "
+  set -e
+  test -f '$CLI_CONTRACT'
+  node --check '$CLI_CONTRACT'
+  echo 'UpdateResident count:' \$(grep -c 'async UpdateResident' '$CLI_CONTRACT')
+  echo 'DeleteResident count:' \$(grep -c 'async DeleteResident' '$CLI_CONTRACT')
+"
+
+section "7. QUERY CURRENT COMMITTED DEFINITION"
+
+docker exec \
+  -e CORE_PEER_LOCALMSPID="$MSP_ID" \
+  -e CORE_PEER_ADDRESS="$PEER_ADDRESS" \
+  -e CORE_PEER_TLS_ENABLED="$TLS_ENABLED" \
+  -e CORE_PEER_TLS_ROOTCERT_FILE="$TLS_ROOT_CERT" \
+  -e CORE_PEER_MSPCONFIGPATH="$ADMIN_MSP" \
+  -e FABRIC_CFG_PATH="/etc/hyperledger/fabric" \
+  "$CLI_CONTAINER" sh -lc "
+    set -e
+
+    peer lifecycle chaincode querycommitted \
+      --channelID '$CHANNEL_NAME' \
+      --name '$CHAINCODE_NAME' \
+      --peerAddresses '$PEER_ADDRESS' \
+      --tlsRootCertFiles '$TLS_ROOT_CERT' \
+      --output json
+  " \
+  > "$COMMITTED_JSON"
+
+jq . "$COMMITTED_JSON"
+
+if ! jq -e '
+  (.version | type == "string")
+  and
+  (.sequence | type == "number")
+' "$COMMITTED_JSON" >/dev/null; then
+  fail "Committed definition JSON is missing version or sequence."
+fi
+
+CURRENT_VERSION="$(jq -r '.version' "$COMMITTED_JSON")"
+CURRENT_SEQUENCE="$(jq -r '.sequence' "$COMMITTED_JSON")"
+NEXT_SEQUENCE="$((CURRENT_SEQUENCE + 1))"
+
+echo
+echo "Current version:  $CURRENT_VERSION"
+echo "Current sequence: $CURRENT_SEQUENCE"
+echo "Next sequence:    $NEXT_SEQUENCE"
+
+section "8. QUERY INSTALLED PACKAGES ON ORG1 PEER"
+
+docker exec \
+  -e CORE_PEER_LOCALMSPID="$MSP_ID" \
+  -e CORE_PEER_ADDRESS="$PEER_ADDRESS" \
+  -e CORE_PEER_TLS_ENABLED="$TLS_ENABLED" \
+  -e CORE_PEER_TLS_ROOTCERT_FILE="$TLS_ROOT_CERT" \
+  -e CORE_PEER_MSPCONFIGPATH="$ADMIN_MSP" \
+  -e FABRIC_CFG_PATH="/etc/hyperledger/fabric" \
+  "$CLI_CONTAINER" sh -lc "
+    set -e
+
+    peer lifecycle chaincode queryinstalled \
+      --peerAddresses '$PEER_ADDRESS' \
+      --tlsRootCertFiles '$TLS_ROOT_CERT' \
+      --output json
+  " \
+  > "$INSTALLED_JSON"
+
+jq . "$INSTALLED_JSON"
+
+echo
+echo "Matching installed packages:"
+
+jq \
+  --arg chaincodeName "$CHAINCODE_NAME" '
+    [
+      .installed_chaincodes[]?
+      | select(
+          (.label // "")
+          | contains($chaincodeName)
+        )
+    ]
+  ' \
+  "$INSTALLED_JSON"
+
+section "9. QUERY CURRENT ORG1 APPROVAL"
+
+docker exec \
+  -e CORE_PEER_LOCALMSPID="$MSP_ID" \
+  -e CORE_PEER_ADDRESS="$PEER_ADDRESS" \
+  -e CORE_PEER_TLS_ENABLED="$TLS_ENABLED" \
+  -e CORE_PEER_TLS_ROOTCERT_FILE="$TLS_ROOT_CERT" \
+  -e CORE_PEER_MSPCONFIGPATH="$ADMIN_MSP" \
+  -e FABRIC_CFG_PATH="/etc/hyperledger/fabric" \
+  "$CLI_CONTAINER" sh -lc "
+    set -e
+
+    peer lifecycle chaincode queryapproved \
+      --channelID '$CHANNEL_NAME' \
+      --name '$CHAINCODE_NAME' \
+      --sequence '$CURRENT_SEQUENCE' \
+      --peerAddresses '$PEER_ADDRESS' \
+      --tlsRootCertFiles '$TLS_ROOT_CERT' \
+      --output json
+  " \
+  > "$APPROVED_JSON"
+
+jq . "$APPROVED_JSON"
+
+section "10. RECOMMENDED NEXT VERSION"
+
+python3 - "$CURRENT_VERSION" <<'PY'
+import re
+import sys
+
+current = sys.argv[1].strip()
+match = re.fullmatch(r"(\d+)\.(\d+)", current)
+
+if not match:
+    print(
+        "Current Fabric version is not major.minor. "
+        "Select the next approved version manually."
+    )
+    raise SystemExit(0)
+
+major = int(match.group(1))
+minor = int(match.group(2))
+
+print(f"Recommended next Fabric version: {major}.{minor + 1}")
+PY
+
+section "11. SOURCE HASHES"
+
+sha256sum "$CONTRACT_FILE"
+
+if [[ -f "$PROJECT_ROOT/chaincode/kyc-wallet-chaincode-js/package.json" ]]; then
+  sha256sum "$PROJECT_ROOT/chaincode/kyc-wallet-chaincode-js/package.json"
+fi
+
+section "12. FINAL SUMMARY"
+
+echo "Org1 MSP ID:              $MSP_ID"
+echo "Org1 Peer Address:        $PEER_ADDRESS"
+echo "Org1 Admin MSP:           $ADMIN_MSP"
+echo "Org1 TLS Root Cert:       $TLS_ROOT_CERT"
+echo "Current Fabric Version:   $CURRENT_VERSION"
+echo "Current Fabric Sequence:  $CURRENT_SEQUENCE"
+echo "Required Next Sequence:   $NEXT_SEQUENCE"
+echo "Committed JSON:           $COMMITTED_JSON"
+echo "Installed JSON:           $INSTALLED_JSON"
+echo "Approved JSON:            $APPROVED_JSON"
+echo
+echo "No package was created."
+echo "No package was installed."
+echo "No approval was submitted."
+echo "No chaincode definition was committed."
+echo "No backend or frontend file was modified."
+
+section "INSPECTION COMPLETE"
+echo "Upload this report for the deployment phase:"
+echo "$REPORT"

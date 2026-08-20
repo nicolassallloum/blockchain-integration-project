@@ -1,0 +1,370 @@
+<div class="license-recovery-page">
+  <header class="page-header">
+    <div>
+      <span class="eyebrow">
+        Blockchain License Management
+      </span>
+
+      <h1>Recover Application License</h1>
+
+      <p>
+        Enter the 12 recovery words to securely restore
+        the license and retrieve its complete information.
+      </p>
+    </div>
+
+    <div class="security-indicator">
+      <span class="security-dot"></span>
+      Recovery words processed locally
+    </div>
+  </header>
+
+  <section class="recovery-card">
+    <div class="section-heading">
+      <div>
+        <h2>12-Word Recovery Phrase</h2>
+
+        <p>
+          Enter every recovery word in the original order.
+        </p>
+      </div>
+
+      <button
+        type="button"
+        class="secondary-button"
+        (click)="toggleWords()"
+      >
+        {{ showWords ? 'Hide Words' : 'Show Words' }}
+      </button>
+    </div>
+
+    <div
+      class="word-grid"
+      (paste)="onPaste($event)"
+    >
+      <label
+        class="word-field"
+        *ngFor="
+          let word of recoveryWords;
+          let index = index
+        "
+      >
+        <span>
+          {{ (index + 1).toString().padStart(2, '0') }}
+        </span>
+
+        <input
+          #wordInput
+          [type]="showWords ? 'text' : 'password'"
+          [value]="word"
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="none"
+          spellcheck="false"
+          maxlength="20"
+          (input)="
+            onWordInput(
+              index,
+              $any($event.target).value
+            )
+          "
+          [attr.aria-label]="
+            'Recovery word ' + (index + 1)
+          "
+        />
+      </label>
+    </div>
+
+    <div class="security-note">
+      <strong>Security notice:</strong>
+
+      Your recovery words remain in this browser and are
+      never submitted to PostgreSQL or Hyperledger Fabric.
+    </div>
+
+    <div
+      class="message error-message"
+      *ngIf="errorMessage"
+    >
+      {{ errorMessage }}
+    </div>
+
+    <div
+      class="message success-message"
+      *ngIf="successMessage"
+    >
+      {{ successMessage }}
+    </div>
+
+    <div class="actions">
+      <button
+        type="button"
+        class="secondary-button"
+        [disabled]="loading"
+        (click)="clearWords()"
+      >
+        Clear
+      </button>
+
+      <button
+        type="button"
+        class="primary-button"
+        [disabled]="!canRecover"
+        (click)="recoverLicense()"
+      >
+        <span *ngIf="!loading">
+          Recover License
+        </span>
+
+        <span *ngIf="loading">
+          Verifying recovery phrase...
+        </span>
+      </button>
+    </div>
+  </section>
+
+  <ng-container *ngIf="result as recoveryResult">
+    <section class="verification-banner">
+      <div class="verification-icon">✓</div>
+
+      <div>
+        <h2>License Recovered Successfully</h2>
+
+        <p>
+          Wallet ownership and challenge signature were
+          verified successfully.
+        </p>
+      </div>
+
+      <span class="verified-badge">
+        Verified
+      </span>
+    </section>
+
+    <section class="summary-grid">
+      <article class="summary-card">
+        <span>Customer ID</span>
+        <strong>{{ recoveryResult.wallet.customerId }}</strong>
+      </article>
+
+      <article class="summary-card">
+        <span>Wallet Status</span>
+
+        <strong
+          [class]="
+            'status ' +
+            statusClass(recoveryResult.wallet.walletStatus)
+          "
+        >
+          {{ recoveryResult.wallet.walletStatus }}
+        </strong>
+      </article>
+
+      <article class="summary-card">
+        <span>Total Licenses</span>
+        <strong>{{ recoveryResult.licenses.length }}</strong>
+      </article>
+
+      <article class="summary-card">
+        <span>Recovered At</span>
+
+        <strong>
+          {{ recoveryResult.recoveredAt | date:'medium' }}
+        </strong>
+      </article>
+    </section>
+
+    <section class="data-card">
+      <div class="section-heading">
+        <div>
+          <h2>Customer Wallet Information</h2>
+          <p>Verified public wallet information.</p>
+        </div>
+      </div>
+
+      <div class="details-grid">
+        <div class="detail-item">
+          <span>Customer ID</span>
+          <strong>{{ recoveryResult.wallet.customerId }}</strong>
+        </div>
+
+        <div class="detail-item">
+          <span>License ID</span>
+          <strong>
+            {{ recoveryResult.wallet.licenseId }}
+          </strong>
+        </div>
+
+        <div class="detail-item">
+          <span>Installation ID</span>
+          <strong>{{ recoveryResult.wallet.installId }}</strong>
+        </div>
+
+        <div class="detail-item wide">
+          <span>Wallet Address</span>
+          <strong>{{ recoveryResult.wallet.walletAddress }}</strong>
+        </div>
+
+        <div class="detail-item wide">
+          <span>Wallet Public Key</span>
+          <strong>{{ recoveryResult.wallet.walletPublicKey }}</strong>
+        </div>
+
+        <div class="detail-item">
+          <span>Wallet Type</span>
+          <strong>{{ recoveryResult.wallet.walletType }}</strong>
+        </div>
+
+        <div class="detail-item">
+          <span>Derivation Path</span>
+          <strong>{{ recoveryResult.wallet.derivationPath }}</strong>
+        </div>
+
+        <div class="detail-item">
+          <span>Recovery Words</span>
+          <strong>
+            {{ recoveryResult.wallet.recoveryWordCount }}
+          </strong>
+        </div>
+
+        <div class="detail-item">
+          <span>Wallet Status</span>
+
+          <strong
+            [class]="
+              'status ' +
+              statusClass(recoveryResult.wallet.walletStatus)
+            "
+          >
+            {{ recoveryResult.wallet.walletStatus }}
+          </strong>
+        </div>
+
+        <div class="detail-item">
+          <span>Created At</span>
+
+          <strong>
+            {{ recoveryResult.wallet.createdAt | date:'medium' }}
+          </strong>
+        </div>
+
+        <div class="detail-item">
+          <span>Updated At</span>
+
+          <strong>
+            {{ recoveryResult.wallet.updatedAt | date:'medium' }}
+          </strong>
+        </div>
+      </div>
+    </section>
+
+    <section
+      class="data-card"
+      *ngFor="
+        let license of recoveryResult.licenses;
+        let index = index
+      "
+    >
+      <div class="section-heading">
+        <div>
+          <h2>
+            License {{ index + 1 }}
+          </h2>
+
+          <p>{{ license.licenseId }}</p>
+        </div>
+
+        <span
+          [class]="
+            'status large ' +
+            statusClass(license.calculatedStatus)
+          "
+        >
+          {{ license.calculatedStatus }}
+        </span>
+      </div>
+
+      <div class="details-grid">
+        <div class="detail-item wide">
+          <span>License ID</span>
+          <strong>{{ license.licenseId }}</strong>
+        </div>
+
+        <div class="detail-item">
+          <span>Customer ID</span>
+          <strong>{{ license.customerId }}</strong>
+        </div>
+
+        <div class="detail-item">
+          <span>Installation ID</span>
+          <strong>{{ license.installId }}</strong>
+        </div>
+
+        <div class="detail-item">
+          <span>Contract Reference</span>
+          <strong>{{ license.contractRef }}</strong>
+        </div>
+
+        <div class="detail-item">
+          <span>Sequence Number</span>
+          <strong>{{ license.sequenceNumber }}</strong>
+        </div>
+
+        <div class="detail-item wide">
+          <span>Product Modules</span>
+
+          <strong>
+            {{ formatModules(license.productModules) }}
+          </strong>
+        </div>
+
+        <div class="detail-item">
+          <span>Maximum Users</span>
+          <strong>{{ license.maxUsers }}</strong>
+        </div>
+
+        <div class="detail-item">
+          <span>Grace Days</span>
+          <strong>{{ license.graceDays }}</strong>
+        </div>
+
+        <div class="detail-item">
+          <span>Valid From</span>
+
+          <strong>
+            {{ license.validFrom | date:'medium' }}
+          </strong>
+        </div>
+
+        <div class="detail-item">
+          <span>Valid Until</span>
+
+          <strong>
+            {{ license.validUntil | date:'medium' }}
+          </strong>
+        </div>
+
+        <div class="detail-item">
+          <span>Issued At</span>
+
+          <strong>
+            {{ license.issuedAt | date:'medium' }}
+          </strong>
+        </div>
+
+        <div class="detail-item">
+          <span>Issued By</span>
+          <strong>{{ license.issuedBy }}</strong>
+        </div>
+
+        <div class="detail-item">
+          <span>Revoked</span>
+
+          <strong>
+            {{ license.revoked ? 'YES' : 'NO' }}
+          </strong>
+        </div>
+      </div>
+    </section>
+  </ng-container>
+</div>

@@ -1,0 +1,126 @@
+{
+	"installed_chaincodes": [
+		{
+			"package_id": "kyc-wallet-chaincode-js_2.7:34a315ad15b14d3d9e56345e17d7e938c5284514a9d02293017482184885a725",
+			"label": "kyc-wallet-chaincode-js_2.7"
+		},
+		{
+			"package_id": "kyc-wallet-chaincode-js_1.0:0ea54eafcae8ec0c3a9b1e3e0cdc7994c6acb3da5c615669fe3fc7c1bbd2f679",
+			"label": "kyc-wallet-chaincode-js_1.0"
+		},
+		{
+			"package_id": "kyc-wallet-chaincode-js_2.11:14b76d4e3dbc34997b4c1435a34f83fd0e8c142e8be865d9298bd6c5c7e46433",
+			"label": "kyc-wallet-chaincode-js_2.11"
+		},
+		{
+			"package_id": "kyc-wallet-chaincode-js_2.14:de3a7dc7c9d988443995d851ee1ed2c514d27a637e2ebddbd16290e994702a52",
+			"label": "kyc-wallet-chaincode-js_2.14"
+		},
+		{
+			"package_id": "kyc-wallet-chaincode-js_2.15:44e8f9548f30f5bbdca787d2ff80d2afd8f4f931d8982d2fe22e3d92b0ab4b38",
+			"label": "kyc-wallet-chaincode-js_2.15"
+		},
+		{
+			"package_id": "kyc-wallet-chaincode-js_2.22:ad7e3b45be45098c621cf0e2e62129a528b455381147935de4efb2217ff91dac",
+			"label": "kyc-wallet-chaincode-js_2.22"
+		},
+		{
+			"package_id": "kyc-wallet-chaincode-js_2.23:e91ff80bce495aa2de1c805601a27cddc4de008faa9befe66030486707934a1f",
+			"label": "kyc-wallet-chaincode-js_2.23"
+		},
+		{
+			"package_id": "kyc-wallet-chaincode-js_2.29:efcd65e5bdeea19e94c0d7e2b6003e6a9ebd90cc61306dcec8accd1cd0ce7fd6",
+			"label": "kyc-wallet-chaincode-js_2.29",
+			"references": {
+				"kycchannelnix1": {
+					"chaincodes": [
+						{
+							"name": "kyc-wallet-chaincode-js",
+							"version": "2.29"
+						}
+					]
+				}
+			}
+		},
+		{
+			"package_id": "kyc-wallet-chaincode-js_2.8:73cb83e2b39ba607e2cff026aa975847b1e9b869ee3f89f146ecd8670109b40c",
+			"label": "kyc-wallet-chaincode-js_2.8"
+		},
+		{
+			"package_id": "kyc-wallet-chaincode-js_1.0:bcf812cb741dead1544268383b8fd2f8ce06fd03e318a3addd14aa2c7d0462e7",
+			"label": "kyc-wallet-chaincode-js_1.0"
+		},
+		{
+			"package_id": "kyc-wallet-chaincode-js_2.12:6b7f1d41b5552ce5f38d33d8162b7e337d40585092b9af26618d1c96d1cc8b3d",
+			"label": "kyc-wallet-chaincode-js_2.12"
+		},
+		{
+			"package_id": "kyc-wallet-chaincode-js_2.13:71ad4c79f9fc13a094a438ad46fedd89b2cad1d127856bdba5121de15f045c10",
+			"label": "kyc-wallet-chaincode-js_2.13"
+		},
+		{
+			"package_id": "kyc-wallet-chaincode-js_2.16:352e1be348dab88c918e45696e4a12ae03e568ac66bd23a7d71a9bbdeceb9d9a",
+			"label": "kyc-wallet-chaincode-js_2.16"
+		},
+		{
+			"package_id": "kyc-wallet-chaincode-js_2.20:58d00e0d90943f445815359c93fa8f08f0bb17397fb51143c910c400ab9d3612",
+			"label": "kyc-wallet-chaincode-js_2.20"
+		},
+		{
+			"package_id": "kyc-wallet-chaincode-js_2.28:6ce36bb3ef82e56635e90122f1ae737c188dfc840aa398b557ed0e6542f20b8c",
+			"label": "kyc-wallet-chaincode-js_2.28"
+		},
+		{
+			"package_id": "kyc-wallet-chaincode-js_2.6:2d9018391798359a8b1a86dfda8b0bf823cc62815e0bdedb7710bafdcb07cd91",
+			"label": "kyc-wallet-chaincode-js_2.6"
+		},
+		{
+			"package_id": "kyc-wallet-chaincode-js_2_3:36c8c9e8e24a0a9af71de80f013db5964bdf6a6df6df0ce3dd4535bc0e8753b9",
+			"label": "kyc-wallet-chaincode-js_2_3"
+		},
+		{
+			"package_id": "kyc-wallet-chaincode-js_1.0:b2f97e29a7fb0bbd04a64318e11ddbabe9f73da651f93fe6e8d8b9c6fdd0799d",
+			"label": "kyc-wallet-chaincode-js_1.0"
+		},
+		{
+			"package_id": "kyc-wallet-chaincode-js_2.19:bd5dff0a36af84006b9b09b4c74f60d4cb27e58121ab54d4b447cf7d0593f4f4",
+			"label": "kyc-wallet-chaincode-js_2.19"
+		},
+		{
+			"package_id": "kyc-wallet-chaincode-js_2.3:047717a0f04c6ab53f406d1d3ce38865b07a2dfe1558e7daa5355de995da50e4",
+			"label": "kyc-wallet-chaincode-js_2.3"
+		},
+		{
+			"package_id": "kyc-wallet-chaincode-js_2.5:ca54a42889e392a2cbe83f4f9e3f04290280d717e23facf87eeb2af001929fc9",
+			"label": "kyc-wallet-chaincode-js_2.5"
+		},
+		{
+			"package_id": "kyc-wallet-chaincode-js_2.30:8498dc6af4916bda9fb1245443740643e842e6256ab168d855a04a27d8ac1b66",
+			"label": "kyc-wallet-chaincode-js_2.30"
+		},
+		{
+			"package_id": "kyc-wallet-chaincode-js_1.0:27002a249aae9daad7c04d507b7eed519232a82ea3f4b9771372b63926e3c679",
+			"label": "kyc-wallet-chaincode-js_1.0"
+		},
+		{
+			"package_id": "kyc-wallet-chaincode-js_2.0:6e8c84bd5b4452a10783e6988a6e07d2bcdc392f7a44d269ffa9f76776a4e708",
+			"label": "kyc-wallet-chaincode-js_2.0"
+		},
+		{
+			"package_id": "kyc-wallet-chaincode-js_2.17:37a6c8f78ae03e275735a384eec94b597a4cdbaab40af1e94659ae56d06c25cf",
+			"label": "kyc-wallet-chaincode-js_2.17"
+		},
+		{
+			"package_id": "kyc-wallet-chaincode-js_2.18:c4c5bc9af837d72990af17ecbab63c248f37dd717ba0aa200b064728c4f7559d",
+			"label": "kyc-wallet-chaincode-js_2.18"
+		},
+		{
+			"package_id": "kyc-wallet-chaincode-js_2.21:2f55a7b9569c123678c434cc74d45f9d7674b4a0a3741e01ce89cdb4a57ffe23",
+			"label": "kyc-wallet-chaincode-js_2.21"
+		},
+		{
+			"package_id": "kyc-wallet-chaincode-js_2.4:142fb331dc7b694a972a32abc0a45802c4d9dc6b9c0d8959a3c0d47218ac8424",
+			"label": "kyc-wallet-chaincode-js_2.4"
+		}
+	]
+}

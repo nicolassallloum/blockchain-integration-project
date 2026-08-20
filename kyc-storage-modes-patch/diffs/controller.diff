@@ -1,0 +1,55 @@
+--- original/blockchain-api/src/controllers/blockchain-kyc.controller.js	2026-07-23 09:54:16.000000000 +0000
++++ modified/blockchain-api/src/controllers/blockchain-kyc.controller.js	2026-07-23 10:46:40.757622578 +0000
+@@ -2,6 +2,11 @@
+ 
+ const blockchainKycService = require('../services/blockchain-kyc.service');
+ 
++function resolveStatusCode(error) {
++  const statusCode = Number(error?.statusCode || error?.status || 500);
++  return statusCode >= 400 && statusCode <= 599 ? statusCode : 500;
++}
++
+ async function createBlockchainKycWallet(req, res) {
+   try {
+     const data = await blockchainKycService.createBlockchainKycWallet(
+@@ -11,10 +16,12 @@
+ 
+     return res.status(201).json({
+       success: true,
+-      message: data.message || 'Blockchain KYC wallet created successfully.',
++      message: data.message || 'KYC request processed successfully.',
+       data
+     });
+   } catch (error) {
++    const statusCode = resolveStatusCode(error);
++
+     console.error('[BLOCKCHAIN_KYC_CREATE_ERROR]', {
+       message: error.message,
+       originalMessage: error.originalError?.message,
+@@ -23,12 +30,16 @@
+       table: error.table || error.originalError?.table,
+       column: error.column || error.originalError?.column,
+       constraint: error.constraint || error.originalError?.constraint,
++      storageMode: error.storageMode || req.body?.storageMode || null,
+       kycRequestId: error.kycRequest?.request_id
+     });
+ 
+-    return res.status(500).json({
++    return res.status(statusCode).json({
+       success: false,
+-      message: 'Failed to create Blockchain KYC wallet in enterprise tables and Fabric ledger.',
++      message:
++        statusCode < 500
++          ? error.message
++          : 'Failed to process the KYC storage request.',
+       error: {
+         message: error.message,
+         originalMessage: error.originalError?.message,
+@@ -39,6 +50,7 @@
+         constraint: error.constraint || error.originalError?.constraint
+       },
+       data: {
++        storageMode: error.storageMode || req.body?.storageMode || null,
+         kycRequest: error.kycRequest || null,
+         walletCreationStatus: 'FAILED'
+       }

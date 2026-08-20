@@ -1,0 +1,302 @@
+--- original/blockchain-test-ui/src/app/pages/blockchain-kyc/blockchain-kyc.component.ts	2026-07-23 10:36:11.000000000 +0000
++++ modified/blockchain-test-ui/src/app/pages/blockchain-kyc/blockchain-kyc.component.ts	2026-07-23 10:47:54.569624018 +0000
+@@ -34,7 +34,14 @@
+   raw?: any;
+ }
+ 
++type KycStorageMode =
++  | 'POSTGRES_ONLY'
++  | 'BLOCKCHAIN_ONLY'
++  | 'POSTGRES_AND_BLOCKCHAIN';
++
+ interface RegistrationResult {
++  storageMode: KycStorageMode;
++  requestId: string;
+   customerId: string;
+   walletAddress: string;
+   organizationName: string;
+@@ -43,11 +50,17 @@
+   oneTimePassword: string;
+   recoveryPhrase: string;
+   fabricTransactionId: string;
++  ledgerReference: string;
+   channelName: string;
+   chaincodeName: string;
++  postgresSaved: boolean;
++  blockchainSaved: boolean;
++  walletLoginEnabled: boolean;
++  statusMessage: string;
+ }
+ 
+ interface BlockchainKycForm {
++  storageMode: KycStorageMode;
+   customerId: string;
+   fullName: string;
+ 
+@@ -150,6 +163,8 @@
+ 
+   getEmptyRegistrationResult(): RegistrationResult {
+     return {
++      storageMode: 'POSTGRES_AND_BLOCKCHAIN',
++      requestId: '',
+       customerId: '',
+       walletAddress: '',
+       organizationName: '',
+@@ -158,13 +173,19 @@
+       oneTimePassword: '',
+       recoveryPhrase: 'No recovery phrase returned from API',
+       fabricTransactionId: '',
++      ledgerReference: '',
+       channelName: '',
+-      chaincodeName: ''
++      chaincodeName: '',
++      postgresSaved: false,
++      blockchainSaved: false,
++      walletLoginEnabled: false,
++      statusMessage: ''
+     };
+   }
+ 
+   getEmptyForm(): BlockchainKycForm {
+     return {
++      storageMode: 'POSTGRES_AND_BLOCKCHAIN',
+       customerId: '',
+       fullName: '',
+ 
+@@ -492,6 +513,57 @@
+     this.form.generatedPassword = this.generatePassword();
+   }
+ 
++  storesInPostgres(): boolean {
++    return this.form.storageMode !== 'BLOCKCHAIN_ONLY';
++  }
++
++  storesInBlockchain(): boolean {
++    return this.form.storageMode !== 'POSTGRES_ONLY';
++  }
++
++  onStorageModeChange(): void {
++    if (this.storesInBlockchain() && !this.form.generatedPassword) {
++      this.form.generatedPassword = this.generatePassword();
++    }
++  }
++
++  getSubmitButtonText(): string {
++    if (this.loading) {
++      return 'Submitting...';
++    }
++
++    switch (this.form.storageMode) {
++      case 'POSTGRES_ONLY':
++        return 'Save KYC into PostgreSQL';
++      case 'BLOCKCHAIN_ONLY':
++        return 'Create KYC Wallet on Blockchain';
++      default:
++        return 'Save KYC into PostgreSQL + Blockchain';
++    }
++  }
++
++  getCompletionTitle(): string {
++    switch (this.registrationResult.storageMode) {
++      case 'POSTGRES_ONLY':
++        return 'KYC Saved in PostgreSQL';
++      case 'BLOCKCHAIN_ONLY':
++        return 'Blockchain Wallet Created';
++      default:
++        return 'KYC and Blockchain Wallet Created';
++    }
++  }
++
++  getStorageModeLabel(mode: KycStorageMode = this.form.storageMode): string {
++    switch (mode) {
++      case 'POSTGRES_ONLY':
++        return 'PostgreSQL Only';
++      case 'BLOCKCHAIN_ONLY':
++        return 'Blockchain Only';
++      default:
++        return 'PostgreSQL + Blockchain';
++    }
++  }
++
+   fillSample(): void {
+     this.form.nationality = 'Lebanon';
+     this.form.countryOfResidence = 'Lebanon';
+@@ -546,6 +618,7 @@
+ 
+   buildPayload(): any {
+     return {
++      storageMode: this.form.storageMode,
+       customerId: this.form.customerId,
+       fullName: this.form.fullName,
+ 
+@@ -573,15 +646,21 @@
+       expectedMonthlyTransactionVolume: this.form.expectedMonthlyTransactionVolume,
+       expectedCashTransactions: this.form.expectedCashTransactions,
+ 
+-      walletType: 'CUSTOMER',
+-      partyTypeCode: 7,
+-      walletStatus: this.form.walletStatus,
+-      initialBalance: this.form.initialBalance,
+-      currencyCode: this.form.currencyCode,
+-      dailyTransferLimit: this.form.dailyTransferLimit,
+-      monthlyTransferLimit: this.form.monthlyTransferLimit,
+-      password: this.form.generatedPassword,
+-      generatedPassword: this.form.generatedPassword,
++      walletType: this.storesInBlockchain() ? 'CUSTOMER' : null,
++      partyTypeCode: this.storesInBlockchain() ? 7 : null,
++      walletStatus: this.storesInBlockchain() ? this.form.walletStatus : null,
++      initialBalance: this.storesInBlockchain() ? this.form.initialBalance : null,
++      currencyCode: this.storesInBlockchain() ? this.form.currencyCode : null,
++      dailyTransferLimit: this.storesInBlockchain()
++        ? this.form.dailyTransferLimit
++        : null,
++      monthlyTransferLimit: this.storesInBlockchain()
++        ? this.form.monthlyTransferLimit
++        : null,
++      password: this.storesInBlockchain() ? this.form.generatedPassword : null,
++      generatedPassword: this.storesInBlockchain()
++        ? this.form.generatedPassword
++        : null,
+ 
+       legalDocumentType: this.form.legalDocumentType,
+       legalIdNumberHash: this.form.legalIdNumberHash,
+@@ -590,14 +669,22 @@
+     };
+   }
+ 
+-  private handleSuccessfulWalletCreation(response: ApiResponse<any>): void {
++  private handleSuccessfulCreation(response: ApiResponse<any>): void {
+     const data = response?.data || {};
+     const walletResult = data?.walletResult || {};
+     const wallet = walletResult?.wallet || {};
+-    const blockchain = walletResult?.blockchain || {};
++    const blockchain = walletResult?.blockchain || data?.blockchain || {};
++    const postgres = data?.postgres || walletResult?.postgres || {};
+     const kycRequest = data?.kycRequest || {};
++    const storageMode = (data?.storageMode || this.form.storageMode) as KycStorageMode;
+ 
+     this.registrationResult = {
++      storageMode,
++      requestId:
++        kycRequest.request_id ||
++        postgres.requestId ||
++        '',
++
+       customerId:
+         wallet.customerId ||
+         kycRequest.customer_id ||
+@@ -605,6 +692,7 @@
+ 
+       walletAddress:
+         wallet.walletAddress ||
++        blockchain.walletAddress ||
+         kycRequest.wallet_address ||
+         '',
+ 
+@@ -614,9 +702,9 @@
+         this.form.organization,
+ 
+       initialBalance:
+-        wallet.currentBalance ||
+-        kycRequest.initial_balance ||
+-        this.form.initialBalance ||
++        wallet.currentBalance ??
++        kycRequest.initial_balance ??
++        this.form.initialBalance ??
+         0,
+ 
+       currencyCode:
+@@ -628,8 +716,8 @@
+       oneTimePassword:
+         walletResult.oneTimePassword ||
+         data.oneTimePassword ||
+-        this.form.generatedPassword ||
+-        'No one-time password returned from API',
++        (this.storesInBlockchain() ? this.form.generatedPassword : '') ||
++        '',
+ 
+       recoveryPhrase:
+         walletResult.recoveryPhrase ||
+@@ -641,15 +729,42 @@
+         kycRequest.blockchain_tx_id ||
+         '',
+ 
+-      channelName:
+-        blockchain.channelName ||
++      ledgerReference:
++        blockchain.ledgerReference ||
++        blockchain.ledgerKey ||
++        kycRequest.ledger_reference ||
++        wallet.walletAddress ||
+         '',
+ 
+-      chaincodeName:
+-        blockchain.chaincodeName ||
+-        ''
++      channelName: blockchain.channelName || '',
++      chaincodeName: blockchain.chaincodeName || '',
++
++      postgresSaved: Boolean(
++        postgres.saved ??
++        kycRequest.request_id ??
++        false
++      ),
++
++      blockchainSaved: Boolean(
++        blockchain.saved ??
++        blockchain.submitted ??
++        blockchain.fabricTransactionId ??
++        false
++      ),
++
++      walletLoginEnabled: Boolean(
++        data.walletLoginEnabled ??
++        walletResult.walletLoginEnabled ??
++        storageMode === 'POSTGRES_AND_BLOCKCHAIN'
++      ),
++
++      statusMessage:
++        response.message ||
++        data.message ||
++        'KYC request processed successfully.'
+     };
+ 
++    this.form.generatedPassword = '';
+     this.showRegistrationComplete = true;
+     window.scrollTo({ top: 0, behavior: 'smooth' });
+   }
+@@ -669,11 +784,11 @@
+       }
+     });
+ 
+-    if (this.form.proofOfAddressFile) {
++    if (this.storesInPostgres() && this.form.proofOfAddressFile) {
+       formData.append('proofOfAddressFile', this.form.proofOfAddressFile);
+     }
+ 
+-    if (this.form.documentFile) {
++    if (this.storesInPostgres() && this.form.documentFile) {
+       formData.append('documentFile', this.form.documentFile);
+     }
+ 
+@@ -690,9 +805,9 @@
+         next: (response) => {
+           this.successMessage =
+             response.message ||
+-            'Blockchain KYC customer wallet created successfully in enterprise tables, PostgreSQL wallet table, and Fabric ledger.';
++            'KYC request processed successfully.';
+ 
+-          this.handleSuccessfulWalletCreation(response);
++          this.handleSuccessfulCreation(response);
+ 
+           console.log('[BLOCKCHAIN_KYC_SUCCESS]', response);
+         },
+@@ -703,7 +818,7 @@
+             error?.error?.message ||
+             error?.error?.error?.message ||
+             error?.error?.error?.originalMessage ||
+-            'Failed to create Blockchain KYC wallet request.';
++            'Failed to process the KYC storage request.';
+         }
+       });
+   }

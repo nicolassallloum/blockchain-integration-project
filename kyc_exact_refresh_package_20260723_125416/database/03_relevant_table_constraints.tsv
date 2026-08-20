@@ -1,0 +1,177 @@
+table_schema	table_name	constraint_name	constraint_type	definition
+blockchain	aml_wallet_risk_profiles	aml_wallet_risk_profiles_is_blacklisted_not_null	n	NOT NULL is_blacklisted
+blockchain	aml_wallet_risk_profiles	aml_wallet_risk_profiles_is_pep_not_null	n	NOT NULL is_pep
+blockchain	aml_wallet_risk_profiles	aml_wallet_risk_profiles_is_sanctioned_not_null	n	NOT NULL is_sanctioned
+blockchain	aml_wallet_risk_profiles	aml_wallet_risk_profiles_pkey	p	PRIMARY KEY (wallet_address)
+blockchain	aml_wallet_risk_profiles	aml_wallet_risk_profiles_wallet_address_not_null	n	NOT NULL wallet_address
+blockchain	blockchain_kyc_wallet_requests	blockchain_kyc_wallet_requests_customer_id_not_null	n	NOT NULL customer_id
+blockchain	blockchain_kyc_wallet_requests	blockchain_kyc_wallet_requests_pkey	p	PRIMARY KEY (request_id)
+blockchain	blockchain_kyc_wallet_requests	blockchain_kyc_wallet_requests_request_id_not_null	n	NOT NULL request_id
+blockchain	blockchain_organization	PK_organization_id	p	PRIMARY KEY (organization_id)
+blockchain	blockchain_organization	blockchain_organization_created_at_not_null	n	NOT NULL created_at
+blockchain	blockchain_organization	blockchain_organization_organization_id_not_null	n	NOT NULL organization_code
+blockchain	blockchain_organization	blockchain_organization_organization_id_not_null1	n	NOT NULL organization_id
+blockchain	blockchain_organization	blockchain_organization_organization_name_not_null	n	NOT NULL organization_name
+blockchain	blockchain_organization	blockchain_organization_organization_type_not_null	n	NOT NULL organization_type
+blockchain	blockchain_organization	blockchain_organization_updated_at_not_null	n	NOT NULL updated_at
+blockchain	blockchain_organization_mapping	blockchain_organization_map_blockchain_organization_id_not_null	n	NOT NULL blockchain_organization_id
+blockchain	blockchain_organization_mapping	blockchain_organization_mapping_created_at_not_null	n	NOT NULL created_at
+blockchain	blockchain_organization_mapping	blockchain_organization_mapping_mapping_id_not_null	n	NOT NULL mapping_id
+blockchain	blockchain_organization_mapping	blockchain_organization_mapping_mapping_status_not_null	n	NOT NULL mapping_status
+blockchain	blockchain_organization_mapping	blockchain_organization_mapping_pkey	p	PRIMARY KEY (mapping_id)
+blockchain	blockchain_organization_mapping	blockchain_organization_mapping_source_organization_id_not_null	n	NOT NULL source_organization_id
+blockchain	blockchain_organization_mapping	blockchain_organization_mapping_updated_at_not_null	n	NOT NULL updated_at
+blockchain	blockchain_organization_mapping	chk_org_mapping_status	c	CHECK (((mapping_status)::text = ANY ((ARRAY['ACTIVE'::character varying, 'INACTIVE'::character varying, 'BLOCKED'::character varying, 'DELETED'::character varying])::text[])))
+blockchain	blockchain_organization_mapping	chk_org_type	c	CHECK (((organization_type)::text = ANY ((ARRAY['BANK'::character varying, 'MERCHANT'::character varying, 'GOVERNMENT'::character varying, 'PARTNER'::character varying, 'OTHER'::character varying])::text[])))
+blockchain	blockchain_organization_mapping	uq_blockchain_org_mapping_blockchain_org	u	UNIQUE (blockchain_organization_id)
+blockchain	blockchain_organization_mapping	uq_blockchain_org_mapping_source_org	u	UNIQUE (source_organization_id)
+blockchain	blockchain_wallet_balance	blockchain_wallet_balance_available_balance_not_null	n	NOT NULL available_balance
+blockchain	blockchain_wallet_balance	blockchain_wallet_balance_blocked_balance_not_null	n	NOT NULL blocked_balance
+blockchain	blockchain_wallet_balance	blockchain_wallet_balance_currency_not_null	n	NOT NULL currency
+blockchain	blockchain_wallet_balance	blockchain_wallet_balance_last_updated_at_not_null	n	NOT NULL last_updated_at
+blockchain	blockchain_wallet_balance	blockchain_wallet_balance_organization_id_not_null	n	NOT NULL organization_id
+blockchain	blockchain_wallet_balance	blockchain_wallet_balance_pkey	p	PRIMARY KEY (wallet_address)
+blockchain	blockchain_wallet_balance	blockchain_wallet_balance_total_balance_not_null	n	NOT NULL total_balance
+blockchain	blockchain_wallet_balance	blockchain_wallet_balance_wallet_address_not_null	n	NOT NULL wallet_address
+blockchain	blockchain_wallet_integration	blockchain_wallet_integration_blockchain_customer_id_not_null	n	NOT NULL blockchain_customer_id
+blockchain	blockchain_wallet_integration	blockchain_wallet_integration_created_at_not_null	n	NOT NULL created_at
+blockchain	blockchain_wallet_integration	blockchain_wallet_integration_currency_code_not_null	n	NOT NULL currency_code
+blockchain	blockchain_wallet_integration	blockchain_wallet_integration_current_balance_not_null	n	NOT NULL current_balance
+blockchain	blockchain_wallet_integration	blockchain_wallet_integration_pkey	p	PRIMARY KEY (wallet_id)
+blockchain	blockchain_wallet_integration	blockchain_wallet_integration_synced_to_postgres_at_not_null	n	NOT NULL synced_to_postgres_at
+blockchain	blockchain_wallet_integration	blockchain_wallet_integration_updated_at_not_null	n	NOT NULL updated_at
+blockchain	blockchain_wallet_integration	blockchain_wallet_integration_wallet_address_not_null	n	NOT NULL wallet_address
+blockchain	blockchain_wallet_integration	blockchain_wallet_integration_wallet_id_not_null	n	NOT NULL wallet_id
+blockchain	blockchain_wallet_integration	blockchain_wallet_integration_wallet_status_not_null	n	NOT NULL wallet_status
+blockchain	blockchain_wallet_integration	chk_wallet_status	c	CHECK (((wallet_status)::text = ANY ((ARRAY['ACTIVE'::character varying, 'INACTIVE'::character varying, 'SUSPENDED'::character varying, 'CLOSED'::character varying, 'BLOCKED'::character varying])::text[])))
+blockchain	blockchain_wallet_integration	uq_blockchain_wallet_address	u	UNIQUE (wallet_address)
+blockchain	government_ministry_wallets	chk_government_ministry_wallet_currency_gov	c	CHECK (((wallet_currency)::text = 'GOV'::text))
+blockchain	government_ministry_wallets	fk_government_ministry_wallet_ministry	f	FOREIGN KEY (ministry_id) REFERENCES blockchain.government_ministries(ministry_id) ON UPDATE CASCADE ON DELETE CASCADE
+blockchain	government_ministry_wallets	government_ministry_wallets_blockchain_status_not_null	n	NOT NULL blockchain_status
+blockchain	government_ministry_wallets	government_ministry_wallets_created_at_not_null	n	NOT NULL created_at
+blockchain	government_ministry_wallets	government_ministry_wallets_ministry_id_not_null	n	NOT NULL ministry_id
+blockchain	government_ministry_wallets	government_ministry_wallets_pkey	p	PRIMARY KEY (wallet_id)
+blockchain	government_ministry_wallets	government_ministry_wallets_updated_at_not_null	n	NOT NULL updated_at
+blockchain	government_ministry_wallets	government_ministry_wallets_wallet_address_key	u	UNIQUE (wallet_address)
+blockchain	government_ministry_wallets	government_ministry_wallets_wallet_address_not_null	n	NOT NULL wallet_address
+blockchain	government_ministry_wallets	government_ministry_wallets_wallet_currency_not_null	n	NOT NULL wallet_currency
+blockchain	government_ministry_wallets	government_ministry_wallets_wallet_current_balance_not_null	n	NOT NULL wallet_current_balance
+blockchain	government_ministry_wallets	government_ministry_wallets_wallet_id_not_null	n	NOT NULL wallet_id
+blockchain	government_ministry_wallets	government_ministry_wallets_wallet_initial_balance_not_null	n	NOT NULL wallet_initial_balance
+blockchain	government_ministry_wallets	government_ministry_wallets_wallet_status_not_null	n	NOT NULL wallet_status
+blockchain	government_ministry_wallets	government_ministry_wallets_wallet_type_not_null	n	NOT NULL wallet_type
+blockchain	kyc_documents	chk_kyc_documents_status	c	CHECK (((kyc_status)::text = ANY ((ARRAY['Pending'::character varying, 'Verified'::character varying, 'Rejected'::character varying, 'Expired'::character varying])::text[])))
+blockchain	kyc_documents	kyc_documents_document_type_not_null	n	NOT NULL document_type
+blockchain	kyc_documents	kyc_documents_file_name_not_null	n	NOT NULL file_name
+blockchain	kyc_documents	kyc_documents_file_path_not_null	n	NOT NULL file_path
+blockchain	kyc_documents	kyc_documents_id_not_null	n	NOT NULL id
+blockchain	kyc_documents	kyc_documents_kyc_status_not_null	n	NOT NULL kyc_status
+blockchain	kyc_documents	kyc_documents_original_file_name_not_null	n	NOT NULL original_file_name
+blockchain	kyc_documents	kyc_documents_pkey	p	PRIMARY KEY (id)
+blockchain	kyc_documents	kyc_documents_resident_id_not_null	n	NOT NULL resident_id
+blockchain	kyc_documents	kyc_documents_resident_name_not_null	n	NOT NULL resident_name
+blockchain	kyc_hashes	kyc_hashes_customer_id_not_null	n	NOT NULL customer_id
+blockchain	kyc_hashes	kyc_hashes_hash_not_null	n	NOT NULL hash
+blockchain	kyc_hashes	kyc_hashes_pkey	p	PRIMARY KEY (customer_id)
+blockchain	kyc_records	ck_kyc_blockchain_status	c	CHECK (((blockchain_status)::text = ANY ((ARRAY['NOT_REQUESTED'::character varying, 'PENDING'::character varying, 'SUBMITTING'::character varying, 'SUBMITTED'::character varying, 'FAILED'::character varying])::text[])))
+blockchain	kyc_records	ck_kyc_storage_mode	c	CHECK (((storage_mode)::text = ANY ((ARRAY['POSTGRES_ONLY'::character varying, 'BLOCKCHAIN_ONLY'::character varying, 'POSTGRES_AND_BLOCKCHAIN'::character varying])::text[])))
+blockchain	kyc_records	kyc_records_blockchain_retry_count_not_null	n	NOT NULL blockchain_retry_count
+blockchain	kyc_records	kyc_records_blockchain_status_not_null	n	NOT NULL blockchain_status
+blockchain	kyc_records	kyc_records_created_at_not_null	n	NOT NULL created_at
+blockchain	kyc_records	kyc_records_customer_id_not_null	n	NOT NULL customer_id
+blockchain	kyc_records	kyc_records_first_name_not_null	n	NOT NULL first_name
+blockchain	kyc_records	kyc_records_kyc_id_not_null	n	NOT NULL kyc_id
+blockchain	kyc_records	kyc_records_kyc_status_not_null	n	NOT NULL kyc_status
+blockchain	kyc_records	kyc_records_last_name_not_null	n	NOT NULL last_name
+blockchain	kyc_records	kyc_records_pkey	p	PRIMARY KEY (kyc_id)
+blockchain	kyc_records	kyc_records_risk_level_not_null	n	NOT NULL risk_level
+blockchain	kyc_records	kyc_records_storage_mode_not_null	n	NOT NULL storage_mode
+blockchain	kyc_records	kyc_records_updated_at_not_null	n	NOT NULL updated_at
+blockchain	kyc_requests	kyc_requests_id_not_null	n	NOT NULL id
+blockchain	kyc_requests	kyc_requests_pkey	p	PRIMARY KEY (id)
+blockchain	kyc_requests	kyc_requests_request_id_key	u	UNIQUE (request_id)
+blockchain	kyc_requests	kyc_requests_request_id_not_null	n	NOT NULL request_id
+blockchain	kyc_statuses	kyc_statuses_kyc_status_id_not_null	n	NOT NULL kyc_status_id
+blockchain	kyc_statuses	kyc_statuses_pkey	p	PRIMARY KEY (kyc_status_id)
+blockchain	kyc_statuses	kyc_statuses_status_code_key	u	UNIQUE (status_code)
+blockchain	kyc_statuses	kyc_statuses_status_code_not_null	n	NOT NULL status_code
+blockchain	kyc_statuses	kyc_statuses_status_name_not_null	n	NOT NULL status_name
+blockchain	organizations	chk_blockchain_organizations_status	c	CHECK (((status)::text = ANY ((ARRAY['ACTIVE'::character varying, 'INACTIVE'::character varying, 'SUSPENDED'::character varying, 'DELETED'::character varying])::text[])))
+blockchain	organizations	chk_blockchain_organizations_type	c	CHECK (((organization_type)::text = ANY ((ARRAY['BANK'::character varying, 'FINTECH'::character varying, 'GOVERNMENT'::character varying, 'MERCHANT'::character varying, 'EXCHANGE'::character varying, 'OTHER'::character varying])::text[])))
+blockchain	organizations	organizations_api_payload_not_null	n	NOT NULL api_payload
+blockchain	organizations	organizations_blockchain_payload_not_null	n	NOT NULL blockchain_payload
+blockchain	organizations	organizations_created_at_not_null	n	NOT NULL created_at
+blockchain	organizations	organizations_metadata_not_null	n	NOT NULL metadata
+blockchain	organizations	organizations_organization_code_not_null	n	NOT NULL organization_code
+blockchain	organizations	organizations_organization_id_not_null	n	NOT NULL organization_id
+blockchain	organizations	organizations_organization_name_not_null	n	NOT NULL organization_name
+blockchain	organizations	organizations_organization_type_not_null	n	NOT NULL organization_type
+blockchain	organizations	organizations_pkey	p	PRIMARY KEY (organization_id)
+blockchain	organizations	organizations_status_not_null	n	NOT NULL status
+blockchain	organizations	organizations_updated_at_not_null	n	NOT NULL updated_at
+blockchain	organizations	uq_blockchain_organizations_code	u	UNIQUE (organization_code)
+blockchain	ref_wallet_statuses	ref_wallet_statuses_created_at_not_null	n	NOT NULL created_at
+blockchain	ref_wallet_statuses	ref_wallet_statuses_display_order_not_null	n	NOT NULL display_order
+blockchain	ref_wallet_statuses	ref_wallet_statuses_is_active_not_null	n	NOT NULL is_active
+blockchain	ref_wallet_statuses	ref_wallet_statuses_pkey	p	PRIMARY KEY (wallet_status_id)
+blockchain	ref_wallet_statuses	ref_wallet_statuses_wallet_status_code_key	u	UNIQUE (wallet_status_code)
+blockchain	ref_wallet_statuses	ref_wallet_statuses_wallet_status_code_not_null	n	NOT NULL wallet_status_code
+blockchain	ref_wallet_statuses	ref_wallet_statuses_wallet_status_id_not_null	n	NOT NULL wallet_status_id
+blockchain	ref_wallet_statuses	ref_wallet_statuses_wallet_status_name_not_null	n	NOT NULL wallet_status_name
+blockchain	resident_kyc	fk_resident_kyc_resident	f	FOREIGN KEY (resident_id) REFERENCES blockchain.residents(resident_id) ON DELETE CASCADE
+blockchain	resident_kyc	resident_kyc_id_not_null	n	NOT NULL id
+blockchain	resident_kyc	resident_kyc_kyc_status_not_null	n	NOT NULL kyc_status
+blockchain	resident_kyc	resident_kyc_pkey	p	PRIMARY KEY (id)
+blockchain	resident_kyc	resident_kyc_resident_id_not_null	n	NOT NULL resident_id
+blockchain	resident_kyc	resident_kyc_risk_category_not_null	n	NOT NULL risk_category
+blockchain	resident_wallets	fk_resident_wallet_resident	f	FOREIGN KEY (resident_id) REFERENCES blockchain.residents(resident_id) ON DELETE CASCADE
+blockchain	resident_wallets	resident_wallets_id_not_null	n	NOT NULL id
+blockchain	resident_wallets	resident_wallets_pkey	p	PRIMARY KEY (id)
+blockchain	resident_wallets	resident_wallets_resident_id_not_null	n	NOT NULL resident_id
+blockchain	resident_wallets	resident_wallets_wallet_address_key	u	UNIQUE (wallet_address)
+blockchain	resident_wallets	resident_wallets_wallet_address_not_null	n	NOT NULL wallet_address
+blockchain	resident_wallets	resident_wallets_wallet_balance_not_null	n	NOT NULL wallet_balance
+blockchain	wallet_statuses	wallet_statuses_created_at_not_null	n	NOT NULL created_at
+blockchain	wallet_statuses	wallet_statuses_is_active_not_null	n	NOT NULL is_active
+blockchain	wallet_statuses	wallet_statuses_pkey	p	PRIMARY KEY (wallet_status_id)
+blockchain	wallet_statuses	wallet_statuses_updated_at_not_null	n	NOT NULL updated_at
+blockchain	wallet_statuses	wallet_statuses_wallet_status_code_key	u	UNIQUE (wallet_status_code)
+blockchain	wallet_statuses	wallet_statuses_wallet_status_code_not_null	n	NOT NULL wallet_status_code
+blockchain	wallet_statuses	wallet_statuses_wallet_status_id_not_null	n	NOT NULL wallet_status_id
+blockchain	wallet_statuses	wallet_statuses_wallet_status_name_not_null	n	NOT NULL wallet_status_name
+blockchain	wallet_types	wallet_types_created_at_not_null	n	NOT NULL created_at
+blockchain	wallet_types	wallet_types_is_active_not_null	n	NOT NULL is_active
+blockchain	wallet_types	wallet_types_pkey	p	PRIMARY KEY (wallet_type_id)
+blockchain	wallet_types	wallet_types_updated_at_not_null	n	NOT NULL updated_at
+blockchain	wallet_types	wallet_types_wallet_type_code_key	u	UNIQUE (wallet_type_code)
+blockchain	wallet_types	wallet_types_wallet_type_code_not_null	n	NOT NULL wallet_type_code
+blockchain	wallet_types	wallet_types_wallet_type_id_not_null	n	NOT NULL wallet_type_id
+blockchain	wallet_types	wallet_types_wallet_type_name_not_null	n	NOT NULL wallet_type_name
+blockchain	wallets	chk_blockchain_wallets_balance_non_negative	c	CHECK ((current_balance >= (0)::numeric))
+blockchain	wallets	chk_blockchain_wallets_kyc_status	c	CHECK (((kyc_status)::text = ANY ((ARRAY['PENDING'::character varying, 'APPROVED'::character varying, 'REJECTED'::character varying, 'EXPIRED'::character varying, 'UNDER_REVIEW'::character varying])::text[])))
+blockchain	wallets	chk_blockchain_wallets_risk_level	c	CHECK (((risk_level)::text = ANY ((ARRAY['LOW'::character varying, 'MEDIUM'::character varying, 'HIGH'::character varying, 'CRITICAL'::character varying])::text[])))
+blockchain	wallets	chk_blockchain_wallets_status	c	CHECK (((status)::text = ANY ((ARRAY['ACTIVE'::character varying, 'INACTIVE'::character varying, 'BLOCKED'::character varying, 'SUSPENDED'::character varying, 'CLOSED'::character varying, 'DELETED'::character varying])::text[])))
+blockchain	wallets	chk_blockchain_wallets_wallet_type	c	CHECK (((wallet_type)::text = ANY ((ARRAY['CUSTOMER'::character varying, 'ORGANIZATION'::character varying, 'BANK'::character varying, 'SYSTEM'::character varying, 'MERCHANT'::character varying])::text[])))
+blockchain	wallets	uq_blockchain_wallets_customer_org	u	UNIQUE (customer_id, organization_code)
+blockchain	wallets	uq_blockchain_wallets_wallet_address	u	UNIQUE (wallet_address)
+blockchain	wallets	uq_wallets_customer_id	u	UNIQUE (customer_id)
+blockchain	wallets	uq_wallets_customer_org	u	UNIQUE (customer_id, organization_id)
+blockchain	wallets	uq_wallets_wallet_address	u	UNIQUE (wallet_address)
+blockchain	wallets	wallets_blockchain_payload_not_null	n	NOT NULL blockchain_payload
+blockchain	wallets	wallets_created_at_not_null	n	NOT NULL created_at
+blockchain	wallets	wallets_currency_code_not_null	n	NOT NULL currency_code
+blockchain	wallets	wallets_current_balance_not_null	n	NOT NULL current_balance
+blockchain	wallets	wallets_customer_id_not_null	n	NOT NULL customer_id
+blockchain	wallets	wallets_kyc_payload_not_null	n	NOT NULL kyc_payload
+blockchain	wallets	wallets_kyc_status_not_null	n	NOT NULL kyc_status
+blockchain	wallets	wallets_login_failed_count_not_null	n	NOT NULL login_failed_count
+blockchain	wallets	wallets_login_status_not_null	n	NOT NULL login_status
+blockchain	wallets	wallets_pkey	p	PRIMARY KEY (wallet_id)
+blockchain	wallets	wallets_risk_level_not_null	n	NOT NULL risk_level
+blockchain	wallets	wallets_status_not_null	n	NOT NULL status
+blockchain	wallets	wallets_updated_at_not_null	n	NOT NULL updated_at
+blockchain	wallets	wallets_wallet_address_not_null	n	NOT NULL wallet_address
+blockchain	wallets	wallets_wallet_id_not_null	n	NOT NULL wallet_id
+blockchain	wallets	wallets_wallet_metadata_not_null	n	NOT NULL wallet_metadata
+blockchain	wallets	wallets_wallet_type_not_null	n	NOT NULL wallet_type
+(175 rows)

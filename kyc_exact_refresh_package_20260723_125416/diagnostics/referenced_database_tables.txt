@@ -1,0 +1,25 @@
+blockchain-api/src/services/blockchain-kyc.service.js:61:    INSERT INTO blockchain.blockchain_kyc_wallet_requests (
+blockchain-api/src/services/blockchain-kyc.service.js:175:    UPDATE blockchain.blockchain_kyc_wallet_requests
+blockchain-api/src/services/blockchain-kyc.service.js:197:    UPDATE blockchain.blockchain_kyc_wallet_requests
+blockchain-api/src/services/wallet.service.js:153:    FROM blockchain.blockchain_organization
+blockchain-api/src/services/wallet.service.js:212:    FROM blockchain.wallets
+blockchain-api/src/services/wallet.service.js:249:    FROM blockchain.wallets
+blockchain-api/src/services/wallet.service.js:272:    FROM blockchain.wallets
+blockchain-api/src/services/wallet.service.js:331:    FROM blockchain.wallets w
+blockchain-api/src/services/wallet.service.js:332:    LEFT JOIN blockchain.blockchain_organization bo
+blockchain-api/src/services/wallet.service.js:334:    LEFT JOIN blockchain.countries c
+blockchain-api/src/services/wallet.service.js:364:    FROM blockchain.wallets w
+blockchain-api/src/services/wallet.service.js:365:    LEFT JOIN blockchain.blockchain_organization bo
+blockchain-api/src/services/wallet.service.js:367:    LEFT JOIN blockchain.countries c
+blockchain-api/src/services/wallet.service.js:404:    INSERT INTO blockchain.wallets (${insertColumns.join(', ')})
+blockchain-api/src/services/wallet.service.js:657:    FROM blockchain.wallets
+blockchain-api/src/services/wallet.service.js:855:    FROM blockchain.wallets
+blockchain-api/src/repositories/resident.repository.js:5:    INSERT INTO blockchain.residents (
+blockchain-api/src/repositories/resident.repository.js:82:    INSERT INTO blockchain.residents (
+blockchain-api/src/repositories/resident.repository.js:191:    FROM blockchain.residents
+blockchain-api/src/repositories/resident.repository.js:208:      INSERT INTO blockchain.resident_wallets (
+blockchain-api/src/repositories/resident.repository.js:231:      UPDATE blockchain.residents
+blockchain-api/src/repositories/resident.repository.js:270:      INSERT INTO blockchain.resident_kyc (
+blockchain-api/src/repositories/resident.repository.js:288:      UPDATE blockchain.residents
+blockchain-api/src/repositories/resident.repository.js:349:    FROM blockchain.residents
+blockchain-api/src/repositories/resident.repository.js:363:    INSERT INTO blockchain.audit_logs (

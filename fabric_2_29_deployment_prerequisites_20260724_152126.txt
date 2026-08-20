@@ -1,0 +1,191 @@
+
+======================================================================
+FABRIC 2.29 DEPLOYMENT PREREQUISITES — READ-ONLY
+======================================================================
+Generated At:       2026-07-24T15:21:26+03:00
+Project Root:       /home/nix/u01/blockchain-integration
+CLI Container:      cli
+Org1 Peer:          peer0.org1.blockchain.local
+Org2 Peer:          peer0.org2.blockchain.local
+Orderer:            orderer.blockchain.local
+Channel:            kycchannelnix1
+Chaincode:          kyc-wallet-chaincode-js
+Requested Version:  2.29
+Requested Sequence: 29
+Report:             /home/nix/u01/blockchain-integration/fabric_2_29_deployment_prerequisites_20260724_152126.txt
+
+======================================================================
+1. ACTIVE CHAINCODE SOURCE
+======================================================================
+UpdateResident count: 1
+DeleteResident count: 1
+
+> kyc-wallet-chaincode-js@2.7.0 check:syntax
+> node --check index.js && node --check lib/kycWalletContract.js && node --check tests/phase10-proof.test.js && node --check tests/phase28-audit-proof.test.js
+
+
+Host source hashes:
+aba7a8ae44b10a34e6120babf04075cdeeec7d48356e7181ab462b9741da3bf2  /home/nix/u01/blockchain-integration/chaincode/kyc-wallet-chaincode-js/lib/kycWalletContract.js
+dcb33ff41d5f8d03c6024f5fce05d166af73e60f04a8aa499fc4bc58714ac3ec  /home/nix/u01/blockchain-integration/chaincode/kyc-wallet-chaincode-js/package.json
+
+======================================================================
+2. CHAINCODE SOURCE INSIDE CLI
+======================================================================
+PASS: Chaincode source and package metadata are mounted.
+UpdateResident count: 1
+DeleteResident count: 1
+
+======================================================================
+3. RESOLVE ORG1 CONTEXT
+======================================================================
+Org1 MSP ID:       Org1MSP
+Org1 Peer Address: peer0.org1.blockchain.local:7051
+Org1 Admin MSP:    /organizations/peerOrganizations/org1.blockchain.local/users/Admin@org1.blockchain.local/msp
+Org1 TLS Cert:     /organizations/peerOrganizations/org1.blockchain.local/peers/peer0.org1.blockchain.local/tls/ca.crt
+PASS: Org1 identity and TLS files are readable.
+
+======================================================================
+4. RESOLVE ORG2 CONTEXT
+======================================================================
+Org2 MSP ID:       Org2MSP
+Org2 Peer Address: peer0.org2.blockchain.local:9051
+Org2 Admin MSP:    /organizations/peerOrganizations/org2.blockchain.local/users/Admin@org2.blockchain.local/msp
+Org2 TLS Cert:     /organizations/peerOrganizations/org2.blockchain.local/peers/peer0.org2.blockchain.local/tls/ca.crt
+PASS: Org2 identity and TLS files are readable.
+
+======================================================================
+5. RESOLVE ORDERER CONTEXT
+======================================================================
+Orderer Address: orderer.blockchain.local:7050
+Orderer TLS CA:  /organizations/ordererOrganizations/blockchain.local/orderers/orderer.blockchain.local/msp/tlscacerts/tlsca.blockchain.local-cert.pem
+172.22.0.8      orderer.blockchain.local
+PASS: Orderer hostname resolves and TLS CA is readable.
+
+======================================================================
+6. NETWORK RESOLUTION FROM CLI
+======================================================================
+172.22.0.10     peer0.org1.blockchain.local
+172.22.0.9      peer0.org2.blockchain.local
+172.22.0.8      orderer.blockchain.local
+
+======================================================================
+7. QUERY CURRENT DEFINITION FROM ORG1
+======================================================================
+{
+  "sequence": 28,
+  "version": "2.28",
+  "endorsement_plugin": "escc",
+  "validation_plugin": "vscc",
+  "validation_parameter": "CiwSDBIKCAESAggAEgIIARoNEgsKB09yZzFNU1AQAxoNEgsKB09yZzJNU1AQAw==",
+  "collections": {},
+  "approvals": {
+    "Org1MSP": true,
+    "Org2MSP": true
+  }
+}
+
+PASS: Current definition is version 2.28, sequence 28.
+
+======================================================================
+8. QUERY CURRENT DEFINITION FROM ORG2
+======================================================================
+{
+  "sequence": 28,
+  "version": "2.28",
+  "endorsement_plugin": "escc",
+  "validation_plugin": "vscc",
+  "validation_parameter": "CiwSDBIKCAESAggAEgIIARoNEgsKB09yZzFNU1AQAxoNEgsKB09yZzJNU1AQAw==",
+  "collections": {},
+  "approvals": {
+    "Org1MSP": true,
+    "Org2MSP": true
+  }
+}
+
+PASS: Org1 and Org2 see the same committed definition.
+
+======================================================================
+9. QUERY CURRENT INSTALLED PACKAGES
+======================================================================
+Org1 current package:
+[
+  {
+    "package_id": "kyc-wallet-chaincode-js_2.28:6ce36bb3ef82e56635e90122f1ae737c188dfc840aa398b557ed0e6542f20b8c",
+    "label": "kyc-wallet-chaincode-js_2.28",
+    "references": {
+      "kycchannelnix1": {
+        "chaincodes": [
+          {
+            "name": "kyc-wallet-chaincode-js",
+            "version": "2.28"
+          }
+        ]
+      }
+    }
+  }
+]
+
+Org2 current package:
+[
+  {
+    "package_id": "kyc-wallet-chaincode-js_2.28:6ce36bb3ef82e56635e90122f1ae737c188dfc840aa398b557ed0e6542f20b8c",
+    "label": "kyc-wallet-chaincode-js_2.28",
+    "references": {
+      "kycchannelnix1": {
+        "chaincodes": [
+          {
+            "name": "kyc-wallet-chaincode-js",
+            "version": "2.28"
+          }
+        ]
+      }
+    }
+  }
+]
+
+======================================================================
+10. CHECK TARGET LABEL IS NOT ALREADY INSTALLED
+======================================================================
+Org1 target-label packages: 0
+Org2 target-label packages: 0
+PASS: Target label kyc-wallet-chaincode-js_2.29 is unused.
+
+======================================================================
+11. PACKAGE COMMAND AVAILABILITY
+======================================================================
+PASS: Required Fabric lifecycle commands are available.
+
+======================================================================
+12. FINAL PREREQUISITE SUMMARY
+======================================================================
+Current Version:       2.28
+Current Sequence:      28
+Next Version:          2.29
+Next Sequence:         29
+Target Label:          kyc-wallet-chaincode-js_2.29
+
+Org1 MSP ID:           Org1MSP
+Org1 Peer Address:     peer0.org1.blockchain.local:7051
+Org1 Admin MSP:        /organizations/peerOrganizations/org1.blockchain.local/users/Admin@org1.blockchain.local/msp
+Org1 TLS Cert:         /organizations/peerOrganizations/org1.blockchain.local/peers/peer0.org1.blockchain.local/tls/ca.crt
+
+Org2 MSP ID:           Org2MSP
+Org2 Peer Address:     peer0.org2.blockchain.local:9051
+Org2 Admin MSP:        /organizations/peerOrganizations/org2.blockchain.local/users/Admin@org2.blockchain.local/msp
+Org2 TLS Cert:         /organizations/peerOrganizations/org2.blockchain.local/peers/peer0.org2.blockchain.local/tls/ca.crt
+
+Orderer Address:       orderer.blockchain.local:7050
+Orderer TLS CA:        /organizations/ordererOrganizations/blockchain.local/orderers/orderer.blockchain.local/msp/tlscacerts/tlsca.blockchain.local-cert.pem
+Chaincode CLI Path:    /chaincode/kyc-wallet-chaincode-js
+
+No chaincode package was created.
+No package was installed.
+No organization approval was submitted.
+No chaincode definition was committed.
+No backend or frontend file was modified.
+
+======================================================================
+PREREQUISITE INSPECTION COMPLETE
+======================================================================
+Upload this report for the controlled deployment phase:
+/home/nix/u01/blockchain-integration/fabric_2_29_deployment_prerequisites_20260724_152126.txt
